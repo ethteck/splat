@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 import argparse
 import importlib
 import os
