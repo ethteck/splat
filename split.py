@@ -127,6 +127,5 @@ def main(rom_path, config_path, repo_path):
 
 
 if __name__ == "__main__":
-    # args = parser.parse_args()
-    # main(args.rom, args.config, args.outdir)
-    main("/home/ethteck/roms/pokemonsnap/PokemonSnap-USA.z64", "pokemonsnap.yaml", "testrepo")
+    args = parser.parse_args()
+    main(args.rom, args.config, args.outdir)
