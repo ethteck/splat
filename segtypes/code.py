@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 import re
 
-class N64SegAsm(N64Segment):
-    def __init__(self, rom_start, rom_end, segtype, name, ram_addr):
-        super().__init__(rom_start, rom_end, segtype, name, ram_addr)
+class N64SegCode(N64Segment):
+    def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files):
+        super().__init__(rom_start, rom_end, segtype, name, ram_addr, files)
         self.labels = set()
         self.undefined_functions = set()
         self.defined_functions = set()
@@ -59,12 +59,14 @@ class N64SegAsm(N64Segment):
         return func_name
     
     def add_glabel(self, addr):
+        if addr == "80000400":
+            dog = 5
         func = self.get_func_name(addr)
         self.undefined_functions.discard(func)
         self.defined_functions.add(func)
         return "glabel " + func
-
-    def pass_1(self, lines):
+    
+    def get_header(self, vram_addr):
         ret = []
 
         ret.append(".include \"macro.inc\"")
@@ -74,21 +76,23 @@ class N64SegAsm(N64Segment):
         ret.append(".set noreorder # don't insert nops after branches")
         ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
-        ret.append(".section .text{:X}_{}, \"ax\"".format(self.ram_addr, self.name))
+        ret.append(".section .text{:X}_{}, \"ax\"".format(vram_addr, self.name))
         ret.append("")
-        ret.append(self.add_glabel("{:X}".format(self.ram_addr)))
+        ret.append(self.add_glabel("{:X}".format(vram_addr)))
+
+        return ret
+
+    def pass_1(self, lines):
+        ret = []
 
         for line in lines:
-            line_split = line.split(" ")
-            vram_addr = int(line_split[2], 16)
-
             if re.search(r"jr\s+.ra", line):
+                vram_addr = int(line.split(" ")[2], 16)
+
                 func = "func_{:X}".format(vram_addr + 8)
                 self.undefined_functions.add(func)
             ret.append(line)
         
-        ret.append("")
-
         return ret
     
     def pass_2(self, lines):
@@ -134,21 +138,20 @@ class N64SegAsm(N64Segment):
         md.detail = True
         md.skipdata = True
 
-        md.insn_name
 
-        out_lines = []
-        rom_addr = self.rom_start
+        for split_file in self.files:
+            if split_file["subtype"] == "asm":
+                out_lines = self.get_header(split_file["vram"])
+                for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
+                    self.format_insn(out_lines, insn, split_file["start"])
+                
+                out_lines = self.pass_1(out_lines)
+                out_lines = self.pass_2(out_lines)
+                out_lines = self.pass_3(out_lines)
+                out_lines.append("")
 
-        for insn in md.disasm(rom_bytes[self.rom_start : self.rom_end], self.ram_addr):
-            self.format_insn(out_lines, insn, rom_addr)
-            rom_addr += 4
-        
-        out_lines = self.pass_1(out_lines)
-        out_lines = self.pass_2(out_lines)
-        out_lines = self.pass_3(out_lines)
-
-        with open(os.path.join(out_dir,  self.name + ".s"), "w", newline="\n") as f:
-            f.write("\n".join(out_lines))
+                with open(os.path.join(out_dir,  split_file["name"] + ".s"), "w", newline="\n") as f:
+                    f.write("\n".join(out_lines))
 
 
     @staticmethod
@@ -156,13 +159,21 @@ class N64SegAsm(N64Segment):
         return ""
 
     def get_ld_section(self):
-        section_name = ".text{:X}_{}".format(self.ram_addr, self.name)
+        ret = []
 
-        lines = []
-        lines.append("    /* 0x{:X} {:X}-{:X} [{:X}] */".format(self.ram_addr, self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.ram_addr, self.rom_start) + "{")
-        lines.append("        build/asm/{}.o({});".format(self.name, section_name))
-        lines.append("    }")
-        lines.append("")
-        lines.append("")
-        return "\n".join(lines)
+        for split_file in self.files:
+            start = split_file["start"]
+            end = split_file["end"]
+            name = split_file["name"]
+            vram = split_file["vram"]
+            subdir = "asm" if split_file["subtype"] == "asm" else "src"
+            section_name = ".text{:X}_{}".format(vram, self.name)
+            section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
+
+            ret.append("    /* 0x{:X} {:X}-{:X} [{:X}] */".format(vram, start, end, end - start))
+            ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, vram, start) + "{")
+            ret.append("        build/{}/{}.o({});".format(subdir, name, section_name2))
+            ret.append("    }")
+            ret.append("")
+        ret.append("")
+        return "\n".join(ret)

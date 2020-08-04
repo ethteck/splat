@@ -9,9 +9,6 @@ class N64SegBin(N64Segment):
         with open(os.path.join(out_dir,  self.name + ".bin"), "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
-    @staticmethod
-    def create_makefile_target():
-        return ""
 
     def get_ld_section(self):
         section_name = ".data_{}".format(self.name)
@@ -24,3 +21,8 @@ class N64SegBin(N64Segment):
         lines.append("")
         lines.append("")
         return "\n".join(lines)
+
+
+    @staticmethod
+    def create_makefile_target():
+        return ""

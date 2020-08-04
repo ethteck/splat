@@ -10,6 +10,7 @@ class N64SegAsm(N64Segment):
             f.write(".section .header, \"a\"\n")
             f.write("")
 
+
     @staticmethod
     def create_makefile_target():
         return ""
