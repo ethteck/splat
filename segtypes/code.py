@@ -13,6 +13,7 @@ class N64SegCode(N64Segment):
         self.undefined_functions = set()
         self.defined_functions = set()
         self.all_functions = set()
+        self.c_functions = {}
 
     def format_insn(self, lines, insn, rom_addr):
         mnemonic = insn.mnemonic
@@ -33,7 +34,9 @@ class N64SegCode(N64Segment):
                 print("INVALID INSTRUCTION " + insn)
         elif mnemonic == "jal":
             jump_func = self.get_func_name(op_str[2:])
-            self.undefined_functions.add(jump_func)
+
+            if jump_func not in self.c_functions.values():
+                self.undefined_functions.add(jump_func)
             op_str = jump_func
         elif mnemonic == "break":
             pass
@@ -51,7 +54,12 @@ class N64SegCode(N64Segment):
         lines.append(asm_line)
 
     def get_func_name(self, addr):
-        return "func_{}".format(addr.upper())
+        def_name = "func_{}".format(addr.upper())
+
+        if def_name in self.c_functions:
+            return self.c_functions[def_name]
+        else:
+            return def_name
         
     def get_unique_func_name(self, func_name):
         if func_name in self.all_functions:
@@ -59,8 +67,6 @@ class N64SegCode(N64Segment):
         return func_name
     
     def add_glabel(self, addr):
-        if addr == "80000400":
-            dog = 5
         func = self.get_func_name(addr)
         self.undefined_functions.discard(func)
         self.defined_functions.add(func)
@@ -90,7 +96,8 @@ class N64SegCode(N64Segment):
                 vram_addr = int(line.split(" ")[2], 16)
 
                 func = "func_{:X}".format(vram_addr + 8)
-                self.undefined_functions.add(func)
+                if func not in self.c_functions.values():
+                    self.undefined_functions.add(func)
             ret.append(line)
         
         return ret

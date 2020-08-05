@@ -23,7 +23,7 @@ OBJCOPY = $(CROSS)objcopy
 
 ASFLAGS = -EB -mtune=vr4300 -march=vr4300
 CFLAGS  = -Wall -O2 -mtune=vr4300 -march=vr4300 -G 0 -c
-LDFLAGS = -T undefined_syms.txt -T $(LD_SCRIPT) -Map $(BUILD_DIR)/$(TARGET).map --no-check-sections
+LDFLAGS = -T undefined_syms.txt -T undefined_etc.txt -T $(LD_SCRIPT) -Map $(BUILD_DIR)/$(TARGET).map --no-check-sections
 
 ######################## Targets #############################
 

@@ -53,6 +53,23 @@ def parse_segment_files(segment, seg_end):
             vram += end - start
     return ret
 
+
+def gather_c_funcs(repo_path):
+    with open(os.path.join(repo_path, "include", "functions.h")) as f:
+        func_lines = f.readlines()
+    
+    ret = {}
+
+    for line in func_lines:
+        if line.startswith("/* 0x"):
+            line_split = line.strip().split(" ")
+            addr = "func_" + line_split[1][2:]
+            name = line_split[4][:line_split[4].find("(")]
+            ret[addr] = name
+
+    return ret
+
+
 def main(rom_path, config_path, repo_path):
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
@@ -63,6 +80,8 @@ def main(rom_path, config_path, repo_path):
     # Load config
     with open(config_path) as f:
         config = yaml.safe_load(f.read())
+    
+    c_funcs = gather_c_funcs(repo_path)
     
     segments = []
     sections = []
@@ -98,6 +117,7 @@ def main(rom_path, config_path, repo_path):
 
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs
+            segment.c_functions = c_funcs
             segment.split(rom_bytes, repo_path)
 
             defined_funcs |= segment.defined_functions
@@ -113,9 +133,10 @@ def main(rom_path, config_path, repo_path):
     # Write ldscript
     write_ldscript(config['basename'], repo_path, sections)
 
-    # Write undefined_syms.txt
-    to_write = sorted(undefined_funcs - defined_funcs)
-    with open(os.path.join(repo_path,"undefined_syms.txt"), "w", newline="\n") as f:
+    # Write undefined_funcs.txt
+    c_predefined_funcs = set(c_funcs.keys())
+    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
+    with open(os.path.join(repo_path,"undefined_funcs.txt"), "w", newline="\n") as f:
         for line in to_write:
             f.write(line + " = 0x" + line[5:13].upper() + ";\n")
 
