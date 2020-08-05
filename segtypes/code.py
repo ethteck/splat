@@ -63,7 +63,7 @@ class N64SegCode(N64Segment):
         
     def get_unique_func_name(self, func_name):
         if func_name in self.all_functions:
-            return func_name + "_" + self.name.split("_")[0]
+            return func_name + "_" + self.name[-5:]
         return func_name
     
     def add_glabel(self, addr):
@@ -145,12 +145,13 @@ class N64SegCode(N64Segment):
         md.detail = True
         md.skipdata = True
 
-
         for split_file in self.files:
             if split_file["subtype"] == "asm":
                 out_lines = self.get_header(split_file["vram"])
+                rom_addr = split_file["start"]
                 for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
-                    self.format_insn(out_lines, insn, split_file["start"])
+                    self.format_insn(out_lines, insn, rom_addr)
+                    rom_addr += 4
                 
                 out_lines = self.pass_1(out_lines)
                 out_lines = self.pass_2(out_lines)
