@@ -15,6 +15,7 @@ class N64SegCode(N64Segment):
         self.all_functions = set()
         self.c_functions = {}
 
+
     def format_insn(self, lines, insn, rom_addr):
         mnemonic = insn.mnemonic
         op_str = insn.op_str
@@ -102,7 +103,7 @@ class N64SegCode(N64Segment):
         
         return ret
     
-    def pass_2(self, lines):
+    def pass_2(self, lines, subtype):
         ret = []
 
         for line in lines:
@@ -116,7 +117,7 @@ class N64SegCode(N64Segment):
                         ret.append(line_label + ":")
                         self.labels.remove(line_label)
                         self.undefined_functions.discard(line_func)
-                    elif line_func in self.undefined_functions and line_func not in self.defined_functions:
+                    elif (line_func in self.undefined_functions and line_func not in self.defined_functions) or (line_func in self.c_functions.keys() and subtype == "hasm"):
                         ret.append("")
                         if not line.rstrip().endswith("nop"):
                             ret.append(self.add_glabel(line_addr))
@@ -146,7 +147,7 @@ class N64SegCode(N64Segment):
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] == "asm":
+            if split_file["subtype"] in ["asm", "hasm"]:
                 out_lines = self.get_header(split_file["vram"])
                 rom_addr = split_file["start"]
                 for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
@@ -154,7 +155,7 @@ class N64SegCode(N64Segment):
                     rom_addr += 4
                 
                 out_lines = self.pass_1(out_lines)
-                out_lines = self.pass_2(out_lines)
+                out_lines = self.pass_2(out_lines, split_file["subtype"])
                 out_lines = self.pass_3(out_lines)
                 out_lines.append("")
 
@@ -174,7 +175,7 @@ class N64SegCode(N64Segment):
             end = split_file["end"]
             name = split_file["name"]
             vram = split_file["vram"]
-            subdir = "asm" if split_file["subtype"] == "asm" else "src"
+            subdir = "src" if split_file["subtype"] == "c" else "asm"
             section_name = ".text{:X}_{}".format(vram, self.name)
             section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
 

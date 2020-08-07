@@ -46,10 +46,12 @@ def parse_segment_files(segment, seg_end):
         for i, split_file in enumerate(segment["files"]):
             start = split_file[0]
             end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
-            name = "{}_{:X}".format(parse_segment_name(segment), start)
+            name = "{}_{:X}".format(parse_segment_name(segment), start) if len(split_file) < 3 else split_file[2]
             subtype = split_file[1]
 
-            ret.append({"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype})
+            fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
+
+            ret.append(fl)
             vram += end - start
     return ret
 
