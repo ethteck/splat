@@ -18,7 +18,7 @@ class N64Segment:
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
     
-    def seg_split(self, rom_bytes, base_path):
+    def split(self, rom_bytes, base_path, options):
         pass
 
     def get_ld_section(self):

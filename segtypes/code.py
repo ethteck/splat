@@ -139,7 +139,7 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def split(self, rom_bytes, base_path):
+    def split(self, rom_bytes, base_path, options):
         out_dir = self.create_split_dir(base_path, "asm")
 
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
@@ -147,7 +147,7 @@ class N64SegCode(N64Segment):
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm"]:
+            if split_file["subtype"] in ["asm", "hasm"] and "skip-asm" not in options:
                 out_lines = self.get_header(split_file["vram"])
                 rom_addr = split_file["start"]
                 for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
@@ -176,7 +176,7 @@ class N64SegCode(N64Segment):
             name = split_file["name"]
             vram = split_file["vram"]
             subdir = "src" if split_file["subtype"] == "c" else "asm"
-            section_name = ".text{:X}_{}".format(vram, self.name)
+            section_name = ".text{:X}_{}".format(start, self.name)
             section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
 
             ret.append("    /* 0x{:X} {:X}-{:X} [{:X}] */".format(vram, start, end, end - start))
