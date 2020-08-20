@@ -140,7 +140,6 @@ class N64SegCode(N64Segment):
 
 
     def split(self, rom_bytes, base_path, options):
-        out_dir = self.create_split_dir(base_path, "asm")
 
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
@@ -148,6 +147,8 @@ class N64SegCode(N64Segment):
 
         for split_file in self.files:
             if split_file["subtype"] in ["asm", "hasm"] and "skip-asm" not in options:
+                out_dir = self.create_split_dir(base_path, "asm")
+
                 out_lines = self.get_header(split_file["vram"])
                 rom_addr = split_file["start"]
                 for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
@@ -161,11 +162,35 @@ class N64SegCode(N64Segment):
 
                 with open(os.path.join(out_dir,  split_file["name"] + ".s"), "w", newline="\n") as f:
                     f.write("\n".join(out_lines))
+            elif split_file["subtype"] == "bin":
+                out_dir = self.create_split_dir(base_path, "bin")
+
+                with open(os.path.join(out_dir, split_file["name"] + ".bin"), "wb") as f:
+                    f.write(rom_bytes[split_file["start"] : split_file["end"]])
 
 
     @staticmethod
     def create_makefile_target():
         return ""
+
+
+    @staticmethod
+    def get_subdir(subtype):
+        if subtype == "c":
+            return "src"
+        elif subtype in ["asm", "hasm"]:
+            return "asm"
+        return subtype
+
+
+    @staticmethod
+    def get_sect_name_2(subtype, section_name):
+        if subtype == "c":
+            return ".text"
+        elif subtype == "bin":
+            return ".data"
+        return section_name
+
 
     def get_ld_section(self):
         ret = []
@@ -176,8 +201,8 @@ class N64SegCode(N64Segment):
         ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.vram_addr, self.rom_start) + "{")
 
         for split_file in self.files:
-            subdir = "src" if split_file["subtype"] == "c" else "asm"
-            section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
+            subdir = self.get_subdir(split_file["subtype"])
+            section_name2 = self.get_sect_name_2(split_file["subtype"], section_name)
             ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
         
         ret.append("    }")
