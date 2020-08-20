@@ -170,19 +170,17 @@ class N64SegCode(N64Segment):
     def get_ld_section(self):
         ret = []
 
-        for split_file in self.files:
-            start = split_file["start"]
-            end = split_file["end"]
-            name = split_file["name"]
-            vram = split_file["vram"]
-            subdir = "src" if split_file["subtype"] == "c" else "asm"
-            section_name = ".text{:X}_{}".format(start, self.name)
-            section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
+        section_name = ".text{:X}_{}".format(self.rom_start, self.name)
 
-            ret.append("    /* 0x{:X} {:X}-{:X} [{:X}] */".format(vram, start, end, end - start))
-            ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, vram, start) + "{")
-            ret.append("        build/{}/{}.o({});".format(subdir, name, section_name2))
-            ret.append("    }")
-            ret.append("")
+        ret.append("    /* 0x{:X} {:X}-{:X} (len {:X}) */".format(self.vram_addr, self.rom_start, self.rom_end, self.rom_end - self.rom_start))
+        ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.vram_addr, self.rom_start) + "{")
+
+        for split_file in self.files:
+            subdir = "src" if split_file["subtype"] == "c" else "asm"
+            section_name2 = section_name if split_file["subtype"] == "asm" else ".text"
+            ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
+        
+        ret.append("    }")
+        ret.append("")
         ret.append("")
         return "\n".join(ret)
