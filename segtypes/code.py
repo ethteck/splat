@@ -176,7 +176,7 @@ class N64SegCode(N64Segment):
 
     @staticmethod
     def get_subdir(subtype):
-        if subtype == "c":
+        if subtype in ["c", ".data", ".rodata"]:
             return "src"
         elif subtype in ["asm", "hasm"]:
             return "asm"
@@ -185,7 +185,7 @@ class N64SegCode(N64Segment):
 
     @staticmethod
     def get_sect_name_2(subtype, section_name):
-        if subtype == "c":
+        if subtype in "c":
             return ".text"
         elif subtype == "bin":
             return ".data"
