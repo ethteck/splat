@@ -187,8 +187,10 @@ class N64SegCode(N64Segment):
     def get_sect_name_2(subtype, section_name):
         if subtype in "c":
             return ".text"
-        elif subtype == "bin":
+        elif subtype in ["bin", ".data"]:
             return ".data"
+        elif subtype == ".rodata":
+            return ".rodata"
         return section_name
 
 
