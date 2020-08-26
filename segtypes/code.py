@@ -160,7 +160,10 @@ class N64SegCode(N64Segment):
                 out_lines = self.pass_3(out_lines)
                 out_lines.append("")
 
-                with open(os.path.join(out_dir,  split_file["name"] + ".s"), "w", newline="\n") as f:
+                outpath = Path(os.path.join(out_dir,  split_file["name"] + ".s"))
+                outpath.parent.mkdir(parents=True, exist_ok=True)
+
+                with open(outpath, "w", newline="\n") as f:
                     f.write("\n".join(out_lines))
             elif split_file["subtype"] == "bin":
                 out_dir = self.create_split_dir(base_path, "bin")
