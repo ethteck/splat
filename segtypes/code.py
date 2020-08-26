@@ -83,7 +83,7 @@ class N64SegCode(N64Segment):
         ret.append(".set noreorder # don't insert nops after branches")
         ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
-        ret.append(".section .text{:X}_{}, \"ax\"".format(vram_addr, self.name))
+        ret.append(".section {}, \"ax\"".format(self.get_sect_name()))
         ret.append("")
         ret.append(self.add_glabel("{:X}".format(vram_addr)))
 
@@ -186,6 +186,10 @@ class N64SegCode(N64Segment):
         return subtype
 
 
+    def get_sect_name(self):
+        return ".text_{:X}".format(self.rom_start)
+
+
     @staticmethod
     def get_sect_name_2(subtype, section_name):
         if subtype in "c":
@@ -200,7 +204,7 @@ class N64SegCode(N64Segment):
     def get_ld_section(self):
         ret = []
 
-        section_name = ".text{:X}_{}".format(self.rom_start, self.name)
+        section_name = self.get_sect_name()
 
         ret.append("    /* 0x{:X} {:X}-{:X} (len {:X}) */".format(self.vram_addr, self.rom_start, self.rom_end, self.rom_end - self.rom_start))
         ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.vram_addr, self.rom_start) + "{")
