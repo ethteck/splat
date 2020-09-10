@@ -3,6 +3,7 @@
 import argparse
 import importlib
 import os
+import re
 from pathlib import Path
 import segtypes
 import sys
@@ -89,7 +90,8 @@ def parse_segment_files(segment, seg_start, seg_end, seg_name, seg_vram):
 
 
 def gather_c_funcs(repo_path):
-    ret = {}
+    funcs = {}
+    labels_to_add = set()
 
     funcs_path = os.path.join(repo_path, "include", "functions.h")
     if os.path.exists(funcs_path):
@@ -99,11 +101,38 @@ def gather_c_funcs(repo_path):
         for line in func_lines:
             if line.startswith("/* 0x"):
                 line_split = line.strip().split(" ")
-                addr = "func_" + line_split[1][2:]
+                addr_comment = line_split[1]
+                addr = "func_" + addr_comment[2:10]
                 name = line_split[4][:line_split[4].find("(")]
-                ret[addr] = name
+                
+                # We need to add marked functions' glabels in asm
+                if len(addr_comment) > 10 and addr_comment[10] == '!':
+                    labels_to_add.add(name)
+                
+                funcs[addr] = name
 
-    return ret
+    return funcs, labels_to_add
+
+
+def gather_c_variables(repo_path):
+    vars = {}
+
+    vars_path = os.path.join(repo_path, "include", "variables.h")
+    if os.path.exists(vars_path):
+        with open(vars_path) as f:
+            vars_lines = f.readlines()
+        
+        for line in vars_lines:
+            if line.startswith("/* 0x"):
+                line_split = line.strip().split(" ")
+                addr_comment = line_split[1]
+                addr = int(addr_comment, 0)
+                
+                name = line_split[-1][:re.search(r'[\\[;]', line_split[-1]).start()]
+
+                vars[addr] = name
+
+    return vars
 
 
 def main(rom_path, config_path, repo_path):
@@ -119,11 +148,11 @@ def main(rom_path, config_path, repo_path):
 
     options = [] if "options" not in config else config["options"]
 
-    c_funcs = gather_c_funcs(repo_path)
+    c_funcs, c_func_labels_to_add = gather_c_funcs(repo_path)
+    c_vars = gather_c_variables(repo_path)
     
     segments = []
     sections = []
-    segment_types = set()
 
     defined_funcs = set()
     undefined_funcs = set()
@@ -141,8 +170,6 @@ def main(rom_path, config_path, repo_path):
         seg_vram = parse_segment_vram(segment)
         seg_files = parse_segment_files(segment, seg_start, seg_end, seg_name, seg_vram)
 
-        segment_types.add(seg_type)
-
         segmodule = importlib.import_module("segtypes." + seg_type)
         segment_class = getattr(segmodule, "N64Seg" + seg_type.title())
 
@@ -152,10 +179,12 @@ def main(rom_path, config_path, repo_path):
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs
             segment.c_functions = c_funcs
+            segment.c_variables = c_vars
+            segment.c_labels_to_add = c_func_labels_to_add
             segment.split(rom_bytes, repo_path, options)
 
-            defined_funcs |= segment.defined_functions
-            undefined_funcs |= segment.undefined_functions
+            defined_funcs |= segment.glabels_added
+            undefined_funcs |= segment.glabels_to_add
         else:
             segment.split(rom_bytes, repo_path, options)
 
@@ -168,7 +197,7 @@ def main(rom_path, config_path, repo_path):
     c_predefined_funcs = set(c_funcs.keys())
     to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
     if len(to_write) > 0:
-        with open(os.path.join(repo_path,"undefined_funcs.txt"), "w", newline="\n") as f:
+        with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
             for line in to_write:
                 f.write(line + " = 0x" + line[5:13].upper() + ";\n")
 

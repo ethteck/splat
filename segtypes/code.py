@@ -1,6 +1,7 @@
 from capstone import *
 from capstone.mips import *
 
+from collections import OrderedDict
 from segtypes.segment import N64Segment
 import os
 from pathlib import Path
@@ -9,71 +10,38 @@ import re
 class N64SegCode(N64Segment):
     def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files):
         super().__init__(rom_start, rom_end, segtype, name, ram_addr, files)
-        self.labels = set()
-        self.undefined_functions = set()
-        self.defined_functions = set()
+        self.labels_to_add = {}
+        self.glabels_to_add = set()
+        self.glabels_added = set()
         self.all_functions = set()
         self.c_functions = {}
+        self.c_variables = {}
+        self.c_labels_to_add = set()
 
-
-    def format_insn(self, lines, insn, rom_addr):
-        mnemonic = insn.mnemonic
-        op_str = insn.op_str
-
-        if mnemonic == "move":
-            # Let's get the actual instruction out
-            opcode = insn.bytes[3] & 0b00111111
-            op_str += ", $zero"
-
-            if opcode == 37:
-                mnemonic = "or"
-            elif opcode == 45:
-                mnemonic = "daddu"
-            elif opcode == 33:
-                mnemonic = "addu"
-            else:
-                print("INVALID INSTRUCTION " + insn)
-        elif mnemonic == "jal":
-            jump_func = self.get_func_name(op_str[2:])
-
-            if jump_func not in self.c_functions.values():
-                self.undefined_functions.add(jump_func)
-            op_str = jump_func
-        elif mnemonic == "break":
-            pass
-        elif mnemonic.startswith("b"):
-            op_str_split = op_str.split(" ")
-            branch_target = op_str_split[-1]
-            label = ".L" + branch_target[2:].upper()
-            self.labels.add(label)
-            op_str = " ".join(op_str_split[:-1] + [label])
-        elif mnemonic == "mtc0" or mnemonic == "mfc0":
-            rd = (insn.bytes[2] & 0xF8) >> 3
-            op_str = op_str.split(" ")[0] + " $" + str(rd)
-
-        asm_line = "/* {:X} {:X} {} */  {}{}".format(rom_addr, insn.address, insn.bytes.hex().upper(), mnemonic.ljust(10), op_str)
-        lines.append(asm_line)
 
     def get_func_name(self, addr):
-        def_name = "func_{}".format(addr.upper())
+        def_name = "func_{:X}".format(addr)
 
         if def_name in self.c_functions:
             return self.c_functions[def_name]
         else:
             return def_name
         
+
     def get_unique_func_name(self, func_name):
         if func_name in self.all_functions:
             return func_name + "_" + self.name[-5:]
         return func_name
     
+
     def add_glabel(self, addr):
         func = self.get_func_name(addr)
-        self.undefined_functions.discard(func)
-        self.defined_functions.add(func)
+        self.glabels_to_add.discard(func)
+        self.glabels_added.add(func)
         return "glabel " + func
     
-    def get_header(self, vram_addr):
+
+    def get_header(self):
         ret = []
 
         ret.append(".include \"macro.inc\"")
@@ -85,62 +53,221 @@ class N64SegCode(N64Segment):
         ret.append("")
         ret.append(".section {}, \"ax\"".format(self.get_sect_name()))
         ret.append("")
-        ret.append(self.add_glabel("{:X}".format(vram_addr)))
 
         return ret
 
-    def pass_1(self, lines):
-        ret = []
+    @staticmethod
+    def nops(insns):
+        for insn in insns:
+            if insn.mnemonic != "nop":
+                return False
+        return True
 
-        for line in lines:
-            if re.search(r"jr\s+.ra", line):
-                vram_addr = int(line.split(" ")[2], 16)
+    def process_insns(self, insns, rom_addr):
+        ret = OrderedDict()
 
-                func = "func_{:X}".format(vram_addr + 8)
-                if func not in self.c_functions.values():
-                    self.undefined_functions.add(func)
-            ret.append(line)
-        
+        func = []
+        end_func = False
+        labels = []
+
+        # Collect labels
+        for insn in insns:
+            if insn.mnemonic == "break":
+                pass
+            elif insn.mnemonic.startswith("b"):
+                op_str_split = insn.op_str.split(" ")
+                branch_target = op_str_split[-1]
+                branch_addr = int(branch_target, 0)
+                labels.append((insn.address, branch_addr))
+
+        # Main loop
+        for i, insn in enumerate(insns):
+            mnemonic = insn.mnemonic
+            op_str = insn.op_str
+            func_addr = insn.address if len(func) == 0 else func[0][0].address
+
+            if mnemonic == "move":
+                # Let's get the actual instruction out
+                opcode = insn.bytes[3] & 0b00111111
+                op_str += ", $zero"
+
+                if opcode == 37:
+                    mnemonic = "or"
+                elif opcode == 45:
+                    mnemonic = "daddu"
+                elif opcode == 33:
+                    mnemonic = "addu"
+                else:
+                    print("INVALID INSTRUCTION " + insn)
+            elif mnemonic == "jal":
+                jal_addr = int(op_str, 0)
+                jump_func = self.get_func_name(jal_addr)
+
+                if jump_func not in self.c_functions.values():
+                    self.glabels_to_add.add(jump_func)
+                op_str = jump_func
+            elif mnemonic == "break":
+                pass
+            elif mnemonic.startswith("b"):
+                op_str_split = op_str.split(" ")
+                branch_target = op_str_split[-1]
+
+                if func_addr not in self.labels_to_add:
+                    self.labels_to_add[func_addr] = set()
+                self.labels_to_add[func_addr].add(int(branch_target, 0))
+
+                label = ".L" + branch_target[2:].upper()
+                op_str = " ".join(op_str_split[:-1] + [label])
+            elif mnemonic == "mtc0" or mnemonic == "mfc0":
+                rd = (insn.bytes[2] & 0xF8) >> 3
+                op_str = op_str.split(" ")[0] + " $" + str(rd)
+            
+            func.append((insn, mnemonic, op_str, rom_addr))
+            rom_addr += 4
+            
+            if mnemonic == "jr":
+                keep_going = False
+                for label in labels:
+                    if label[0] > insn.address and label[1] <= insn.address:
+                        keep_going = True
+                        break
+                    if label[0] <= insn.address and label[1] > insn.address:
+                        keep_going = True
+                        break
+                if not keep_going:
+                    end_func = True
+                    continue
+            
+            if i < len(insns) - 1 and self.get_func_name(insns[i + 1].address) in self.c_labels_to_add:
+                end_func = True
+
+            if end_func:
+                if self.nops(insns[i:]) or i < len(insns) - 1 and insns[i + 1].mnemonic != "nop":
+                    end_func = False
+                    ret[func_addr] = func
+                    func = []
+
+        # Add the last function (or append nops to the previous one)
+        if not self.nops([i[0] for i in func]):
+            ret[func_addr] = func
+        else:
+            ret[next(reversed(ret))].extend(func)
+
         return ret
-    
-    def pass_2(self, lines, subtype):
-        ret = []
 
-        for line in lines:
-            line_split = line.split(" ")
-            if len(line_split) > 2:
-                line_addr = line.split(" ")[2]
-                if re.match(r"[0-9A-F]{8}", line_addr):
-                    line_label = ".L" + line_addr
-                    line_func = "func_" + line_addr
-                    if line_label in self.labels:
-                        ret.append(line_label + ":")
-                        self.labels.remove(line_label)
-                        self.undefined_functions.discard(line_func)
-                    elif (line_func in self.undefined_functions and line_func not in self.defined_functions) or (line_func in self.c_functions.keys() and subtype == "hasm"):
-                        ret.append("")
-                        if not line.rstrip().endswith("nop"):
-                            ret.append(self.add_glabel(line_addr))
-                        else:
-                            self.undefined_functions.remove(line_func)
-            ret.append(line)
-        
+
+    # Determine symbols
+    def determine_symbols(self, funcs):
+        ret = {}
+
+        for func_addr in funcs:
+            func = funcs[func_addr]
+
+            for i in range(len(func)):
+                insn = func[i][0]
+
+                if insn.mnemonic == "lui":
+                    op_split = insn.op_str.split(", ")
+                    reg = op_split[0]
+
+                    if not op_split[1].startswith("0x"):
+                        continue
+                        
+                    lui_val = int(op_split[1], 0)
+                    if lui_val >= 0x8000:
+                        for j in range(i + 1, min(i + 8, len(func))):
+                            s_insn = func[j][0]
+
+                            if s_insn.mnemonic in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu"]:
+                                s_op_split = s_insn.op_str.split(", ")
+
+                                if s_insn.mnemonic.startswith("s"):
+                                    s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1 : -1]
+                                else:
+                                    s_reg = s_op_split[-2]
+
+                                if reg == s_reg:
+                                    # Match!
+                                    
+                                    reg_ext = ""
+
+                                    junk_search = re.search(r"[\(]", s_op_split[-1])
+                                    if junk_search is not None:
+                                        if junk_search.start() == 0:
+                                            break
+                                        s_str = s_op_split[-1][:junk_search.start()]
+                                        reg_ext = s_op_split[-1][junk_search.start():]
+                                    else:
+                                        s_str = s_op_split[-1]
+
+                                    s_val = int(s_str, 0)
+
+                                    symbol_addr = (lui_val * 0x10000) + s_val
+
+                                    if symbol_addr in self.c_variables:
+                                        sym_name = self.c_variables[symbol_addr]
+                                    else:
+                                        break
+                                        #sym_name = "D_{:X}".format(symbol_addr)
+
+                                    func[i] += ("%hi({})".format(sym_name),)
+                                    func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
+                                    break
+
+            ret[func_addr] = func
+
         return ret
-    
-    def pass_3(self, lines):
-        ret = []
 
-        dup_funcs = self.defined_functions.intersection(self.all_functions)
-        for line in lines:
-            for func in dup_funcs:
-                line = line.replace(func, self.get_unique_func_name(func))
-            ret.append(line)
+
+    def add_labels(self, funcs, options):
+        ret = {}
+
+        for func in funcs:
+            func_text = []
+
+            # Add function glabel
+            func_text.append(self.add_glabel(func))
+
+            for insn in funcs[func]:
+                # Add a label if we need one
+                if func in self.labels_to_add and insn[0].address in self.labels_to_add[func]:
+                    self.labels_to_add[func].remove(insn[0].address)
+                    func_text.append(".L{:X}:".format(insn[0].address))
+                    
+                asm_comment = "/* {:X} {:X} {} */".format(insn[3], insn[0].address, insn[0].bytes.hex().upper())
+                
+                if len(insn) > 4:
+                    op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
+                else:
+                    op_str = insn[2]
+                asm_insn_text = "  {}{}".format(insn[1].ljust(10), op_str)
+                func_text.append(asm_comment + asm_insn_text)
+            ret[func] = func_text
+
+            if "find-file-boundaries" in options:
+                if func != next(reversed(funcs)) and self.nops([i[0] for i in funcs[func][-2:]]):
+                    print("Warning: function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
+
+        return ret
+
+
+    # Rename duplicate functions (text-level)
+    def rename_duplicates(self, funcs_text):
+        ret = {}
+
+        dup_funcs = self.glabels_added.intersection(self.all_functions)
+        for func in funcs_text:
+            func_text = []
+            for line in funcs_text[func]:
+                for dup_func in dup_funcs:
+                    line = line.replace(dup_func, self.get_unique_func_name(dup_func))
+                func_text.append(line)
+            ret[func] = func_text
         
         return ret
 
 
     def split(self, rom_bytes, base_path, options):
-
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
         md.skipdata = True
@@ -149,18 +276,23 @@ class N64SegCode(N64Segment):
             if split_file["subtype"] in ["asm", "hasm"] and "skip-asm" not in options:
                 out_dir = self.create_split_dir(base_path, "asm")
 
-                out_lines = self.get_header(split_file["vram"])
+                out_lines = self.get_header()
                 rom_addr = split_file["start"]
-                for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
-                    self.format_insn(out_lines, insn, rom_addr)
-                    rom_addr += 4
-                
-                out_lines = self.pass_1(out_lines)
-                out_lines = self.pass_2(out_lines, split_file["subtype"])
-                out_lines = self.pass_3(out_lines)
-                out_lines.append("")
 
-                outpath = Path(os.path.join(out_dir,  split_file["name"] + ".s"))
+                insns = []
+                for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
+                    insns.append(insn)
+
+                funcs = self.process_insns(insns, rom_addr)
+                funcs = self.determine_symbols(funcs)
+                funcs_text = self.add_labels(funcs, options)
+                funcs_text = self.rename_duplicates(funcs_text)
+
+                for func in funcs_text:
+                    out_lines.extend(funcs_text[func])
+                    out_lines.append("")
+
+                outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
                 outpath.parent.mkdir(parents=True, exist_ok=True)
 
                 with open(outpath, "w", newline="\n") as f:
