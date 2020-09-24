@@ -5,7 +5,9 @@ from collections import OrderedDict
 from segtypes.segment import N64Segment
 import os
 from pathlib import Path
+from pycparser import c_parser, c_ast, parse_file
 import re
+
 
 class N64SegCode(N64Segment):
     def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files):
@@ -56,6 +58,16 @@ class N64SegCode(N64Segment):
 
         return ret
 
+
+    def get_c_header(self):
+        ret = []
+        ret.append(".set noat      # allow manual use of $at")
+        ret.append(".set noreorder # don't insert nops after branches")
+        ret.append("")
+
+        return ret
+
+
     @staticmethod
     def nops(insns):
         for insn in insns:
@@ -74,7 +86,7 @@ class N64SegCode(N64Segment):
         for insn in insns:
             if insn.mnemonic == "break":
                 pass
-            elif insn.mnemonic.startswith("b"):
+            elif insn.mnemonic.startswith("b") or insn.mnemonic == "j":
                 op_str_split = insn.op_str.split(" ")
                 branch_target = op_str_split[-1]
                 branch_addr = int(branch_target, 0)
@@ -108,7 +120,7 @@ class N64SegCode(N64Segment):
                 op_str = jump_func
             elif mnemonic == "break":
                 pass
-            elif mnemonic.startswith("b"):
+            elif mnemonic.startswith("b") or insn.mnemonic == "j":
                 op_str_split = op_str.split(" ")
                 branch_target = op_str_split[-1]
 
@@ -228,6 +240,8 @@ class N64SegCode(N64Segment):
             # Add function glabel
             func_text.append(self.add_glabel(func))
 
+            indent_next = False
+
             for insn in funcs[func]:
                 # Add a label if we need one
                 if func in self.labels_to_add and insn[0].address in self.labels_to_add[func]:
@@ -240,13 +254,23 @@ class N64SegCode(N64Segment):
                     op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
                 else:
                     op_str = insn[2]
-                asm_insn_text = "  {}{}".format(insn[1].ljust(10), op_str)
+
+                insn_text = insn[1]
+                if indent_next:
+                    indent_next = False
+                    insn_text = " " + insn_text
+
+                asm_insn_text = "  {}{}".format(insn_text.ljust(10), op_str)
                 func_text.append(asm_comment + asm_insn_text)
+
+                if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
+                    indent_next = True
+
             ret[func] = func_text
 
             if "find-file-boundaries" in options:
                 if func != next(reversed(funcs)) and self.nops([i[0] for i in funcs[func][-2:]]):
-                    print("Warning: function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
+                    print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
 
         return ret
 
@@ -273,10 +297,9 @@ class N64SegCode(N64Segment):
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm"] and "skip-asm" not in options:
+            if split_file["subtype"] in ["asm", "hasm", "c"] and "skip-asm" not in options:
                 out_dir = self.create_split_dir(base_path, "asm")
 
-                out_lines = self.get_header()
                 rom_addr = split_file["start"]
 
                 insns = []
@@ -288,15 +311,55 @@ class N64SegCode(N64Segment):
                 funcs_text = self.add_labels(funcs, options)
                 funcs_text = self.rename_duplicates(funcs_text)
 
-                for func in funcs_text:
-                    out_lines.extend(funcs_text[func])
-                    out_lines.append("")
+                if split_file["subtype"] == "c":
+                    print("Splitting " + split_file["name"])
+                    defined_funcs = set()
 
-                outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
-                outpath.parent.mkdir(parents=True, exist_ok=True)
+                    class FuncDefVisitor(c_ast.NodeVisitor):
+                        def visit_FuncDef(self, node):
+                            defined_funcs.add(node.decl.name)
+                    
+                    v = FuncDefVisitor()
 
-                with open(outpath, "w", newline="\n") as f:
-                    f.write("\n".join(out_lines))
+                    old_dir = os.getcwd()
+                    os.chdir(base_path)
+                    c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
+                    cpp_args = ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"]
+                    ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
+                    os.chdir(old_dir)
+                    v.visit(ast)
+
+                    out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
+                    
+                    for func in funcs_text:
+                        func_name = self.get_func_name(func)
+
+                        # print("INCLUDE_ASM(\"" + split_file["name"] + "\", " + func_name + ");\n")
+                        if func_name == "remove_effect":
+                            dog = 5
+                        
+                        if func_name not in defined_funcs:
+                            out_lines = self.get_c_header()
+                            out_lines.extend(funcs_text[func])
+                            out_lines.append("")
+
+                            outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
+                            outpath.parent.mkdir(parents=True, exist_ok=True)
+
+                            with open(outpath, "w", newline="\n") as f:
+                                f.write("\n".join(out_lines))
+
+                else:
+                    out_lines = self.get_header()
+                    for func in funcs_text:
+                        out_lines.extend(funcs_text[func])
+                        out_lines.append("")
+
+                    outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
+                    outpath.parent.mkdir(parents=True, exist_ok=True)
+
+                    with open(outpath, "w", newline="\n") as f:
+                        f.write("\n".join(out_lines))
             elif split_file["subtype"] == "bin":
                 out_dir = self.create_split_dir(base_path, "bin")
 

@@ -110,6 +110,22 @@ def gather_c_funcs(repo_path):
                     labels_to_add.add(name)
                 
                 funcs[addr] = name
+    
+    # Manual list of func name / addrs
+    func_addrs_path = os.path.join(repo_path, "tools", "func_addrs.txt")
+    if os.path.exists(func_addrs_path):
+        with open(func_addrs_path) as f:
+            func_addrs_lines = f.readlines()
+
+        for line in func_addrs_lines:
+            line_split = line.strip().split(";")
+            name = line_split[0]
+            if name.startswith("!"):
+                name = name[1:]
+                labels_to_add.add(name)
+
+            addr = "func_" + line_split[1][2:10]
+            funcs[addr] = name
 
     return funcs, labels_to_add
 
