@@ -148,6 +148,19 @@ def gather_c_variables(repo_path):
 
                 vars[addr] = name
 
+    undefined_syms_path = os.path.join(repo_path, "undefined_syms.txt")
+    if os.path.exists(undefined_syms_path):
+        with open(undefined_syms_path) as f:
+            us_lines = f.readlines()
+        
+        for line in us_lines:
+            line = line.strip()
+            if not line == "" and not line.startswith("//"):
+                line_split = line.split("=")
+                name = line_split[0].strip()
+                addr = int(line_split[1].strip()[:-1], 0)
+                vars[addr] = name
+
     return vars
 
 

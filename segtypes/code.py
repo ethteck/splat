@@ -220,7 +220,7 @@ class N64SegCode(N64Segment):
                                         sym_name = self.c_variables[symbol_addr]
                                     else:
                                         break
-                                        #sym_name = "D_{:X}".format(symbol_addr)
+                                        # sym_name = "D_{:X}".format(symbol_addr)
 
                                     func[i] += ("%hi({})".format(sym_name),)
                                     func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
@@ -335,8 +335,6 @@ class N64SegCode(N64Segment):
                         func_name = self.get_func_name(func)
 
                         # print("INCLUDE_ASM(\"" + split_file["name"] + "\", " + func_name + ");\n")
-                        if func_name == "remove_effect":
-                            dog = 5
                         
                         if func_name not in defined_funcs:
                             out_lines = self.get_c_header()
@@ -376,7 +374,7 @@ class N64SegCode(N64Segment):
     def get_subdir(subtype):
         if subtype in ["c", ".data", ".rodata"]:
             return "src"
-        elif subtype in ["asm", "hasm"]:
+        elif subtype in ["asm", "hasm", "header"]:
             return "asm"
         return subtype
 
