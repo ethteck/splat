@@ -86,7 +86,7 @@ class N64SegCode(N64Segment):
         for insn in insns:
             if insn.mnemonic == "break":
                 pass
-            elif insn.mnemonic.startswith("b") or insn.mnemonic == "j":
+            elif (insn.mnemonic.startswith("b") and not insn.mnemonic.startswith("binsl")) or insn.mnemonic == "j":
                 op_str_split = insn.op_str.split(" ")
                 branch_target = op_str_split[-1]
                 branch_addr = int(branch_target, 0)
@@ -120,7 +120,7 @@ class N64SegCode(N64Segment):
                 op_str = jump_func
             elif mnemonic == "break":
                 pass
-            elif mnemonic.startswith("b") or insn.mnemonic == "j":
+            elif (mnemonic.startswith("b") and not insn.mnemonic.startswith("binsl")) or insn.mnemonic == "j":
                 op_str_split = op_str.split(" ")
                 branch_target = op_str_split[-1]
 
