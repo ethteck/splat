@@ -260,7 +260,7 @@ class N64SegCode(N64Segment):
                     indent_next = False
                     insn_text = " " + insn_text
 
-                asm_insn_text = "  {}{}".format(insn_text.ljust(10), op_str)
+                asm_insn_text = "  {}{}".format(insn_text.ljust(11), op_str)
                 func_text.append(asm_comment + asm_insn_text)
 
                 if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
