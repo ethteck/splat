@@ -38,10 +38,23 @@ class N64SegHeader(N64Segment):
         header_lines.append(".ascii " + cartridge_id + " /* Cartridge ID */")
         header_lines.append(".ascii " +  country_code + " /* Country code */")
         header_lines.append(".byte " +  version + " /* Version */")
-        header_lines.append()
+        header_lines.append("")
 
         with open(os.path.join(out_dir,  self.name + ".s"), "w", newline="\n") as f:
             f.write("\n".join(header_lines))
+
+
+    def get_ld_section(self):
+        section_name = ".header"
+
+        lines = []
+        lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
+        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
+        lines.append("        build/bin/{}.o(.data);".format(self.name))
+        lines.append("    }")
+        lines.append("")
+        lines.append("")
+        return "\n".join(lines)
 
 
     @staticmethod
