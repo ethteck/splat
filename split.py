@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description="Split a rom given a rom, a config,
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
+parser.add_argument("--mode", choices=["all", "ld"])
 
 
 def write_ldscript(rom_name, repo_path, sections):
