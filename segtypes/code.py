@@ -309,7 +309,7 @@ class N64SegCode(N64Segment):
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.get_option("split-asm", options):
+            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.get_option("skip-asm", options):
                 out_dir = self.create_split_dir(base_path, "asm")
 
                 rom_addr = split_file["start"]

@@ -11,17 +11,26 @@ def main(rom_path):
 
     header = \
 """name: {0} ({1})
-crc1: {2}
-crc2: {3}
-basename: {4}\n
-""".format(rom.name.title(), rom.get_country_name(), rom.crc1, rom.crc2, basename)
+basename: {2}
+options:
+  find-file-boundaries: True
+  pycparser_flags: ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"]
+  compiler: "IDO"\n
+""".format(rom.name.title(), rom.get_country_name(), basename)
 
     segments = \
 """segments:
-  - [0x0000000, 0x0000040, "header", "header"]
-  - [0x0000040, 0x0001000, "bin", "boot"]
-  - [0x0001000, {0}, "bin", "the_rest"]
-""".format(hex(rom.size))
+  - name: header
+    type: header
+    start: 0x0
+  - name: boot
+    type: bin
+    start: 0x40
+  - name: the_rest
+    type: bin
+    start: 0x1000
+  - [0x{:X}]
+""".format(rom.size)
 
     outstr = header + segments
     
