@@ -166,9 +166,6 @@ def gather_c_variables(repo_path):
 
 
 def main(rom_path, config_path, repo_path, modes):
-    create_ld = "ld" in modes or "all" in modes
-    create_asm = "asm" in modes or "all" in modes
-
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
 
@@ -180,6 +177,7 @@ def main(rom_path, config_path, repo_path, modes):
         config = yaml.safe_load(f.read())
 
     options = config.get("options")
+    options["modes"] = modes
 
     c_funcs, c_func_labels_to_add = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
@@ -224,17 +222,16 @@ def main(rom_path, config_path, repo_path, modes):
         sections.append(segment.get_ld_section())
 
     # Write ldscript
-    if create_ld:
+    if "ld" in options["modes"] or "all" in options["modes"]:
         write_ldscript(config['basename'], repo_path, sections)
 
     # Write undefined_funcs.txt
-    if create_asm:
-        c_predefined_funcs = set(c_funcs.keys())
-        to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
-        if len(to_write) > 0:
-            with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
-                for line in to_write:
-                    f.write(line + " = 0x" + line[5:13].upper() + ";\n")
+    c_predefined_funcs = set(c_funcs.keys())
+    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
+    if len(to_write) > 0:
+        with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
+            for line in to_write:
+                f.write(line + " = 0x" + line[5:13].upper() + ";\n")
 
 
 if __name__ == "__main__":
