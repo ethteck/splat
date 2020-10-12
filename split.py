@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description="Split a rom given a rom, a config,
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
-parser.add_argument('--modes', nargs='+', choices=["ld", "bin", "asm", "all", "makefile", ""])
+parser.add_argument('--modes', nargs='+', choices=["ld", "bin", "asm", "all"], default="all")
 
 
 def write_ldscript(rom_name, repo_path, sections):
@@ -85,7 +85,7 @@ def parse_segment_files(segment, seg_start, seg_end, seg_name, seg_vram):
 
             ret.append(fl)
     else:
-        fl = {"start": seg_start, "end": seg_end, "name": seg_name, "vram": seg_vram, "subtype": "c"} # TODO make this better, don't assume code
+        fl = {"start": seg_start, "end": seg_end, "name": seg_name, "vram": seg_vram, "subtype": "asm"}
         ret.append(fl)
     return ret
 
@@ -168,7 +168,6 @@ def gather_c_variables(repo_path):
 def main(rom_path, config_path, repo_path, modes):
     create_ld = "ld" in modes or "all" in modes
     create_asm = "asm" in modes or "all" in modes
-    create_makefile = "makefile" in modes or "all" in modes
 
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
@@ -215,25 +214,27 @@ def main(rom_path, config_path, repo_path, modes):
             segment.c_functions = c_funcs
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
-            segment.split(rom_bytes, repo_path)
+        
+        segment.split(rom_bytes, repo_path)
 
+        if type(segment) == N64SegCode:
             defined_funcs |= segment.glabels_added
             undefined_funcs |= segment.glabels_to_add
-        else:
-            segment.split(rom_bytes, repo_path)
 
         sections.append(segment.get_ld_section())
 
     # Write ldscript
-    write_ldscript(config['basename'], repo_path, sections)
+    if create_ld:
+        write_ldscript(config['basename'], repo_path, sections)
 
     # Write undefined_funcs.txt
-    c_predefined_funcs = set(c_funcs.keys())
-    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
-    if len(to_write) > 0:
-        with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
-            for line in to_write:
-                f.write(line + " = 0x" + line[5:13].upper() + ";\n")
+    if create_asm:
+        c_predefined_funcs = set(c_funcs.keys())
+        to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
+        if len(to_write) > 0:
+            with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
+                for line in to_write:
+                    f.write(line + " = 0x" + line[5:13].upper() + ";\n")
 
 
 if __name__ == "__main__":
