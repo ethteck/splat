@@ -3,7 +3,7 @@
 import argparse
 from util import rominfo
 
-parser = argparse.ArgumentParser(description="Create a split config from a rom")
+parser = argparse.ArgumentParser(description="Create a splat config from a rom")
 parser.add_argument("rom", help="path to a .z64 rom")
 
 
@@ -16,7 +16,7 @@ def main(rom_path):
 basename: {2}
 options:
   find-file-boundaries: True
-  pycparser_flags: ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"]
+  cpp_args: ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"]
   compiler: "IDO"\n
 """.format(rom.name.title(), rom.get_country_name(), basename)
 

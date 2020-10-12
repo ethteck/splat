@@ -69,13 +69,6 @@ class N64SegCode(N64Segment):
 
 
     @staticmethod
-    def get_option(option, options):
-        if option in options:
-            return option
-        return None
-
-
-    @staticmethod
     def nops(insns):
         for insn in insns:
             if insn.mnemonic != "nop":
@@ -238,7 +231,7 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def add_labels(self, funcs, options):
+    def add_labels(self, funcs):
         ret = {}
 
         for func in funcs:
@@ -275,7 +268,7 @@ class N64SegCode(N64Segment):
 
             ret[func] = func_text
 
-            if self.get_option("find-file-boundaries", options):
+            if self.options.get("find-file-boundaries"):
                 if func != next(reversed(funcs)) and self.nops([i[0] for i in funcs[func][-2:]]):
                     print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
 
@@ -298,18 +291,18 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def get_pycparser_args(self, options):
-        option = self.get_option("pycparser_args", options)
+    def get_pycparser_args(self):
+        option = self.options.get("cpp_args")
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
 
 
-    def split(self, rom_bytes, base_path, options):
+    def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.get_option("skip-asm", options):
+            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.options.get("skip-asm"):
                 out_dir = self.create_split_dir(base_path, "asm")
 
                 rom_addr = split_file["start"]
@@ -320,7 +313,7 @@ class N64SegCode(N64Segment):
 
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs)
-                funcs_text = self.add_labels(funcs, options)
+                funcs_text = self.add_labels(funcs)
                 funcs_text = self.rename_duplicates(funcs_text)
 
                 if split_file["subtype"] == "c":
@@ -336,7 +329,7 @@ class N64SegCode(N64Segment):
                     old_dir = os.getcwd()
                     os.chdir(base_path)
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
-                    cpp_args = self.get_pycparser_args(options)
+                    cpp_args = self.get_pycparser_args()
                     ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
                     os.chdir(old_dir)
                     v.visit(ast)

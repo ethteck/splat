@@ -2,13 +2,14 @@ import os
 from pathlib import Path
 
 class N64Segment:
-    def __init__(self, rom_start, rom_end, segtype, name, vram_addr, files):
+    def __init__(self, rom_start, rom_end, segtype, name, vram_addr, files, options):
         self.rom_start = rom_start
         self.rom_end = rom_end
         self.type = segtype
         self.name = name
         self.vram_addr = vram_addr
         self.files = files
+        self.options = options
     
     def get_length(self):
         return self.rom_end - self.rom_start
@@ -18,7 +19,7 @@ class N64Segment:
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
     
-    def split(self, rom_bytes, base_path, options):
+    def split(self, rom_bytes, base_path):
         pass
 
     def get_ld_section(self):

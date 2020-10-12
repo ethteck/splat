@@ -3,7 +3,7 @@ from segtypes.segment import N64Segment
 from pathlib import Path
 
 class N64SegHeader(N64Segment):
-    def split(self, rom_bytes, base_path, options):
+    def split(self, rom_bytes, base_path):
         out_dir = self.create_split_dir(base_path, "asm")
 
         header_lines = []

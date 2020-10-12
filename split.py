@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description="Split a rom given a rom, a config,
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
-parser.add_argument("--mode", choices=["all", "ld"])
+parser.add_argument('--modes', nargs='+', choices=["ld", "bin", "asm", "all", "makefile", ""])
 
 
 def write_ldscript(rom_name, repo_path, sections):
@@ -165,7 +165,11 @@ def gather_c_variables(repo_path):
     return vars
 
 
-def main(rom_path, config_path, repo_path):
+def main(rom_path, config_path, repo_path, modes):
+    create_ld = "ld" in modes or "all" in modes
+    create_asm = "asm" in modes or "all" in modes
+    create_makefile = "makefile" in modes or "all" in modes
+
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
 
@@ -176,7 +180,7 @@ def main(rom_path, config_path, repo_path):
     with open(config_path) as f:
         config = yaml.safe_load(f.read())
 
-    options = [] if "options" not in config else config["options"]
+    options = config.get("options")
 
     c_funcs, c_func_labels_to_add = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
@@ -203,7 +207,7 @@ def main(rom_path, config_path, repo_path):
         segmodule = importlib.import_module("segtypes." + seg_type)
         segment_class = getattr(segmodule, "N64Seg" + seg_type.title())
 
-        segment = segment_class(seg_start, seg_end, seg_type, seg_name, seg_vram, seg_files)
+        segment = segment_class(seg_start, seg_end, seg_type, seg_name, seg_vram, seg_files, options)
         segments.append(segment)
 
         if type(segment) == N64SegCode:
@@ -211,12 +215,12 @@ def main(rom_path, config_path, repo_path):
             segment.c_functions = c_funcs
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
-            segment.split(rom_bytes, repo_path, options)
+            segment.split(rom_bytes, repo_path)
 
             defined_funcs |= segment.glabels_added
             undefined_funcs |= segment.glabels_to_add
         else:
-            segment.split(rom_bytes, repo_path, options)
+            segment.split(rom_bytes, repo_path)
 
         sections.append(segment.get_ld_section())
 
@@ -234,4 +238,4 @@ def main(rom_path, config_path, repo_path):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.rom, args.config, args.outdir)
+    main(args.rom, args.config, args.outdir, args.modes)
