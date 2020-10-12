@@ -10,8 +10,8 @@ import re
 
 
 class N64SegCode(N64Segment):
-    def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files):
-        super().__init__(rom_start, rom_end, segtype, name, ram_addr, files)
+    def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files, options):
+        super().__init__(rom_start, rom_end, segtype, name, ram_addr, files, options)
         self.labels_to_add = {}
         self.glabels_to_add = set()
         self.glabels_added = set()
@@ -69,18 +69,17 @@ class N64SegCode(N64Segment):
 
 
     @staticmethod
-    def get_option(option, options):
-        if option in options:
-            return option
-        return None
-
-
-    @staticmethod
-    def nops(insns):
+    def is_nops(insns):
         for insn in insns:
             if insn.mnemonic != "nop":
                 return False
         return True
+
+    
+    @staticmethod
+    def is_branch_insn(mnemonic):
+        return (mnemonic.startswith("b") and not mnemonic.startswith("binsl") and not mnemonic == "break") or mnemonic == "j"
+
 
     def process_insns(self, insns, rom_addr):
         ret = OrderedDict()
@@ -91,9 +90,7 @@ class N64SegCode(N64Segment):
 
         # Collect labels
         for insn in insns:
-            if insn.mnemonic == "break":
-                pass
-            elif (insn.mnemonic.startswith("b") and not insn.mnemonic.startswith("binsl")) or insn.mnemonic == "j":
+            if self.is_branch_insn(insn.mnemonic):
                 op_str_split = insn.op_str.split(" ")
                 branch_target = op_str_split[-1]
                 branch_addr = int(branch_target, 0)
@@ -125,9 +122,7 @@ class N64SegCode(N64Segment):
                 if jump_func not in self.c_functions.values():
                     self.glabels_to_add.add(jump_func)
                 op_str = jump_func
-            elif mnemonic == "break":
-                pass
-            elif (mnemonic.startswith("b") and not insn.mnemonic.startswith("binsl")) or insn.mnemonic == "j":
+            elif self.is_branch_insn(insn.mnemonic):
                 op_str_split = op_str.split(" ")
                 branch_target = op_str_split[-1]
 
@@ -147,10 +142,7 @@ class N64SegCode(N64Segment):
             if mnemonic == "jr":
                 keep_going = False
                 for label in labels:
-                    if label[0] > insn.address and label[1] <= insn.address:
-                        keep_going = True
-                        break
-                    if label[0] <= insn.address and label[1] > insn.address:
+                    if (label[0] > insn.address and label[1] <= insn.address) or (label[0] <= insn.address and label[1] > insn.address):
                         keep_going = True
                         break
                 if not keep_going:
@@ -161,16 +153,16 @@ class N64SegCode(N64Segment):
                 end_func = True
 
             if end_func:
-                if self.nops(insns[i:]) or i < len(insns) - 1 and insns[i + 1].mnemonic != "nop":
+                if self.is_nops(insns[i:]) or i < len(insns) - 1 and insns[i + 1].mnemonic != "nop":
                     end_func = False
                     ret[func_addr] = func
                     func = []
 
         # Add the last function (or append nops to the previous one)
-        if not self.nops([i[0] for i in func]):
+        if not self.is_nops([i[0] for i in func]):
             ret[func_addr] = func
         else:
-            ret[next(reversed(ret))].extend(func)
+            ret[next(reversed(ret))].extend(func) # Requires Python 3.7 (I think)
 
         return ret
 
@@ -238,7 +230,7 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def add_labels(self, funcs, options):
+    def add_labels(self, funcs):
         ret = {}
 
         for func in funcs:
@@ -275,8 +267,8 @@ class N64SegCode(N64Segment):
 
             ret[func] = func_text
 
-            if self.get_option("find-file-boundaries", options):
-                if func != next(reversed(funcs)) and self.nops([i[0] for i in funcs[func][-2:]]):
+            if self.options.get("find-file-boundaries"):
+                if func != next(reversed(funcs)) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
 
         return ret
@@ -298,18 +290,18 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def get_pycparser_args(self, options):
-        option = self.get_option("pycparser_args", options)
+    def get_pycparser_args(self):
+        option = self.options.get("cpp_args")
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
 
 
-    def split(self, rom_bytes, base_path, options):
+    def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.get_option("skip-asm", options):
+            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.options.get("skip-asm"):
                 out_dir = self.create_split_dir(base_path, "asm")
 
                 rom_addr = split_file["start"]
@@ -320,7 +312,7 @@ class N64SegCode(N64Segment):
 
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs)
-                funcs_text = self.add_labels(funcs, options)
+                funcs_text = self.add_labels(funcs)
                 funcs_text = self.rename_duplicates(funcs_text)
 
                 if split_file["subtype"] == "c":
@@ -336,7 +328,7 @@ class N64SegCode(N64Segment):
                     old_dir = os.getcwd()
                     os.chdir(base_path)
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
-                    cpp_args = self.get_pycparser_args(options)
+                    cpp_args = self.get_pycparser_args()
                     ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
                     os.chdir(old_dir)
                     v.visit(ast)
