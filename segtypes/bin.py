@@ -4,10 +4,11 @@ from pathlib import Path
 
 class N64SegBin(N64Segment):
     def split(self, rom_bytes, base_path):
-        out_dir = self.create_split_dir(base_path, "bin")
+        if self.type in self.options["modes"] or "all" in self.options["modes"]:
+            out_dir = self.create_split_dir(base_path, "bin")
 
-        with open(os.path.join(out_dir,  self.name + ".bin"), "wb") as f:
-            f.write(rom_bytes[self.rom_start : self.rom_end])
+            with open(os.path.join(out_dir,  self.name + ".bin"), "wb") as f:
+                f.write(rom_bytes[self.rom_start : self.rom_end])
 
 
     def get_ld_section(self):

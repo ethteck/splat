@@ -296,12 +296,21 @@ class N64SegCode(N64Segment):
 
 
     def split(self, rom_bytes, base_path):
+        if self.type in self.options["modes"] or "all" in self.options["modes"]:
+            out_dir = self.create_split_dir(base_path, "bin")
+
+            with open(os.path.join(out_dir,  self.name + ".bin"), "wb") as f:
+                f.write(rom_bytes[self.rom_start : self.rom_end])
+
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm", "c"] and not self.options.get("skip-asm"):
+            if split_file["subtype"] in ["asm", "hasm", "c"]:
+                if self.type not in self.options["modes"] and "all" not in self.options["modes"]:
+                    continue
+
                 out_dir = self.create_split_dir(base_path, "asm")
 
                 rom_addr = split_file["start"]
@@ -362,7 +371,7 @@ class N64SegCode(N64Segment):
 
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
-            elif split_file["subtype"] == "bin":
+            elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
                 with open(os.path.join(out_dir, split_file["name"] + ".bin"), "wb") as f:
