@@ -296,12 +296,6 @@ class N64SegCode(N64Segment):
 
 
     def split(self, rom_bytes, base_path):
-        if self.type in self.options["modes"] or "all" in self.options["modes"]:
-            out_dir = self.create_split_dir(base_path, "bin")
-
-            with open(os.path.join(out_dir,  self.name + ".bin"), "wb") as f:
-                f.write(rom_bytes[self.rom_start : self.rom_end])
-
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
         md.skipdata = True
