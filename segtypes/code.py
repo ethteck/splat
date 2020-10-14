@@ -59,7 +59,7 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    def get_c_header(self):
+    def get_gcc_inc_header(self):
         ret = []
         ret.append(".set noat      # allow manual use of $at")
         ret.append(".set noreorder # don't insert nops after branches")
@@ -341,10 +341,12 @@ class N64SegCode(N64Segment):
                     for func in funcs_text:
                         func_name = self.get_func_name(func)
 
-                        # print("INCLUDE_ASM(\"" + split_file["name"] + "\", " + func_name + ");\n")
-                        
                         if func_name not in defined_funcs:
-                            out_lines = self.get_c_header()
+                            # TODO make more graceful
+                            if "compiler" in self.options and self.options["compiler"] == "GCC":
+                                out_lines = self.get_gcc_inc_header()
+                            else:
+                                out_lines = []
                             out_lines.extend(funcs_text[func])
                             out_lines.append("")
 
