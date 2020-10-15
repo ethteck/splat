@@ -316,7 +316,7 @@ class N64SegCode(N64Segment):
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs)
                 funcs_text = self.add_labels(funcs)
-                funcs_text = self.rename_duplicates(funcs_text)
+                # funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
 
                 if split_file["subtype"] == "c":
                     print("Splitting " + split_file["name"])

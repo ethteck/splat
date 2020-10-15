@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description="Split a rom given a rom, a config,
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
-parser.add_argument('--modes', nargs='+', choices=["ld", "bin", "asm", "all"], default="all")
+parser.add_argument('--modes', nargs='+', default="all")
 
 
 def write_ldscript(rom_name, repo_path, sections):
@@ -113,7 +113,7 @@ def gather_c_funcs(repo_path):
                 funcs[addr] = name
     
     # Manual list of func name / addrs
-    func_addrs_path = os.path.join(repo_path, "tools", "func_addrs.txt")
+    func_addrs_path = os.path.join(repo_path, "tools", "symbol_addrs.txt")
     if os.path.exists(func_addrs_path):
         with open(func_addrs_path) as f:
             func_addrs_lines = f.readlines()
