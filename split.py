@@ -103,7 +103,7 @@ def gather_c_funcs(repo_path):
             if line.startswith("/* 0x"):
                 line_split = line.strip().split(" ")
                 addr_comment = line_split[1]
-                addr = "func_" + addr_comment[2:10]
+                addr = int(addr_comment[:10], 0)
                 name = line_split[4][:line_split[4].find("(")]
                 
                 # We need to add marked functions' glabels in asm
@@ -125,7 +125,7 @@ def gather_c_funcs(repo_path):
                 name = name[1:]
                 labels_to_add.add(name)
 
-            addr = "func_" + line_split[1][2:10]
+            addr = int(line_split[1], 0)
             funcs[addr] = name
 
     return funcs, labels_to_add

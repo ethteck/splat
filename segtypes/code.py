@@ -22,12 +22,10 @@ class N64SegCode(N64Segment):
 
 
     def get_func_name(self, addr):
-        def_name = "func_{:X}".format(addr)
-
-        if def_name in self.c_functions:
-            return self.c_functions[def_name]
+        if addr in self.c_functions:
+            return self.c_functions[addr]
         else:
-            return def_name
+            return "func_{:X}".format(addr)
         
 
     def get_unique_func_name(self, func_name):
@@ -217,6 +215,8 @@ class N64SegCode(N64Segment):
 
                                     if symbol_addr in self.c_variables:
                                         sym_name = self.c_variables[symbol_addr]
+                                    elif symbol_addr in self.c_functions:
+                                        sym_name = self.c_functions[symbol_addr]
                                     else:
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
