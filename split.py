@@ -37,14 +37,14 @@ def parse_segment_type(segment):
         return segment[1]
 
 
-def parse_segment_name(segment):
+def parse_segment_name(segment, segment_class):
     if type(segment) is dict:
         return segment["name"]
     else:
         if len(segment) >= 3 and type(segment[2]) is str:
             return segment[2]
         else:
-            return "{:X}".format(parse_segment_start(segment))
+            return segment_class.get_default_name(parse_segment_start(segment))
 
 
 def parse_segment_vram(segment):
@@ -64,19 +64,19 @@ def parse_file_start(split_file):
     return split_file[0] if "start" not in split_file else split_file["start"]
 
 
-def parse_segment_files(segment, seg_start, seg_end, seg_name, seg_vram):
+def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
     ret = []
     if "files" in segment:
         for i, split_file in enumerate(segment["files"]):
             if type(split_file) is dict:
                 start = split_file["start"]
                 end = split_file["end"]
-                name = "{}_{:X}".format(parse_segment_name(segment), start) if "name" not in split_file else split_file["name"]
+                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if "name" not in split_file else split_file["name"]
                 subtype = split_file["type"]
             else:
                 start = split_file[0]
                 end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
-                name = "{}_{:X}".format(parse_segment_name(segment), start) if len(split_file) < 3 else split_file[2]
+                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
 
             vram = seg_vram + (start - seg_start)
@@ -194,15 +194,16 @@ def main(rom_path, config_path, repo_path, modes):
             # We're at the end
             continue
 
-        seg_start = parse_segment_start(segment)
-        seg_end = parse_segment_start(config['segments'][i + 1])
         seg_type = parse_segment_type(segment)
-        seg_name = parse_segment_name(segment)
-        seg_vram = parse_segment_vram(segment)
-        seg_files = parse_segment_files(segment, seg_start, seg_end, seg_name, seg_vram)
-
+        
         segmodule = importlib.import_module("segtypes." + seg_type)
         segment_class = getattr(segmodule, "N64Seg" + seg_type.title())
+
+        seg_start = parse_segment_start(segment)
+        seg_end = parse_segment_start(config['segments'][i + 1])
+        seg_name = parse_segment_name(segment, segment_class)
+        seg_vram = parse_segment_vram(segment)
+        seg_files = parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram)
 
         segment = segment_class(seg_start, seg_end, seg_type, seg_name, seg_vram, seg_files, options)
         segments.append(segment)

@@ -24,3 +24,7 @@ class N64Segment:
 
     def get_ld_section(self):
         pass
+
+    @staticmethod
+    def get_default_name(addr): 
+        return "{:X}".format(addr)

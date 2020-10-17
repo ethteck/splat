@@ -1,0 +1,3 @@
+[submodule "util/n64decompress"]
+	path = util/n64decompress
+	url = https://github.com/ethteck/n64decompress.git
