@@ -34,4 +34,4 @@ class N64SegYay0(N64Segment):
 
     @staticmethod
     def get_default_name(addr): 
-        return "bin/Yay0decompressed/{:X}.bin".format(addr)
+        return "bin/Yay0/{:X}.bin".format(addr)
