@@ -1,5 +1,4 @@
 import argparse
-from bitarray import bitarray
 import sys
 
 def decompress_yay0(in_bytes, byte_order="big"):
