@@ -1,7 +1,7 @@
 import os
 from segtypes.segment import N64Segment
 from pathlib import Path
-from util.n64decompress.Yay0 import decompress
+from util import Yay0decompress
 
 class N64SegYay0(N64Segment):
     def split(self, rom_bytes, base_path):
@@ -11,7 +11,7 @@ class N64SegYay0(N64Segment):
 
             with open(os.path.join(out_dir, name), "wb") as f:
                 compressed_bytes = rom_bytes[self.rom_start : self.rom_end]
-                decompressed_bytes = decompress.decompress_yay0(compressed_bytes)
+                decompressed_bytes = Yay0decompress.decompress_yay0(compressed_bytes)
                 f.write(decompressed_bytes)
 
 
