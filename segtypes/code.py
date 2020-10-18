@@ -30,7 +30,7 @@ class N64SegCode(N64Segment):
 
     def get_unique_func_name(self, func_name):
         if func_name in self.all_functions:
-            return func_name + "_" + self.name[-5:]
+            return func_name + "_" + "{:X}".format(self.rom_start)
         return func_name
     
 
@@ -320,30 +320,32 @@ class N64SegCode(N64Segment):
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs)
                 funcs_text = self.add_labels(funcs)
-                # funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
+                funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
 
                 if split_file["subtype"] == "c":
                     print("Splitting " + split_file["name"])
                     defined_funcs = set()
-
-                    class FuncDefVisitor(c_ast.NodeVisitor):
-                        def visit_FuncDef(self, node):
-                            defined_funcs.add(node.decl.name)
                     
-                    v = FuncDefVisitor()
-
-                    old_dir = os.getcwd()
-                    os.chdir(base_path)
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
-                    cpp_args = self.get_pycparser_args()
-                    ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
-                    os.chdir(old_dir)
-                    v.visit(ast)
+
+                    if os.path.exists(c_path):
+                        class FuncDefVisitor(c_ast.NodeVisitor):
+                            def visit_FuncDef(self, node):
+                                defined_funcs.add(node.decl.name)
+                        
+                        v = FuncDefVisitor()
+
+                        old_dir = os.getcwd()
+                        os.chdir(base_path)
+                        cpp_args = self.get_pycparser_args()
+                        ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
+                        os.chdir(old_dir)
+                        v.visit(ast)
 
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
                     
                     for func in funcs_text:
-                        func_name = self.get_func_name(func)
+                        func_name = self.get_unique_func_name(self.get_func_name(func))
 
                         if func_name not in defined_funcs:
                             # TODO make more graceful
@@ -359,6 +361,24 @@ class N64SegCode(N64Segment):
 
                             with open(outpath, "w", newline="\n") as f:
                                 f.write("\n".join(out_lines))
+                    
+                    # Creation of c files
+                    if not os.path.exists(c_path): # and some option is enabled
+                        c_lines = []
+                        c_lines.append("#include \"common.h\"")
+                        c_lines.append("")
+
+                        for func in funcs_text:
+                            func_name = self.get_unique_func_name(self.get_func_name(func))
+                            if self.options["compiler"] == "GCC":
+                                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
+                            else:
+                                c_lines.append("#pragma GLOBAL_ASM()") # todo fix
+                            c_lines.append("")
+
+                        with open(c_path, "w") as f:
+                            f.write("\n".join(c_lines))
+                        dog = 55
 
                 else:
                     out_lines = self.get_header()
