@@ -1,16 +1,49 @@
 import os
 from pathlib import Path
 
+
+def parse_segment_start(segment):
+    return segment[0] if "start" not in segment else segment["start"]
+
+def parse_segment_type(segment):
+    if type(segment) is dict:
+        return segment["type"]
+    else:
+        return segment[1]
+
+
+def parse_segment_name(segment, segment_class):
+    if type(segment) is dict:
+        return segment["name"]
+    else:
+        if len(segment) >= 3 and type(segment[2]) is str:
+            return segment[2]
+        else:
+            return segment_class.get_default_name(parse_segment_start(segment))
+
+
+def parse_segment_vram(segment):
+    if type(segment) is dict:
+        if "vram" in segment:
+            return segment["vram"]
+        else:
+            return 0
+    else:
+        if len(segment) >=3 and type(segment[-1]) is int:
+            return segment[-1]
+        else:
+            return 0
+
+
 class N64Segment:
-    def __init__(self, rom_start, rom_end, segtype, name, vram_addr, files, options, config):
-        self.rom_start = rom_start
-        self.rom_end = rom_end
-        self.type = segtype
-        self.name = name
-        self.vram_addr = vram_addr
-        self.files = files
+    def __init__(self, segment, next_segment, options):
+        self.rom_start = parse_segment_start(segment)
+        self.rom_end = parse_segment_start(next_segment)
+        self.type = parse_segment_type(segment)
+        self.name = parse_segment_name(segment, self.__class__)
+        self.vram_addr = parse_segment_vram(segment)
         self.options = options
-        self.config = config
+
 
     def get_length(self):
         return self.rom_end - self.rom_start

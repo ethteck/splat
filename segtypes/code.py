@@ -2,16 +2,43 @@ from capstone import *
 from capstone.mips import *
 
 from collections import OrderedDict
-from segtypes.segment import N64Segment
+from segtypes.segment import N64Segment, parse_segment_name
 import os
 from pathlib import Path
 from pycparser import c_parser, c_ast, parse_file
 import re
 
 
+def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
+    ret = []
+    if "files" in segment:
+        for i, split_file in enumerate(segment["files"]):
+            if type(split_file) is dict:
+                start = split_file["start"]
+                end = split_file["end"]
+                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if "name" not in split_file else split_file["name"]
+                subtype = split_file["type"]
+            else:
+                start = split_file[0]
+                end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
+                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
+                subtype = split_file[1]
+
+            vram = seg_vram + (start - seg_start)
+
+            fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
+
+            ret.append(fl)
+    else:
+        fl = {"start": seg_start, "end": seg_end, "name": seg_name, "vram": seg_vram, "subtype": "asm"}
+        ret.append(fl)
+    return ret
+
+
 class N64SegCode(N64Segment):
-    def __init__(self, rom_start, rom_end, segtype, name, ram_addr, files, options, config):
-        super().__init__(rom_start, rom_end, segtype, name, ram_addr, files, options, config)
+    def __init__(self, segment, next_segment, options):
+        super().__init__(segment, next_segment, options)
+        self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.labels_to_add = {}
         self.glabels_to_add = set()
         self.glabels_added = set()
@@ -340,7 +367,7 @@ class N64SegCode(N64Segment):
                         class FuncDefVisitor(c_ast.NodeVisitor):
                             def visit_FuncDef(self, node):
                                 defined_funcs.add(node.decl.name)
-                        
+
                         v = FuncDefVisitor()
 
                         old_dir = os.getcwd()
@@ -369,7 +396,7 @@ class N64SegCode(N64Segment):
 
                             with open(outpath, "w", newline="\n") as f:
                                 f.write("\n".join(out_lines))
-                    
+
                     # Creation of c files
                     if not os.path.exists(c_path): # and some option is enabled
                         c_lines = []

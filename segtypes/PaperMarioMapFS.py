@@ -14,9 +14,11 @@ def decode_null_terminated_ascii(data):
     return data[:length].decode('ascii')
 
 class N64SegPaperMarioMapFS(N64Segment):
-    def split(self, rom_bytes, base_path):
-        paths = self.config.get("paths", {})
+    def __init__(self, segment, next_segment, options):
+        super().__init__(segment, next_segment, options)
+        self.paths = segment.get("paths", {})
 
+    def split(self, rom_bytes, base_path):
         fs_dir = Path(base_path, self.name)
         fs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -41,7 +43,7 @@ class N64SegPaperMarioMapFS(N64Segment):
             if offset == 0:
                 path = None
             else:
-                path = paths.get(name, "{}.bin".format(name))
+                path = self.paths.get(name, "{}.bin".format(name))
                 Path(fs_dir, path).parent.mkdir(parents=True, exist_ok=True)
 
             print(f"{name} {offset:08X} {size:08X} {decompressed_size:08X}")

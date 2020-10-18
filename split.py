@@ -8,6 +8,7 @@ from pathlib import Path
 import segtypes
 import sys
 import yaml
+from segtypes.segment import parse_segment_type
 from segtypes.code import N64SegCode
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
@@ -26,68 +27,8 @@ def write_ldscript(rom_name, repo_path, sections):
         f.write("SECTIONS\n{\n" + mid + "}")
 
 
-def parse_segment_start(segment):
-    return segment[0] if "start" not in segment else segment["start"]
-
-
-def parse_segment_type(segment):
-    if type(segment) is dict:
-        return segment["type"]
-    else:
-        return segment[1]
-
-
-def parse_segment_name(segment, segment_class):
-    if type(segment) is dict:
-        return segment["name"]
-    else:
-        if len(segment) >= 3 and type(segment[2]) is str:
-            return segment[2]
-        else:
-            return segment_class.get_default_name(parse_segment_start(segment))
-
-
-def parse_segment_vram(segment):
-    if type(segment) is dict:
-        if "vram" in segment:
-            return segment["vram"]
-        else:
-            return 0
-    else:
-        if len(segment) >=3 and type(segment[-1]) is int:
-            return segment[-1]
-        else:
-            return 0
-
-
 def parse_file_start(split_file):
     return split_file[0] if "start" not in split_file else split_file["start"]
-
-
-def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
-    ret = []
-    if "files" in segment:
-        for i, split_file in enumerate(segment["files"]):
-            if type(split_file) is dict:
-                start = split_file["start"]
-                end = split_file["end"]
-                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if "name" not in split_file else split_file["name"]
-                subtype = split_file["type"]
-            else:
-                start = split_file[0]
-                end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
-                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
-                subtype = split_file[1]
-
-            vram = seg_vram + (start - seg_start)
-
-            fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
-
-            ret.append(fl)
-    else:
-        fl = {"start": seg_start, "end": seg_end, "name": seg_name, "vram": seg_vram, "subtype": "asm"}
-        ret.append(fl)
-    return ret
 
 
 def gather_c_funcs(repo_path):
@@ -199,14 +140,7 @@ def main(rom_path, config_path, repo_path, modes):
         segmodule = importlib.import_module("segtypes." + seg_type)
         segment_class = getattr(segmodule, "N64Seg" + seg_type[0].upper() + seg_type[1:])
 
-        seg_start = parse_segment_start(segment)
-        seg_end = parse_segment_start(config['segments'][i + 1])
-        seg_name = parse_segment_name(segment, segment_class)
-        seg_vram = parse_segment_vram(segment)
-        seg_files = parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram)
-        seg_config = segment if type(segment) is dict else {}
-
-        segment = segment_class(seg_start, seg_end, seg_type, seg_name, seg_vram, seg_files, options, seg_config)
+        segment = segment_class(segment, config['segments'][i + 1], options)
         segments.append(segment)
 
         if type(segment) == N64SegCode:
