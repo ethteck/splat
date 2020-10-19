@@ -24,7 +24,10 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
 
-            vram = seg_vram + (start - seg_start)
+            if segment.get("vram_lock", False):
+                vram = seg_vram
+            else:
+                vram = seg_vram + (start - seg_start)
 
             fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
 
