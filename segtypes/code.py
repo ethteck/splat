@@ -84,14 +84,14 @@ class N64SegCode(N64Segment):
             return "func_{:X}".format(addr)
 
 
-    def get_unique_func_name(self, func_name):
+    def get_unique_func_name(self, func_name, rom_addr):
         if func_name in self.all_functions:
-            return func_name + "_" + "{:X}".format(self.rom_start)
+            return func_name + "_" + "{:X}".format(rom_addr)
         return func_name
 
 
-    def add_glabel(self, addr):
-        func = self.get_func_name(addr)
+    def add_glabel(self, ram_addr, rom_addr):
+        func = self.get_unique_func_name(self.get_func_name(ram_addr), rom_addr)
         self.glabels_to_add.discard(func)
         self.glabels_added.add(func)
         return "glabel " + func
@@ -293,7 +293,7 @@ class N64SegCode(N64Segment):
             func_text = []
 
             # Add function glabel
-            func_text.append(self.add_glabel(func))
+            func_text.append(self.add_glabel(func, funcs[func][0][3]))
 
             indent_next = False
 
@@ -334,22 +334,6 @@ class N64SegCode(N64Segment):
         return ret
 
 
-    # Rename duplicate functions (text-level)
-    def rename_duplicates(self, funcs_text):
-        ret = {}
-
-        dup_funcs = self.glabels_added.intersection(self.all_functions)
-        for func in funcs_text:
-            func_text = []
-            for line in funcs_text[func]:
-                for dup_func in dup_funcs:
-                    line = line.replace(dup_func, self.get_unique_func_name(dup_func))
-                func_text.append(line)
-            ret[func] = func_text
-
-        return ret
-
-
     def get_pycparser_args(self):
         option = self.options.get("cpp_args")
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
@@ -376,7 +360,6 @@ class N64SegCode(N64Segment):
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs)
                 funcs_text = self.add_labels(funcs)
-                funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
 
                 if split_file["subtype"] == "c":
                     old_dir = os.getcwd()
@@ -392,7 +375,7 @@ class N64SegCode(N64Segment):
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
                     for func in funcs_text:
-                        func_name = self.get_unique_func_name(self.get_func_name(func))
+                        func_name = self.get_unique_func_name(self.get_func_name(func), split_file["start"])
 
                         if func_name not in defined_funcs:
                             # TODO make more graceful
@@ -417,7 +400,7 @@ class N64SegCode(N64Segment):
                         c_lines.append("")
 
                         for func in funcs_text:
-                            func_name = self.get_unique_func_name(self.get_func_name(func))
+                            func_name = self.get_unique_func_name(self.get_func_name(func), split_file["start"])
                             if self.options["compiler"] == "GCC":
                                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
                             else:
@@ -441,6 +424,9 @@ class N64SegCode(N64Segment):
 
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
+                
+                self.all_functions |= self.glabels_added
+
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 

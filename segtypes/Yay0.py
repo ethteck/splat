@@ -23,7 +23,7 @@ class N64SegYay0(N64Segment):
         lines = []
         lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
         lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        lines.append("        build/{}.Yay0(.data);".format(self.name))
+        lines.append("        build/{}.Yay0.o(.data);".format(self.name))
         lines.append("    }")
         lines.append("")
         lines.append("")
