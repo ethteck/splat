@@ -40,7 +40,9 @@ class N64SegHeader(N64Segment):
         header_lines.append(".byte " +  version + " /* Version */")
         header_lines.append("")
 
-        with open(os.path.join(out_dir,  self.name + ".s"), "w", newline="\n") as f:
+        s_path = os.path.join(out_dir, self.name + ".s")
+        Path(s_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(s_path, "w", newline="\n") as f:
             f.write("\n".join(header_lines))
 
 

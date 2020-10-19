@@ -44,7 +44,7 @@ class N64SegPaperMarioMapFS(N64Segment):
                     path = None
                 else:
                     path = self.paths.get(name, "{}.bin".format(name))
-                    Path(fs_dir, path).parent.mkdir(parents=True, exist_ok=True)
+                    self.create_parent_dir(fs_dir, path)
 
                 print(f"{name} {offset:08X} {size:08X} {decompressed_size:08X}")
 

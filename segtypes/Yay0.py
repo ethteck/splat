@@ -6,7 +6,7 @@ from util import Yay0decompress
 class N64SegYay0(N64Segment):
     def split(self, rom_bytes, base_path):
         if self.type in self.options["modes"] or "all" in self.options["modes"]:
-            out_dir = self.create_split_dir(base_path, Path(self.name).parent)
+            out_dir = self.create_parent_dir(base_path, self.name)
             name = os.path.basename(self.name)
 
             with open(os.path.join(out_dir, name), "wb") as f:
@@ -33,5 +33,5 @@ class N64SegYay0(N64Segment):
         return ""
 
     @staticmethod
-    def get_default_name(addr): 
+    def get_default_name(addr):
         return "bin/Yay0/{:X}.bin".format(addr)

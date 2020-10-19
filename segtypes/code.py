@@ -425,6 +425,7 @@ class N64SegCode(N64Segment):
                                 c_lines.append("#pragma GLOBAL_ASM()") # todo fix
                             c_lines.append("")
 
+                        Path(c_path).parent.mkdir(parents=True, exist_ok=True)
                         with open(c_path, "w") as f:
                             f.write("\n".join(c_lines))
                         dog = 55
@@ -443,7 +444,9 @@ class N64SegCode(N64Segment):
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
-                with open(os.path.join(out_dir, split_file["name"] + ".bin"), "wb") as f:
+                bin_path = os.path.join(out_dir, split_file["name"] + ".bin")
+                Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
+                with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"] : split_file["end"]])
 
 
