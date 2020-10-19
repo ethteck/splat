@@ -53,6 +53,11 @@ class N64Segment:
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
 
+    def create_parent_dir(self, base_path, filename):
+        out_dir = Path(base_path, filename).parent
+        out_dir.mkdir(parents=True, exist_ok=True)
+        return out_dir
+
     def split(self, rom_bytes, base_path):
         pass
 

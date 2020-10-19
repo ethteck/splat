@@ -5,8 +5,34 @@ from collections import OrderedDict
 from segtypes.segment import N64Segment, parse_segment_name
 import os
 from pathlib import Path
-from pycparser import c_parser, c_ast, parse_file
 import re
+
+
+STRIP_C_COMMENTS_RE = re.compile(
+    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+    re.DOTALL | re.MULTILINE
+)
+
+def strip_c_comments(text):
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith("/"):
+            return " "
+        else:
+            return s
+    return re.sub(STRIP_C_COMMENTS_RE, replacer, text)
+
+
+C_FUNC_RE = re.compile(
+    r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
+    re.MULTILINE
+)
+
+def get_funcs_defined_in_c(c_file):
+    with open(c_file, "r") as f:
+        text = strip_c_comments(f.read())
+
+    return set(m.group(2) for m in C_FUNC_RE.finditer(text))
 
 
 def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
@@ -24,7 +50,10 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
 
-            vram = seg_vram + (start - seg_start)
+            if segment.get("vram_lock", False):
+                vram = seg_vram
+            else:
+                vram = seg_vram + (start - seg_start)
 
             fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
 
@@ -350,32 +379,15 @@ class N64SegCode(N64Segment):
                 funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
 
                 if split_file["subtype"] == "c":
-                    print("Splitting " + split_file["name"])
-                    defined_funcs = set()
-                    class FuncDefVisitor(c_ast.NodeVisitor):
-                        def visit_FuncDef(self, node):
-                            defined_funcs.add(node.decl.name)
-
-                    v = FuncDefVisitor()
-
                     old_dir = os.getcwd()
                     os.chdir(base_path)
 
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
 
                     if os.path.exists(c_path):
-                        class FuncDefVisitor(c_ast.NodeVisitor):
-                            def visit_FuncDef(self, node):
-                                defined_funcs.add(node.decl.name)
-
-                        v = FuncDefVisitor()
-
-                        old_dir = os.getcwd()
-                        os.chdir(base_path)
-                        cpp_args = self.get_pycparser_args()
-                        ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
-                        os.chdir(old_dir)
-                        v.visit(ast)
+                        defined_funcs = get_funcs_defined_in_c(c_path)
+                    else:
+                        defined_funcs = set()
 
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
@@ -396,6 +408,7 @@ class N64SegCode(N64Segment):
 
                             with open(outpath, "w", newline="\n") as f:
                                 f.write("\n".join(out_lines))
+                            print(f"Disassembled {func_name} to {outpath}")
 
                     # Creation of c files
                     if not os.path.exists(c_path): # and some option is enabled
@@ -411,8 +424,10 @@ class N64SegCode(N64Segment):
                                 c_lines.append("#pragma GLOBAL_ASM()") # todo fix
                             c_lines.append("")
 
+                        Path(c_path).parent.mkdir(parents=True, exist_ok=True)
                         with open(c_path, "w") as f:
                             f.write("\n".join(c_lines))
+                        print(f"Wrote {split_file['name']} to {c_path}")
                         dog = 55
 
                 else:
@@ -429,7 +444,9 @@ class N64SegCode(N64Segment):
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
-                with open(os.path.join(out_dir, split_file["name"] + ".bin"), "wb") as f:
+                bin_path = os.path.join(out_dir, split_file["name"] + ".bin")
+                Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
+                with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"] : split_file["end"]])
 
 
