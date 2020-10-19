@@ -10,11 +10,11 @@ class N64SegYay0(N64Segment):
 
             path = os.path.join(out_dir, os.path.basename(self.name) + ".bin")
             with open(path, "wb") as f:
-                print(f"Decompressing {self.name}...")
+                self.log(f"Decompressing {self.name}...")
                 compressed_bytes = rom_bytes[self.rom_start : self.rom_end]
                 decompressed_bytes = Yay0decompress.decompress_yay0(compressed_bytes)
                 f.write(decompressed_bytes)
-            print(f"Wrote {self.name} to {path}")
+            self.log(f"Wrote {self.name} to {path}")
 
 
     def get_ld_section(self):

@@ -55,11 +55,11 @@ class N64SegPaperMarioMapFS(N64Segment):
                     bytes = rom_bytes[self.rom_start + 0x20 + offset : self.rom_start + 0x20 + offset + size]
 
                     if is_compressed:
-                        print(f"Decompressing {name}...")
+                        self.log(f"Decompressing {name}...")
                         bytes = Yay0decompress.decompress_yay0(bytes)
 
                     f.write(bytes)
-                    print(f"Wrote {name} to {Path(fs_dir, path)}")
+                    self.log(f"Wrote {name} to {Path(fs_dir, path)}")
 
                 asset_idx += 1
 

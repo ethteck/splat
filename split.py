@@ -15,7 +15,8 @@ parser = argparse.ArgumentParser(description="Split a rom given a rom, a config,
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
-parser.add_argument('--modes', nargs='+', default="all")
+parser.add_argument("--modes", nargs="+", default="all")
+parser.add_argument("--verbose", help="Enable debug logging")
 
 
 def write_ldscript(rom_name, repo_path, sections):
@@ -106,7 +107,7 @@ def gather_c_variables(repo_path):
     return vars
 
 
-def main(rom_path, config_path, repo_path, modes):
+def main(rom_path, config_path, repo_path, modes, verbose):
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
 
@@ -119,6 +120,7 @@ def main(rom_path, config_path, repo_path, modes):
 
     options = config.get("options")
     options["modes"] = modes
+    options["verbose"] = verbose
 
     c_funcs, c_func_labels_to_add = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
@@ -149,7 +151,8 @@ def main(rom_path, config_path, repo_path, modes):
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
 
-        print(f"Splitting segment {segment.name}:")
+        if verbose:
+            print(f"Splitting segment {segment.name}:")
         segment.split(rom_bytes, repo_path)
 
         if type(segment) == N64SegCode:
@@ -173,4 +176,4 @@ def main(rom_path, config_path, repo_path, modes):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.rom, args.config, args.outdir, args.modes)
+    main(args.rom, args.config, args.outdir, args.modes, args.verbose)

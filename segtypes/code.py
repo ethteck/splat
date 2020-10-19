@@ -391,7 +391,7 @@ class N64SegCode(N64Segment):
 
                             with open(outpath, "w", newline="\n") as f:
                                 f.write("\n".join(out_lines))
-                            print(f"Disassembled {func_name} to {outpath}")
+                            self.log(f"Disassembled {func_name} to {outpath}")
 
                     # Creation of c files
                     if not os.path.exists(c_path): # and some option is enabled
@@ -411,7 +411,6 @@ class N64SegCode(N64Segment):
                         with open(c_path, "w") as f:
                             f.write("\n".join(c_lines))
                         print(f"Wrote {split_file['name']} to {c_path}")
-                        dog = 55
 
                 else:
                     out_lines = self.get_header()

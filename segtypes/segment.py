@@ -5,6 +5,7 @@ from pathlib import Path
 def parse_segment_start(segment):
     return segment[0] if "start" not in segment else segment["start"]
 
+
 def parse_segment_type(segment):
     if type(segment) is dict:
         return segment["type"]
@@ -24,10 +25,7 @@ def parse_segment_name(segment, segment_class):
 
 def parse_segment_vram(segment):
     if type(segment) is dict:
-        if "vram" in segment:
-            return segment["vram"]
-        else:
-            return 0
+        return segment.get("vram", 0)
     else:
         if len(segment) >=3 and type(segment[-1]) is int:
             return segment[-1]
@@ -48,21 +46,31 @@ class N64Segment:
     def get_length(self):
         return self.rom_end - self.rom_start
 
+
     def create_split_dir(self, base_path, subdir):
         out_dir = Path(base_path, subdir)
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
+
 
     def create_parent_dir(self, base_path, filename):
         out_dir = Path(base_path, filename).parent
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
 
+
     def split(self, rom_bytes, base_path):
         pass
 
+
     def get_ld_section(self):
         pass
+
+
+    def log(self, msg):
+        if self.options.get("verbose", False):
+            print(msg)
+
 
     @staticmethod
     def get_default_name(addr):
