@@ -427,7 +427,7 @@ class N64SegCode(N64Segment):
                         Path(c_path).parent.mkdir(parents=True, exist_ok=True)
                         with open(c_path, "w") as f:
                             f.write("\n".join(c_lines))
-                        print(f"Wrote {split_file['name']} tp {c_path}")
+                        print(f"Wrote {split_file['name']} to {c_path}")
                         dog = 55
 
                 else:
