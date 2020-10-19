@@ -5,8 +5,34 @@ from collections import OrderedDict
 from segtypes.segment import N64Segment, parse_segment_name
 import os
 from pathlib import Path
-from pycparser import c_parser, c_ast, parse_file
 import re
+
+
+STRIP_C_COMMENTS_RE = re.compile(
+    r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+    re.DOTALL | re.MULTILINE
+)
+
+def strip_c_comments(text):
+    def replacer(match):
+        s = match.group(0)
+        if s.startswith("/"):
+            return " "
+        else:
+            return s
+    return re.sub(STRIP_C_COMMENTS_RE, replacer, text)
+
+
+C_FUNC_RE = re.compile(
+    r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+{",
+    re.MULTILINE
+)
+
+def get_funcs_defined_in_c(c_file):
+    with open(c_file, "r") as f:
+        text = strip_c_comments(f.read())
+
+    return set(m.group(2) for m in C_FUNC_RE.finditer(text))
 
 
 def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
@@ -354,12 +380,6 @@ class N64SegCode(N64Segment):
 
                 if split_file["subtype"] == "c":
                     print("Splitting " + split_file["name"])
-                    defined_funcs = set()
-                    class FuncDefVisitor(c_ast.NodeVisitor):
-                        def visit_FuncDef(self, node):
-                            defined_funcs.add(node.decl.name)
-
-                    v = FuncDefVisitor()
 
                     old_dir = os.getcwd()
                     os.chdir(base_path)
@@ -367,18 +387,9 @@ class N64SegCode(N64Segment):
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
 
                     if os.path.exists(c_path):
-                        class FuncDefVisitor(c_ast.NodeVisitor):
-                            def visit_FuncDef(self, node):
-                                defined_funcs.add(node.decl.name)
-
-                        v = FuncDefVisitor()
-
-                        old_dir = os.getcwd()
-                        os.chdir(base_path)
-                        cpp_args = self.get_pycparser_args()
-                        ast = parse_file(c_path, use_cpp=True, cpp_args=cpp_args)
-                        os.chdir(old_dir)
-                        v.visit(ast)
+                        defined_funcs = get_funcs_defined_in_c(c_path)
+                    else:
+                        defined_funcs = set()
 
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
