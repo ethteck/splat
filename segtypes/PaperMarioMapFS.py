@@ -46,8 +46,6 @@ class N64SegPaperMarioMapFS(N64Segment):
                     path = self.paths.get(name, "{}.bin".format(name))
                     self.create_parent_dir(fs_dir, path)
 
-                print(f"{name} {offset:08X} {size:08X} {decompressed_size:08X}")
-
                 if name == "end_data":
                     break
 
@@ -55,11 +53,13 @@ class N64SegPaperMarioMapFS(N64Segment):
 
                 with open(os.path.join(fs_dir, path), "wb") as f:
                     bytes = rom_bytes[self.rom_start + 0x20 + offset : self.rom_start + 0x20 + offset + size]
+
                     if is_compressed:
-                        decompressed_bytes = Yay0decompress.decompress_yay0(bytes)
-                        f.write(decompressed_bytes)
-                    else:
-                        f.write(bytes)
+                        print(f"Decompressing {name}...")
+                        bytes = Yay0decompress.decompress_yay0(bytes)
+
+                    f.write(bytes)
+                    print(f"Wrote {name} to {Path(fs_dir, path)}")
 
                 asset_idx += 1
 

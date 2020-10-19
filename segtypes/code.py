@@ -379,8 +379,6 @@ class N64SegCode(N64Segment):
                 funcs_text = self.rename_duplicates(funcs_text) # TODO need a better solution
 
                 if split_file["subtype"] == "c":
-                    print("Splitting " + split_file["name"])
-
                     old_dir = os.getcwd()
                     os.chdir(base_path)
 
@@ -410,6 +408,7 @@ class N64SegCode(N64Segment):
 
                             with open(outpath, "w", newline="\n") as f:
                                 f.write("\n".join(out_lines))
+                            print(f"Disassembled {func_name} to {outpath}")
 
                     # Creation of c files
                     if not os.path.exists(c_path): # and some option is enabled
@@ -428,6 +427,7 @@ class N64SegCode(N64Segment):
                         Path(c_path).parent.mkdir(parents=True, exist_ok=True)
                         with open(c_path, "w") as f:
                             f.write("\n".join(c_lines))
+                        print(f"Wrote {split_file['name']} tp {c_path}")
                         dog = 55
 
                 else:

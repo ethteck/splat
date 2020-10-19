@@ -11,6 +11,7 @@ class N64SegBin(N64Segment):
             Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
             with open(bin_path, "wb") as f:
                 f.write(rom_bytes[self.rom_start : self.rom_end])
+            print(f"Wrote {self.name} to {bin_path}")
 
 
     def get_ld_section(self):

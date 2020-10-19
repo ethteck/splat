@@ -44,6 +44,7 @@ class N64SegHeader(N64Segment):
         Path(s_path).parent.mkdir(parents=True, exist_ok=True)
         with open(s_path, "w", newline="\n") as f:
             f.write("\n".join(header_lines))
+        print(f"Wrote {self.name} to {s_path}")
 
 
     def get_ld_section(self):

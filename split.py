@@ -149,6 +149,7 @@ def main(rom_path, config_path, repo_path, modes):
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
 
+        print(f"Splitting segment {segment.name}:")
         segment.split(rom_bytes, repo_path)
 
         if type(segment) == N64SegCode:
