@@ -17,7 +17,6 @@ parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
 parser.add_argument('--modes', nargs='+', default="all")
 
-
 def write_ldscript(rom_name, repo_path, sections):
     mid = ""
     for section in sections:
@@ -137,25 +136,26 @@ def main(rom_path, config_path, repo_path, modes):
 
         seg_type = parse_segment_type(segment)
 
-        segmodule = importlib.import_module("segtypes." + seg_type)
-        segment_class = getattr(segmodule, "N64Seg" + seg_type[0].upper() + seg_type[1:])
+        if seg_type in options["modes"] or "all" in options["modes"]:
+            segmodule = importlib.import_module("segtypes." + seg_type)
+            segment_class = getattr(segmodule, "N64Seg" + seg_type[0].upper() + seg_type[1:])
 
-        segment = segment_class(segment, config['segments'][i + 1], options)
-        segments.append(segment)
+            segment = segment_class(segment, config['segments'][i + 1], options)
+            segments.append(segment)
 
-        if type(segment) == N64SegCode:
-            segment.all_functions = defined_funcs
-            segment.c_functions = c_funcs
-            segment.c_variables = c_vars
-            segment.c_labels_to_add = c_func_labels_to_add
+            if type(segment) == N64SegCode:
+                segment.all_functions = defined_funcs
+                segment.c_functions = c_funcs
+                segment.c_variables = c_vars
+                segment.c_labels_to_add = c_func_labels_to_add
 
-        segment.split(rom_bytes, repo_path)
+            segment.split(rom_bytes, repo_path)
 
-        if type(segment) == N64SegCode:
-            defined_funcs |= segment.glabels_added
-            undefined_funcs |= segment.glabels_to_add
+            if type(segment) == N64SegCode:
+                defined_funcs |= segment.glabels_added
+                undefined_funcs |= segment.glabels_to_add
 
-        sections.append(segment.get_ld_section())
+            sections.append(segment.get_ld_section())
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
