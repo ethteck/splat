@@ -36,18 +36,20 @@ def get_funcs_defined_in_c(c_file):
 
 
 def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, seg_vram):
+    prefix = seg_name if seg_name.endswith("/") else f"{seg_name}_"
+
     ret = []
     if "files" in segment:
         for i, split_file in enumerate(segment["files"]):
             if type(split_file) is dict:
                 start = split_file["start"]
                 end = split_file["end"]
-                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if "name" not in split_file else split_file["name"]
+                name = "{}{:X}".format(prefix, start) if "name" not in split_file else split_file["name"]
                 subtype = split_file["type"]
             else:
                 start = split_file[0]
                 end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
-                name = "{}_{:X}".format(parse_segment_name(segment, segment_class), start) if len(split_file) < 3 else split_file[2]
+                name = "{}{:X}".format(prefix, start) if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
 
             if segment.get("vram_lock", False):
@@ -421,7 +423,7 @@ class N64SegCode(N64Segment):
 
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
-                
+
                 self.all_functions |= self.glabels_added
 
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
