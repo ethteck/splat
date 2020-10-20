@@ -293,7 +293,8 @@ class N64SegCode(N64Segment):
             func_text = []
 
             # Add function glabel
-            func_text.append(self.add_glabel(func, funcs[func][0][3]))
+            rom_addr = funcs[func][0][3]
+            func_text.append(self.add_glabel(func, rom_addr))
 
             indent_next = False
 
@@ -325,7 +326,7 @@ class N64SegCode(N64Segment):
                 if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
                     indent_next = True
 
-            ret[func] = func_text
+            ret[func] = (func_text, rom_addr)
 
             if self.options.get("find-file-boundaries"):
                 if func != next(reversed(funcs)) and self.is_nops([i[0] for i in funcs[func][-2:]]):
@@ -362,9 +363,6 @@ class N64SegCode(N64Segment):
                 funcs_text = self.add_labels(funcs)
 
                 if split_file["subtype"] == "c":
-                    old_dir = os.getcwd()
-                    os.chdir(base_path)
-
                     c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
 
                     if os.path.exists(c_path):
@@ -375,7 +373,7 @@ class N64SegCode(N64Segment):
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
                     for func in funcs_text:
-                        func_name = self.get_unique_func_name(self.get_func_name(func), split_file["start"])
+                        func_name = self.get_unique_func_name(self.get_func_name(func), funcs_text[func][1])
 
                         if func_name not in defined_funcs:
                             # TODO make more graceful
@@ -383,7 +381,7 @@ class N64SegCode(N64Segment):
                                 out_lines = self.get_gcc_inc_header()
                             else:
                                 out_lines = []
-                            out_lines.extend(funcs_text[func])
+                            out_lines.extend(funcs_text[func][0])
                             out_lines.append("")
 
                             outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
@@ -400,7 +398,7 @@ class N64SegCode(N64Segment):
                         c_lines.append("")
 
                         for func in funcs_text:
-                            func_name = self.get_unique_func_name(self.get_func_name(func), split_file["start"])
+                            func_name = self.get_unique_func_name(self.get_func_name(func), funcs_text[func][1])
                             if self.options["compiler"] == "GCC":
                                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
                             else:
@@ -415,7 +413,7 @@ class N64SegCode(N64Segment):
                 else:
                     out_lines = self.get_header()
                     for func in funcs_text:
-                        out_lines.extend(funcs_text[func])
+                        out_lines.extend(funcs_text[func][0])
                         out_lines.append("")
 
                     outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
@@ -433,11 +431,6 @@ class N64SegCode(N64Segment):
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"] : split_file["end"]])
-
-
-    @staticmethod
-    def create_makefile_target():
-        return ""
 
 
     @staticmethod

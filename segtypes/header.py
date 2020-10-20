@@ -58,8 +58,3 @@ class N64SegHeader(N64Segment):
         lines.append("")
         lines.append("")
         return "\n".join(lines)
-
-
-    @staticmethod
-    def create_makefile_target():
-        return ""

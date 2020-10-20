@@ -78,9 +78,3 @@ class N64SegPaperMarioMapFS(N64Segment):
         lines.append("")
         lines.append("")
         return "\n".join(lines)
-        return ""
-
-
-    @staticmethod
-    def create_makefile_target():
-        return ""

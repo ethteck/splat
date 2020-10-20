@@ -31,9 +31,5 @@ class N64SegYay0(N64Segment):
 
 
     @staticmethod
-    def create_makefile_target():
-        return ""
-
-    @staticmethod
     def get_default_name(addr):
         return "bin/Yay0/{:X}".format(addr)
