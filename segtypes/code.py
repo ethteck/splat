@@ -70,6 +70,7 @@ class N64SegCode(N64Segment):
     def __init__(self, segment, next_segment, options):
         super().__init__(segment, next_segment, options)
         self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
+        self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
         self.glabels_to_add = set()
         self.glabels_added = set()
@@ -86,14 +87,16 @@ class N64SegCode(N64Segment):
             return "func_{:X}".format(addr)
 
 
-    def get_unique_func_name(self, func_name, rom_addr):
-        if func_name in self.all_functions:
-            return func_name + "_" + "{:X}".format(rom_addr)
+    def get_unique_func_name(self, func_addr, rom_addr):
+        func_name = self.get_func_name(func_addr)
+
+        if func_name in self.all_functions or (self.is_overlay and (func_addr >= self.vram_addr) and (func_addr <= self.vram_addr + self.rom_end - self.rom_start)):
+            return func_name + "_{:X}".format(rom_addr)
         return func_name
 
 
     def add_glabel(self, ram_addr, rom_addr):
-        func = self.get_unique_func_name(self.get_func_name(ram_addr), rom_addr)
+        func = self.get_unique_func_name(ram_addr, rom_addr)
         self.glabels_to_add.discard(func)
         self.glabels_added.add(func)
         return "glabel " + func
@@ -174,6 +177,14 @@ class N64SegCode(N64Segment):
             elif mnemonic == "jal":
                 jal_addr = int(op_str, 0)
                 jump_func = self.get_func_name(jal_addr)
+                if (
+                        jump_func.startswith("func_")
+                        and self.is_overlay \
+                        and jal_addr >= self.vram_addr \
+                        and jal_addr <= (self.vram_addr + self.rom_end - self.rom_start)
+                    ):
+                    func_loc = self.rom_start + jal_addr - self.vram_addr
+                    jump_func += "_{:X}".format(func_loc)
 
                 if jump_func not in self.c_functions.values():
                     self.glabels_to_add.add(jump_func)
@@ -375,7 +386,7 @@ class N64SegCode(N64Segment):
                     out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
                     for func in funcs_text:
-                        func_name = self.get_unique_func_name(self.get_func_name(func), funcs_text[func][1])
+                        func_name = self.get_unique_func_name(func, funcs_text[func][1])
 
                         if func_name not in defined_funcs:
                             # TODO make more graceful
@@ -400,7 +411,7 @@ class N64SegCode(N64Segment):
                         c_lines.append("")
 
                         for func in funcs_text:
-                            func_name = self.get_unique_func_name(self.get_func_name(func), funcs_text[func][1])
+                            func_name = self.get_unique_func_name(func, funcs_text[func][1])
                             if self.options["compiler"] == "GCC":
                                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
                             else:
