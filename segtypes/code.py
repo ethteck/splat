@@ -493,7 +493,7 @@ class N64SegCode(N64Segment):
             subdir = self.get_subdir(split_file["subtype"])
             section_name2 = self.get_sect_name_2(split_file["subtype"], section_name)
 
-            if self.options.get("o_as_suffix", False):
+            if not self.options.get("ld_o_replace_extension", True):
                 ret.append("        build/{}/{}.{}.o({});".format(subdir, split_file["name"], self.get_ext(split_file["subtype"]), section_name2))
             else:
                 ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
