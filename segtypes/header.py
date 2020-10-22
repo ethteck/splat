@@ -53,7 +53,10 @@ class N64SegHeader(N64Segment):
         lines = []
         lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
         lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        lines.append("        build/asm/{}.o(.data);".format(self.name))
+        if self.options.get("o_as_suffix", False):
+            lines.append("        build/asm/{}.s.o(.data);".format(self.name))
+        else:
+            lines.append("        build/asm/{}.o(.data);".format(self.name))
         lines.append("    }")
         lines.append("")
         lines.append("")

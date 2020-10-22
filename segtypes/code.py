@@ -376,7 +376,7 @@ class N64SegCode(N64Segment):
                 funcs_text = self.add_labels(funcs)
 
                 if split_file["subtype"] == "c":
-                    c_path = os.path.join(base_path, "src", split_file["name"] + ".c")
+                    c_path = os.path.join(base_path, "src", split_file["name"] + "." + self.get_exit(split_file["subtype"]))
 
                     if os.path.exists(c_path):
                         defined_funcs = get_funcs_defined_in_c(c_path)
@@ -397,7 +397,7 @@ class N64SegCode(N64Segment):
                             out_lines.extend(funcs_text[func][0])
                             out_lines.append("")
 
-                            outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
+                            outpath = Path(os.path.join(out_dir, split_file["name"], func_name + "." + self.get_exit(split_file["subtype"])))
                             outpath.parent.mkdir(parents=True, exist_ok=True)
 
                             with open(outpath, "w", newline="\n") as f:
@@ -440,7 +440,7 @@ class N64SegCode(N64Segment):
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
-                bin_path = os.path.join(out_dir, split_file["name"] + ".bin")
+                bin_path = os.path.join(out_dir, split_file["name"] + "." + self.get_exit(split_file["subtype"]))
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"] : split_file["end"]])
@@ -452,6 +452,17 @@ class N64SegCode(N64Segment):
             return "src"
         elif subtype in ["asm", "hasm", "header"]:
             return "asm"
+        return subtype
+
+
+    @staticmethod
+    def get_ext(subtype):
+        if subtype in ["c", ".data", ".rodata"]:
+            return "c"
+        elif subtype in ["asm", "hasm", "header"]:
+            return "s"
+        elif subtype == "bin":
+            return "bin"
         return subtype
 
 
@@ -481,7 +492,11 @@ class N64SegCode(N64Segment):
         for split_file in self.files:
             subdir = self.get_subdir(split_file["subtype"])
             section_name2 = self.get_sect_name_2(split_file["subtype"], section_name)
-            ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
+
+            if self.options.get("o_as_suffix", False):
+                ret.append("        build/{}/{}.{}.o({});".format(subdir, split_file["name"], self.get_ext(split_file["subtype"]), section_name2))
+            else:
+                ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
 
         ret.append("    }")
         ret.append("")
