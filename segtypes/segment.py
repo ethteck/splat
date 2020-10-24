@@ -88,7 +88,7 @@ class N64Segment:
             f"RAM_{sect_name} = 0x{vram_or_rom:X};\n"
         )
 
-        return s
+        return s, (f"ROM_{sect_name}", f"ROM_END_{sect_name}", f"RAM_{sect_name}")
 
 
     def get_ld_section_name(self):

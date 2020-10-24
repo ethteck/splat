@@ -22,21 +22,8 @@ parser.add_argument("--verbose", action="store_true", help="Enable debug logging
 def write_ldscript(rom_name, repo_path, sections):
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
         f.write(
-            #"#define BEGIN_SEG(name, addr) \\\n"
-            #"    _##name##SegmentStart = ADDR(.name); \\\n"
-            #"    _##name##SegmentRomStart = __romPos; \\\n"
-            #"    .name addr : AT(__romPos)\n"
-            #"\n"
-            #"#define END_SEG(name) \\\n"
-            #"    _##name##SegmentEnd = ADDR(.name) + SIZEOF(.name); \\\n"
-            #"    _##name##SegmentRomEnd = __romPos + SIZEOF(.name); \\\n"
-            #"    __romPos += SIZEOF(.name);\n"
-            #"\n"
             "SECTIONS\n"
             "{\n"
-            #"    __romPos = 0;\n"
-            #"\n"
-            "    "
         )
         f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
         f.write(
@@ -44,6 +31,22 @@ def write_ldscript(rom_name, repo_path, sections):
             "}\n"
         )
 
+
+def write_ld_addrs_h(repo_path, symbols):
+    with open(os.path.join(repo_path, "include", "ld_addrs.h"), "w") as f:
+        f.write(
+            "#ifndef _LD_ADDRS_H_\n"
+            "#define _LD_ADDRS_H_\n"
+            "\n"
+        )
+        for symbol in symbols:
+            f.write("extern void* ")
+            f.write(symbol)
+            f.write(";\n")
+        f.write(
+            "\n"
+            "#endif\n"
+        )
 
 def parse_file_start(split_file):
     return split_file[0] if "start" not in split_file else split_file["start"]
@@ -143,7 +146,8 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     c_vars = gather_c_variables(repo_path)
 
     segments = []
-    sections = []
+    ld_sections = []
+    ld_symbols = set()
     seen_segment_names = set()
 
     defined_funcs = set()
@@ -181,11 +185,14 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             defined_funcs |= segment.glabels_added
             undefined_funcs |= segment.glabels_to_add
 
-        sections.append(segment.get_ld_section())
+        ld_section, seg_ld_symbols = segment.get_ld_section()
+        ld_sections.append(ld_section)
+        ld_symbols.update(seg_ld_symbols)
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
-        write_ldscript(config['basename'], repo_path, sections)
+        write_ldscript(config['basename'], repo_path, ld_sections)
+        write_ld_addrs_h(repo_path, ld_symbols)
 
     # Write undefined_funcs.txt
     c_predefined_funcs = set(c_funcs.keys())
