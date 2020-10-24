@@ -16,16 +16,33 @@ parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
-parser.add_argument("--verbose", help="Enable debug logging")
+parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
 
 
 def write_ldscript(rom_name, repo_path, sections):
-    mid = ""
-    for section in sections:
-        mid += section
-
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
-        f.write("SECTIONS\n{\n" + mid + "}")
+        f.write(
+            #"#define BEGIN_SEG(name, addr) \\\n"
+            #"    _##name##SegmentStart = ADDR(.name); \\\n"
+            #"    _##name##SegmentRomStart = __romPos; \\\n"
+            #"    .name addr : AT(__romPos)\n"
+            #"\n"
+            #"#define END_SEG(name) \\\n"
+            #"    _##name##SegmentEnd = ADDR(.name) + SIZEOF(.name); \\\n"
+            #"    _##name##SegmentRomEnd = __romPos + SIZEOF(.name); \\\n"
+            #"    __romPos += SIZEOF(.name);\n"
+            #"\n"
+            "SECTIONS\n"
+            "{\n"
+            #"    __romPos = 0;\n"
+            #"\n"
+            "    "
+        )
+        f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
+        f.write(
+            "\n"
+            "}\n"
+        )
 
 
 def parse_file_start(split_file):
@@ -127,6 +144,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
     segments = []
     sections = []
+    seen_segment_names = set()
 
     defined_funcs = set()
     undefined_funcs = set()
@@ -144,6 +162,11 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
         segment = segment_class(segment, config['segments'][i + 1], options)
         segments.append(segment)
+
+        if segment.name in seen_segment_names:
+            print(f"ERROR: Segment name {segment.name} is not unique")
+            exit(1)
+        seen_segment_names.add(segment.name)
 
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs

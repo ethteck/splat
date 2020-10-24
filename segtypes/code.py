@@ -44,13 +44,16 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
             if type(split_file) is dict:
                 start = split_file["start"]
                 end = split_file["end"]
-                name = "{}{:X}".format(prefix, start) if "name" not in split_file else split_file["name"]
+                name = None if "name" not in split_file else split_file["name"]
                 subtype = split_file["type"]
             else:
                 start = split_file[0]
                 end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
-                name = "{}{:X}".format(prefix, start) if len(split_file) < 3 else split_file[2]
+                name = None if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
+
+            if not name:
+                name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(seg_start) else f"{prefix}{start:X}"
 
             if segment.get("vram_lock", False):
                 vram = seg_vram
@@ -78,6 +81,12 @@ class N64SegCode(N64Segment):
         self.c_functions = {}
         self.c_variables = {}
         self.c_labels_to_add = set()
+        self.ld_section_name = "." + segment.get("ld_name", f"text_{self.rom_start:X}")
+
+
+    @staticmethod
+    def get_default_name(addr):
+        return f"code_{addr:X}"
 
 
     def get_func_name(self, addr):
@@ -471,7 +480,7 @@ class N64SegCode(N64Segment):
 
 
     @staticmethod
-    def get_sect_name_2(subtype, section_name):
+    def get_ld_obj_type(subtype, section_name):
         if subtype in "c":
             return ".text"
         elif subtype in ["bin", ".data"]:
@@ -481,24 +490,18 @@ class N64SegCode(N64Segment):
         return section_name
 
 
-    def get_ld_section(self):
-        ret = []
+    def get_ld_files(self):
+        section_name = self.get_ld_section_name()
 
-        section_name = self.get_sect_name()
-
-        ret.append("    /* 0x{:X} {:X}-{:X} (len {:X}) */".format(self.vram_addr, self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        ret.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.vram_addr, self.rom_start) + "{")
-
-        for split_file in self.files:
+        def transform(split_file):
             subdir = self.get_subdir(split_file["subtype"])
-            section_name2 = self.get_sect_name_2(split_file["subtype"], section_name)
+            obj_type = self.get_ld_obj_type(split_file["subtype"], "." + section_name)
+            ext = self.get_ext(split_file['subtype'])
 
-            if not self.options.get("ld_o_replace_extension", True):
-                ret.append("        build/{}/{}.{}.o({});".format(subdir, split_file["name"], self.get_ext(split_file["subtype"]), section_name2))
-            else:
-                ret.append("        build/{}/{}.o({});".format(subdir, split_file["name"], section_name2))
+            return subdir, f"{split_file['name']}.{ext}", obj_type
 
-        ret.append("    }")
-        ret.append("")
-        ret.append("")
-        return "\n".join(ret)
+        return [transform(file) for file in self.files]
+
+
+    def get_ld_section_name(self):
+        return f"text_{self.rom_start:X}"

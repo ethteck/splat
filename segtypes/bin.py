@@ -14,17 +14,10 @@ class N64SegBin(N64Segment):
             self.log(f"Wrote {self.name} to {bin_path}")
 
 
-    def get_ld_section(self):
-        section_name = ".data_{}".format(self.name)
+    def get_ld_files(self):
+        return [("bin", f"{self.name}.bin", ".data")]
 
-        lines = []
-        lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        if not self.options.get("ld_o_replace_extension", True):
-            lines.append("        build/bin/{}.bin.o(.data);".format(self.name))
-        else:
-            lines.append("        build/bin/{}.o(.data);".format(self.name))
-        lines.append("    }")
-        lines.append("")
-        lines.append("")
-        return "\n".join(lines)
+
+    @staticmethod
+    def get_default_name(addr):
+        return "bin_{:X}".format(addr)

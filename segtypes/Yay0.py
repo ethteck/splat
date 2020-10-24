@@ -6,7 +6,7 @@ from util import Yay0decompress
 class N64SegYay0(N64Segment):
     def split(self, rom_bytes, base_path):
         if self.type in self.options["modes"] or "all" in self.options["modes"]:
-            out_dir = self.create_parent_dir(base_path, self.name)
+            out_dir = self.create_parent_dir(base_path + "/bin", self.name)
 
             path = os.path.join(out_dir, os.path.basename(self.name) + ".bin")
             with open(path, "wb") as f:
@@ -17,19 +17,10 @@ class N64SegYay0(N64Segment):
             self.log(f"Wrote {self.name} to {path}")
 
 
-    def get_ld_section(self):
-        section_name = ".data_{}".format(self.rom_start)
-
-        lines = []
-        lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        lines.append("        build/{}.Yay0.o(.data);".format(self.name))
-        lines.append("    }")
-        lines.append("")
-        lines.append("")
-        return "\n".join(lines)
+    def get_ld_files(self):
+        return [("bin", f"{self.name}.Yay0", ".data")]
 
 
     @staticmethod
     def get_default_name(addr):
-        return "bin/Yay0/{:X}".format(addr)
+        return "Yay0/{:X}".format(addr)

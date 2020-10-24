@@ -7,7 +7,7 @@ class N64SegHeader(N64Segment):
         out_dir = self.create_split_dir(base_path, "asm")
 
         header_lines = []
-        header_lines.append(".section .header, \"a\"\n")
+        header_lines.append(f".section .{self.name}, \"a\"\n")
 
         pi_bsd = rom_bytes[0x00:0x04].hex().upper()
         clock_rate = rom_bytes[0x04:0x08].hex().upper()
@@ -47,17 +47,14 @@ class N64SegHeader(N64Segment):
         self.log(f"Wrote {self.name} to {s_path}")
 
 
-    def get_ld_section(self):
-        section_name = ".header"
+    def get_ld_section_name(self):
+        return self.name
 
-        lines = []
-        lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        if not self.options.get("ld_o_replace_extension", True):
-            lines.append("        build/asm/{}.s.o(.data);".format(self.name))
-        else:
-            lines.append("        build/asm/{}.o(.data);".format(self.name))
-        lines.append("    }")
-        lines.append("")
-        lines.append("")
-        return "\n".join(lines)
+
+    def get_ld_files(self):
+        return [("asm", f"{self.name}.s", ".data")]
+
+
+    @staticmethod
+    def get_default_name(addr):
+        return "header"

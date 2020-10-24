@@ -1,5 +1,6 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
+import re
 
 
 def parse_segment_start(segment):
@@ -14,13 +15,12 @@ def parse_segment_type(segment):
 
 
 def parse_segment_name(segment, segment_class):
-    if type(segment) is dict:
+    if type(segment) is dict and "name" in segment:
         return segment["name"]
+    elif type(segment) is list and len(segment) >= 3 and type(segment[2]) is str:
+        return segment[2]
     else:
-        if len(segment) >= 3 and type(segment[2]) is str:
-            return segment[2]
-        else:
-            return segment_class.get_default_name(parse_segment_start(segment))
+        return segment_class.get_default_name(parse_segment_start(segment))
 
 
 def parse_segment_vram(segment):
@@ -40,10 +40,12 @@ class N64Segment:
         self.type = parse_segment_type(segment)
         self.name = parse_segment_name(segment, self.__class__)
         self.vram_addr = parse_segment_vram(segment)
+        self.ld_name_override = segment.get("ld_name", None) if type(segment) is dict else None
         self.options = options
 
 
-    def get_length(self):
+    @property
+    def rom_length(self):
         return self.rom_end - self.rom_start
 
 
@@ -64,7 +66,38 @@ class N64Segment:
 
 
     def get_ld_section(self):
-        pass
+        replace_ext = self.options.get("ld_o_replace_extension", True)
+        sect_name = self.ld_name_override if self.ld_name_override else self.get_ld_section_name()
+        vram_or_rom = self.rom_start if self.vram_addr == 0 else self.vram_addr
+
+        s = (
+            f"/* 0x{self.vram_addr:08X} {self.rom_start:X}-{self.rom_end:X} (len {self.rom_length:X}) */\n"
+            f".{sect_name} 0x{vram_or_rom:X} : AT(0x{self.rom_start:X}) {{\n"
+        )
+
+        for subdir, path, obj_type in self.get_ld_files():
+            path = PurePath(subdir) / PurePath(path)
+            path = path.with_suffix(".o" if replace_ext else path.suffix + ".o")
+
+            s += f"    BUILD_DIR/{path}({obj_type});\n"
+
+        s += (
+            "}\n"
+            f"ROM_{sect_name} = 0x{self.rom_start:X};\n"
+            f"ROM_END_{sect_name} = 0x{self.rom_end:X};\n"
+            f"RAM_{sect_name} = 0x{vram_or_rom:X};\n"
+        )
+
+        return s
+
+
+    def get_ld_section_name(self):
+        return f"data_{self.rom_start:X}"
+
+
+    # returns list of (basedir, filename, obj_type)
+    def get_ld_files(self):
+        return []
 
 
     def log(self, msg):
