@@ -121,7 +121,7 @@ class N64SegCode(N64Segment):
         ret.append(".set noreorder # don't insert nops after branches")
         ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
-        ret.append(".section {}, \"ax\"".format(self.get_sect_name()))
+        ret.append(".section .text, \"ax\"")
         ret.append("")
 
         return ret
@@ -298,6 +298,7 @@ class N64SegCode(N64Segment):
                                     else:
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
+                                        # self.glabels_to_add.add(sym_name)
 
                                     func[i] += ("%hi({})".format(sym_name),)
                                     func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
@@ -475,10 +476,6 @@ class N64SegCode(N64Segment):
         return subtype
 
 
-    def get_sect_name(self):
-        return ".text_{:X}".format(self.rom_start)
-
-
     @staticmethod
     def get_ld_obj_type(subtype, section_name):
         if subtype in "c":
@@ -491,17 +488,11 @@ class N64SegCode(N64Segment):
 
 
     def get_ld_files(self):
-        section_name = self.get_ld_section_name()
-
         def transform(split_file):
             subdir = self.get_subdir(split_file["subtype"])
-            obj_type = self.get_ld_obj_type(split_file["subtype"], "." + section_name)
+            obj_type = self.get_ld_obj_type(split_file["subtype"], ".text")
             ext = self.get_ext(split_file['subtype'])
 
             return subdir, f"{split_file['name']}.{ext}", obj_type
 
         return [transform(file) for file in self.files]
-
-
-    def get_ld_section_name(self):
-        return f"text_{self.rom_start:X}"
