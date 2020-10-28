@@ -2,7 +2,6 @@ import os
 from segtypes.segment import N64Segment
 from pathlib import Path
 from util import Yay0decompress
-import json
 
 def decode_null_terminated_ascii(data):
     length = 0
@@ -16,18 +15,13 @@ def decode_null_terminated_ascii(data):
 class N64SegPaperMarioMapFS(N64Segment):
     def __init__(self, segment, next_segment, options):
         super().__init__(segment, next_segment, options)
-        self.paths = segment.get("paths", {})
+
 
     def split(self, rom_bytes, base_path):
         if self.type in self.options["modes"] or "all" in self.options["modes"]:
-            fs_dir = self.create_split_dir(base_path, self.name)
+            bin_dir = self.create_split_dir(base_path, "bin/assets")
 
             data = rom_bytes[self.rom_start : self.rom_end]
-
-            filesystem = {
-                "title": decode_null_terminated_ascii(data[0:0x20]),
-                "assets": [],
-            }
 
             asset_idx = 0
             while True:
@@ -43,15 +37,13 @@ class N64SegPaperMarioMapFS(N64Segment):
                 if offset == 0:
                     path = None
                 else:
-                    path = self.paths.get(name, "{}.bin".format(name))
-                    self.create_parent_dir(fs_dir, path)
+                    path = "{}.bin".format(name)
+                    self.create_parent_dir(bin_dir, path)
 
                 if name == "end_data":
                     break
 
-                filesystem["assets"].append({ "name": name, "path": path, "compress": is_compressed })
-
-                with open(os.path.join(fs_dir, path), "wb") as f:
+                with open(os.path.join(bin_dir, path), "wb") as f:
                     bytes = rom_bytes[self.rom_start + 0x20 + offset : self.rom_start + 0x20 + offset + size]
 
                     if is_compressed:
@@ -59,22 +51,15 @@ class N64SegPaperMarioMapFS(N64Segment):
                         bytes = Yay0decompress.decompress_yay0(bytes)
 
                     f.write(bytes)
-                    self.log(f"Wrote {name} to {Path(fs_dir, path)}")
+                    self.log(f"Wrote {name} to {Path(bin_dir, path)}")
 
                 asset_idx += 1
 
-            with open(os.path.join(base_path, "{}.json".format(self.name)), "w") as f:
-                json.dump(filesystem, f, indent=4)
+
+    def get_ld_files(self):
+        return [("bin/assets", self.name, ".data")]
 
 
-    def get_ld_section(self):
-        section_name = ".data_{}".format(self.rom_start)
-
-        lines = []
-        lines.append("    /* 0x00000000 {:X}-{:X} [{:X}] */".format(self.rom_start, self.rom_end, self.rom_end - self.rom_start))
-        lines.append("    {} 0x{:X} : AT(0x{:X}) ".format(section_name, self.rom_start, self.rom_start) + "{")
-        lines.append("        build/{}.o(.data);".format(self.name))
-        lines.append("    }")
-        lines.append("")
-        lines.append("")
-        return "\n".join(lines)
+    @staticmethod
+    def get_default_name(addr):
+        return "assets"
