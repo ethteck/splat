@@ -32,8 +32,8 @@ def write_ldscript(rom_name, repo_path, sections):
         )
 
 
-def write_ld_addrs_h(repo_path, symbols):
-    with open(os.path.join(repo_path, "include", "ld_addrs.h"), "w") as f:
+def write_ld_addrs_h(repo_path, h_path, symbols):
+    with open(os.path.join(repo_path, h_path), "w") as f:
         f.write(
             "#ifndef _LD_ADDRS_H_\n"
             "#define _LD_ADDRS_H_\n"
@@ -192,7 +192,9 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
         write_ldscript(config['basename'], repo_path, ld_sections)
-        write_ld_addrs_h(repo_path, ld_symbols)
+
+        if "ld_addrs_header" in options:
+            write_ld_addrs_h(repo_path, options["ld_addrs_header"], ld_symbols)
 
     # Write undefined_funcs.txt
     c_predefined_funcs = set(c_funcs.keys())
