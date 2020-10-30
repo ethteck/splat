@@ -501,5 +501,5 @@ class N64SegCode(N64Segment):
     def get_ld_section_name(self):
         path = PurePath(self.name)
         name = path.name if path.name != "" else path.parent
-        print(name)
+
         return f"code_{name}"
