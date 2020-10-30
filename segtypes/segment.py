@@ -83,12 +83,12 @@ class N64Segment:
 
         s += (
             "}\n"
-            f"ROM_{sect_name} = 0x{self.rom_start:X};\n"
-            f"ROM_END_{sect_name} = 0x{self.rom_end:X};\n"
-            f"RAM_{sect_name} = 0x{vram_or_rom:X};\n"
+            f"{sect_name}_ROM_START = 0x{self.rom_start:X};\n"
+            f"{sect_name}_ROM_END = 0x{self.rom_end:X};\n"
+            f"{sect_name}_VRAM = 0x{vram_or_rom:X};\n"
         )
 
-        return s, (f"ROM_{sect_name}", f"ROM_END_{sect_name}", f"RAM_{sect_name}")
+        return s, (f"{sect_name}_ROM_START", f"{sect_name}_ROM_END", f"{sect_name}_VRAM")
 
 
     def get_ld_section_name(self):
@@ -103,6 +103,10 @@ class N64Segment:
     def log(self, msg):
         if self.options.get("verbose", False):
             print(msg)
+
+
+    def is_name_default(self):
+        return self.name == self.get_default_name(self.rom_end)
 
 
     @staticmethod
