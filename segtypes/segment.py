@@ -97,14 +97,13 @@ class N64Segment:
 
             s += f"    BUILD_DIR/{path}({obj_type});\n"
 
-        s += (
-            "}\n"
-            f"ROM_{sect_name} = 0x{self.rom_start:X};\n"
-            f"ROM_END_{sect_name} = 0x{self.rom_end:X};\n"
-            f"RAM_{sect_name} = 0x{vram_or_rom:X};\n"
-        )
+        s += "}\n"
 
-        return s, (f"ROM_{sect_name}", f"ROM_END_{sect_name}", f"RAM_{sect_name}")
+        return s, {
+            f"{sect_name}_ROM_START": self.rom_start,
+            f"{sect_name}_ROM_END": self.rom_end,
+            f"{sect_name}_VRAM": vram_or_rom,
+        }
 
 
     def get_ld_section_name(self):
@@ -123,6 +122,10 @@ class N64Segment:
 
     def max_length(self):
         return None
+
+    
+    def is_name_default(self):
+        return self.name == self.get_default_name(self.rom_end)
 
 
     @staticmethod

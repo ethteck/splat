@@ -4,7 +4,7 @@ from capstone.mips import *
 from collections import OrderedDict
 from segtypes.segment import N64Segment, parse_segment_name
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 import re
 
 
@@ -496,3 +496,10 @@ class N64SegCode(N64Segment):
             return subdir, f"{split_file['name']}.{ext}", obj_type
 
         return [transform(file) for file in self.files]
+
+
+    def get_ld_section_name(self):
+        path = PurePath(self.name)
+        name = path.name if path.name != "" else path.parent
+
+        return f"code_{name}"

@@ -8,6 +8,7 @@ from pathlib import Path
 import segtypes
 import sys
 import yaml
+from collections import OrderedDict
 from segtypes.segment import parse_segment_type
 from segtypes.code import N64SegCode
 
@@ -35,16 +36,23 @@ def write_ldscript(rom_name, repo_path, sections):
 def write_ld_addrs_h(repo_path, h_path, symbols):
     with open(os.path.join(repo_path, h_path), "w") as f:
         f.write(
-            "#ifndef _LD_ADDRS_H_\n"
-            "#define _LD_ADDRS_H_\n"
+            "#ifndef _SPLAT_LD_ADDRS_H_\n"
+            "#define _SPLAT_LD_ADDRS_H_\n"
             "\n"
         )
-        for symbol in symbols:
+        for symbol, addr in symbols.items():
             f.write("extern void* ")
             f.write(symbol)
             f.write(";\n")
+
+            f.write("#define LD_")
+            f.write(symbol)
+            f.write(" ")
+            f.write(f"0x{addr:X}")
+            f.write("\n")
+
+            f.write("\n")
         f.write(
-            "\n"
             "#endif\n"
         )
 
@@ -147,7 +155,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
     segments = []
     ld_sections = []
-    ld_symbols = set()
+    ld_symbols = OrderedDict()
     seen_segment_names = set()
 
     defined_funcs = set()
@@ -190,6 +198,10 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             undefined_funcs |= segment.glabels_to_add
 
         ld_section, seg_ld_symbols = segment.get_ld_section()
+
+        for symbol, addr in seg_ld_symbols.items():
+            ld_section += f"{symbol} = 0x{addr:X};\n"
+
         ld_sections.append(ld_section)
         ld_symbols.update(seg_ld_symbols)
 
