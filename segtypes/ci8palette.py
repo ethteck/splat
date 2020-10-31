@@ -2,7 +2,6 @@ import os
 from segtypes.segment import N64Segment
 from util.color import unpack_color
 from util.iter import iter_in_groups
-from PIL.ImagePalette import ImagePalette
 
 class N64SegCi8palette(N64Segment):
     require_unique_name = False
