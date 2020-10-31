@@ -34,6 +34,8 @@ def parse_segment_vram(segment):
 
 
 class N64Segment:
+    require_unique_name = True
+
     def __init__(self, segment, next_segment, options):
         self.rom_start = parse_segment_start(segment)
         self.rom_end = parse_segment_start(next_segment)
@@ -42,6 +44,16 @@ class N64Segment:
         self.vram_addr = parse_segment_vram(segment)
         self.ld_name_override = segment.get("ld_name", None) if type(segment) is dict else None
         self.options = options
+
+
+    def check(self):
+        if self.rom_start > self.rom_end:
+            print(f"WARNING: {self.type} {self.name} is out-of-order")
+        elif self.max_length():
+            expected_len = int(self.max_length())
+            actual_len = self.rom_end - self.rom_start
+            if actual_len > expected_len:
+                print(f"WARNING: {self.type} {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X} (hint: add a 'bin' segment after {self.name})")
 
 
     @property
@@ -62,6 +74,10 @@ class N64Segment:
 
 
     def split(self, rom_bytes, base_path):
+        pass
+
+
+    def postsplit(self, segments):
         pass
 
 
@@ -104,6 +120,10 @@ class N64Segment:
             print(msg)
 
 
+    def max_length(self):
+        return None
+
+    
     def is_name_default(self):
         return self.name == self.get_default_name(self.rom_end)
 

@@ -175,10 +175,11 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         segment = segment_class(segment, config['segments'][i + 1], options)
         segments.append(segment)
 
-        if segment.name in seen_segment_names:
-            print(f"ERROR: Segment name {segment.name} is not unique")
-            exit(1)
-        seen_segment_names.add(segment.name)
+        if segment_class.require_unique_name:
+            if segment.name in seen_segment_names:
+                print(f"ERROR: Segment name {segment.name} is not unique")
+                exit(1)
+            seen_segment_names.add(segment.name)
 
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs
@@ -186,7 +187,10 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
 
-        print(f"Splitting segment {segment.name} at 0x{segment.rom_start:X}")
+        if verbose:
+            print(f"Splitting {segment.type} {segment.name} at 0x{segment.rom_start:X}")
+
+        segment.check()
         segment.split(rom_bytes, repo_path)
 
         if type(segment) == N64SegCode:
@@ -200,6 +204,9 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
         ld_sections.append(ld_section)
         ld_symbols.update(seg_ld_symbols)
+
+    for segment in segments:
+        segment.postsplit(segments)
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
