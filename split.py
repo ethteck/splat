@@ -3,6 +3,7 @@
 import argparse
 import importlib
 import os
+from ranges import Range, RangeDict
 import re
 from pathlib import Path
 import segtypes
@@ -56,6 +57,7 @@ def write_ld_addrs_h(repo_path, h_path, symbols):
             "#endif\n"
         )
 
+
 def parse_file_start(split_file):
     return split_file[0] if "start" not in split_file else split_file["start"]
 
@@ -63,6 +65,7 @@ def parse_file_start(split_file):
 def gather_c_funcs(repo_path):
     funcs = {}
     labels_to_add = set()
+    ranges = RangeDict()
 
     funcs_path = os.path.join(repo_path, "include", "functions.h")
     if os.path.exists(funcs_path):
@@ -89,16 +92,29 @@ def gather_c_funcs(repo_path):
             func_addrs_lines = f.readlines()
 
         for line in func_addrs_lines:
-            line_split = line.strip().split(";")
-            name = line_split[0]
-            if name.startswith("!"):
-                name = name[1:]
-                labels_to_add.add(name)
+            line = line.strip()
+            if not line == "" and not line.startswith("//"):
+                comment_loc = line.find("//")
+                line_ext = ""
 
-            addr = int(line_split[1], 0)
-            funcs[addr] = name
+                if comment_loc != -1:
+                    line_ext = line[comment_loc + 2:].strip()
+                    line = line[:comment_loc].strip()
+                
+                line_split = line.split("=")
+                name = line_split[0].strip()
+                addr = int(line_split[1].strip()[:-1], 0)
+                funcs[addr] = name
 
-    return funcs, labels_to_add
+                if line_ext:
+                    for info in line_ext.split(" "):
+                        if info == "!":
+                            labels_to_add.add(name)
+                        if info.startswith("size:"):
+                            size = int(info.split(":")[1], 0)
+                            ranges.add(Range(addr, addr + size), name)
+
+    return funcs, labels_to_add, ranges
 
 
 def gather_c_variables(repo_path):
@@ -150,7 +166,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     options["modes"] = modes
     options["verbose"] = verbose
 
-    c_funcs, c_func_labels_to_add = gather_c_funcs(repo_path)
+    c_funcs, c_func_labels_to_add, ranges = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
 
     segments = []
@@ -186,6 +202,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.c_functions = c_funcs
             segment.c_variables = c_vars
             segment.c_labels_to_add = c_func_labels_to_add
+            segment.symbol_ranges = ranges
 
         if verbose:
             print(f"Splitting {segment.type} {segment.name} at 0x{segment.rom_start:X}")

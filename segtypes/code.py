@@ -5,6 +5,7 @@ from collections import OrderedDict
 from segtypes.segment import N64Segment, parse_segment_name
 import os
 from pathlib import Path, PurePath
+from ranges import Range, RangeDict
 import re
 
 
@@ -82,6 +83,7 @@ class N64SegCode(N64Segment):
         self.c_variables = {}
         self.c_labels_to_add = set()
         self.ld_section_name = "." + segment.get("ld_name", f"text_{self.rom_start:X}")
+        self.symbol_ranges = RangeDict()
 
 
     @staticmethod
@@ -291,15 +293,21 @@ class N64SegCode(N64Segment):
 
                                     symbol_addr = (lui_val * 0x10000) + s_val
 
+                                    offset = 0
                                     if symbol_addr in self.c_variables:
                                         sym_name = self.c_variables[symbol_addr]
                                     elif symbol_addr in self.c_functions:
                                         sym_name = self.c_functions[symbol_addr]
+                                    elif symbol_addr in self.symbol_ranges:
+                                        sym_name = self.symbol_ranges.get(symbol_addr)
+                                        offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
                                     else:
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
                                         # self.glabels_to_add.add(sym_name)
 
+                                    if offset != 0:
+                                        sym_name += f"+0x{offset:X}"
                                     func[i] += ("%hi({})".format(sym_name),)
                                     func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
                                     break
@@ -353,7 +361,9 @@ class N64SegCode(N64Segment):
 
             if self.options.get("find-file-boundaries"):
                 if func != next(reversed(funcs)) and self.is_nops([i[0] for i in funcs[func][-2:]]):
-                    print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, funcs[func][-1][3] + 4))
+                    new_file_addr = funcs[func][-1][3] + 4
+                    if (new_file_addr % 16) == 0:
+                        print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, new_file_addr))
 
         return ret
 
@@ -371,6 +381,9 @@ class N64SegCode(N64Segment):
         for split_file in self.files:
             if split_file["subtype"] in ["asm", "hasm", "c"]:
                 if self.type not in self.options["modes"] and "all" not in self.options["modes"]:
+                    continue
+
+                if split_file["start"] == split_file["end"]:
                     continue
 
                 out_dir = self.create_split_dir(base_path, "asm")
