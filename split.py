@@ -51,14 +51,6 @@ def write_ld_addrs_h(repo_path, h_path, symbols):
             f.write("extern void* ")
             f.write(symbol)
             f.write(";\n")
-
-            f.write("#define LD_")
-            f.write(symbol)
-            f.write(" ")
-            f.write(f"0x{addr:X}")
-            f.write("\n")
-
-            f.write("\n")
         f.write(
             "#endif\n"
         )
