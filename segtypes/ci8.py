@@ -39,7 +39,7 @@ class N64SegCi8(N64SegRgba16):
                 self.log(f"Wrote {pal_seg.name} to {pal_seg.path}")
 
         # canonical version of image (not palette!) data
-        if self.path not in seen_paths:
+        if self.path and self.path not in seen_paths:
             w = png.Writer(self.width, self.height,
                            palette=palettes[0].palette)
 
