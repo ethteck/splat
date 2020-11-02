@@ -85,7 +85,9 @@ class N64Segment:
 
         s = (
             f"/* 0x{self.vram_addr:08X} {self.rom_start:X}-{self.rom_end:X} (len {self.rom_length:X}) */\n"
-            f".{sect_name} 0x{vram_or_rom:X} : AT(0x{self.rom_start:X}) {{\n"
+            f"{sect_name}_ROM_START = __romPos;\n"
+            f"{sect_name}_VRAM = ADDR(.{sect_name});\n"
+            f".{sect_name} 0x{vram_or_rom:X} : AT({sect_name}_ROM_START) {{\n"
         )
 
         for subdir, path, obj_type in self.get_ld_files():
@@ -95,13 +97,13 @@ class N64Segment:
 
             s += f"    BUILD_DIR/{path}({obj_type});\n"
 
-        s += "}\n"
+        s += (
+            "}\n"
+            f"{sect_name}_ROM_END = __romPos + SIZEOF(.{sect_name});\n"
+            f"__romPos += SIZEOF(.{sect_name});\n"
+        )
 
-        return s, {
-            f"{sect_name}_ROM_START": self.rom_start,
-            f"{sect_name}_ROM_END": self.rom_end,
-            f"{sect_name}_VRAM": vram_or_rom,
-        }
+        return s
 
     def get_ld_section_name(self):
         return f"data_{self.rom_start:X}"
