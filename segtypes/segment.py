@@ -85,7 +85,11 @@ class N64Segment:
 
         s = (
             f"/* 0x{self.vram_addr:08X} {self.rom_start:X}-{self.rom_end:X} (len {self.rom_length:X}) */\n"
+            "#ifdef SHIFT\n"
             f"{sect_name}_ROM_START = __romPos;\n"
+            "#else\n"
+            f"{sect_name}_ROM_START = 0x{self.rom_start:X};\n"
+            "#endif\n"
             f"{sect_name}_VRAM = ADDR(.{sect_name});\n"
             f".{sect_name} 0x{vram_or_rom:X} : AT({sect_name}_ROM_START) {{\n"
         )
@@ -99,8 +103,13 @@ class N64Segment:
 
         s += (
             "}\n"
+            "#ifdef SHIFT\n"
             f"{sect_name}_ROM_END = __romPos + SIZEOF(.{sect_name});\n"
             f"__romPos += SIZEOF(.{sect_name});\n"
+            "#else\n"
+            f"{sect_name}_ROM_END = 0x{self.rom_end:X};\n"
+            f"__romPos += 0x{self.rom_length:X};\n"
+            "#endif\n"
         )
 
         return s
