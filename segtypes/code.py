@@ -14,6 +14,7 @@ STRIP_C_COMMENTS_RE = re.compile(
     re.DOTALL | re.MULTILINE
 )
 
+
 def strip_c_comments(text):
     def replacer(match):
         s = match.group(0)
@@ -28,6 +29,7 @@ C_FUNC_RE = re.compile(
     r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
     re.MULTILINE
 )
+
 
 def get_funcs_defined_in_c(c_file):
     with open(c_file, "r") as f:
@@ -49,23 +51,27 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 subtype = split_file["type"]
             else:
                 start = split_file[0]
-                end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
+                end = seg_end if i == len(
+                    segment["files"]) - 1 else segment["files"][i + 1][0]
                 name = None if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
 
             if not name:
-                name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(seg_start) else f"{prefix}{start:X}"
+                name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(
+                    seg_start) else f"{prefix}{start:X}"
 
             if segment.get("vram_lock", False):
                 vram = seg_vram
             else:
                 vram = seg_vram + (start - seg_start)
 
-            fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
+            fl = {"start": start, "end": end, "name": name,
+                  "vram": vram, "subtype": subtype}
 
             ret.append(fl)
     else:
-        fl = {"start": seg_start, "end": seg_end, "name": seg_name, "vram": seg_vram, "subtype": "asm"}
+        fl = {"start": seg_start, "end": seg_end,
+              "name": seg_name, "vram": seg_vram, "subtype": "asm"}
         ret.append(fl)
     return ret
 
@@ -73,7 +79,8 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
 class N64SegCode(N64Segment):
     def __init__(self, segment, next_segment, options):
         super().__init__(segment, next_segment, options)
-        self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
+        self.files = parse_segment_files(
+            segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
         self.glabels_to_add = set()
@@ -82,21 +89,19 @@ class N64SegCode(N64Segment):
         self.c_functions = {}
         self.c_variables = {}
         self.c_labels_to_add = set()
-        self.ld_section_name = "." + segment.get("ld_name", f"text_{self.rom_start:X}")
+        self.ld_section_name = "." + \
+            segment.get("ld_name", f"text_{self.rom_start:X}")
         self.symbol_ranges = RangeDict()
-
 
     @staticmethod
     def get_default_name(addr):
         return f"code_{addr:X}"
-
 
     def get_func_name(self, addr):
         if addr in self.c_functions:
             return self.c_functions[addr]
         else:
             return "func_{:X}".format(addr)
-
 
     def get_unique_func_name(self, func_addr, rom_addr):
         func_name = self.get_func_name(func_addr)
@@ -105,13 +110,11 @@ class N64SegCode(N64Segment):
             return func_name + "_{:X}".format(rom_addr)
         return func_name
 
-
     def add_glabel(self, ram_addr, rom_addr):
         func = self.get_unique_func_name(ram_addr, rom_addr)
         self.glabels_to_add.discard(func)
         self.glabels_added.add(func)
         return "glabel " + func
-
 
     def get_header(self):
         ret = []
@@ -121,13 +124,13 @@ class N64SegCode(N64Segment):
         ret.append("# assembler directives")
         ret.append(".set noat      # allow manual use of $at")
         ret.append(".set noreorder # don't insert nops after branches")
-        ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
+        ret.append(
+            ".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
         ret.append(".section .text, \"ax\"")
         ret.append("")
 
         return ret
-
 
     def get_gcc_inc_header(self):
         ret = []
@@ -137,7 +140,6 @@ class N64SegCode(N64Segment):
 
         return ret
 
-
     @staticmethod
     def is_nops(insns):
         for insn in insns:
@@ -145,11 +147,9 @@ class N64SegCode(N64Segment):
                 return False
         return True
 
-
     @staticmethod
     def is_branch_insn(mnemonic):
         return (mnemonic.startswith("b") and not mnemonic.startswith("binsl") and not mnemonic == "break") or mnemonic == "j"
-
 
     def process_insns(self, insns, rom_addr):
         ret = OrderedDict()
@@ -189,11 +189,11 @@ class N64SegCode(N64Segment):
                 jal_addr = int(op_str, 0)
                 jump_func = self.get_func_name(jal_addr)
                 if (
-                        jump_func.startswith("func_")
-                        and self.is_overlay \
-                        and jal_addr >= self.vram_addr \
-                        and jal_addr <= (self.vram_addr + self.rom_end - self.rom_start)
-                    ):
+                    jump_func.startswith("func_")
+                    and self.is_overlay
+                    and jal_addr >= self.vram_addr
+                    and jal_addr <= (self.vram_addr + self.rom_end - self.rom_start)
+                ):
                     func_loc = self.rom_start + jal_addr - self.vram_addr
                     jump_func += "_{:X}".format(func_loc)
 
@@ -240,12 +240,13 @@ class N64SegCode(N64Segment):
         if not self.is_nops([i[0] for i in func]):
             ret[func_addr] = func
         else:
-            ret[next(reversed(ret))].extend(func) # Requires Python 3.7 (I think)
+            # Requires Python 3.7 (I think)
+            ret[next(reversed(ret))].extend(func)
 
         return ret
 
-
     # Determine symbols
+
     def determine_symbols(self, funcs):
         ret = {}
 
@@ -271,7 +272,8 @@ class N64SegCode(N64Segment):
                                 s_op_split = s_insn.op_str.split(", ")
 
                                 if s_insn.mnemonic.startswith("s"):
-                                    s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1 : -1]
+                                    s_reg = s_op_split[-1][s_op_split[-1].rfind(
+                                        "(") + 1: -1]
                                 else:
                                     s_reg = s_op_split[-2]
 
@@ -280,7 +282,8 @@ class N64SegCode(N64Segment):
 
                                     reg_ext = ""
 
-                                    junk_search = re.search(r"[\(]", s_op_split[-1])
+                                    junk_search = re.search(
+                                        r"[\(]", s_op_split[-1])
                                     if junk_search is not None:
                                         if junk_search.start() == 0:
                                             break
@@ -299,8 +302,11 @@ class N64SegCode(N64Segment):
                                     elif symbol_addr in self.c_functions:
                                         sym_name = self.c_functions[symbol_addr]
                                     elif symbol_addr in self.symbol_ranges:
-                                        sym_name = self.symbol_ranges.get(symbol_addr)
-                                        offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
+                                        sym_name = self.symbol_ranges.get(
+                                            symbol_addr)
+                                        offset = symbol_addr - \
+                                            self.symbol_ranges.getrange(
+                                                symbol_addr).start
                                     else:
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
@@ -315,7 +321,6 @@ class N64SegCode(N64Segment):
             ret[func_addr] = func
 
         return ret
-
 
     def add_labels(self, funcs):
         ret = {}
@@ -335,7 +340,8 @@ class N64SegCode(N64Segment):
                     self.labels_to_add[func].remove(insn[0].address)
                     func_text.append(".L{:X}:".format(insn[0].address))
 
-                asm_comment = "/* {:X} {:X} {} */".format(insn[3], insn[0].address, insn[0].bytes.hex().upper())
+                asm_comment = "/* {:X} {:X} {} */".format(
+                    insn[3], insn[0].address, insn[0].bytes.hex().upper())
 
                 if len(insn) > 4:
                     op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
@@ -351,7 +357,8 @@ class N64SegCode(N64Segment):
                 if "mnemonic_ljust" in self.options:
                     mnemonic_ljust = self.options["mnemonic_ljust"]
 
-                asm_insn_text = "  {}{}".format(insn_text.ljust(mnemonic_ljust), op_str)
+                asm_insn_text = "  {}{}".format(
+                    insn_text.ljust(mnemonic_ljust), op_str)
                 func_text.append(asm_comment + asm_insn_text)
 
                 if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
@@ -363,15 +370,14 @@ class N64SegCode(N64Segment):
                 if func != next(reversed(funcs)) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:
-                        print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(func, new_file_addr))
+                        print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(
+                            func, new_file_addr))
 
         return ret
-
 
     def get_pycparser_args(self):
         option = self.options.get("cpp_args")
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
-
 
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
@@ -391,7 +397,7 @@ class N64SegCode(N64Segment):
                 rom_addr = split_file["start"]
 
                 insns = []
-                for insn in md.disasm(rom_bytes[split_file["start"] : split_file["end"]], split_file["vram"]):
+                for insn in md.disasm(rom_bytes[split_file["start"]: split_file["end"]], split_file["vram"]):
                     insns.append(insn)
 
                 funcs = self.process_insns(insns, rom_addr)
@@ -399,17 +405,20 @@ class N64SegCode(N64Segment):
                 funcs_text = self.add_labels(funcs)
 
                 if split_file["subtype"] == "c":
-                    c_path = os.path.join(base_path, "src", split_file["name"] + "." + self.get_ext(split_file["subtype"]))
+                    c_path = os.path.join(
+                        base_path, "src", split_file["name"] + "." + self.get_ext(split_file["subtype"]))
 
                     if os.path.exists(c_path):
                         defined_funcs = get_funcs_defined_in_c(c_path)
                     else:
                         defined_funcs = set()
 
-                    out_dir = self.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
+                    out_dir = self.create_split_dir(
+                        base_path, os.path.join("asm", "nonmatchings"))
 
                     for func in funcs_text:
-                        func_name = self.get_unique_func_name(func, funcs_text[func][1])
+                        func_name = self.get_unique_func_name(
+                            func, funcs_text[func][1])
 
                         if func_name not in defined_funcs:
                             # TODO make more graceful
@@ -420,7 +429,8 @@ class N64SegCode(N64Segment):
                             out_lines.extend(funcs_text[func][0])
                             out_lines.append("")
 
-                            outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
+                            outpath = Path(os.path.join(
+                                out_dir, split_file["name"], func_name + ".s"))
                             outpath.parent.mkdir(parents=True, exist_ok=True)
 
                             with open(outpath, "w", newline="\n") as f:
@@ -428,17 +438,20 @@ class N64SegCode(N64Segment):
                             self.log(f"Disassembled {func_name} to {outpath}")
 
                     # Creation of c files
-                    if not os.path.exists(c_path): # and some option is enabled
+                    if not os.path.exists(c_path):  # and some option is enabled
                         c_lines = []
                         c_lines.append("#include \"common.h\"")
                         c_lines.append("")
 
                         for func in funcs_text:
-                            func_name = self.get_unique_func_name(func, funcs_text[func][1])
+                            func_name = self.get_unique_func_name(
+                                func, funcs_text[func][1])
                             if self.options["compiler"] == "GCC":
-                                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
+                                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(
+                                    split_file["name"], func_name))
                             else:
-                                c_lines.append("#pragma GLOBAL_ASM()") # todo fix
+                                c_lines.append(
+                                    "#pragma GLOBAL_ASM()")  # todo fix
                             c_lines.append("")
 
                         Path(c_path).parent.mkdir(parents=True, exist_ok=True)
@@ -452,7 +465,8 @@ class N64SegCode(N64Segment):
                         out_lines.extend(funcs_text[func][0])
                         out_lines.append("")
 
-                    outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
+                    outpath = Path(os.path.join(
+                        out_dir, split_file["name"] + ".s"))
                     outpath.parent.mkdir(parents=True, exist_ok=True)
 
                     with open(outpath, "w", newline="\n") as f:
@@ -463,11 +477,11 @@ class N64SegCode(N64Segment):
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
-                bin_path = os.path.join(out_dir, split_file["name"] + "." + self.get_ext(split_file["subtype"]))
+                bin_path = os.path.join(
+                    out_dir, split_file["name"] + "." + self.get_ext(split_file["subtype"]))
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
-                    f.write(rom_bytes[split_file["start"] : split_file["end"]])
-
+                    f.write(rom_bytes[split_file["start"]: split_file["end"]])
 
     @staticmethod
     def get_subdir(subtype):
@@ -476,7 +490,6 @@ class N64SegCode(N64Segment):
         elif subtype in ["asm", "hasm", "header"]:
             return "asm"
         return subtype
-
 
     @staticmethod
     def get_ext(subtype):
@@ -488,7 +501,6 @@ class N64SegCode(N64Segment):
             return "bin"
         return subtype
 
-
     @staticmethod
     def get_ld_obj_type(subtype, section_name):
         if subtype in "c":
@@ -499,7 +511,6 @@ class N64SegCode(N64Segment):
             return ".rodata"
         return section_name
 
-
     def get_ld_files(self):
         def transform(split_file):
             subdir = self.get_subdir(split_file["subtype"])
@@ -509,7 +520,6 @@ class N64SegCode(N64Segment):
             return subdir, f"{split_file['name']}.{ext}", obj_type
 
         return [transform(file) for file in self.files]
-
 
     def get_ld_section_name(self):
         path = PurePath(self.name)

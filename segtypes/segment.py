@@ -27,7 +27,7 @@ def parse_segment_vram(segment):
     if type(segment) is dict:
         return segment.get("vram", 0)
     else:
-        if len(segment) >=3 and type(segment[-1]) is int:
+        if len(segment) >= 3 and type(segment[-1]) is int:
             return segment[-1]
         else:
             return 0
@@ -42,9 +42,9 @@ class N64Segment:
         self.type = parse_segment_type(segment)
         self.name = parse_segment_name(segment, self.__class__)
         self.vram_addr = parse_segment_vram(segment)
-        self.ld_name_override = segment.get("ld_name", None) if type(segment) is dict else None
+        self.ld_name_override = segment.get(
+            "ld_name", None) if type(segment) is dict else None
         self.options = options
-
 
     def check(self):
         if self.rom_start > self.rom_end:
@@ -55,31 +55,28 @@ class N64Segment:
             if actual_len > expected_len:
                 print(f"WARNING: {self.type} {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X} (hint: add a 'bin' segment after {self.name})")
 
-
     @property
     def rom_length(self):
         return self.rom_end - self.rom_start
-
 
     def create_split_dir(self, base_path, subdir):
         out_dir = Path(base_path, subdir)
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
 
-
     def create_parent_dir(self, base_path, filename):
         out_dir = Path(base_path, filename).parent
         out_dir.mkdir(parents=True, exist_ok=True)
         return out_dir
 
+    def should_run(self):
+        return self.type in self.options["modes"] or "all" in self.options["modes"]
 
     def split(self, rom_bytes, base_path):
         pass
 
-
     def postsplit(self, segments):
         pass
-
 
     def get_ld_section(self):
         replace_ext = self.options.get("ld_o_replace_extension", True)
@@ -93,7 +90,8 @@ class N64Segment:
 
         for subdir, path, obj_type in self.get_ld_files():
             path = PurePath(subdir) / PurePath(path)
-            path = path.with_suffix(".o" if replace_ext else path.suffix + ".o")
+            path = path.with_suffix(
+                ".o" if replace_ext else path.suffix + ".o")
 
             s += f"    BUILD_DIR/{path}({obj_type});\n"
 
@@ -105,28 +103,23 @@ class N64Segment:
             f"{sect_name}_VRAM": vram_or_rom,
         }
 
-
     def get_ld_section_name(self):
         return f"data_{self.rom_start:X}"
 
-
     # returns list of (basedir, filename, obj_type)
+
     def get_ld_files(self):
         return []
-
 
     def log(self, msg):
         if self.options.get("verbose", False):
             print(msg)
 
-
     def max_length(self):
         return None
 
-    
     def is_name_default(self):
         return self.name == self.get_default_name(self.rom_end)
-
 
     @staticmethod
     def get_default_name(addr):

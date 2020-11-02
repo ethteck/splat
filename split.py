@@ -13,12 +13,14 @@ from collections import OrderedDict
 from segtypes.segment import parse_segment_type
 from segtypes.code import N64SegCode
 
-parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
+parser = argparse.ArgumentParser(
+    description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("outdir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
-parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+parser.add_argument("--verbose", action="store_true",
+                    help="Enable debug logging")
 
 
 def write_ldscript(rom_name, repo_path, sections):
@@ -100,7 +102,7 @@ def gather_c_funcs(repo_path):
                 if comment_loc != -1:
                     line_ext = line[comment_loc + 2:].strip()
                     line = line[:comment_loc].strip()
-                
+
                 line_split = line.split("=")
                 name = line_split[0].strip()
                 addr = int(line_split[1].strip()[:-1], 0)
@@ -131,7 +133,8 @@ def gather_c_variables(repo_path):
                 addr_comment = line_split[1]
                 addr = int(addr_comment, 0)
 
-                name = line_split[-1][:re.search(r'[\\[;]', line_split[-1]).start()]
+                name = line_split[-1][:re.search(
+                    r'[\\[;]', line_split[-1]).start()]
 
                 vars[addr] = name
 
@@ -186,7 +189,8 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         seg_type = parse_segment_type(segment)
 
         segmodule = importlib.import_module("segtypes." + seg_type)
-        segment_class = getattr(segmodule, "N64Seg" + seg_type[0].upper() + seg_type[1:])
+        segment_class = getattr(segmodule, "N64Seg" +
+                                seg_type[0].upper() + seg_type[1:])
 
         segment = segment_class(segment, config['segments'][i + 1], options)
         segments.append(segment)
@@ -204,15 +208,15 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.c_labels_to_add = c_func_labels_to_add
             segment.symbol_ranges = ranges
 
-        if verbose:
+        if segment.should_run():
             print(f"Splitting {segment.type} {segment.name} at 0x{segment.rom_start:X}")
 
-        segment.check()
-        segment.split(rom_bytes, repo_path)
+            segment.check()
+            segment.split(rom_bytes, repo_path)
 
-        if type(segment) == N64SegCode:
-            defined_funcs |= segment.glabels_added
-            undefined_funcs |= segment.glabels_to_add
+            if type(segment) == N64SegCode:
+                defined_funcs |= segment.glabels_added
+                undefined_funcs |= segment.glabels_to_add
 
         ld_section, seg_ld_symbols = segment.get_ld_section()
 
@@ -223,7 +227,8 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         ld_symbols.update(seg_ld_symbols)
 
     for segment in segments:
-        segment.postsplit(segments)
+        if segment.should_run():
+            segment.postsplit(segments)
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:

@@ -3,6 +3,7 @@ from segtypes.segment import N64Segment
 from util.color import unpack_color
 from util.iter import iter_in_groups
 
+
 class N64SegCi8palette(N64Segment):
     require_unique_name = False
 
@@ -13,20 +14,25 @@ class N64SegCi8palette(N64Segment):
         #  1) same as the relevant ci4/ci8 segment name (max. 1 palette)
         #  2) relevant ci4/ci8 segment name + "." + unique palette name
         #  3) unique, referencing the relevant ci4/ci8 segment using `image_name`
-        self.image_name = segment.get("image_name", self.name.split(".")[0]) if type(segment) is dict else self.name.split(".")[0]
+        self.image_name = segment.get("image_name", self.name.split(
+            ".")[0]) if type(segment) is dict else self.name.split(".")[0]
 
-        self.compressed = segment.get("compressed", False) if type(segment) is dict else False
+        self.compressed = segment.get("compressed", False) if type(
+            segment) is dict else False
+
+    def should_run(self):
+        return N64Segment.should_run(self) or "palette" in self.options["modes"]
 
     def split(self, rom_bytes, base_path):
-        if self.type in self.options["modes"] or self.type[:3] in self.options["modes"] or "all" in self.options["modes"]:
-            out_dir = self.create_parent_dir(base_path + "/img", self.name)
-            self.path = os.path.join(out_dir, os.path.basename(self.name) + ".png")
+        out_dir = self.create_parent_dir(base_path + "/img", self.name)
+        self.path = os.path.join(
+            out_dir, os.path.basename(self.name) + ".png")
 
-            data = rom_bytes[self.rom_start : self.rom_end]
-            if self.compressed:
-                data = Yay0decompress.decompress_yay0(data)
+        data = rom_bytes[self.rom_start: self.rom_end]
+        if self.compressed:
+            data = Yay0decompress.decompress_yay0(data)
 
-            self.palette = self.parse_palette(data)
+        self.palette = self.parse_palette(data)
 
     def parse_palette(self, data):
         palette = []
@@ -37,7 +43,8 @@ class N64SegCi8palette(N64Segment):
         return palette
 
     def max_length(self):
-        if self.compressed: return None
+        if self.compressed:
+            return None
         return 256 * 2
 
     def get_ld_files(self):
