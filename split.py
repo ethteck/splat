@@ -31,6 +31,8 @@ def write_ldscript(rom_name, repo_path, sections, bare=False):
             f.write(
                 "SECTIONS\n"
                 "{\n"
+                "    __romPos = 0;\n"
+                "\n"
                 "    "
             )
             f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
@@ -38,22 +40,6 @@ def write_ldscript(rom_name, repo_path, sections, bare=False):
                 "\n"
                 "}\n"
             )
-
-
-def write_ld_addrs_h(repo_path, h_path, symbols):
-    with open(os.path.join(repo_path, h_path), "w") as f:
-        f.write(
-            "#ifndef _SPLAT_LD_ADDRS_H_\n"
-            "#define _SPLAT_LD_ADDRS_H_\n"
-            "\n"
-        )
-        for symbol, addr in symbols.items():
-            f.write("extern void* ")
-            f.write(symbol)
-            f.write(";\n")
-        f.write(
-            "#endif\n"
-        )
 
 
 def parse_file_start(split_file):
@@ -215,13 +201,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
                 defined_funcs |= segment.glabels_added
                 undefined_funcs |= segment.glabels_to_add
 
-        ld_section, seg_ld_symbols = segment.get_ld_section()
-
-        for symbol, addr in seg_ld_symbols.items():
-            ld_section += f"{symbol} = 0x{addr:X};\n"
-
-        ld_sections.append(ld_section)
-        ld_symbols.update(seg_ld_symbols)
+        ld_sections.append(segment.get_ld_section())
 
     for segment in ran_segments:
         segment.postsplit(ran_segments)
@@ -230,9 +210,6 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     if "ld" in options["modes"] or "all" in options["modes"]:
         print("Writing linker script")
         write_ldscript(config['basename'], repo_path, ld_sections, options.get("ld_bare", False))
-
-        if "ld_addrs_header" in options:
-            write_ld_addrs_h(repo_path, options["ld_addrs_header"], ld_symbols)
 
     # Write undefined_funcs.txt
     c_predefined_funcs = set(c_funcs.keys())
