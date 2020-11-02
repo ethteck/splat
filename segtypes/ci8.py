@@ -1,3 +1,4 @@
+from segtypes.segment import N64Segment
 from segtypes.rgba16 import N64SegRgba16
 import png
 import os
@@ -16,18 +17,18 @@ class N64SegCi8(N64SegRgba16):
         self.image = self.parse_image(data)
 
     def postsplit(self, segments):
-        pal_type = self.type + "palette"
-        palettes = [seg for seg in segments if seg.type ==
-                    pal_type and seg.image_name == self.name]
+        if self.type in self.options["modes"] or "all" in self.options["modes"]:
+            pal_type = self.type + "palette"
+            palettes = [seg for seg in segments if seg.type ==
+                        pal_type and seg.image_name == self.name]
 
-        if len(palettes) == 0:
-            print(f"ERROR: {self.name} requires at least one {pal_type}")
-            exit(1)
+            if len(palettes) == 0:
+                print(f"ERROR: {self.name} requires at least one {pal_type}")
+                exit(1)
 
-        seen_paths = []
+            seen_paths = []
 
-        for pal_seg in palettes:
-            if pal_seg.path:
+            for pal_seg in palettes:
                 if pal_seg.path in seen_paths:
                     print(f"ERROR: Palette name {pal_seg.name} is not unique")
                     exit(1)
@@ -39,15 +40,15 @@ class N64SegCi8(N64SegRgba16):
                     w.write_array(f, self.image)
                     self.log(f"Wrote {pal_seg.name} to {pal_seg.path}")
 
-        # canonical version of image (not palette!) data
-        if self.path not in seen_paths:
-            w = png.Writer(self.width, self.height,
-                           palette=palettes[0].palette)
+            # canonical version of image (not palette!) data
+            if self.path not in seen_paths:
+                w = png.Writer(self.width, self.height,
+                            palette=palettes[0].palette)
 
-            with open(self.path, "wb") as f:
-                w.write_array(f, self.image)
-                self.log(
-                    f"No unnamed palette for {self.name}; wrote image data to {self.path}")
+                with open(self.path, "wb") as f:
+                    w.write_array(f, self.image)
+                    self.log(
+                        f"No unnamed palette for {self.name}; wrote image data to {self.path}")
 
     def parse_image(self, data):
         return data

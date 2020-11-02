@@ -227,8 +227,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         ld_symbols.update(seg_ld_symbols)
 
     for segment in segments:
-        if segment.should_run():
-            segment.postsplit(segments)
+        segment.postsplit(segments)
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
