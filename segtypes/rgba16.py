@@ -48,7 +48,7 @@ class N64SegRgba16(N64Segment):
                 yield x, y, (y * w) + x
 
     def should_run(self):
-        return N64Segment.should_run(self) or "img" in self.options["modes"]
+        return super().should_run() or "img" in self.options["modes"]
 
     def split(self, rom_bytes, base_path):
         out_dir = self.create_parent_dir(base_path + "/img", self.name)

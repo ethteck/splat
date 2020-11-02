@@ -21,7 +21,7 @@ class N64SegCi8palette(N64Segment):
             segment) is dict else False
 
     def should_run(self):
-        return N64Segment.should_run(self) or "palette" in self.options["modes"]
+        return super().should_run() or self.type[:3] in self.options["modes"]
 
     def split(self, rom_bytes, base_path):
         out_dir = self.create_parent_dir(base_path + "/img", self.name)

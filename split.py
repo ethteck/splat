@@ -172,7 +172,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     c_funcs, c_func_labels_to_add, ranges = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
 
-    segments = []
+    ran_segments = []
     ld_sections = []
     ld_symbols = OrderedDict()
     seen_segment_names = set()
@@ -193,7 +193,6 @@ def main(rom_path, config_path, repo_path, modes, verbose):
                                 seg_type[0].upper() + seg_type[1:])
 
         segment = segment_class(segment, config['segments'][i + 1], options)
-        segments.append(segment)
 
         if segment_class.require_unique_name:
             if segment.name in seen_segment_names:
@@ -208,11 +207,13 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.c_labels_to_add = c_func_labels_to_add
             segment.symbol_ranges = ranges
 
+        segment.check()
+
         if segment.should_run():
             print(f"Splitting {segment.type} {segment.name} at 0x{segment.rom_start:X}")
 
-            segment.check()
             segment.split(rom_bytes, repo_path)
+            ran_segments.append(segment)
 
             if type(segment) == N64SegCode:
                 defined_funcs |= segment.glabels_added
@@ -226,9 +227,8 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         ld_sections.append(ld_section)
         ld_symbols.update(seg_ld_symbols)
 
-    for segment in segments:
-        if segment.should_run():
-            segment.postsplit(segments)
+    for segment in ran_segments:
+        segment.postsplit(ran_segments)
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
