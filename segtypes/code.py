@@ -380,7 +380,15 @@ class N64SegCode(N64Segment):
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
 
     def should_run(self):
-        return True
+        subtypes = set(f["subtype"] for f in self.files)
+
+        return (
+            super().should_run()
+            or ("c" in self.options["modes"] and "c" in subtypes)
+            or ("asm" in self.options["modes"] and "asm" in subtypes)
+            or ("hasm" in self.options["modes"] and "hasm" in subtypes)
+            or ("bin" in self.options["modes"] and "bin" in subtypes)
+        )
 
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
