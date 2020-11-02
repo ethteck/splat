@@ -271,11 +271,11 @@ class N64SegCode(N64Segment):
                             if s_insn.mnemonic in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu"]:
                                 s_op_split = s_insn.op_str.split(", ")
 
-                                if s_insn.mnemonic.startswith("s"):
+                                if s_insn.mnemonic == "addiu":
+                                    s_reg = s_op_split[-2]
+                                else:
                                     s_reg = s_op_split[-1][s_op_split[-1].rfind(
                                         "(") + 1: -1]
-                                else:
-                                    s_reg = s_op_split[-2]
 
                                 if reg == s_reg:
                                     # Match!
