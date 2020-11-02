@@ -23,17 +23,21 @@ parser.add_argument("--verbose", action="store_true",
                     help="Enable debug logging")
 
 
-def write_ldscript(rom_name, repo_path, sections):
+def write_ldscript(rom_name, repo_path, sections, bare=False):
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
-        f.write(
-            "SECTIONS\n"
-            "{\n"
-        )
-        f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
-        f.write(
-            "\n"
-            "}\n"
-        )
+        if bare:
+            f.write("\n".join(sections))
+        else:
+            f.write(
+                "SECTIONS\n"
+                "{\n"
+                "    "
+            )
+            f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
+            f.write(
+                "\n"
+                "}\n"
+            )
 
 
 def write_ld_addrs_h(repo_path, h_path, symbols):
@@ -47,14 +51,6 @@ def write_ld_addrs_h(repo_path, h_path, symbols):
             f.write("extern void* ")
             f.write(symbol)
             f.write(";\n")
-
-            f.write("#define LD_")
-            f.write(symbol)
-            f.write(" ")
-            f.write(f"0x{addr:X}")
-            f.write("\n")
-
-            f.write("\n")
         f.write(
             "#endif\n"
         )
@@ -233,7 +229,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
         print("Writing linker script")
-        write_ldscript(config['basename'], repo_path, ld_sections)
+        write_ldscript(config['basename'], repo_path, ld_sections, options.get("ld_bare", False))
 
         if "ld_addrs_header" in options:
             write_ld_addrs_h(repo_path, options["ld_addrs_header"], ld_symbols)
