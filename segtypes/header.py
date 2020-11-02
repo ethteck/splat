@@ -3,6 +3,9 @@ from segtypes.segment import N64Segment
 from pathlib import Path
 
 class N64SegHeader(N64Segment):
+    def should_run(self):
+        return N64Segment.should_run(self) or "asm" in self.options["modes"]
+
     def split(self, rom_bytes, base_path):
         out_dir = self.create_split_dir(base_path, "asm")
 

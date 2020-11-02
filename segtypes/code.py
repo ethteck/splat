@@ -379,6 +379,9 @@ class N64SegCode(N64Segment):
         option = self.options.get("cpp_args")
         return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
 
+    def should_run(self):
+        return True
+
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
