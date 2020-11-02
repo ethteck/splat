@@ -27,19 +27,20 @@ class N64SegCi8(N64SegRgba16):
         seen_paths = []
 
         for pal_seg in palettes:
-            if pal_seg.path in seen_paths:
-                print(f"ERROR: Palette name {pal_seg.name} is not unique")
-                exit(1)
-            seen_paths.append(pal_seg.path)
+            if pal_seg.path:
+                if pal_seg.path in seen_paths:
+                    print(f"ERROR: Palette name {pal_seg.name} is not unique")
+                    exit(1)
+                seen_paths.append(pal_seg.path)
 
-            w = png.Writer(self.width, self.height, palette=pal_seg.palette)
+                w = png.Writer(self.width, self.height, palette=pal_seg.palette)
 
-            with open(pal_seg.path, "wb") as f:
-                w.write_array(f, self.image)
-                self.log(f"Wrote {pal_seg.name} to {pal_seg.path}")
+                with open(pal_seg.path, "wb") as f:
+                    w.write_array(f, self.image)
+                    self.log(f"Wrote {pal_seg.name} to {pal_seg.path}")
 
         # canonical version of image (not palette!) data
-        if self.path and self.path not in seen_paths:
+        if self.path not in seen_paths:
             w = png.Writer(self.width, self.height,
                            palette=palettes[0].palette)
 
