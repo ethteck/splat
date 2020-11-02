@@ -22,12 +22,11 @@ class N64SegCi8(N64SegRgba16):
         self.image = self.parse_image(data)
 
     def postsplit(self, segments):
-        pal_type = self.type + "palette"
         palettes = [seg for seg in segments if seg.type ==
-                    pal_type and seg.image_name == self.name]
+                    "palette" and seg.image_name == self.name]
 
         if len(palettes) == 0:
-            print(f"ERROR: {self.name} requires at least one {pal_type}")
+            print(f"ERROR: {self.type} {self.name} requires at least one palette")
             exit(1)
 
         seen_paths = []

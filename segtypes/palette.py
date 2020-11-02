@@ -4,7 +4,7 @@ from util.color import unpack_color
 from util.iter import iter_in_groups
 
 
-class N64SegCi8palette(N64Segment):
+class N64SegPalette(N64Segment):
     require_unique_name = False
 
     def __init__(self, segment, next_segment, options):
@@ -21,7 +21,7 @@ class N64SegCi8palette(N64Segment):
             segment) is dict else False
 
     def should_run(self):
-        return super().should_run() or self.type[:3] in self.options["modes"]
+        return super().should_run() or "img" in self.options["modes"]
 
     def split(self, rom_bytes, base_path):
         out_dir = self.create_parent_dir(base_path + "/img", self.name)

@@ -232,6 +232,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
+        print("Writing linker script")
         write_ldscript(config['basename'], repo_path, ld_sections)
 
         if "ld_addrs_header" in options:
