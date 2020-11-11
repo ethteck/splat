@@ -161,7 +161,8 @@ def get_extension_class(options, config_path, seg_type):
         ext_spec = importlib.util.spec_from_file_location(f"segtypes.{seg_type}", os.path.join(ext_dir, f"{seg_type}.py"))
         ext_mod = importlib.util.module_from_spec(ext_spec)
         ext_spec.loader.exec_module(ext_mod)
-    except Exception:
+    except Exception as err:
+        print(err)
         return None
     
     return getattr(ext_mod, "N64Seg" + seg_type[0].upper() + seg_type[1:])
