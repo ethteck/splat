@@ -85,7 +85,7 @@ class Sprite:
 
             if image.palette_index not in palette_to_raster:
                 palette_to_raster[image.palette_index] = []
-            palette_to_raster[image.palette_index].append(name)
+            palette_to_raster[image.palette_index].append(image)
 
             ET.SubElement(RasterList, "Raster", {
                 "id": f"{i:X}",
@@ -97,16 +97,10 @@ class Sprite:
             name = self.palette_names[i] if self.palette_names else f"Palette_{i:02X}"
 
             if i in palette_to_raster:
-                # no need to write this palette, a raster includes it already
-                ET.SubElement(PaletteList, "Palette", {
-                    "id": f"{i:X}",
-                    "src": palette_to_raster[i][0] + ".png",
-                })
-                continue
+                img = palette_to_raster[i][0]
+            else:
+                img = self.images[0]
 
-            assert name not in self.image_names
-
-            img = self.images[0]
             img.write(path / (name + ".png"), palette)
 
             ET.SubElement(PaletteList, "Palette", {
@@ -137,7 +131,7 @@ class Sprite:
         xml.write(str(path / "SpriteSheet.xml"), encoding="unicode")
 
     @staticmethod
-    def from_dir(path):
+    def from_dir(path, read_images=True):
         self = Sprite()
 
         xml = ET.parse(str(path / "SpriteSheet.xml"))
@@ -148,32 +142,36 @@ class Sprite:
         self.num_variations = int(SpriteSheet.get("b"))
 
         for Palette in SpriteSheet.findall("./PaletteList/Palette"):
-            img = png.Reader(str(path / Palette.get("src")))
-            img.preamble(True)
-            palette = img.palette(alpha="force")
+            if read_images:
+                img = png.Reader(str(path / Palette.get("src")))
+                img.preamble(True)
+                palette = img.palette(alpha="force")
 
-            assert len(palette) == 16
+                assert len(palette) == 16
 
-            self.palette_names.append(Palette.get("name").split(".png")[0])
-            self.palettes.append(palette)
+                self.palettes.append(palette)
+
+            self.palette_names.append(Palette.get("src").split(".png")[0])
 
         for Raster in SpriteSheet.findall("./RasterList/Raster"):
-            img_path = str(path / Raster.get("src"))
-            width, height, raster, info = png.Reader(img_path).read_flat()
+            if read_images:
+                img_path = str(path / Raster.get("src"))
+                width, height, raster, info = png.Reader(img_path).read_flat()
 
-            image = Image()
-            image.width = width
-            image.height = height
-            image.raster = raster
-            image.palette_index = int(Raster.get("palette"), base=16)
+                image = Image()
+                image.width = width
+                image.height = height
+                image.raster = raster
+                image.palette_index = int(Raster.get("palette"), base=16)
 
-            assert (image.width % 8) == 0, f"{img_path} width is not a multiple of 8"
-            assert (image.height % 8) == 0, f"{img_path} height is not a multiple of 8"
+                assert (image.width % 8) == 0, f"{img_path} width is not a multiple of 8"
+                assert (image.height % 8) == 0, f"{img_path} height is not a multiple of 8"
 
-            self.image_names.append(Raster.get("name").split(".png")[0])
-            self.images.append(image)
+                self.images.append(image)
 
-        for Animation in SpriteSheet.findall("./AnimationList/Animation"):
+            self.image_names.append(Raster.get("src").split(".png")[0])
+
+        for i, Animation in enumerate(SpriteSheet.findall("./AnimationList/Animation")):
             components = []
 
             for ComponentEl in Animation.findall("Component"):
