@@ -2,6 +2,7 @@
 
 import argparse
 import importlib
+import importlib.util
 import os
 from ranges import Range, RangeDict
 import re
@@ -136,6 +137,36 @@ def gather_c_variables(repo_path):
     return vars
 
 
+def get_base_segment_class(seg_type):
+    try:
+        segmodule = importlib.import_module("segtypes." + seg_type)
+    except ModuleNotFoundError:
+        return None
+
+    return getattr(segmodule, "N64Seg" + seg_type[0].upper() + seg_type[1:])
+
+
+def get_extension_dir(options, config_path):
+    if "extensions" not in options:
+        return None
+    return os.path.join(Path(config_path).parent, options["extensions"])
+
+
+def get_extension_class(options, config_path, seg_type):
+    ext_dir = get_extension_dir(options, config_path)
+    if ext_dir == None:
+        return None
+    
+    try:
+        ext_spec = importlib.util.spec_from_file_location(f"segtypes.{seg_type}", os.path.join(ext_dir, f"{seg_type}.py"))
+        ext_mod = importlib.util.module_from_spec(ext_spec)
+        ext_spec.loader.exec_module(ext_mod)
+    except Exception:
+        return None
+    
+    return getattr(ext_mod, "N64Seg" + seg_type[0].upper() + seg_type[1:])
+
+
 def main(rom_path, config_path, repo_path, modes, verbose):
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
@@ -170,9 +201,14 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
         seg_type = parse_segment_type(segment)
 
-        segmodule = importlib.import_module("segtypes." + seg_type)
-        segment_class = getattr(segmodule, "N64Seg" +
-                                seg_type[0].upper() + seg_type[1:])
+        segment_class = get_base_segment_class(seg_type)
+        if segment_class == None:
+            # Look in extensions
+            segment_class = get_extension_class(options, config_path, seg_type)
+        
+        if segment_class == None:
+            print(f"ERROR: could not load {seg_type} segment type. Confirm your extension directory is configured correctly")
+            exit(1)
 
         segment = segment_class(segment, config['segments'][i + 1], options)
 
@@ -217,7 +253,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     if len(to_write) > 0:
         with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
             for line in to_write:
-                f.write(line + " = 0x" + line[5:13].upper() + ";\n")
+                f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
 
 
 if __name__ == "__main__":
