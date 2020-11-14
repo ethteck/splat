@@ -52,24 +52,6 @@ def gather_c_funcs(repo_path):
     labels_to_add = set()
     ranges = RangeDict()
 
-    funcs_path = os.path.join(repo_path, "include", "functions.h")
-    if os.path.exists(funcs_path):
-        with open(funcs_path) as f:
-            func_lines = f.readlines()
-
-        for line in func_lines:
-            if line.startswith("/* 0x"):
-                line_split = line.strip().split(" ")
-                addr_comment = line_split[1]
-                addr = int(addr_comment[:10], 0)
-                name = line_split[4][:line_split[4].find("(")]
-
-                # We need to add marked functions' glabels in asm
-                if len(addr_comment) > 10 and addr_comment[10] == '!':
-                    labels_to_add.add(name)
-
-                funcs[addr] = name
-
     # Manual list of func name / addrs
     func_addrs_path = os.path.join(repo_path, "tools", "symbol_addrs.txt")
     if os.path.exists(func_addrs_path):
@@ -104,22 +86,6 @@ def gather_c_funcs(repo_path):
 
 def gather_c_variables(repo_path):
     vars = {}
-
-    vars_path = os.path.join(repo_path, "include", "variables.h")
-    if os.path.exists(vars_path):
-        with open(vars_path) as f:
-            vars_lines = f.readlines()
-
-        for line in vars_lines:
-            if line.startswith("/* 0x"):
-                line_split = line.strip().split(" ")
-                addr_comment = line_split[1]
-                addr = int(addr_comment, 0)
-
-                name = line_split[-1][:re.search(
-                    r'[\\[;]', line_split[-1]).start()]
-
-                vars[addr] = name
 
     undefined_syms_path = os.path.join(repo_path, "undefined_syms.txt")
     if os.path.exists(undefined_syms_path):

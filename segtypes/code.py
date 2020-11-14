@@ -203,12 +203,17 @@ class N64SegCode(N64Segment):
             elif self.is_branch_insn(insn.mnemonic):
                 op_str_split = op_str.split(" ")
                 branch_target = op_str_split[-1]
+                branch_target_int = int(branch_target, 0)
+                label = ""
 
-                if func_addr not in self.labels_to_add:
-                    self.labels_to_add[func_addr] = set()
-                self.labels_to_add[func_addr].add(int(branch_target, 0))
+                if branch_target_int in self.c_functions:
+                    label = self.c_functions[branch_target_int]
+                else:
+                    if func_addr not in self.labels_to_add:
+                        self.labels_to_add[func_addr] = set()
+                    self.labels_to_add[func_addr].add(branch_target_int)
+                    label = ".L" + branch_target[2:].upper()
 
-                label = ".L" + branch_target[2:].upper()
                 op_str = " ".join(op_str_split[:-1] + [label])
             elif mnemonic == "mtc0" or mnemonic == "mfc0":
                 rd = (insn.bytes[2] & 0xF8) >> 3
@@ -240,7 +245,7 @@ class N64SegCode(N64Segment):
         if not self.is_nops([i[0] for i in func]):
             ret[func_addr] = func
         else:
-            # Requires Python 3.7 (I think)
+            # Requires Python 3.7
             ret[next(reversed(ret))].extend(func)
 
         return ret
