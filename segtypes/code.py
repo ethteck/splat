@@ -245,8 +245,7 @@ class N64SegCode(N64Segment):
         if not self.is_nops([i[0] for i in func]):
             ret[func_addr] = func
         else:
-            # Requires Python 3.7
-            ret[next(reversed(ret))].extend(func)
+            next(reversed(ret.values())).extend(func)
 
         return ret
 
