@@ -12,27 +12,30 @@ def decompress_yay0(in_bytes, byte_order="big"):
     link_table_idx = link_table_offset
     chunk_idx = chunk_offset
     other_idx = 16
-    
+
     mask_bit_counter = 0
     current_mask = 0
 
-    ret = b""
+    # preallocate result and index into it
+    idx = 0
+    ret = bytearray(decompressed_size);
 
-    while len(ret) < decompressed_size:
+    while idx < decompressed_size:
         # If we're out of bits, get the next mask
         if mask_bit_counter == 0:
             current_mask = int.from_bytes(in_bytes[other_idx : other_idx + 4], byteorder=byte_order)
             other_idx += 4
             mask_bit_counter = 32
-        
-        if (current_mask & 0x80000000) == 0x80000000:
-            ret += in_bytes[chunk_idx : chunk_idx + 1]
+
+        if (current_mask & 0x80000000):
+            ret[idx] = in_bytes[chunk_idx]
+            idx += 1
             chunk_idx += 1
         else:
             link = int.from_bytes(in_bytes[link_table_idx : link_table_idx + 2], byteorder=byte_order)
             link_table_idx += 2
 
-            offset = len(ret) - (link & 0xfff)
+            offset = idx - (link & 0xfff)
 
             count = link >> 12
 
@@ -42,14 +45,12 @@ def decompress_yay0(in_bytes, byte_order="big"):
                 count = count_modifier + 18
             else:
                 count += 2
-            
-            # Copy the block
-            block_copy = offset
 
+            # Copy the block
             for i in range(count):
-                ret += ret[block_copy - 1 : block_copy]
-                block_copy += 1
-        
+                ret[idx] = ret[offset + i - 1]
+                idx += 1
+
         current_mask <<= 1
         mask_bit_counter -= 1
 
