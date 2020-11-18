@@ -206,13 +206,13 @@ class N64SegCode(N64Segment):
                 branch_target_int = int(branch_target, 0)
                 label = ""
 
-                if branch_target_int in self.c_functions:
-                    label = self.c_functions[branch_target_int]
-                else:
-                    if func_addr not in self.labels_to_add:
-                        self.labels_to_add[func_addr] = set()
-                    self.labels_to_add[func_addr].add(branch_target_int)
-                    label = ".L" + branch_target[2:].upper()
+                # if branch_target_int in self.c_functions:
+                #     label = self.c_functions[branch_target_int]
+                # else:
+                if func_addr not in self.labels_to_add:
+                    self.labels_to_add[func_addr] = set()
+                self.labels_to_add[func_addr].add(branch_target_int)
+                label = ".L" + branch_target[2:].upper()
 
                 op_str = " ".join(op_str_split[:-1] + [label])
             elif mnemonic == "mtc0" or mnemonic == "mfc0":
@@ -371,7 +371,7 @@ class N64SegCode(N64Segment):
             ret[func] = (func_text, rom_addr)
 
             if self.options.get("find-file-boundaries"):
-                if func != next(reversed(funcs)) and self.is_nops([i[0] for i in funcs[func][-2:]]):
+                if func != next(reversed(funcs.keys())) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:
                         print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(
