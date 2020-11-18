@@ -371,7 +371,7 @@ class N64SegCode(N64Segment):
             ret[func] = (func_text, rom_addr)
 
             if self.options.get("find-file-boundaries"):
-                if func != next(reversed(funcs.items()))[0] and self.is_nops([i[0] for i in funcs[func][-2:]]):
+                if func != next(reversed(list(funcs.keys()))) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:
                         print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(
