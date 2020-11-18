@@ -346,9 +346,9 @@ class N64SegCode(N64Segment):
 
                 rom_addr_padding = self.options.get("rom_address_padding", None)
                 if rom_addr_padding:
-                    rom_str = "0x{0:0{1}X}".format(insn[3], rom_addr_padding)
+                    rom_str = "{0:0{1}X}".format(insn[3], rom_addr_padding)
                 else:
-                    rom_str = "0x{:X}".format(insn[3])
+                    rom_str = "{:X}".format(insn[3])
 
                 asm_comment = "/* {} {:X} {} */".format(
                     rom_str, insn[0].address, insn[0].bytes.hex().upper())
