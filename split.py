@@ -49,6 +49,7 @@ def parse_file_start(split_file):
 
 def gather_c_funcs(repo_path):
     funcs = {}
+    special_labels = {}
     labels_to_add = set()
     ranges = RangeDict()
 
@@ -77,11 +78,12 @@ def gather_c_funcs(repo_path):
                     for info in line_ext.split(" "):
                         if info == "!":
                             labels_to_add.add(name)
+                            special_labels[addr] = name
                         if info.startswith("size:"):
                             size = int(info.split(":")[1], 0)
                             ranges.add(Range(addr, addr + size), name)
 
-    return funcs, labels_to_add, ranges
+    return funcs, labels_to_add, special_labels, ranges
 
 
 def gather_c_variables(repo_path):
@@ -149,12 +151,11 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     options["modes"] = modes
     options["verbose"] = verbose
 
-    c_funcs, c_func_labels_to_add, ranges = gather_c_funcs(repo_path)
+    c_funcs, c_func_labels_to_add, special_labels, ranges = gather_c_funcs(repo_path)
     c_vars = gather_c_variables(repo_path)
 
     ran_segments = []
     ld_sections = []
-    ld_symbols = OrderedDict()
     seen_segment_names = set()
 
     defined_funcs = set()
@@ -189,6 +190,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.all_functions = defined_funcs
             segment.c_functions = c_funcs
             segment.c_variables = c_vars
+            segment.special_labels = special_labels
             segment.c_labels_to_add = c_func_labels_to_add
             segment.symbol_ranges = ranges
 

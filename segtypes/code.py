@@ -206,13 +206,13 @@ class N64SegCode(N64Segment):
                 branch_target_int = int(branch_target, 0)
                 label = ""
 
-                # if branch_target_int in self.c_functions:
-                #     label = self.c_functions[branch_target_int]
-                # else:
-                if func_addr not in self.labels_to_add:
-                    self.labels_to_add[func_addr] = set()
-                self.labels_to_add[func_addr].add(branch_target_int)
-                label = ".L" + branch_target[2:].upper()
+                if branch_target_int in self.special_labels:
+                    label = self.special_labels[branch_target_int]
+                else:
+                    if func_addr not in self.labels_to_add:
+                        self.labels_to_add[func_addr] = set()
+                    self.labels_to_add[func_addr].add(branch_target_int)
+                    label = ".L" + branch_target[2:].upper()
 
                 op_str = " ".join(op_str_split[:-1] + [label])
             elif mnemonic == "mtc0" or mnemonic == "mfc0":
@@ -471,8 +471,10 @@ class N64SegCode(N64Segment):
                                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(
                                     split_file["name"], func_name))
                             else:
+                                outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
+                                rel_outpath = os.path.relpath(outpath, base_path)
                                 c_lines.append(
-                                    "#pragma GLOBAL_ASM()")  # todo fix
+                                    f"#pragma GLOBAL_ASM(\"{rel_outpath}\")")
                             c_lines.append("")
 
                         Path(c_path).parent.mkdir(parents=True, exist_ok=True)
