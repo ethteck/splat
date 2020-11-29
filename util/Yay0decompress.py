@@ -1,7 +1,42 @@
 import argparse
 import sys
+import os
+from ctypes import *
+from struct import pack, unpack
+
+lib = None
+def setup_lib():
+    global lib
+    lib = cdll.LoadLibrary(os.path.abspath("Yay0Decompress"))
+    if lib is None:
+        print(f"Failed to load Yay0Decompress")
+        exit()
 
 def decompress_yay0(in_bytes, byte_order="big"):
+    global lib
+    if not lib:
+        setup_lib()
+
+    class Yay0(Structure):
+        _fields_ = [
+            ("magic", c_uint32),
+            ("uncompressedLength", c_uint32),
+            ("opPtr", c_uint32),
+            ("dataPtr", c_uint32),
+        ]
+
+    bigEndian = byte_order == "big"
+    if bigEndian:
+        hdr = Yay0.from_buffer_copy(pack("<IIII", *unpack(">IIII", in_bytes[:sizeof(Yay0)])))
+    else:
+        hdr = Yay0.from_buffer_copy(in_bytes, 0)
+    
+    src = (c_uint8 * (len(in_bytes)-sizeof(Yay0))).from_buffer_copy(in_bytes, 0)
+    dst = (c_uint8 * hdr.uncompressedLength)()
+    lib.decompress(byref(hdr), byref(src), byref(dst), c_bool(bigEndian))
+    return bytearray(dst)
+
+def decompress_yay0_python(in_bytes, byte_order="big"):
     if in_bytes[:4] != b"Yay0":
         sys.exit("Input file is not yay0")
 
@@ -60,7 +95,9 @@ def decompress_yay0(in_bytes, byte_order="big"):
 def main(args):
     with open(args.infile, "rb") as f:
         raw_bytes = f.read()
+
     decompressed = decompress_yay0(raw_bytes, args.byte_order)
+    
     with open(args.outfile, "wb") as f:
         f.write(decompressed)
 
