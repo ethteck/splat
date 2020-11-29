@@ -1,3 +1,4 @@
+from re import split
 from capstone import *
 from capstone.mips import *
 
@@ -92,6 +93,8 @@ class N64SegCode(N64Segment):
         self.ld_section_name = "." + \
             segment.get("ld_name", f"text_{self.rom_start:X}")
         self.symbol_ranges = RangeDict()
+        self.data_syms = {}
+        self.rodata_syms = {}
 
     @staticmethod
     def get_default_name(addr):
@@ -249,8 +252,13 @@ class N64SegCode(N64Segment):
 
         return ret
 
-    # Determine symbols
+    def get_file_for_addr(self, addr):
+        for fl in self.files:
+            if addr >= fl["vram"] and addr < fl["vram"] + fl["end"] - fl["start"]:
+                return fl
+        return None
 
+    # Determine symbols
     def determine_symbols(self, funcs):
         ret = {}
 
@@ -315,6 +323,19 @@ class N64SegCode(N64Segment):
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
                                         # self.glabels_to_add.add(sym_name)
+
+                                    sect = self.get_file_for_addr(symbol_addr)
+
+                                    if sect:
+                                        if sect["subtype"] == "data":
+                                            if sect["name"] not in self.data_syms:
+                                                self.data_syms[sect["name"]] = {}
+                                            self.data_syms[sect["name"]][symbol_addr] = sym_name
+
+                                        if sect["subtype"] == "rodata":
+                                            if sect["name"] not in self.rodata_syms:
+                                                self.rodata_syms[sect["name"]] = {}
+                                            self.rodata_syms[sect["name"]][symbol_addr] = sym_name
 
                                     if offset != 0:
                                         sym_name += f"+0x{offset:X}"
@@ -399,6 +420,72 @@ class N64SegCode(N64Segment):
             or ("hasm" in self.options["modes"] and "hasm" in subtypes)
             or ("bin" in self.options["modes"] and "bin" in subtypes)
         )
+
+    def gen_data_file(self, split_file, rom_bytes):
+        ret = ".include \"macro.inc\"\n\n"
+        ret += f'.section .{split_file["subtype"]}\n'
+
+        if split_file["name"] in self.data_syms:
+            sym_info = self.data_syms[split_file["name"]]
+        elif split_file["name"] in self.rodata_syms:
+            sym_info = self.rodata_syms[split_file["name"]]
+        else:
+            return None
+
+        sorted_syms = sorted(sym_info.keys())
+        # check beginning
+        if sorted_syms[0] != split_file["vram"]:
+            sorted_syms.insert(0, split_file["vram"])
+        
+        # add end
+        sorted_syms.append(split_file["vram"] + split_file["end"] - split_file["start"])
+        
+        rom_pos = split_file["start"]
+        
+        for i in range(len(sorted_syms) - 1):
+            start = sorted_syms[i]
+            end = sorted_syms[i + 1]
+            offset = end - split_file["vram"]
+
+            if start in sym_info:
+                sym_name = sym_info[start]
+            else:
+                sym_name = f"D_{start:X}"
+
+            sym_str = "\nglabel " + sym_name + "\n"
+            i = 0
+            line_lim = 100
+
+            this_end = split_file["start"] + offset
+
+            while rom_pos < this_end:
+                if i % line_lim == 0:
+                    sym_str += ".word "
+
+                word = int.from_bytes(rom_bytes[rom_pos : rom_pos + 4], "big")
+
+                if word in self.c_variables:
+                    byte_str = self.c_variables[word]
+                elif word in self.c_functions:
+                    byte_str = self.c_functions[word]
+                else:
+                    byte_str = '0x{0:0{1}X}'.format(word,8)
+
+                if (i + 1) % line_lim == 0:
+                    sym_str += byte_str + "\n"
+                else:
+                    sym_str += byte_str
+                    if rom_pos + 4 < this_end:
+                        sym_str += ", "
+                    else:
+                        sym_str += "\n"
+
+                rom_pos += 4
+                i += 1
+
+            ret += sym_str
+
+        return ret
 
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
@@ -497,6 +584,20 @@ class N64SegCode(N64Segment):
 
                 self.all_functions |= self.glabels_added
 
+            elif split_file["subtype"] == "data":
+                out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
+                outpath = Path(os.path.join(out_dir, split_file["name"] + ".data.s"))
+
+                with open(outpath, "w", newline="\n") as f:
+                    f.write(self.gen_data_file(split_file, rom_bytes))
+
+            elif split_file["subtype"] == "rodata":
+                out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
+                outpath = Path(os.path.join(out_dir, split_file["name"] + ".rodata.s"))
+
+                with open(outpath, "w", newline="\n") as f:
+                    f.write(self.gen_data_file(split_file, rom_bytes))
+
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
@@ -508,7 +609,7 @@ class N64SegCode(N64Segment):
 
     @staticmethod
     def get_subdir(subtype):
-        if subtype in ["c", ".data", ".rodata"]:
+        if subtype in ["c", ".data", ".rodata", ".bss"]:
             return "src"
         elif subtype in ["asm", "hasm", "header"]:
             return "asm"
@@ -516,7 +617,7 @@ class N64SegCode(N64Segment):
 
     @staticmethod
     def get_ext(subtype):
-        if subtype in ["c", ".data", ".rodata"]:
+        if subtype in ["c", ".data", ".rodata", ".bss"]:
             return "c"
         elif subtype in ["asm", "hasm", "header"]:
             return "s"
@@ -528,10 +629,12 @@ class N64SegCode(N64Segment):
     def get_ld_obj_type(subtype, section_name):
         if subtype in "c":
             return ".text"
-        elif subtype in ["bin", ".data"]:
+        elif subtype in ["bin", ".data", "data"]:
             return ".data"
-        elif subtype == ".rodata":
+        elif subtype in [".rodata", "rodata"]:
             return ".rodata"
+        elif subtype == ".bss":
+            return ".bss"
         return section_name
 
     def get_ld_files(self):
