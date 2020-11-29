@@ -260,6 +260,25 @@ class N64SegCode(N64Segment):
                 return fl
         return None
 
+    def store_syms(self, addr, name):
+        sect = self.get_file_for_addr(addr)
+
+        if sect:
+            sect_name = sect["name"]
+
+            if sect["subtype"] in [".data", "data"]:
+                if sect_name not in self.data_syms:
+                    self.data_syms[sect_name] = {}
+                self.data_syms[sect_name][addr] = name
+            elif sect["subtype"] in [".rodata", "rodata"]:
+                if sect_name not in self.rodata_syms:
+                    self.rodata_syms[sect_name] = {}
+                self.rodata_syms[sect_name][addr] = name
+            elif sect["subtype"] == "bin":
+                if sect_name not in self.unk_syms:
+                    self.unk_syms[sect_name] = {}
+                self.unk_syms[sect_name][addr] = name
+
     # Determine symbols
     def determine_symbols(self, funcs):
         ret = {}
@@ -313,36 +332,18 @@ class N64SegCode(N64Segment):
                                     offset = 0
                                     if symbol_addr in self.c_variables:
                                         sym_name = self.c_variables[symbol_addr]
+                                        self.store_syms(symbol_addr, sym_name)
                                     elif symbol_addr in self.c_functions:
                                         sym_name = self.c_functions[symbol_addr]
+                                        self.store_syms(symbol_addr, sym_name)
                                     elif symbol_addr in self.symbol_ranges:
-                                        sym_name = self.symbol_ranges.get(
-                                            symbol_addr)
-                                        offset = symbol_addr - \
-                                            self.symbol_ranges.getrange(
-                                                symbol_addr).start
+                                        sym_name = self.symbol_ranges.get(symbol_addr)
+                                        offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
                                     else:
+                                        sym_name = "D_{:X}".format(symbol_addr)
+                                        self.store_syms(symbol_addr, sym_name)
                                         break
-                                        # sym_name = "D_{:X}".format(symbol_addr)
                                         # self.undefined_syms_to_add.add(sym_name)
-
-                                    sect = self.get_file_for_addr(symbol_addr)
-
-                                    if sect:
-                                        sect_name = sect["name"]
-
-                                        if sect["subtype"] in [".data", "data"]:
-                                            if sect_name not in self.data_syms:
-                                                self.data_syms[sect_name] = {}
-                                            self.data_syms[sect_name][symbol_addr] = sym_name
-                                        elif sect["subtype"] in [".rodata", "rodata"]:
-                                            if sect_name not in self.rodata_syms:
-                                                self.rodata_syms[sect_name] = {}
-                                            self.rodata_syms[sect_name][symbol_addr] = sym_name
-                                        elif sect["subtype"] == "bin":
-                                            if sect_name not in self.unk_syms:
-                                                self.unk_syms[sect_name] = {}
-                                            self.unk_syms[sect_name][symbol_addr] = sym_name
 
                                     if offset != 0:
                                         sym_name += f"+0x{offset:X}"
