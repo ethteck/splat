@@ -281,7 +281,7 @@ class N64SegCode(N64Segment):
                         for j in range(i + 1, min(i + 8, len(func))):
                             s_insn = func[j][0]
 
-                            if s_insn.mnemonic in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu"]:
+                            if s_insn.mnemonic in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu", "lwc1", "swc1", "ldc1", "sdc1"]:
                                 s_op_split = s_insn.op_str.split(", ")
 
                                 if s_insn.mnemonic == "addiu":
