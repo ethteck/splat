@@ -218,11 +218,11 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         print("Writing linker script")
         write_ldscript(config['basename'], repo_path, ld_sections, options.get("ld_bare", False))
 
-    # Write undefined_funcs.txt
+    # Write undefined_funcs_auto.txt
     c_predefined_funcs = set(c_funcs.keys())
     to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
     if len(to_write) > 0:
-        with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
+        with open(os.path.join(repo_path, "undefined_funcs_auto.txt"), "w", newline="\n") as f:
             for line in to_write:
                 f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
     
