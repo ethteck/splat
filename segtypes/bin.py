@@ -14,7 +14,7 @@ class N64SegBin(N64Segment):
         self.log(f"Wrote {self.name} to {bin_path}")
 
     def get_ld_files(self):
-        return [("bin", f"{self.name}.bin", ".data")]
+        return [("bin", f"{self.name}.bin", ".data", self.rom_start)]
 
     @staticmethod
     def get_default_name(addr):

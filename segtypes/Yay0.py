@@ -17,7 +17,7 @@ class N64SegYay0(N64Segment):
 
 
     def get_ld_files(self):
-        return [("bin", f"{self.name}.Yay0", ".data")]
+        return [("bin", f"{self.name}.Yay0", ".data", self.rom_start)]
 
 
     @staticmethod

@@ -91,8 +91,7 @@ class N64SegCode(N64Segment):
         self.c_functions = {}
         self.c_variables = {}
         self.c_labels_to_add = set()
-        self.ld_section_name = "." + \
-            segment.get("ld_name", f"text_{self.rom_start:X}")
+        self.ld_section_name = "." + segment.get("ld_name", f"text_{self.rom_start:X}")
         self.symbol_ranges = RangeDict()
         self.data_syms = {}
         self.rodata_syms = {}
@@ -433,7 +432,7 @@ class N64SegCode(N64Segment):
 
     def gen_data_file(self, split_file, rom_bytes):
         ret = ".include \"macro.inc\"\n\n"
-        ret += f'.section .{split_file["subtype"]}\n'
+        ret += f'.section .{split_file["subtype"]}'
 
         if split_file["name"] in self.data_syms:
             sym_info = self.data_syms[split_file["name"]]
@@ -463,17 +462,15 @@ class N64SegCode(N64Segment):
             else:
                 sym_name = f"D_{start:X}"
 
-            sym_str = "\nglabel " + sym_name + "\n"
+            sym_str = "\n\nglabel " + sym_name + "\n.word "
             i = 0
-            line_lim = 100
 
             this_end = split_file["start"] + offset
 
             while rom_pos < this_end:
-                if i % line_lim == 0:
-                    sym_str += ".word "
+                adv_amt = min(4, this_end - rom_pos)
 
-                word = int.from_bytes(rom_bytes[rom_pos : rom_pos + 4], "big")
+                word = int.from_bytes(rom_bytes[rom_pos : rom_pos + adv_amt], "big")
 
                 if word in self.c_variables:
                     byte_str = self.c_variables[word]
@@ -482,16 +479,11 @@ class N64SegCode(N64Segment):
                 else:
                     byte_str = '0x{0:0{1}X}'.format(word,8)
 
-                if (i + 1) % line_lim == 0:
-                    sym_str += byte_str + "\n"
-                else:
-                    sym_str += byte_str
-                    if rom_pos + 4 < this_end:
-                        sym_str += ", "
-                    else:
-                        sym_str += "\n"
+                sym_str += byte_str
+                if rom_pos + adv_amt < this_end:
+                    sym_str += ", "
 
-                rom_pos += 4
+                rom_pos += adv_amt
                 i += 1
 
             ret += sym_str
@@ -684,8 +676,9 @@ class N64SegCode(N64Segment):
             subdir = self.get_subdir(split_file["subtype"])
             obj_type = self.get_ld_obj_type(split_file["subtype"], ".text")
             ext = self.get_ext(split_file['subtype'])
+            start = split_file["start"]
 
-            return subdir, f"{split_file['name']}.{ext}", obj_type
+            return subdir, f"{split_file['name']}.{ext}", obj_type, start
 
         return [transform(file) for file in self.files]
 

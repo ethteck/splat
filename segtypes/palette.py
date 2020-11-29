@@ -52,4 +52,4 @@ class N64SegPalette(N64Segment):
         if self.compressed:
             ext += ".Yay0"
 
-        return [("img", f"{self.name}{ext}", ".data")]
+        return [("img", f"{self.name}{ext}", ".data", self.rom_start)]

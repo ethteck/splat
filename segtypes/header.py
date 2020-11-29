@@ -55,7 +55,7 @@ class N64SegHeader(N64Segment):
 
 
     def get_ld_files(self):
-        return [("asm", f"{self.name}.s", ".data")]
+        return [("asm", f"{self.name}.s", ".data", self.rom_start)]
 
 
     @staticmethod

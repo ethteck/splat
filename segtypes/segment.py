@@ -94,12 +94,28 @@ class N64Segment:
             f".{sect_name} 0x{vram_or_rom:X} : AT({sect_name}_ROM_START) {{\n"
         )
 
-        for subdir, path, obj_type in self.get_ld_files():
+        i = 0
+        for subdir, path, obj_type, start in self.get_ld_files():
+            # Hack for non-0x10 alignment
+            if start % 0x10 != 0 and i != 0:
+                tmp_sect_name = path.replace(".", "_")
+                tmp_sect_name = tmp_sect_name.replace("/", "_")
+                tmp_vram = start - self.rom_start + self.vram_addr
+                s += (
+                    "}\n"
+                    "#ifdef SHIFT\n"
+                    f"{tmp_sect_name}_ROM_START = __romPos;\n"
+                    "#else\n"
+                    f"{tmp_sect_name}_ROM_START = 0x{start:X};\n"
+                    "#endif\n"
+                    f".{tmp_sect_name} 0x{tmp_vram:X} : AT({tmp_sect_name}_ROM_START) {{\n"
+                )
+                
             path = PurePath(subdir) / PurePath(path)
-            path = path.with_suffix(
-                ".o" if replace_ext else path.suffix + ".o")
+            path = path.with_suffix(".o" if replace_ext else path.suffix + ".o")
 
             s += f"    BUILD_DIR/{path}({obj_type});\n"
+            i += 1
 
         s += (
             "}\n"
