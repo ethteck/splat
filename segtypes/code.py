@@ -342,8 +342,10 @@ class N64SegCode(N64Segment):
                                     else:
                                         sym_name = "D_{:X}".format(symbol_addr)
                                         self.store_syms(symbol_addr, sym_name)
-                                        break
-                                        # self.undefined_syms_to_add.add(sym_name)
+                                        if self.options.get("create_detected_syms", False):
+                                            self.undefined_syms_to_add.add(sym_name)
+                                        else:
+                                            break
 
                                     if offset != 0:
                                         sym_name += f"+0x{offset:X}"
