@@ -85,6 +85,7 @@ class N64SegCode(N64Segment):
         self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
         self.glabels_to_add = set()
+        self.undefined_syms_to_add = set()
         self.glabels_added = set()
         self.all_functions = set()
         self.c_functions = {}
@@ -323,7 +324,7 @@ class N64SegCode(N64Segment):
                                     else:
                                         break
                                         # sym_name = "D_{:X}".format(symbol_addr)
-                                        # self.glabels_to_add.add(sym_name)
+                                        # self.undefined_syms_to_add.add(sym_name)
 
                                     sect = self.get_file_for_addr(symbol_addr)
 

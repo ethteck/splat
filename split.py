@@ -160,6 +160,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
 
     defined_funcs = set()
     undefined_funcs = set()
+    undefined_syms = set()
 
     # Initialize segments
     for i, segment in enumerate(config['segments']):
@@ -205,6 +206,7 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             if type(segment) == N64SegCode:
                 defined_funcs |= segment.glabels_added
                 undefined_funcs |= segment.glabels_to_add
+                undefined_syms |= segment.undefined_syms_to_add
 
         ld_sections.append(segment.get_ld_section())
 
@@ -223,6 +225,13 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         with open(os.path.join(repo_path, "undefined_funcs.txt"), "w", newline="\n") as f:
             for line in to_write:
                 f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
+    
+    # write undefined_syms_auto.txt
+    to_write = sorted(undefined_syms)
+    if len(to_write) > 0:
+        with open(os.path.join(repo_path, "undefined_syms_auto.txt"), "w", newline="\n") as f:
+            for sym in to_write:
+                f.write(f"{sym} = 0x{sym[2:]};\n")
 
 
 if __name__ == "__main__":
