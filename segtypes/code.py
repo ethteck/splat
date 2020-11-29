@@ -95,6 +95,7 @@ class N64SegCode(N64Segment):
         self.symbol_ranges = RangeDict()
         self.data_syms = {}
         self.rodata_syms = {}
+        self.unk_syms = {}
 
     @staticmethod
     def get_default_name(addr):
@@ -327,15 +328,20 @@ class N64SegCode(N64Segment):
                                     sect = self.get_file_for_addr(symbol_addr)
 
                                     if sect:
-                                        if sect["subtype"] == "data":
-                                            if sect["name"] not in self.data_syms:
-                                                self.data_syms[sect["name"]] = {}
-                                            self.data_syms[sect["name"]][symbol_addr] = sym_name
+                                        sect_name = sect["name"]
 
-                                        if sect["subtype"] == "rodata":
-                                            if sect["name"] not in self.rodata_syms:
-                                                self.rodata_syms[sect["name"]] = {}
-                                            self.rodata_syms[sect["name"]][symbol_addr] = sym_name
+                                        if sect["subtype"] == "data":
+                                            if sect_name not in self.data_syms:
+                                                self.data_syms[sect_name] = {}
+                                            self.data_syms[sect_name][symbol_addr] = sym_name
+                                        elif sect["subtype"] == "rodata":
+                                            if sect_name not in self.rodata_syms:
+                                                self.rodata_syms[sect_name] = {}
+                                            self.rodata_syms[sect_name][symbol_addr] = sym_name
+                                        elif sect["subtype"] == "bin":
+                                            if sect_name not in self.unk_syms:
+                                                self.unk_syms[sect_name] = {}
+                                            self.unk_syms[sect_name][symbol_addr] = sym_name
 
                                     if offset != 0:
                                         sym_name += f"+0x{offset:X}"
@@ -606,6 +612,33 @@ class N64SegCode(N64Segment):
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"]: split_file["end"]])
+        
+        if self.options.get("symbol_debug_info", None):
+            for split_file in self.files:
+                name = split_file["name"]
+                print("Info for " + name)
+
+                if name in self.data_syms:
+                    print("data:")
+                    sym_info = self.data_syms[name]
+                    sorted_syms = sorted(sym_info.keys())
+                    for sym in sorted_syms:
+                        print(f"0x{sym:X}: {sym_info[sym]}")
+                    print("\n")
+                if name in self.rodata_syms:
+                    print("rodata:")
+                    sym_info = self.rodata_syms[name]
+                    sorted_syms = sorted(sym_info.keys())
+                    for sym in sorted_syms:
+                        print(f"0x{sym:X}: {sym_info[sym]}")
+                    print("\n")
+                if name in self.unk_syms:
+                    print("unk:")
+                    sym_info = self.unk_syms[name]
+                    sorted_syms = sorted(sym_info.keys())
+                    for sym in sorted_syms:
+                        print(f"0x{sym:X}: {sym_info[sym]}")
+
 
     @staticmethod
     def get_subdir(subtype):
