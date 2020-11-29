@@ -330,11 +330,11 @@ class N64SegCode(N64Segment):
                                     if sect:
                                         sect_name = sect["name"]
 
-                                        if sect["subtype"] == "data":
+                                        if sect["subtype"] in [".data", "data"]:
                                             if sect_name not in self.data_syms:
                                                 self.data_syms[sect_name] = {}
                                             self.data_syms[sect_name][symbol_addr] = sym_name
-                                        elif sect["subtype"] == "rodata":
+                                        elif sect["subtype"] in [".rodata", "rodata"]:
                                             if sect_name not in self.rodata_syms:
                                                 self.rodata_syms[sect_name] = {}
                                             self.rodata_syms[sect_name][symbol_addr] = sym_name
@@ -616,7 +616,7 @@ class N64SegCode(N64Segment):
         if self.options.get("symbol_debug_info", None):
             for split_file in self.files:
                 name = split_file["name"]
-                print("Info for " + name)
+                print(f"Symbol info for {name}:")
 
                 if name in self.data_syms:
                     print("data:")
