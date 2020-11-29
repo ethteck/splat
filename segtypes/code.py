@@ -437,6 +437,7 @@ class N64SegCode(N64Segment):
         elif split_file["name"] in self.rodata_syms:
             sym_info = self.rodata_syms[split_file["name"]]
         else:
+            self.log("No data found for " + split_file["name"] + "; not generating file")
             return None
 
         sorted_syms = sorted(sym_info.keys())
@@ -595,15 +596,19 @@ class N64SegCode(N64Segment):
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
                 outpath = Path(os.path.join(out_dir, split_file["name"] + ".data.s"))
 
-                with open(outpath, "w", newline="\n") as f:
-                    f.write(self.gen_data_file(split_file, rom_bytes))
+                file_text = self.gen_data_file(split_file, rom_bytes)
+                if file_text:
+                    with open(outpath, "w", newline="\n") as f:
+                        f.write(file_text)
 
             elif split_file["subtype"] == "rodata":
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
                 outpath = Path(os.path.join(out_dir, split_file["name"] + ".rodata.s"))
 
-                with open(outpath, "w", newline="\n") as f:
-                    f.write(self.gen_data_file(split_file, rom_bytes))
+                file_text = self.gen_data_file(split_file, rom_bytes)
+                if file_text:
+                    with open(outpath, "w", newline="\n") as f:
+                        f.write(file_text)
 
             elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
