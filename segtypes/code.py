@@ -429,14 +429,20 @@ class N64SegCode(N64Segment):
             or ("hasm" in self.options["modes"] and "hasm" in subtypes)
             or ("bin" in self.options["modes"] and "bin" in subtypes)
         )
+    
+    def is_bytes_empty(self, bytes):
+        for b in bytes:
+            if b != 0:
+                return False
+        return True
 
     def gen_data_file(self, split_file, rom_bytes):
         ret = ".include \"macro.inc\"\n\n"
         ret += f'.section .{split_file["subtype"]}'
 
-        if split_file["name"] in self.data_syms:
+        if split_file["subtype"] == "data" and split_file["name"] in self.data_syms:
             sym_info = self.data_syms[split_file["name"]]
-        elif split_file["name"] in self.rodata_syms:
+        elif split_file["subtype"] == "rodata" and split_file["name"] in self.rodata_syms:
             sym_info = self.rodata_syms[split_file["name"]]
         else:
             self.log("No data found for " + split_file["name"] + "; not generating file")
@@ -450,27 +456,38 @@ class N64SegCode(N64Segment):
         # add end
         sorted_syms.append(split_file["vram"] + split_file["end"] - split_file["start"])
         
-        rom_pos = split_file["start"]
-        
         for i in range(len(sorted_syms) - 1):
             start = sorted_syms[i]
             end = sorted_syms[i + 1]
-            offset = end - split_file["vram"]
+            sym_rom_start = start - split_file["vram"] + split_file["start"]
+            sym_rom_end = end - split_file["vram"] + split_file["start"]
 
             if start in sym_info:
                 sym_name = sym_info[start]
             else:
                 sym_name = f"D_{start:X}"
 
-            sym_str = "\n\nglabel " + sym_name + "\n.word "
+            sym_str = "\n\nglabel " + sym_name + "\n"
+            sym_bytes = rom_bytes[sym_rom_start : sym_rom_end]
+
+            # .ascii
+            if not self.is_bytes_empty(sym_bytes):
+                try:
+                    ascii_str = sym_bytes.decode("EUC-JP")
+                    ascii_str = ascii_str.replace("\x00", "\\0")
+                    sym_str += f'.ascii "{ascii_str}"'
+                    ret += sym_str
+                    continue
+                except:
+                    pass
+
+            # .word
+            sym_str += ".word "
             i = 0
+            while i < len(sym_bytes):
+                adv_amt = min(4, len(sym_bytes) - i)
 
-            this_end = split_file["start"] + offset
-
-            while rom_pos < this_end:
-                adv_amt = min(4, this_end - rom_pos)
-
-                word = int.from_bytes(rom_bytes[rom_pos : rom_pos + adv_amt], "big")
+                word = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
 
                 if word in self.c_variables:
                     byte_str = self.c_variables[word]
@@ -479,14 +496,9 @@ class N64SegCode(N64Segment):
                 else:
                     byte_str = '0x{0:0{1}X}'.format(word,8)
 
-                sym_str += byte_str
-                if rom_pos + adv_amt < this_end:
-                    sym_str += ", "
-
-                rom_pos += adv_amt
-                i += 1
-
-            ret += sym_str
+                sym_str += byte_str + ", "
+                i += adv_amt
+            ret += sym_str[:-2] # omit final ", "
 
         return ret
 
