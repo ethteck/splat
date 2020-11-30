@@ -264,19 +264,23 @@ class N64SegCode(N64Segment):
 
         if sect:
             sect_name = sect["name"]
+            sect_type = sect["subtype"]
 
-            if sect["subtype"] in [".data", "data"]:
+            if sect_type in [".data", "data"]:
                 if sect_name not in self.data_syms:
                     self.data_syms[sect_name] = {}
                 self.data_syms[sect_name][addr] = name
-            elif sect["subtype"] in [".rodata", "rodata"]:
+            elif sect_type in [".rodata", "rodata"]:
                 if sect_name not in self.rodata_syms:
                     self.rodata_syms[sect_name] = {}
                 self.rodata_syms[sect_name][addr] = name
-            elif sect["subtype"] == "bin":
+            elif sect_type == "bin":
                 if sect_name not in self.unk_syms:
                     self.unk_syms[sect_name] = {}
                 self.unk_syms[sect_name][addr] = name
+            return sect_type
+        else:
+            return None
 
     # Determine symbols
     def determine_symbols(self, funcs):
@@ -340,8 +344,8 @@ class N64SegCode(N64Segment):
                                         offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
                                     else:
                                         sym_name = "D_{:X}".format(symbol_addr)
-                                        self.store_syms(symbol_addr, sym_name)
-                                        if self.options.get("create_detected_syms", False):
+                                        sect_type = self.store_syms(symbol_addr, sym_name)
+                                        if self.options.get("create_detected_syms", False) and not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
                                             self.undefined_syms_to_add.add(sym_name)
                                         else:
                                             break
