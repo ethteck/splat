@@ -7,16 +7,18 @@ from struct import pack, unpack_from
 lib = None
 def setup_lib():
     global lib
-    lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0Decompress")
-    if lib is None:
-        print(f"Failed to load Yay0Decompress")
-        exit()
+    try:
+        lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0Decompress")
+        return True
+    except Exception:
+        return False
 
 def decompress_yay0(in_bytes, byte_order="big"):
     # attempt to load the library only once per execution
     global lib
-    if not lib:
-        setup_lib()
+    if not lib and not setup_lib():
+        print(f"Failed to load Yay0Decompress, falling back to python method")
+        return decompress_yay0_python(in_bytes, byte_order)
 
     class Yay0(Structure):
         _fields_ = [
