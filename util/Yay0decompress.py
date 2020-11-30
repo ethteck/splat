@@ -4,20 +4,29 @@ import os
 from ctypes import *
 from struct import pack, unpack_from
 
+tried_loading = False
 lib = None
+
 def setup_lib():
+    global tried_loading
     global lib
+    if tried_loading:
+        return False
+    if lib:
+        return True
     try:
-        lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0Decompress")
+        tried_loading = True
+        lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0decompress")
         return True
     except Exception:
+        print(f"Failed to load Yay0decompress, falling back to python method")
+        tried_loading = True
         return False
 
 def decompress_yay0(in_bytes, byte_order="big"):
     # attempt to load the library only once per execution
     global lib
-    if not lib and not setup_lib():
-        print(f"Failed to load Yay0Decompress, falling back to python method")
+    if not setup_lib():
         return decompress_yay0_python(in_bytes, byte_order)
 
     class Yay0(Structure):

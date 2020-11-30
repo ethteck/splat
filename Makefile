@@ -2,10 +2,10 @@ UTIL_DIR := util
 
 default: all
 
-all: Yay0Decompress
+all: Yay0decompress
 
-Yay0Decompress:
-	gcc $(UTIL_DIR)/Yay0Decompress.c -fPIC -shared -O3 -o $(UTIL_DIR)/Yay0Decompress
+Yay0decompress:
+	gcc $(UTIL_DIR)/Yay0decompress.c -fPIC -shared -O3 -o $(UTIL_DIR)/Yay0Decompress
 
 clean:
-	rm -f $(UTIL_DIR)/Yay0Decompress
+	rm -f $(UTIL_DIR)/Yay0decompress
