@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 from ctypes import *
-from struct import pack, unpack
+from struct import pack, unpack_from
 
 lib = None
 def setup_lib():
@@ -13,6 +13,7 @@ def setup_lib():
         exit()
 
 def decompress_yay0(in_bytes, byte_order="big"):
+    # attempt to load the library only once per execution
     global lib
     if not lib:
         setup_lib()
@@ -25,15 +26,24 @@ def decompress_yay0(in_bytes, byte_order="big"):
             ("dataPtr", c_uint32),
         ]
 
+    # read the file header
     bigEndian = byte_order == "big"
     if bigEndian:
-        hdr = Yay0.from_buffer_copy(pack("<IIII", *unpack(">IIII", in_bytes[:sizeof(Yay0)])))
+        # the struct is only a view, so when passed to C it will keep
+        # its BigEndian values and crash. Explicitly convert them here to little
+        hdr = Yay0.from_buffer_copy(pack("<IIII", *unpack_from(">IIII", in_bytes, 0)))
     else:
         hdr = Yay0.from_buffer_copy(in_bytes, 0)
-    
+
+    # create the input/output buffers, copying data to in
     src = (c_uint8 * len(in_bytes)).from_buffer_copy(in_bytes, 0)
     dst = (c_uint8 * hdr.uncompressedLength)()
+
+    # call decompress, equivilant to, in C:
+    # decompress(&hdr, &src, &dst, bigEndian)
     lib.decompress(byref(hdr), byref(src), byref(dst), c_bool(bigEndian))
+
+    # other functions want the results back as a non-ctypes type
     return bytearray(dst)
 
 def decompress_yay0_python(in_bytes, byte_order="big"):
@@ -97,16 +107,15 @@ def main(args):
         raw_bytes = f.read()
 
     decompressed = decompress_yay0(raw_bytes, args.byte_order)
-    
+
     with open(args.outfile, "wb") as f:
         f.write(decompressed)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("infile")
     parser.add_argument("outfile")
-    parser.add_argument("--byte-order", default="big")
+    parser.add_argument("--byte-order", default="big", choices=["big", "little"])
 
     args = parser.parse_args()
     main(args)
