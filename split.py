@@ -162,6 +162,8 @@ def main(rom_path, config_path, repo_path, modes, verbose):
     undefined_funcs = set()
     undefined_syms = set()
 
+    seg_sizes = {}
+
     # Initialize segments
     for i, segment in enumerate(config['segments']):
         if len(segment) == 1:
@@ -196,6 +198,14 @@ def main(rom_path, config_path, repo_path, modes, verbose):
             segment.symbol_ranges = ranges
 
         segment.check()
+
+        tp = segment.type
+        if segment.type == "bin" and segment.is_name_default():
+            tp = "unk"
+
+        if tp not in seg_sizes:
+            seg_sizes[tp] = 0
+        seg_sizes[tp] += segment.rom_length
 
         if segment.should_run():
             print(f"Splitting {segment.type} {segment.name} at 0x{segment.rom_start:X}")
@@ -232,6 +242,28 @@ def main(rom_path, config_path, repo_path, modes, verbose):
         with open(os.path.join(repo_path, "undefined_syms_auto.txt"), "w", newline="\n") as f:
             for sym in to_write:
                 f.write(f"{sym} = 0x{sym[2:]};\n")
+    
+    # Statistics
+    unk_size = seg_sizes.get("unk", 0)
+    rest_size = 0
+    total_size = len(rom_bytes)
+
+    for tp in seg_sizes:
+        if tp != "unk":
+            rest_size += seg_sizes[tp]
+
+    assert(unk_size + rest_size == total_size)
+
+    known_ratio = rest_size / total_size
+    unk_ratio = unk_size / total_size
+
+    print(f"Split {rest_size} bytes ({known_ratio:.2%}) in defined segments")
+    for tp in seg_sizes:
+        if tp != "unk":
+            tmp_size = seg_sizes[tp]
+            tmp_ratio = tmp_size / total_size
+            print(f"\t{tp}: {tmp_size} bytes ({tmp_ratio:.2%})")
+    print(f"Split {unk_size} bytes ({unk_ratio:.2%}) from unknown bin files")
 
 
 if __name__ == "__main__":

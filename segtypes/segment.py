@@ -146,7 +146,7 @@ class N64Segment:
         return None
 
     def is_name_default(self):
-        return self.name == self.get_default_name(self.rom_end)
+        return self.name == self.get_default_name(self.rom_start)
 
     @staticmethod
     def get_default_name(addr):
