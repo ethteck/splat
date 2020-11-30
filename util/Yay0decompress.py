@@ -1,7 +1,54 @@
 import argparse
 import sys
+import os
+from ctypes import *
+from struct import pack, unpack_from
+
+lib = None
+def setup_lib():
+    global lib
+    try:
+        lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0Decompress")
+        return True
+    except Exception:
+        return False
 
 def decompress_yay0(in_bytes, byte_order="big"):
+    # attempt to load the library only once per execution
+    global lib
+    if not lib and not setup_lib():
+        print(f"Failed to load Yay0Decompress, falling back to python method")
+        return decompress_yay0_python(in_bytes, byte_order)
+
+    class Yay0(Structure):
+        _fields_ = [
+            ("magic", c_uint32),
+            ("uncompressedLength", c_uint32),
+            ("opPtr", c_uint32),
+            ("dataPtr", c_uint32),
+        ]
+
+    # read the file header
+    bigEndian = byte_order == "big"
+    if bigEndian:
+        # the struct is only a view, so when passed to C it will keep
+        # its BigEndian values and crash. Explicitly convert them here to little
+        hdr = Yay0.from_buffer_copy(pack("<IIII", *unpack_from(">IIII", in_bytes, 0)))
+    else:
+        hdr = Yay0.from_buffer_copy(in_bytes, 0)
+
+    # create the input/output buffers, copying data to in
+    src = (c_uint8 * len(in_bytes)).from_buffer_copy(in_bytes, 0)
+    dst = (c_uint8 * hdr.uncompressedLength)()
+
+    # call decompress, equivilant to, in C:
+    # decompress(&hdr, &src, &dst, bigEndian)
+    lib.decompress(byref(hdr), byref(src), byref(dst), c_bool(bigEndian))
+
+    # other functions want the results back as a non-ctypes type
+    return bytearray(dst)
+
+def decompress_yay0_python(in_bytes, byte_order="big"):
     if in_bytes[:4] != b"Yay0":
         sys.exit("Input file is not yay0")
 
@@ -60,16 +107,17 @@ def decompress_yay0(in_bytes, byte_order="big"):
 def main(args):
     with open(args.infile, "rb") as f:
         raw_bytes = f.read()
+
     decompressed = decompress_yay0(raw_bytes, args.byte_order)
+
     with open(args.outfile, "wb") as f:
         f.write(decompressed)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("infile")
     parser.add_argument("outfile")
-    parser.add_argument("--byte-order", default="big")
+    parser.add_argument("--byte-order", default="big", choices=["big", "little"])
 
     args = parser.parse_args()
     main(args)
