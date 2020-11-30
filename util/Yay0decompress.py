@@ -8,12 +8,12 @@ tried_loading = False
 lib = None
 
 def setup_lib():
-    global tried_loading
     global lib
-    if tried_loading:
-        return False
+    global tried_loading
     if lib:
         return True
+    if tried_loading:
+        return False
     try:
         tried_loading = True
         lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0decompress")
