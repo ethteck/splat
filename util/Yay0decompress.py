@@ -7,7 +7,7 @@ from struct import pack, unpack
 lib = None
 def setup_lib():
     global lib
-    lib = cdll.LoadLibrary(os.path.abspath("Yay0Decompress"))
+    lib = cdll.LoadLibrary(os.path.dirname(os.path.realpath(__file__)) + "/Yay0Decompress")
     if lib is None:
         print(f"Failed to load Yay0Decompress")
         exit()
@@ -31,7 +31,7 @@ def decompress_yay0(in_bytes, byte_order="big"):
     else:
         hdr = Yay0.from_buffer_copy(in_bytes, 0)
     
-    src = (c_uint8 * (len(in_bytes)-sizeof(Yay0))).from_buffer_copy(in_bytes, 0)
+    src = (c_uint8 * len(in_bytes)).from_buffer_copy(in_bytes, 0)
     dst = (c_uint8 * hdr.uncompressedLength)()
     lib.decompress(byref(hdr), byref(src), byref(dst), c_bool(bigEndian))
     return bytearray(dst)
