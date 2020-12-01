@@ -506,6 +506,17 @@ class N64SegCode(N64Segment):
 
         return ret
 
+    def get_c_preamble(self):
+        ret = []
+
+        if self.options.get("generated_c_preamble", None):
+            ret.append(self.options["generated_c_preamble"])
+        else:
+            ret.append("#include \"common.h\"")
+        
+        ret.append("")
+        return ret
+
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         md.detail = True
@@ -566,9 +577,7 @@ class N64SegCode(N64Segment):
 
                     # Creation of c files
                     if not os.path.exists(c_path):  # and some option is enabled
-                        c_lines = []
-                        c_lines.append("#include \"common.h\"")
-                        c_lines.append("")
+                        c_lines = self.get_c_preamble()
 
                         for func in funcs_text:
                             func_name = self.get_unique_func_name(
