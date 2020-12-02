@@ -310,8 +310,7 @@ class N64SegCode(N64Segment):
                                 if s_insn.mnemonic == "addiu":
                                     s_reg = s_op_split[-2]
                                 else:
-                                    s_reg = s_op_split[-1][s_op_split[-1].rfind(
-                                        "(") + 1: -1]
+                                    s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1: -1]
 
                                 if reg == s_reg:
                                     # Match!
@@ -333,11 +332,11 @@ class N64SegCode(N64Segment):
                                     symbol_addr = (lui_val * 0x10000) + s_val
 
                                     offset = 0
-                                    if symbol_addr in self.c_variables:
-                                        sym_name = self.c_variables[symbol_addr]
-                                        self.store_syms(symbol_addr, sym_name)
-                                    elif symbol_addr in self.c_functions:
+                                    if symbol_addr in self.c_functions:
                                         sym_name = self.c_functions[symbol_addr]
+                                        self.store_syms(symbol_addr, sym_name)
+                                    elif symbol_addr in self.c_variables:
+                                        sym_name = self.c_variables[symbol_addr]
                                         self.store_syms(symbol_addr, sym_name)
                                     elif symbol_addr in self.symbol_ranges:
                                         sym_name = self.symbol_ranges.get(symbol_addr)
@@ -345,19 +344,17 @@ class N64SegCode(N64Segment):
                                     else:
                                         sym_name = "D_{:X}".format(symbol_addr)
                                         sect_type = self.store_syms(symbol_addr, sym_name)
-                                        if self.options.get("create_detected_syms", False) and not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
-                                            self.undefined_syms_to_add.add(sym_name)
-                                        else:
+                                        if not self.options.get("create_detected_syms", False):
                                             break
+                                        if not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
+                                            self.undefined_syms_to_add.add(sym_name)
 
                                     if offset != 0:
                                         sym_name += f"+0x{offset:X}"
                                     func[i] += ("%hi({})".format(sym_name),)
                                     func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
                                     break
-
             ret[func_addr] = func
-
         return ret
 
     def add_labels(self, funcs):
