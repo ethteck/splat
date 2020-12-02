@@ -429,6 +429,8 @@ class N64SegCode(N64Segment):
             or ("asm" in self.options["modes"] and "asm" in subtypes)
             or ("hasm" in self.options["modes"] and "hasm" in subtypes)
             or ("bin" in self.options["modes"] and "bin" in subtypes)
+            or ("data" in self.options["modes"] and "data" in subtypes)
+            or ("rodata" in self.options["modes"] and "rodata" in subtypes)
         )
     
     def is_bytes_empty(self, bytes):
@@ -611,7 +613,9 @@ class N64SegCode(N64Segment):
 
             elif split_file["subtype"] == "data":
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
+
                 outpath = Path(os.path.join(out_dir, split_file["name"] + ".data.s"))
+                outpath.parent.mkdir(parents=True, exist_ok=True)
 
                 file_text = self.gen_data_file(split_file, rom_bytes)
                 if file_text:
@@ -621,8 +625,8 @@ class N64SegCode(N64Segment):
             elif split_file["subtype"] == "rodata":
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
 
-                self.create_parent_dir(out_dir, split_file["name"] + ".rodata.s")
                 outpath = Path(os.path.join(out_dir, split_file["name"] + ".rodata.s"))
+                outpath.parent.mkdir(parents=True, exist_ok=True)
 
                 file_text = self.gen_data_file(split_file, rom_bytes)
                 if file_text:
