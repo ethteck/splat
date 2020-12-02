@@ -620,6 +620,8 @@ class N64SegCode(N64Segment):
 
             elif split_file["subtype"] == "rodata":
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
+
+                self.create_parent_dir(out_dir, split_file["name"] + ".rodata.s")
                 outpath = Path(os.path.join(out_dir, split_file["name"] + ".rodata.s"))
 
                 file_text = self.gen_data_file(split_file, rom_bytes)
