@@ -37,13 +37,10 @@ def write_ldscript(rom_name, repo_path, sections, bare=False):
             f.write(
                 "SECTIONS\n"
                 "{\n"
-                "    __romPos = 0;\n"
-                "\n"
                 "    "
             )
-            f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections))
+            f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections)[:-4])
             f.write(
-                "\n"
                 "}\n"
             )
 
