@@ -1,7 +1,8 @@
 import os
 from pathlib import Path, PurePath
 import re
-
+import json
+from util import log
 
 def parse_segment_start(segment):
     return segment[0] if "start" not in segment else segment["start"]
@@ -45,6 +46,7 @@ class N64Segment:
         self.ld_name_override = segment.get(
             "ld_name", None) if type(segment) is dict else None
         self.options = options
+        self.config = segment
 
     def check(self):
         if self.rom_start > self.rom_end:
@@ -78,6 +80,9 @@ class N64Segment:
     def postsplit(self, segments):
         pass
 
+    def cache(self):
+        return (self.config, self.rom_end)
+
     def get_ld_section(self):
         replace_ext = self.options.get("ld_o_replace_extension", True)
         sect_name = self.ld_name_override if self.ld_name_override else self.get_ld_section_name()
@@ -110,7 +115,7 @@ class N64Segment:
                     "#endif\n"
                     f".{tmp_sect_name} 0x{tmp_vram:X} : AT({tmp_sect_name}_ROM_START) {{\n"
                 )
-                
+
             path = PurePath(subdir) / PurePath(path)
             path = path.with_suffix(".o" if replace_ext else path.suffix + ".o")
 
@@ -134,19 +139,24 @@ class N64Segment:
         return f"data_{self.rom_start:X}"
 
     # returns list of (basedir, filename, obj_type)
-
     def get_ld_files(self):
         return []
 
     def log(self, msg):
         if self.options.get("verbose", False):
-            print(msg)
+            log.write(f"{self.type} {self.name}: {msg}")
+
+    def error(self, msg):
+        log.write(f"{self.type} {self.name}: {msg}", status="error")
 
     def max_length(self):
         return None
 
     def is_name_default(self):
         return self.name == self.get_default_name(self.rom_start)
+
+    def unique_id(self):
+        return self.type + "_" + self.name
 
     @staticmethod
     def get_default_name(addr):

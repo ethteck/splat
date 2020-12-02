@@ -26,14 +26,14 @@ class N64SegCi8(N64SegRgba16):
                     "palette" and seg.image_name == self.name]
 
         if len(palettes) == 0:
-            print(f"ERROR: {self.type} {self.name} requires at least one palette")
+            self.error("no palette sibling segment exists")
             exit(1)
 
         seen_paths = []
 
         for pal_seg in palettes:
             if pal_seg.path in seen_paths:
-                print(f"ERROR: Palette name {pal_seg.name} is not unique")
+                self.error(f"palette name '{pal_seg.name}' is not unique")
                 exit(1)
             seen_paths.append(pal_seg.path)
 
