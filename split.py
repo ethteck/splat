@@ -31,6 +31,37 @@ parser.add_argument("--new", action="store_true",
 
 def write_ldscript(rom_name, repo_path, sections, bare=False):
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
+        f.write(
+            "#ifndef SPLAT_BEGIN_SEG\n"
+                "#ifndef SHIFT\n"
+                    "#define SPLAT_BEGIN_SEG(name, start, vram) \\\n"
+                    "    . = start;\\\n"
+                    "    name##_ROM_START = .;\\\n"
+                    "    name##_VRAM = ADDR(.name);\\\n"
+                    "    .name vram : AT(name##_ROM_START) {\n"
+                "#else\n"
+                    "#define SPLAT_BEGIN_SEG(name, start, vram) \\\n"
+                    "    name##_ROM_START = .;\\\n"
+                    "    name##_VRAM = ADDR(.name);\\\n"
+                    "    .name vram : AT(name##_ROM_START) {\n"
+                "#endif\n"
+            "#endif\n"
+            "\n"
+            "#ifndef SPLAT_END_SEG\n"
+                "#ifndef SHIFT\n"
+                    "#define SPLAT_END_SEG(name, end) \\\n"
+                    "    } \\\n"
+                    "    . = end;\\\n"
+                    "    name##_ROM_END = .;\n"
+                "#else\n"
+                    "#define SPLAT_END_SEG(name, end) \\\n"
+                    "    } \\\n"
+                    "    name##_ROM_END = .;\n"
+                "#endif\n"
+            "#endif\n"
+            "\n"
+        )
+
         if bare:
             f.write("\n".join(sections))
         else:

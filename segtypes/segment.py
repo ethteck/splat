@@ -89,13 +89,7 @@ class N64Segment:
         vram_or_rom = self.rom_start if self.vram_addr == 0 else self.vram_addr
 
         s = (
-            f"/* 0x{self.vram_addr:08X} {self.rom_start:X}-{self.rom_end:X} (len {self.rom_length:X}) */\n"
-            "#ifndef SHIFT\n"
-            f". = 0x{self.rom_start:X};\n"
-            "#endif\n"
-            f"{sect_name}_ROM_START = .;\n"
-            f"{sect_name}_VRAM = ADDR(.{sect_name});\n"
-            f".{sect_name} 0x{vram_or_rom:X} : AT({sect_name}_ROM_START) {{\n"
+            f"SPLAT_BEGIN_SEG({sect_name}, 0x{self.rom_start:X}, 0x{vram_or_rom:X})\n"
         )
 
         i = 0
@@ -107,11 +101,7 @@ class N64Segment:
                 tmp_vram = start - self.rom_start + self.vram_addr
                 s += (
                     "}\n"
-                    "#ifndef SHIFT\n"
-                    f". = 0x{start:X};\n"
-                    "#endif\n"
-                    f"{tmp_sect_name}_ROM_START = .;\n"
-                    f".{tmp_sect_name} 0x{tmp_vram:X} : AT({tmp_sect_name}_ROM_START) {{\n"
+                    f"SPLAT_BEGIN_SEG({tmp_sect_name}, 0x{start:X}, 0x{tmp_vram:X})\n"
                 )
 
             path = PurePath(subdir) / PurePath(path)
@@ -121,11 +111,7 @@ class N64Segment:
             i += 1
 
         s += (
-            "}\n"
-            "#ifndef SHIFT\n"
-            f". = 0x{self.rom_end:X};\n"
-            "#endif\n"
-            f"{sect_name}_ROM_END = .;\n"
+            f"SPLAT_END_SEG({sect_name}, 0x{self.rom_end:X})\n"
         )
 
         return s
