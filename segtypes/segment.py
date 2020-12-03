@@ -48,14 +48,18 @@ class N64Segment:
         self.options = options
         self.config = segment
 
+        self.errors = []
+        self.warnings = []
+        self.did_run = False
+
     def check(self):
         if self.rom_start > self.rom_end:
-            print(f"WARNING: {self.type} {self.name} is out-of-order")
+            self.warn(f"out-of-order (starts at 0x{self.rom_start:X}, but next segment starts at 0x{self.rom_end:X})")
         elif self.max_length():
             expected_len = int(self.max_length())
             actual_len = self.rom_end - self.rom_start
             if actual_len > expected_len:
-                print(f"WARNING: {self.type} {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X} (hint: add a 'bin' segment after {self.name})")
+                print(f"should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after {self.name})")
 
     @property
     def rom_length(self):
@@ -127,8 +131,11 @@ class N64Segment:
         if self.options.get("verbose", False):
             log.write(f"{self.type} {self.name}: {msg}")
 
+    def warn(self, msg):
+        self.warnings.append(msg)
+
     def error(self, msg):
-        log.write(f"{self.type} {self.name}: {msg}", status="error")
+        self.errors.append(msg)
 
     def max_length(self):
         return None
@@ -138,6 +145,16 @@ class N64Segment:
 
     def unique_id(self):
         return self.type + "_" + self.name
+
+    def status(self):
+        if len(self.errors) > 0:
+            return "error"
+        elif len(self.warnings) > 0:
+            return "warn"
+        elif self.did_run:
+            return "ok"
+        else:
+            return "skip"
 
     @staticmethod
     def get_default_name(addr):

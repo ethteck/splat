@@ -22,8 +22,10 @@ def dot(status=None):
 def status_to_ansi(status):
     if status == "ok":
         return Fore.GREEN
+    elif status == "warn":
+        return Fore.YELLOW + Style.BRIGHT
     elif status == "error":
-        return Fore.RED
+        return Fore.RED + Style.BRIGHT
     elif status == "skip":
         return Style.DIM
     else:

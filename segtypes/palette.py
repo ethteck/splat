@@ -21,7 +21,16 @@ class N64SegPalette(N64Segment):
             segment) is dict else False
 
     def should_run(self):
-        return super().should_run() or "img" in self.options["modes"]
+        return super().should_run() or (
+            "img" in self.options["modes"] or
+            "ci4" in self.options["modes"] or
+            "ci8" in self.options["modes"] or
+            "i4" in self.options["modes"] or
+            "i8" in self.options["modes"] or
+            "ia4" in self.options["modes"] or
+            "ia8" in self.options["modes"] or
+            "ia16" in self.options["modes"]
+        )
 
     def split(self, rom_bytes, base_path):
         out_dir = self.create_parent_dir(base_path + "/img", self.name)

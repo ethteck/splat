@@ -13,7 +13,7 @@ import yaml
 import pickle
 from colorama import Style, Fore
 from collections import OrderedDict
-from segtypes.segment import parse_segment_type
+from segtypes.segment import N64Segment, parse_segment_type
 from segtypes.code import N64SegCode
 from util import log
 
@@ -197,6 +197,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     c_vars = gather_c_variables(repo_path)
 
     ran_segments = []
+    all_segments = []
     ld_sections = []
     seen_segment_names = set()
 
@@ -230,15 +231,22 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
             segment_class = get_extension_class(options, config_path, seg_type)
 
         if segment_class == None:
-            log.write(f"ERROR: could not load {seg_type} segment type. Confirm your extension directory is configured correctly", status="error")
-            exit(1)
+            log.write(f"fatal error: could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)", status="error")
+            return 2
 
-        segment = segment_class(segment, config['segments'][i + 1], options)
+        try:
+            segment = segment_class(segment, config['segments'][i + 1], options)
+        except (IndexError, KeyError) as e:
+            try:
+                segment = N64Segment(segment, config['segments'][i + 1], options)
+                segment.error(e)
+            except Exception as e:
+                log.write(f"fatal error (segment type = {seg_type}): " + str(e), status="error")
+                return 2
 
         if segment_class.require_unique_name:
             if segment.name in seen_segment_names:
-                log.write(f"ERROR: Segment name {segment.name} is not unique", status="error")
-                exit(1)
+                segment.error("segment name is not unique", status="error")
             seen_segment_names.add(segment.name)
 
         if type(segment) == N64SegCode:
@@ -261,46 +269,50 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
             seg_cached[tp] = 0
         seg_sizes[tp] += segment.rom_length
 
-        if segment.should_run():
-            # Check cache
-            cached = segment.cache()
-            if not ignore_cache and cached == cache.get(segment.unique_id()):
-                log.dot(status="skip")
-                seg_cached[tp] += 1
-                continue
+        if len(segment.errors) == 0:
+            if segment.should_run():
+                # Check cache
+                cached = segment.cache()
+                if not ignore_cache and cached == cache.get(segment.unique_id()):
+                    # Cache hit
+                    seg_cached[tp] += 1
+                else:
+                    # Cache miss; split
+                    cache[segment.unique_id()] = cached
 
-            cache[segment.unique_id()] = cached
+                    try:
+                        segment.did_run = True
+                        segment.split(rom_bytes, repo_path)
+                    except Exception as e:
+                        segment.error(str(e))
 
-            if verbose:
-                log.write(f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}{Style.DIM}...", end="")
+                    if len(segment.errors) == 0:
+                        ran_segments.append(segment)
 
-            segment.split(rom_bytes, repo_path)
-            ran_segments.append(segment)
+                        if type(segment) == N64SegCode:
+                            defined_funcs |= segment.glabels_added
+                            undefined_funcs |= segment.glabels_to_add
+                            undefined_syms |= segment.undefined_syms_to_add
 
-            if type(segment) == N64SegCode:
-                defined_funcs |= segment.glabels_added
-                undefined_funcs |= segment.glabels_to_add
-                undefined_syms |= segment.undefined_syms_to_add
+                    seg_split[tp] += 1
 
-            if verbose:
-                log.write(f"ok", status="ok")
-            else:
-                log.dot(status="ok")
-
-            seg_split[tp] += 1
-
+        log.dot(status=segment.status())
+        all_segments.append(segment)
         ld_sections.append(segment.get_ld_section())
 
     for segment in ran_segments:
         segment.postsplit(ran_segments)
+        log.dot(status=segment.status())
 
     # Write ldscript
     if "ld" in options["modes"] or "all" in options["modes"]:
         if verbose:
-            log.write("Writing linker script")
+            log.write(f"saving {config['basename']}.ld")
         write_ldscript(config['basename'], repo_path, ld_sections, options.get("ld_bare", False))
 
     # Write undefined_funcs_auto.txt
+    if verbose:
+        log.write(f"saving undefined_funcs_auto.txt")
     c_predefined_funcs = set(c_funcs.keys())
     to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
     if len(to_write) > 0:
@@ -309,11 +321,31 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
                 f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
 
     # write undefined_syms_auto.txt
+    if verbose:
+        log.write(f"saving undefined_syms_auto.txt")
     to_write = sorted(undefined_syms)
     if len(to_write) > 0:
         with open(os.path.join(repo_path, "undefined_syms_auto.txt"), "w", newline="\n") as f:
             for sym in to_write:
                 f.write(f"{sym} = 0x{sym[2:]};\n")
+
+    # print warnings and errors during split/postsplit
+    had_error = False
+    for segment in all_segments:
+        if len(segment.warnings) > 0 or len(segment.errors) > 0:
+            log.write(f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:")
+
+            for warn in segment.warnings:
+                log.write("warning: " + warn, status="warn")
+
+            for error in segment.errors:
+                log.write("error: " + error, status="error")
+                had_error = True
+
+            log.write("") # empty line
+
+    if had_error:
+        return 1
 
     # Statistics
     unk_size = seg_sizes.get("unk", 0)
@@ -344,6 +376,9 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
         with open(cache_path, "wb") as f:
             pickle.dump(cache, f)
 
+    return 0 # no error
+
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.rom, args.config, args.outdir, args.modes, args.verbose, not args.new)
+    error_code = main(args.rom, args.config, args.outdir, args.modes, args.verbose, not args.new)
+    exit(error_code)

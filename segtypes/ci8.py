@@ -26,15 +26,15 @@ class N64SegCi8(N64SegRgba16):
                     "palette" and seg.image_name == self.name]
 
         if len(palettes) == 0:
-            self.error("no palette sibling segment exists")
-            exit(1)
+            self.error(f"no palette sibling segment exists\n(hint: add a segment with type 'palette' and name '{self.name}')")
+            return
 
         seen_paths = []
 
         for pal_seg in palettes:
             if pal_seg.path in seen_paths:
                 self.error(f"palette name '{pal_seg.name}' is not unique")
-                exit(1)
+                return
             seen_paths.append(pal_seg.path)
 
             w = png.Writer(self.width, self.height, palette=pal_seg.palette)
