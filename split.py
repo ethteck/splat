@@ -267,8 +267,8 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
             if not ignore_cache and cached == cache.get(segment.unique_id()):
                 log.dot(status="skip")
                 seg_cached[tp] += 1
-
                 continue
+
             cache[segment.unique_id()] = cached
 
             if verbose:
