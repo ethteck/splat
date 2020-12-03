@@ -16,11 +16,9 @@ class N64SegRgba16(N64Segment):
             self.width = segment["width"]
             self.height = segment["height"]
             self.flip = segment.get("flip", "noflip")
+        elif len(segment) < 5:
+            self.error("missing parameters")
         else:
-            if len(segment) < 5:
-                print(f"ERROR: {self.type} {self.name} is missing parameters")
-                exit(1)
-
             self.compressed = False
             self.width = segment[3]
             self.height = segment[4]
