@@ -1,0 +1,4 @@
+pyyaml
+python-ranges
+capstone
+pypng
