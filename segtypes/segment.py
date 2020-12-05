@@ -4,6 +4,9 @@ import re
 import json
 from util import log
 
+default_subalign = 16
+
+
 def parse_segment_start(segment):
     return segment[0] if "start" not in segment else segment["start"]
 
@@ -34,6 +37,12 @@ def parse_segment_vram(segment):
             return 0
 
 
+def parse_segment_subalign(segment):
+    if type(segment) is dict:
+        return segment.get("subalign", default_subalign)
+    return default_subalign
+
+
 class N64Segment:
     require_unique_name = True
 
@@ -47,6 +56,7 @@ class N64Segment:
             "ld_name", None) if type(segment) is dict else None
         self.options = options
         self.config = segment
+        self.subalign = parse_segment_subalign(segment)
 
         self.errors = []
         self.warnings = []
@@ -91,9 +101,10 @@ class N64Segment:
         replace_ext = self.options.get("ld_o_replace_extension", True)
         sect_name = self.ld_name_override if self.ld_name_override else self.get_ld_section_name()
         vram_or_rom = self.rom_start if self.vram_addr == 0 else self.vram_addr
+        subalign_str = "" if self.subalign == default_subalign else f"SUBALIGN({self.subalign})"
 
         s = (
-            f"SPLAT_BEGIN_SEG({sect_name}, 0x{self.rom_start:X}, 0x{vram_or_rom:X})\n"
+            f"SPLAT_BEGIN_SEG({sect_name}, 0x{self.rom_start:X}, 0x{vram_or_rom:X}, {subalign_str})\n"
         )
 
         i = 0
@@ -105,7 +116,7 @@ class N64Segment:
                 tmp_vram = start - self.rom_start + self.vram_addr
                 s += (
                     "}\n"
-                    f"SPLAT_BEGIN_SEG({tmp_sect_name}, 0x{start:X}, 0x{tmp_vram:X})\n"
+                    f"SPLAT_BEGIN_SEG({tmp_sect_name}, 0x{start:X}, 0x{tmp_vram:X}, {subalign_str})\n"
                 )
 
             path = PurePath(subdir) / PurePath(path)
