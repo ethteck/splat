@@ -432,11 +432,20 @@ class N64SegCode(N64Segment):
             or ("data" in self.options["modes"] and "data" in subtypes)
             or ("rodata" in self.options["modes"] and "rodata" in subtypes)
         )
-    
-    def is_bytes_empty(self, bytes):
+
+    def is_valid_ascii(self, bytes):
+        if len(bytes) < 8:
+            return False
+
+        num_empty_bytes = 0
         for b in bytes:
-            if b != 0:
-                return False
+            if b == 0:
+                num_empty_bytes += 1
+
+        empty_ratio = num_empty_bytes / len(bytes)
+        if empty_ratio > 0.2:
+            return False
+
         return True
 
     def gen_data_file(self, split_file, rom_bytes):
@@ -455,10 +464,10 @@ class N64SegCode(N64Segment):
         # check beginning
         if sorted_syms[0] != split_file["vram"]:
             sorted_syms.insert(0, split_file["vram"])
-        
+
         # add end
         sorted_syms.append(split_file["vram"] + split_file["end"] - split_file["start"])
-        
+
         for i in range(len(sorted_syms) - 1):
             start = sorted_syms[i]
             end = sorted_syms[i + 1]
@@ -474,7 +483,7 @@ class N64SegCode(N64Segment):
             sym_bytes = rom_bytes[sym_rom_start : sym_rom_end]
 
             # .ascii
-            if not self.is_bytes_empty(sym_bytes):
+            if self.is_valid_ascii(sym_bytes):
                 try:
                     ascii_str = sym_bytes.decode("EUC-JP")
                     ascii_str = ascii_str.replace("\x00", "\\0")
@@ -484,11 +493,21 @@ class N64SegCode(N64Segment):
                 except:
                     pass
 
-            # .word
-            sym_str += ".word "
+            # Fallback to raw data
+            if len(sym_bytes) % 4 == 0:
+                stype = ".word "
+                slen = 4
+            elif len(sym_bytes) % 2 == 0:
+                stype = ".short "
+                slen = 2
+            else:
+                stype = ".byte "
+                slen = 1
+
+            sym_str += stype
             i = 0
             while i < len(sym_bytes):
-                adv_amt = min(4, len(sym_bytes) - i)
+                adv_amt = min(slen, len(sym_bytes) - i)
 
                 word = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
 
@@ -497,7 +516,7 @@ class N64SegCode(N64Segment):
                 elif word in self.c_functions:
                     byte_str = self.c_functions[word]
                 else:
-                    byte_str = '0x{0:0{1}X}'.format(word,8)
+                    byte_str = '0x{0:0{1}X}'.format(word,2 * slen)
 
                 sym_str += byte_str + ", "
                 i += adv_amt
@@ -512,7 +531,7 @@ class N64SegCode(N64Segment):
             ret.append(self.options["generated_c_preamble"])
         else:
             ret.append("#include \"common.h\"")
-        
+
         ret.append("")
         return ret
 
@@ -641,7 +660,7 @@ class N64SegCode(N64Segment):
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"]: split_file["end"]])
-        
+
         if self.options.get("symbol_debug_info", None):
             for split_file in self.files:
                 name = split_file["name"]
