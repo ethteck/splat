@@ -301,61 +301,60 @@ class N64SegCode(N64Segment):
 
                     lui_val = int(op_split[1], 0)
                     if lui_val >= 0x8000:
-                        for j in range(i + 1, min(i + 8, len(func))):
+                        for j in range(i + 1, min(i + 6, len(func))):
                             s_insn = func[j][0]
 
-                            if s_insn.mnemonic in ["addiu", "ori", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu", "lwc1", "swc1", "ldc1", "sdc1"]:
-                                s_op_split = s_insn.op_str.split(", ")
+                            s_op_split = s_insn.op_str.split(", ")
 
-                                if s_insn.mnemonic in ["addiu", "ori"]:
-                                    s_reg = s_op_split[-2]
-                                else:
-                                    s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1: -1]
+                            if s_insn.mnemonic in ["addiu", "ori"]:
+                                s_reg = s_op_split[-2]
+                            else:
+                                s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1: -1]
 
-                                if reg == s_reg:
-                                    if s_insn.mnemonic == "ori":
-                                        break
-                                    # Match!
-
-                                    reg_ext = ""
-
-                                    junk_search = re.search(
-                                        r"[\(]", s_op_split[-1])
-                                    if junk_search is not None:
-                                        if junk_search.start() == 0:
-                                            break
-                                        s_str = s_op_split[-1][:junk_search.start()]
-                                        reg_ext = s_op_split[-1][junk_search.start():]
-                                    else:
-                                        s_str = s_op_split[-1]
-
-                                    s_val = int(s_str, 0)
-
-                                    symbol_addr = (lui_val * 0x10000) + s_val
-
-                                    offset = 0
-                                    if symbol_addr in self.c_functions:
-                                        sym_name = self.c_functions[symbol_addr]
-                                        self.store_syms(symbol_addr, sym_name)
-                                    elif symbol_addr in self.c_variables:
-                                        sym_name = self.c_variables[symbol_addr]
-                                        self.store_syms(symbol_addr, sym_name)
-                                    elif symbol_addr in self.symbol_ranges:
-                                        sym_name = self.symbol_ranges.get(symbol_addr)
-                                        offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
-                                    else:
-                                        sym_name = "D_{:X}".format(symbol_addr)
-                                        sect_type = self.store_syms(symbol_addr, sym_name)
-                                        if not self.options.get("create_detected_syms", False):
-                                            break
-                                        if not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
-                                            self.undefined_syms_to_add.add(sym_name)
-
-                                    if offset != 0:
-                                        sym_name += f"+0x{offset:X}"
-                                    func[i] += ("%hi({})".format(sym_name),)
-                                    func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
+                            if reg == s_reg:
+                                if s_insn.mnemonic not in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu", "lwc1", "swc1", "ldc1", "sdc1"]:
                                     break
+
+                                # Match!
+                                reg_ext = ""
+
+                                junk_search = re.search(
+                                    r"[\(]", s_op_split[-1])
+                                if junk_search is not None:
+                                    if junk_search.start() == 0:
+                                        break
+                                    s_str = s_op_split[-1][:junk_search.start()]
+                                    reg_ext = s_op_split[-1][junk_search.start():]
+                                else:
+                                    s_str = s_op_split[-1]
+
+                                s_val = int(s_str, 0)
+
+                                symbol_addr = (lui_val * 0x10000) + s_val
+
+                                offset = 0
+                                if symbol_addr in self.c_functions:
+                                    sym_name = self.c_functions[symbol_addr]
+                                    self.store_syms(symbol_addr, sym_name)
+                                elif symbol_addr in self.c_variables:
+                                    sym_name = self.c_variables[symbol_addr]
+                                    self.store_syms(symbol_addr, sym_name)
+                                elif symbol_addr in self.symbol_ranges:
+                                    sym_name = self.symbol_ranges.get(symbol_addr)
+                                    offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
+                                else:
+                                    sym_name = "D_{:X}".format(symbol_addr)
+                                    sect_type = self.store_syms(symbol_addr, sym_name)
+                                    if not self.options.get("create_detected_syms", False):
+                                        break
+                                    if not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
+                                        self.undefined_syms_to_add.add(sym_name)
+
+                                if offset != 0:
+                                    sym_name += f"+0x{offset:X}"
+                                func[i] += ("%hi({})".format(sym_name),)
+                                func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
+                                break
             ret[func_addr] = func
         return ret
 
