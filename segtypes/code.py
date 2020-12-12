@@ -408,7 +408,10 @@ class N64SegCode(N64Segment):
 
             ret[func] = (func_text, rom_addr)
 
-            if self.options.get("find-file-boundaries"):
+            if self.options.get("find_file_boundaries") or self.options.get("find-file-boundaries"):
+                if self.options.get("find-file-boundaries"):
+                    self.warn("warning: find-file-boundaries with dashes is deprecated. Please rename this to use
+                             "underscores instead of dashes (find_file_boundaries).")
                 if func != next(reversed(list(funcs.keys()))) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:

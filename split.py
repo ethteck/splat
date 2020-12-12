@@ -29,7 +29,7 @@ parser.add_argument("--new", action="store_true",
                     help="Only split changed segments in config")
 
 
-def write_ldscript(rom_name, repo_path, sections, bare=False):
+def write_ldscript(rom_name, repo_path, sections, options):
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
         f.write(
             "#ifndef SPLAT_BEGIN_SEG\n"
@@ -62,7 +62,7 @@ def write_ldscript(rom_name, repo_path, sections, bare=False):
             "\n"
         )
 
-        if bare:
+        if options.get("ld_bare", False):
             f.write("\n".join(sections))
         else:
             f.write(
@@ -308,7 +308,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     if "ld" in options["modes"] or "all" in options["modes"]:
         if verbose:
             log.write(f"saving {config['basename']}.ld")
-        write_ldscript(config['basename'], repo_path, ld_sections, options.get("ld_bare", False))
+        write_ldscript(config['basename'], repo_path, ld_sections, options)
 
     # Write undefined_funcs_auto.txt
     if verbose:

@@ -16,7 +16,7 @@ def main(rom_path):
 """name: {0} ({1})
 basename: {2}
 options:
-  find-file-boundaries: True
+  find_file_boundaries: True
   compiler: "IDO"
 """.format(rom.name.title(), rom.get_country_name(), basename)
 
@@ -41,11 +41,11 @@ options:
 """.format(rom.size)
 
     outstr = header + segments
-    
+
     outname = rom.name.replace(" ", "").lower()
     with open(outname + ".yaml", "w", newline="\n") as f:
         f.write(outstr)
-    
+
 if __name__ == "__main__":
     args = parser.parse_args()
     main(args.rom)
