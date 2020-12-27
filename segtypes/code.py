@@ -306,6 +306,9 @@ class N64SegCode(N64Segment):
 
                             s_op_split = s_insn.op_str.split(", ")
 
+                            if s_insn.mnemonic == "lui" and reg == s_op_split[0]:
+                                break
+
                             if s_insn.mnemonic in ["addiu", "ori"]:
                                 s_reg = s_op_split[-2]
                             else:
