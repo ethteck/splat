@@ -80,16 +80,23 @@ def parse_file_start(split_file):
     return split_file[0] if "start" not in split_file else split_file["start"]
 
 
-def gather_c_funcs(repo_path):
+def get_symbol_addrs_path(repo_path, options):
+    return os.path.join(repo_path, options.get("symbol_addrs", "symbol_addrs.txt"))
+
+
+def get_undefined_syms_path(repo_path, options):
+    return os.path.join(repo_path, options.get("undefined_syms", "undefined_syms.txt"))
+
+
+def gather_c_funcs(symbol_addrs_path):
     funcs = {}
     special_labels = {}
     labels_to_add = set()
     ranges = RangeDict()
 
     # Manual list of func name / addrs
-    func_addrs_path = os.path.join(repo_path, "tools", "symbol_addrs.txt")
-    if os.path.exists(func_addrs_path):
-        with open(func_addrs_path) as f:
+    if os.path.exists(symbol_addrs_path):
+        with open(symbol_addrs_path) as f:
             func_addrs_lines = f.readlines()
 
         for line in func_addrs_lines:
@@ -119,10 +126,9 @@ def gather_c_funcs(repo_path):
     return funcs, labels_to_add, special_labels, ranges
 
 
-def gather_c_variables(repo_path):
+def gather_c_variables(undefined_syms_path):
     vars = {}
 
-    undefined_syms_path = os.path.join(repo_path, "undefined_syms.txt")
     if os.path.exists(undefined_syms_path):
         with open(undefined_syms_path) as f:
             us_lines = f.readlines()
@@ -193,8 +199,10 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     options["modes"] = modes
     options["verbose"] = verbose
 
-    c_funcs, c_func_labels_to_add, special_labels, ranges = gather_c_funcs(repo_path)
-    c_vars = gather_c_variables(repo_path)
+    symbol_addrs_path = get_symbol_addrs_path(repo_path, options)
+    c_funcs, c_func_labels_to_add, special_labels, ranges = gather_c_funcs(symbol_addrs_path)
+    undefined_syms_path = get_undefined_syms_path(repo_path, options)
+    c_vars = gather_c_variables(undefined_syms_path)
 
     ran_segments = []
     all_segments = []
