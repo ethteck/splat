@@ -1,4 +1,7 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
+
+from capstone import *
+from capstone.mips import *
 
 import argparse
 from util import rominfo
@@ -20,8 +23,14 @@ options:
   compiler: "IDO"
 """.format(rom.name.title(), rom.get_country_name(), basename)
 
-    # codeseg = N64SegCode(0x1000, rom.size, "asm", "firstseg", rom.entry_point, [{"start": 0x1000, "end": rom.size, "name": "firstseg", "vram": rom.entry_point, "subtype": "asm"}], {})
-    # codeseg.split
+    with open(rom_path, "rb") as f:
+      fbytes = f.read()
+
+    rom_addr = 0x1000
+
+    md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+    for insn in md.disasm(fbytes[rom_addr:], rom.entry_point):
+        rom_addr += 4
 
     segments = \
 """segments:
@@ -34,11 +43,17 @@ options:
   - name: boot
     type: bin
     start: 0x40
+  - name: main
+    type: code
+    start: 0x1000
+    vram: 0x{:X}
+    files:
+      - [0x1000, asm]
   - name: the_rest
     type: bin
-    start: 0x1000
+    start: 0x{:X}
   - [0x{:X}]
-""".format(rom.size)
+""".format(rom.entry_point, rom_addr, rom.size)
 
     outstr = header + segments
 
