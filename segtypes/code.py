@@ -8,6 +8,7 @@ import os
 from pathlib import Path, PurePath
 from ranges import Range, RangeDict
 import re
+import sys
 
 
 STRIP_C_COMMENTS_RE = re.compile(
