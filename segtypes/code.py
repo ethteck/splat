@@ -44,7 +44,7 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
     prefix = seg_name if seg_name.endswith("/") else f"{seg_name}_"
 
     ret = []
-    prev_start = 0
+    prev_start = -1
 
     if "files" in segment:
         for i, split_file in enumerate(segment["files"]):
