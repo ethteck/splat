@@ -60,7 +60,7 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 subtype = split_file[1]
             
             if start <= prev_start:
-                print(f"Error: Code segment {seg_name} has files out ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
+                print(f"Error: Code segment {seg_name} has files out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
                 sys.exit(1)
 
             if not name:
