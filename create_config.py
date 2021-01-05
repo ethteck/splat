@@ -49,8 +49,7 @@ options:
     vram: 0x{:X}
     files:
       - [0x1000, asm]
-  - name: the_rest
-    type: bin
+  - type: bin
     start: 0x{:X}
   - [0x{:X}]
 """.format(rom.entry_point, rom_addr, rom.size)

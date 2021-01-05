@@ -99,6 +99,7 @@ class N64SegCode(N64Segment):
         self.data_syms = {}
         self.rodata_syms = {}
         self.unk_syms = {}
+        self.reported_file_split = False
 
     @staticmethod
     def get_default_name(addr):
@@ -423,8 +424,11 @@ class N64SegCode(N64Segment):
                 if func != next(reversed(list(funcs.keys()))) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:
-                        print("function at vram {:X} ends with nops so a new file probably starts at rom address 0x{:X}".format(
-                            func, new_file_addr))
+                        if not self.reported_file_split:
+                            self.reported_file_split = True
+                            print(f"Segment {self.name}, function at vram {func:X} ends with nops, indicating a likely file split.")
+                            print("File split suggestions for this segment will follow in config yaml format:")
+                        print(f"      - [0x{new_file_addr:X}, asm]")
 
         return ret
 
