@@ -43,6 +43,8 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
     prefix = seg_name if seg_name.endswith("/") else f"{seg_name}_"
 
     ret = []
+    prev_start = 0
+
     if "files" in segment:
         for i, split_file in enumerate(segment["files"]):
             if type(split_file) is dict:
@@ -52,36 +54,36 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 subtype = split_file["type"]
             else:
                 start = split_file[0]
-                end = seg_end if i == len(
-                    segment["files"]) - 1 else segment["files"][i + 1][0]
+                end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
                 name = None if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
+            
+            if start <= prev_start:
+                print(f"Error: Code segment {seg_name} has files out ascending rom order ({prev_start} followed by {start})")
+                sys.exit(1)
 
             if not name:
                 name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(
                     seg_start) else f"{prefix}{start:X}"
 
-            if segment.get("vram_lock", False):
-                vram = seg_vram
-            else:
-                vram = seg_vram + (start - seg_start)
+            vram = seg_vram + (start - seg_start)
 
-            fl = {"start": start, "end": end, "name": name,
-                  "vram": vram, "subtype": subtype}
+            fl = {"start": start, "end": end, "name": name, "vram": vram, "subtype": subtype}
 
             ret.append(fl)
+            prev_start = start
     else:
         fl = {"start": seg_start, "end": seg_end,
               "name": seg_name, "vram": seg_vram, "subtype": "asm"}
         ret.append(fl)
+
     return ret
 
 
 class N64SegCode(N64Segment):
     def __init__(self, segment, next_segment, options):
         super().__init__(segment, next_segment, options)
-        self.files = parse_segment_files(
-            segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
+        self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
         self.glabels_to_add = set()
@@ -110,7 +112,10 @@ class N64SegCode(N64Segment):
     def get_unique_func_name(self, func_addr, rom_addr):
         func_name = self.get_func_name(func_addr)
 
-        if func_name in self.all_functions or (self.is_overlay and (func_addr >= self.vram_addr) and (func_addr <= self.vram_addr + self.rom_end - self.rom_start)):
+        if func_name in self.all_functions or (
+            self.is_overlay and 
+            (func_addr >= self.vram_addr) and 
+            (func_addr <= self.vram_addr + self.rom_end - self.rom_start)):
             return func_name + "_{:X}".format(rom_addr)
         return func_name
 
@@ -120,7 +125,7 @@ class N64SegCode(N64Segment):
         self.glabels_added.add(func)
         return "glabel " + func
 
-    def get_header(self):
+    def get_asm_header(self):
         ret = []
 
         ret.append(".include \"macro.inc\"")
@@ -128,8 +133,7 @@ class N64SegCode(N64Segment):
         ret.append("# assembler directives")
         ret.append(".set noat      # allow manual use of $at")
         ret.append(".set noreorder # don't insert nops after branches")
-        ret.append(
-            ".set gp=64     # allow use of 64-bit general purpose registers")
+        ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
         ret.append(".section .text, \"ax\"")
         ret.append("")
@@ -584,8 +588,7 @@ class N64SegCode(N64Segment):
                             func, funcs_text[func][1])
 
                         if func_name not in defined_funcs:
-                            # TODO make more graceful
-                            if "compiler" in self.options and self.options["compiler"] == "GCC":
+                            if self.options.get("compiler", "IDO") == "GCC":
                                 out_lines = self.get_gcc_inc_header()
                             else:
                                 out_lines = []
@@ -605,16 +608,13 @@ class N64SegCode(N64Segment):
                         c_lines = self.get_c_preamble()
 
                         for func in funcs_text:
-                            func_name = self.get_unique_func_name(
-                                func, funcs_text[func][1])
-                            if self.options["compiler"] == "GCC":
-                                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(
-                                    split_file["name"], func_name))
+                            func_name = self.get_unique_func_name(func, funcs_text[func][1])
+                            if self.options.get("compiler", "IDO") == "GCC":
+                                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(split_file["name"], func_name))
                             else:
                                 outpath = Path(os.path.join(out_dir, split_file["name"], func_name + ".s"))
                                 rel_outpath = os.path.relpath(outpath, base_path)
-                                c_lines.append(
-                                    f"#pragma GLOBAL_ASM(\"{rel_outpath}\")")
+                                c_lines.append(f"#pragma GLOBAL_ASM(\"{rel_outpath}\")")
                             c_lines.append("")
 
                         Path(c_path).parent.mkdir(parents=True, exist_ok=True)
@@ -623,13 +623,12 @@ class N64SegCode(N64Segment):
                         print(f"Wrote {split_file['name']} to {c_path}")
 
                 else:
-                    out_lines = self.get_header()
+                    out_lines = self.get_asm_header()
                     for func in funcs_text:
                         out_lines.extend(funcs_text[func][0])
                         out_lines.append("")
 
-                    outpath = Path(os.path.join(
-                        out_dir, split_file["name"] + ".s"))
+                    outpath = Path(os.path.join(out_dir, split_file["name"] + ".s"))
                     outpath.parent.mkdir(parents=True, exist_ok=True)
 
                     with open(outpath, "w", newline="\n") as f:
