@@ -254,7 +254,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
 
         if segment_class.require_unique_name:
             if segment.name in seen_segment_names:
-                segment.error("segment name is not unique", status="error")
+                segment.error("segment name is not unique")
             seen_segment_names.add(segment.name)
 
         if type(segment) == N64SegCode:

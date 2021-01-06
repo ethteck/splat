@@ -16,6 +16,10 @@ STRIP_C_COMMENTS_RE = re.compile(
     re.DOTALL | re.MULTILINE
 )
 
+C_FUNC_RE = re.compile(
+    r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
+    re.MULTILINE
+)
 
 def strip_c_comments(text):
     def replacer(match):
@@ -25,12 +29,6 @@ def strip_c_comments(text):
         else:
             return s
     return re.sub(STRIP_C_COMMENTS_RE, replacer, text)
-
-
-C_FUNC_RE = re.compile(
-    r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
-    re.MULTILINE
-)
 
 
 def get_funcs_defined_in_c(c_file):
