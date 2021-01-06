@@ -31,7 +31,7 @@ class N64SegHeader(N64Segment):
         header_lines.append(self.get_line("word", rom_bytes[0x14:0x18], "Checksum 2"))
         header_lines.append(self.get_line("word", rom_bytes[0x18:0x1C], "Unknown 1"))
         header_lines.append(self.get_line("word", rom_bytes[0x1C:0x20], "Unknown 2"))
-        header_lines.append(self.get_line("ascii", rom_bytes[0x20:0x34], "Internal name"))
+        header_lines.append(".ascii \"" + rom_bytes[0x20:0x34].decode("ASCII").strip().ljust(20) + "\" /* Internal name */")
         header_lines.append(self.get_line("word", rom_bytes[0x34:0x38], "Unknown 3"))
         header_lines.append(self.get_line("word", rom_bytes[0x38:0x3C], "Cartridge"))
         header_lines.append(self.get_line("ascii", rom_bytes[0x3C:0x3E], "Cartridge ID"))
