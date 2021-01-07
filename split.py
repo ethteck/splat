@@ -184,6 +184,46 @@ def fmt_size(size):
         return str(size) + " B"
 
 
+def initialize_segments(options, config_path, config_segments):
+    seen_segment_names = set()
+    ret = []
+
+    for i, segment in enumerate(config_segments):
+        if len(segment) == 1:
+            # We're at the end
+            continue
+
+        seg_type = parse_segment_type(segment)
+
+        segment_class = get_base_segment_class(seg_type)
+        if segment_class == None:
+            # Look in extensions
+            segment_class = get_extension_class(options, config_path, seg_type)
+
+        if segment_class == None:
+            log.write(f"fatal error: could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)", status="error")
+            return 2
+
+        try:
+            segment = segment_class(segment, config_segments[i + 1], options)
+        except (IndexError, KeyError) as e:
+            try:
+                segment = N64Segment(segment, config_segments[i + 1], options)
+                segment.error(e)
+            except Exception as e:
+                log.write(f"fatal error (segment type = {seg_type}): " + str(e), status="error")
+                return 2
+
+        if segment_class.require_unique_name:
+            if segment.name in seen_segment_names:
+                segment.error("segment name is not unique")
+            seen_segment_names.add(segment.name)
+
+        ret.append(segment)
+
+    return ret
+
+
 def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     with open(rom_path, "rb") as f:
         rom_bytes = f.read()
@@ -205,9 +245,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     c_vars = gather_c_variables(undefined_syms_path)
 
     ran_segments = []
-    all_segments = []
     ld_sections = []
-    seen_segment_names = set()
 
     defined_funcs = set()
     undefined_funcs = set()
@@ -226,37 +264,9 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
         cache = {}
 
     # Initialize segments
-    for i, segment in enumerate(config['segments']):
-        if len(segment) == 1:
-            # We're at the end
-            continue
+    all_segments = initialize_segments(options, config_path, config["segments"])
 
-        seg_type = parse_segment_type(segment)
-
-        segment_class = get_base_segment_class(seg_type)
-        if segment_class == None:
-            # Look in extensions
-            segment_class = get_extension_class(options, config_path, seg_type)
-
-        if segment_class == None:
-            log.write(f"fatal error: could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)", status="error")
-            return 2
-
-        try:
-            segment = segment_class(segment, config['segments'][i + 1], options)
-        except (IndexError, KeyError) as e:
-            try:
-                segment = N64Segment(segment, config['segments'][i + 1], options)
-                segment.error(e)
-            except Exception as e:
-                log.write(f"fatal error (segment type = {seg_type}): " + str(e), status="error")
-                return 2
-
-        if segment_class.require_unique_name:
-            if segment.name in seen_segment_names:
-                segment.error("segment name is not unique")
-            seen_segment_names.add(segment.name)
-
+    for segment in all_segments:
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs
             segment.c_functions = c_funcs
@@ -305,7 +315,6 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
                     seg_split[tp] += 1
 
         log.dot(status=segment.status())
-        all_segments.append(segment)
         ld_sections.append(segment.get_ld_section())
 
     for segment in ran_segments:

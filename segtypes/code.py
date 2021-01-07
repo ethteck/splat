@@ -377,20 +377,21 @@ class N64SegCode(N64Segment):
 
             indent_next = False
 
+            mnemonic_ljust = self.options.get("mnemonic_ljust", 11)
+            rom_addr_padding = self.options.get("rom_address_padding", None)
+
             for insn in funcs[func]:
                 # Add a label if we need one
                 if func in self.labels_to_add and insn[0].address in self.labels_to_add[func]:
                     self.labels_to_add[func].remove(insn[0].address)
                     func_text.append(".L{:X}:".format(insn[0].address))
 
-                rom_addr_padding = self.options.get("rom_address_padding", None)
                 if rom_addr_padding:
                     rom_str = "{0:0{1}X}".format(insn[3], rom_addr_padding)
                 else:
                     rom_str = "{:X}".format(insn[3])
 
-                asm_comment = "/* {} {:X} {} */".format(
-                    rom_str, insn[0].address, insn[0].bytes.hex().upper())
+                asm_comment = "/* {} {:X} {} */".format(rom_str, insn[0].address, insn[0].bytes.hex().upper())
 
                 if len(insn) > 4:
                     op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
@@ -402,12 +403,8 @@ class N64SegCode(N64Segment):
                     indent_next = False
                     insn_text = " " + insn_text
 
-                mnemonic_ljust = 11
-                if "mnemonic_ljust" in self.options:
-                    mnemonic_ljust = self.options["mnemonic_ljust"]
+                asm_insn_text = "  {}{}".format(insn_text.ljust(mnemonic_ljust), op_str)
 
-                asm_insn_text = "  {}{}".format(
-                    insn_text.ljust(mnemonic_ljust), op_str)
                 func_text.append(asm_comment + asm_insn_text)
 
                 if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
@@ -415,10 +412,7 @@ class N64SegCode(N64Segment):
 
             ret[func] = (func_text, rom_addr)
 
-            if self.options.get("find_file_boundaries") or self.options.get("find-file-boundaries"):
-                if self.options.get("find-file-boundaries"):
-                    self.warn("warning: find-file-boundaries with dashes is deprecated. Please rename this to use"
-                              "underscores instead of dashes (find_file_boundaries).")
+            if self.options.get("find_file_boundaries"):
                 if func != next(reversed(list(funcs.keys()))) and self.is_nops([i[0] for i in funcs[func][-2:]]):
                     new_file_addr = funcs[func][-1][3] + 4
                     if (new_file_addr % 16) == 0:
