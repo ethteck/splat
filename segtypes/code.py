@@ -478,7 +478,7 @@ class N64SegCode(N64Segment):
             if len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
                 stype = "word"
                 slen = 4
-            if len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
+            elif len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
                 stype = "float"
                 slen = 4
             elif len(sym_bytes) % 2 == 0 and mnemonic in ["addiu", "lh", "sh", "lhu"]:
