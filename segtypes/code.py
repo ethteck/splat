@@ -57,7 +57,7 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 end = seg_end if i == len(segment["files"]) - 1 else segment["files"][i + 1][0]
                 name = None if len(split_file) < 3 else split_file[2]
                 subtype = split_file[1]
-            
+
             if start < prev_start:
                 print(f"Error: Code segment {seg_name} has files out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
                 sys.exit(1)
@@ -424,13 +424,13 @@ class N64SegCode(N64Segment):
             return False
 
         return True
-    
+
     def get_symbols_for_file(self, split_file):
         vram_start = split_file["vram"]
         vram_end = split_file["vram"] + split_file["end"] - split_file["start"]
 
         return [(s, self.detected_syms[s]) for s in self.detected_syms if s >= vram_start and s <= vram_end]
-            
+
 
     def disassemble_data(self, split_file, rom_bytes):
         ret = ".include \"macro.inc\"\n\n"
@@ -609,7 +609,7 @@ class N64SegCode(N64Segment):
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
 
-            elif file_type in ["data", "rodata"]:
+            elif file_type in ["data", "rodata"] and (file_type in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
 
                 outpath = Path(os.path.join(out_dir, split_file["name"] + f".{file_type}.s"))
