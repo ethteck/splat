@@ -9,6 +9,7 @@ from pathlib import Path, PurePath
 from ranges import Range, RangeDict
 import re
 import sys
+from util import floats
 
 
 STRIP_C_COMMENTS_RE = re.compile(
@@ -62,8 +63,7 @@ def parse_segment_files(segment, segment_class, seg_start, seg_end, seg_name, se
                 sys.exit(1)
 
             if not name:
-                name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(
-                    seg_start) else f"{prefix}{start:X}"
+                name = N64SegCode.get_default_name(start) if seg_name == N64SegCode.get_default_name(seg_start) else f"{prefix}{start:X}"
 
             vram = seg_vram + (start - seg_start)
 
@@ -85,18 +85,15 @@ class N64SegCode(N64Segment):
         self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
-        self.glabels_to_add = set()
+        self.special_labels = {}
         self.undefined_syms_to_add = set()
-        self.glabels_added = set()
-        self.all_functions = set()
-        self.c_functions = {}
-        self.c_variables = {}
+        self.glabels_added = {}
+        self.all_functions = {}
+        self.provided_symbols = {}
         self.c_labels_to_add = set()
         self.ld_section_name = "." + segment.get("ld_name", f"text_{self.rom_start:X}")
         self.symbol_ranges = RangeDict()
-        self.data_syms = {}
-        self.rodata_syms = {}
-        self.unk_syms = {}
+        self.detected_syms = {}
         self.reported_file_split = False
 
     @staticmethod
@@ -104,25 +101,20 @@ class N64SegCode(N64Segment):
         return f"code_{addr:X}"
 
     def get_func_name(self, addr):
-        if addr in self.c_functions:
-            return self.c_functions[addr]
-        else:
-            return "func_{:X}".format(addr)
+        return self.provided_symbols.get(addr, f"func_{addr:X}")
 
     def get_unique_func_name(self, func_addr, rom_addr):
         func_name = self.get_func_name(func_addr)
 
-        if func_name in self.all_functions or (
-            self.is_overlay and 
-            (func_addr >= self.vram_addr) and 
-            (func_addr <= self.vram_addr + self.rom_end - self.rom_start)):
+        if self.is_overlay and (func_addr >= self.vram_addr) and (func_addr <= self.vram_addr + self.rom_end - self.rom_start):
             return func_name + "_{:X}".format(rom_addr)
         return func_name
 
     def add_glabel(self, ram_addr, rom_addr):
         func = self.get_unique_func_name(ram_addr, rom_addr)
-        self.glabels_to_add.discard(func)
-        self.glabels_added.add(func)
+        self.glabels_added[ram_addr] = func
+        if not self.is_overlay:
+            self.all_functions[ram_addr] = func
         return "glabel " + func
 
     def get_asm_header(self):
@@ -205,8 +197,6 @@ class N64SegCode(N64Segment):
                     func_loc = self.rom_start + jal_addr - self.vram_addr
                     jump_func += "_{:X}".format(func_loc)
 
-                if jump_func not in self.c_functions.values():
-                    self.glabels_to_add.add(jump_func)
                 op_str = jump_func
             elif self.is_branch_insn(insn.mnemonic):
                 op_str_split = op_str.split(" ")
@@ -263,31 +253,31 @@ class N64SegCode(N64Segment):
                 return fl
         return None
 
-    def store_syms(self, addr, name):
-        sect = self.get_file_for_addr(addr)
+    def store_symbol_access(self, addr, mnemonic):
+        # Don't overwrite useful info with addiu
+        if addr in self.detected_syms and self.detected_syms[addr] != "addiu":
+            return
 
-        if sect:
-            sect_name = sect["name"]
-            sect_type = sect["subtype"]
+        self.detected_syms[addr] = mnemonic
 
-            if sect_type in [".data", "data"]:
-                if sect_name not in self.data_syms:
-                    self.data_syms[sect_name] = {}
-                self.data_syms[sect_name][addr] = name
-            elif sect_type in [".rodata", "rodata"]:
-                if sect_name not in self.rodata_syms:
-                    self.rodata_syms[sect_name] = {}
-                self.rodata_syms[sect_name][addr] = name
-            elif sect_type == "bin":
-                if sect_name not in self.unk_syms:
-                    self.unk_syms[sect_name] = {}
-                self.unk_syms[sect_name][addr] = name
-            return sect_type
+    def get_symbol_name(self, addr, rom_addr=None, funcs=None):
+        if funcs and addr in funcs:
+            return self.get_unique_func_name(addr, rom_addr)
+        if addr in self.all_functions:
+            return self.all_functions[addr]
+        if addr in self.provided_symbols:
+            return self.provided_symbols[addr]
+        elif addr in self.symbol_ranges:
+            ret = self.symbol_ranges.get(addr)
+            offset = addr - self.symbol_ranges.getrange(addr).start
+            if offset != 0:
+                ret += f"+0x{offset:X}"
+            return ret
         else:
-            return None
+            return f"D_{addr:X}"
 
     # Determine symbols
-    def determine_symbols(self, funcs):
+    def determine_symbols(self, funcs, rom_addr):
         ret = {}
 
         for func_addr in funcs:
@@ -339,28 +329,18 @@ class N64SegCode(N64Segment):
 
                                 symbol_addr = (lui_val * 0x10000) + s_val
 
-                                offset = 0
-                                if symbol_addr in self.c_functions:
-                                    sym_name = self.c_functions[symbol_addr]
-                                    self.store_syms(symbol_addr, sym_name)
-                                elif symbol_addr in self.c_variables:
-                                    sym_name = self.c_variables[symbol_addr]
-                                    self.store_syms(symbol_addr, sym_name)
-                                elif symbol_addr in self.symbol_ranges:
-                                    sym_name = self.symbol_ranges.get(symbol_addr)
-                                    offset = symbol_addr - self.symbol_ranges.getrange(symbol_addr).start
-                                else:
-                                    sym_name = "D_{:X}".format(symbol_addr)
-                                    sect_type = self.store_syms(symbol_addr, sym_name)
+                                symbol_name = self.get_symbol_name(symbol_addr, symbol_addr - next(iter(funcs)) + rom_addr, funcs)
+                                self.store_symbol_access(symbol_addr, s_insn.mnemonic)
+                                symbol_file = self.get_file_for_addr(symbol_addr)
+
+                                if not symbol_file or symbol_file["subtype"] == "bin":
                                     if not self.options.get("create_detected_syms", False):
                                         break
-                                    if not (sect_type and sect_type in [".data", ".rodata", ".bss"]):
-                                        self.undefined_syms_to_add.add(sym_name)
+                                    if "+" not in symbol_name:
+                                        self.undefined_syms_to_add.add((symbol_name, symbol_addr))
 
-                                if offset != 0:
-                                    sym_name += f"+0x{offset:X}"
-                                func[i] += ("%hi({})".format(sym_name),)
-                                func[j] += ("%lo({}){}".format(sym_name, reg_ext),)
+                                func[i] += ("%hi({})".format(symbol_name),)
+                                func[j] += ("%lo({}){}".format(symbol_name, reg_ext),)
                                 break
             ret[func_addr] = func
         return ret
@@ -424,22 +404,11 @@ class N64SegCode(N64Segment):
 
         return ret
 
-    def get_pycparser_args(self):
-        option = self.options.get("cpp_args")
-        return ["-Iinclude", "-D_LANGUAGE_C", "-ffreestanding", "-DF3DEX_GBI_2", "-DSPLAT"] if option is None else option
-
     def should_run(self):
+        possible_subtypes = ["c", "asm", "hasm", "bin", "data", "rodata"]
         subtypes = set(f["subtype"] for f in self.files)
 
-        return (
-            super().should_run()
-            or ("c" in self.options["modes"] and "c" in subtypes)
-            or ("asm" in self.options["modes"] and "asm" in subtypes)
-            or ("hasm" in self.options["modes"] and "hasm" in subtypes)
-            or ("bin" in self.options["modes"] and "bin" in subtypes)
-            or ("data" in self.options["modes"] and "data" in subtypes)
-            or ("rodata" in self.options["modes"] and "rodata" in subtypes)
-        )
+        return super().should_run() or (st in self.options["modes"] and st in subtypes for st in possible_subtypes)
 
     def is_valid_ascii(self, bytes):
         if len(bytes) < 8:
@@ -455,45 +424,49 @@ class N64SegCode(N64Segment):
             return False
 
         return True
+    
+    def get_symbols_for_file(self, split_file):
+        vram_start = split_file["vram"]
+        vram_end = split_file["vram"] + split_file["end"] - split_file["start"]
 
-    def gen_data_file(self, split_file, rom_bytes):
+        return [(s, self.detected_syms[s]) for s in self.detected_syms if s >= vram_start and s <= vram_end]
+            
+
+    def disassemble_data(self, split_file, rom_bytes):
         ret = ".include \"macro.inc\"\n\n"
         ret += f'.section .{split_file["subtype"]}'
 
-        if split_file["subtype"] == "data" and split_file["name"] in self.data_syms:
-            sym_info = self.data_syms[split_file["name"]]
-        elif split_file["subtype"] == "rodata" and split_file["name"] in self.rodata_syms:
-            sym_info = self.rodata_syms[split_file["name"]]
-        else:
-            self.log("No data found for " + split_file["name"] + "; not generating file")
-            return None
+        syms = self.get_symbols_for_file(split_file)
+        syms.sort(key=lambda x:x[0])
 
-        sorted_syms = sorted(sym_info.keys())
+        if len(syms) == 0:
+            self.warn("No symbol accesses detected for " + split_file["name"] + "; the output will most likely be an ugly blob")
+
         # check beginning
-        if sorted_syms[0] != split_file["vram"]:
-            sorted_syms.insert(0, split_file["vram"])
+        if syms[0][0] != split_file["vram"]:
+            syms.insert(0, (split_file["vram"], None))
 
         # add end
-        sorted_syms.append(split_file["vram"] + split_file["end"] - split_file["start"])
+        vram_end = split_file["vram"] + split_file["end"] - split_file["start"]
+        if syms[-1][0] != vram_end:
+            syms.append((vram_end, None))
 
-        for i in range(len(sorted_syms) - 1):
-            start = sorted_syms[i]
-            end = sorted_syms[i + 1]
+        for i in range(len(syms) - 1):
+            mnemonic = syms[i][1]
+            start = syms[i][0]
+            end = syms[i + 1][0]
             sym_rom_start = start - split_file["vram"] + split_file["start"]
             sym_rom_end = end - split_file["vram"] + split_file["start"]
-
-            if start in sym_info:
-                sym_name = sym_info[start]
-            else:
-                sym_name = f"D_{start:X}"
-
-            sym_str = "\n\nglabel " + sym_name + "\n"
+            sym_name = self.get_symbol_name(start)
+            sym_str = f"\n\nglabel {sym_name}\n"
             sym_bytes = rom_bytes[sym_rom_start : sym_rom_end]
 
             # .ascii
-            if self.is_valid_ascii(sym_bytes):
+            if self.is_valid_ascii(sym_bytes) and mnemonic == "addiu":
+            # mnemonic thing may be too picky, we'll see
                 try:
                     ascii_str = sym_bytes.decode("EUC-JP")
+                    ascii_str = ascii_str.replace("\\", "\\\\")
                     ascii_str = ascii_str.replace("\x00", "\\0")
                     sym_str += f'.ascii "{ascii_str}"'
                     ret += sym_str
@@ -502,45 +475,48 @@ class N64SegCode(N64Segment):
                     pass
 
             # Fallback to raw data
-            if len(sym_bytes) % 4 == 0:
-                stype = ".word "
+            if len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
+                stype = "word"
                 slen = 4
-            elif len(sym_bytes) % 2 == 0:
-                stype = ".short "
+            if len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
+                stype = "float"
+                slen = 4
+            elif len(sym_bytes) % 2 == 0 and mnemonic in ["addiu", "lh", "sh", "lhu"]:
+                stype = "short"
                 slen = 2
             else:
-                stype = ".byte "
+                stype = "byte"
                 slen = 1
 
-            sym_str += stype
+            sym_str += f".{stype} "
             i = 0
             while i < len(sym_bytes):
                 adv_amt = min(slen, len(sym_bytes) - i)
-
-                word = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
-
-                if word in self.c_variables:
-                    byte_str = self.c_variables[word]
-                elif word in self.c_functions:
-                    byte_str = self.c_functions[word]
+                bits = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
+                if stype == "float":
+                    byte_str = floats.format_f32_imm(bits)
                 else:
-                    byte_str = '0x{0:0{1}X}'.format(word,2 * slen)
+                    byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
+                sym_str += byte_str
 
-                sym_str += byte_str + ", "
                 i += adv_amt
-            ret += sym_str[:-2] # omit final ", "
+
+                if i < len(sym_bytes):
+                    sym_str += ", "
+
+            ret += sym_str
+
+        ret += "\n"
 
         return ret
 
     def get_c_preamble(self):
         ret = []
 
-        if self.options.get("generated_c_preamble", None):
-            ret.append(self.options["generated_c_preamble"])
-        else:
-            ret.append("#include \"common.h\"")
-
+        preamble = self.options.get("generated_c_preamble", "#include \"common.h\"")
+        ret.append(preamble)
         ret.append("")
+
         return ret
 
     def split(self, rom_bytes, base_path):
@@ -549,7 +525,9 @@ class N64SegCode(N64Segment):
         md.skipdata = True
 
         for split_file in self.files:
-            if split_file["subtype"] in ["asm", "hasm", "c"]:
+            file_type = split_file["subtype"]
+
+            if file_type in ["asm", "hasm", "c"]:
                 if self.type not in self.options["modes"] and "all" not in self.options["modes"]:
                     continue
 
@@ -565,10 +543,10 @@ class N64SegCode(N64Segment):
                     insns.append(insn)
 
                 funcs = self.process_insns(insns, rom_addr)
-                funcs = self.determine_symbols(funcs)
+                funcs = self.determine_symbols(funcs, rom_addr)
                 funcs_text = self.add_labels(funcs)
 
-                if split_file["subtype"] == "c":
+                if file_type == "c":
                     c_path = os.path.join(
                         base_path, "src", split_file["name"] + "." + self.get_ext(split_file["subtype"]))
 
@@ -631,31 +609,18 @@ class N64SegCode(N64Segment):
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
 
-                self.all_functions |= self.glabels_added
-
-            elif split_file["subtype"] == "data":
+            elif file_type in ["data", "rodata"]:
                 out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
 
-                outpath = Path(os.path.join(out_dir, split_file["name"] + ".data.s"))
+                outpath = Path(os.path.join(out_dir, split_file["name"] + f".{file_type}.s"))
                 outpath.parent.mkdir(parents=True, exist_ok=True)
 
-                file_text = self.gen_data_file(split_file, rom_bytes)
+                file_text = self.disassemble_data(split_file, rom_bytes)
                 if file_text:
                     with open(outpath, "w", newline="\n") as f:
                         f.write(file_text)
 
-            elif split_file["subtype"] == "rodata":
-                out_dir = self.create_split_dir(base_path, os.path.join("asm", "data"))
-
-                outpath = Path(os.path.join(out_dir, split_file["name"] + ".rodata.s"))
-                outpath.parent.mkdir(parents=True, exist_ok=True)
-
-                file_text = self.gen_data_file(split_file, rom_bytes)
-                if file_text:
-                    with open(outpath, "w", newline="\n") as f:
-                        f.write(file_text)
-
-            elif split_file["subtype"] == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
+            elif file_type == "bin" and ("bin" in self.options["modes"] or "all" in self.options["modes"]):
                 out_dir = self.create_split_dir(base_path, "bin")
 
                 bin_path = os.path.join(
@@ -663,33 +628,6 @@ class N64SegCode(N64Segment):
                 Path(bin_path).parent.mkdir(parents=True, exist_ok=True)
                 with open(bin_path, "wb") as f:
                     f.write(rom_bytes[split_file["start"]: split_file["end"]])
-
-        if self.options.get("symbol_debug_info", None):
-            for split_file in self.files:
-                name = split_file["name"]
-                print(f"Symbol info for {name}:")
-
-                if name in self.data_syms:
-                    print("data:")
-                    sym_info = self.data_syms[name]
-                    sorted_syms = sorted(sym_info.keys())
-                    for sym in sorted_syms:
-                        print(f"0x{sym:X}: {sym_info[sym]}")
-                    print("\n")
-                if name in self.rodata_syms:
-                    print("rodata:")
-                    sym_info = self.rodata_syms[name]
-                    sorted_syms = sorted(sym_info.keys())
-                    for sym in sorted_syms:
-                        print(f"0x{sym:X}: {sym_info[sym]}")
-                    print("\n")
-                if name in self.unk_syms:
-                    print("unk:")
-                    sym_info = self.unk_syms[name]
-                    sorted_syms = sorted(sym_info.keys())
-                    for sym in sorted_syms:
-                        print(f"0x{sym:X}: {sym_info[sym]}")
-
 
     @staticmethod
     def get_subdir(subtype):

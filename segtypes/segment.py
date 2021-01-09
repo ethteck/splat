@@ -72,7 +72,7 @@ class N64Segment:
                 print(f"should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after {self.name})")
 
     @property
-    def rom_length(self):
+    def size(self):
         return self.rom_end - self.rom_start
 
     def create_split_dir(self, base_path, subdir):

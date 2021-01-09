@@ -88,8 +88,8 @@ def get_undefined_syms_path(repo_path, options):
     return os.path.join(repo_path, options.get("undefined_syms", "undefined_syms.txt"))
 
 
-def gather_c_funcs(symbol_addrs_path):
-    funcs = {}
+def gather_symbols(symbol_addrs_path, undefined_syms_path):
+    symbols = {}
     special_labels = {}
     labels_to_add = set()
     ranges = RangeDict()
@@ -112,7 +112,7 @@ def gather_c_funcs(symbol_addrs_path):
                 line_split = line.split("=")
                 name = line_split[0].strip()
                 addr = int(line_split[1].strip()[:-1], 0)
-                funcs[addr] = name
+                symbols[addr] = name
 
                 if line_ext:
                     for info in line_ext.split(" "):
@@ -122,8 +122,20 @@ def gather_c_funcs(symbol_addrs_path):
                         if info.startswith("size:"):
                             size = int(info.split(":")[1], 0)
                             ranges.add(Range(addr, addr + size), name)
+    
+    if os.path.exists(undefined_syms_path):
+        with open(undefined_syms_path) as f:
+            us_lines = f.readlines()
 
-    return funcs, labels_to_add, special_labels, ranges
+        for line in us_lines:
+            line = line.strip()
+            if not line == "" and not line.startswith("//"):
+                line_split = line.split("=")
+                name = line_split[0].strip()
+                addr = int(line_split[1].strip()[:-1], 0)
+                symbols[addr] = name
+
+    return symbols, labels_to_add, special_labels, ranges
 
 
 def gather_c_variables(undefined_syms_path):
@@ -240,15 +252,13 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     options["verbose"] = verbose
 
     symbol_addrs_path = get_symbol_addrs_path(repo_path, options)
-    c_funcs, c_func_labels_to_add, special_labels, ranges = gather_c_funcs(symbol_addrs_path)
     undefined_syms_path = get_undefined_syms_path(repo_path, options)
-    c_vars = gather_c_variables(undefined_syms_path)
+    provided_symbols, c_func_labels_to_add, special_labels, ranges = gather_symbols(symbol_addrs_path, undefined_syms_path)
 
-    ran_segments = []
+    processed_segments = []
     ld_sections = []
 
-    defined_funcs = set()
-    undefined_funcs = set()
+    defined_funcs = {}
     undefined_syms = set()
 
     seg_sizes = {}
@@ -269,8 +279,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     for segment in all_segments:
         if type(segment) == N64SegCode:
             segment.all_functions = defined_funcs
-            segment.c_functions = c_funcs
-            segment.c_variables = c_vars
+            segment.provided_symbols = provided_symbols
             segment.special_labels = special_labels
             segment.c_labels_to_add = c_func_labels_to_add
             segment.symbol_ranges = ranges
@@ -285,7 +294,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
             seg_sizes[tp] = 0
             seg_split[tp] = 0
             seg_cached[tp] = 0
-        seg_sizes[tp] += segment.rom_length
+        seg_sizes[tp] += segment.size
 
         if len(segment.errors) == 0:
             if segment.should_run():
@@ -305,11 +314,10 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
                         segment.error(str(e))
 
                     if len(segment.errors) == 0:
-                        ran_segments.append(segment)
+                        processed_segments.append(segment)
 
                         if type(segment) == N64SegCode:
-                            defined_funcs |= segment.glabels_added
-                            undefined_funcs |= segment.glabels_to_add
+                            defined_funcs = {**defined_funcs, **segment.glabels_added}
                             undefined_syms |= segment.undefined_syms_to_add
 
                     seg_split[tp] += 1
@@ -317,8 +325,8 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
         log.dot(status=segment.status())
         ld_sections.append(segment.get_ld_section())
 
-    for segment in ran_segments:
-        segment.postsplit(ran_segments)
+    for segment in processed_segments:
+        segment.postsplit(processed_segments)
         log.dot(status=segment.status())
 
     # Write ldscript
@@ -327,24 +335,14 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
             log.write(f"saving {config['basename']}.ld")
         write_ldscript(config['basename'], repo_path, ld_sections, options)
 
-    # Write undefined_funcs_auto.txt
-    if verbose:
-        log.write(f"saving undefined_funcs_auto.txt")
-    c_predefined_funcs = set(c_funcs.keys())
-    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
-    if len(to_write) > 0:
-        with open(os.path.join(repo_path, "undefined_funcs_auto.txt"), "w", newline="\n") as f:
-            for line in to_write:
-                f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
-
     # write undefined_syms_auto.txt
     if verbose:
         log.write(f"saving undefined_syms_auto.txt")
-    to_write = sorted(undefined_syms)
+    to_write = sorted(undefined_syms, key=lambda x:x[1])
     if len(to_write) > 0:
         with open(os.path.join(repo_path, "undefined_syms_auto.txt"), "w", newline="\n") as f:
             for sym in to_write:
-                f.write(f"{sym} = 0x{sym[2:]};\n")
+                f.write(f"{sym[0]} = 0x{sym[1]:X};\n")
 
     # print warnings and errors during split/postsplit
     had_error = False
