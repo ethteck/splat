@@ -341,7 +341,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     if verbose:
         log.write(f"saving undefined_funcs_auto.txt")
     c_predefined_funcs = set(provided_symbols.keys())
-    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
+    to_write = sorted(undefined_funcs - set(defined_funcs.values()) - c_predefined_funcs)
     if len(to_write) > 0:
         with open(os.path.join(repo_path, "undefined_funcs_auto.txt"), "w", newline="\n") as f:
             for line in to_write:
