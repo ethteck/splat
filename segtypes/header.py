@@ -21,8 +21,7 @@ class N64SegHeader(N64Segment):
     def split(self, rom_bytes, base_path):
         out_dir = self.create_split_dir(base_path, "asm")
 
-        if self.options.get("header_encoding", "ASCII"):
-            encoding = self.options.get("header_encoding", "ASCII")
+        encoding = self.options.get("header_encoding", "ASCII")
 
         header_lines = []
         header_lines.append(f".section .{self.name}, \"a\"\n")
