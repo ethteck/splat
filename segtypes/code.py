@@ -85,6 +85,7 @@ class N64SegCode(N64Segment):
         self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.is_overlay = segment.get("overlay", False)
         self.labels_to_add = {}
+        self.glabels_to_add = set()
         self.special_labels = {}
         self.undefined_syms_to_add = set()
         self.glabels_added = {}
@@ -112,6 +113,7 @@ class N64SegCode(N64Segment):
 
     def add_glabel(self, ram_addr, rom_addr):
         func = self.get_unique_func_name(ram_addr, rom_addr)
+        self.glabels_to_add.discard(func)
         self.glabels_added[ram_addr] = func
         if not self.is_overlay:
             self.all_functions[ram_addr] = func
@@ -197,6 +199,8 @@ class N64SegCode(N64Segment):
                     func_loc = self.rom_start + jal_addr - self.vram_addr
                     jump_func += "_{:X}".format(func_loc)
 
+                if jump_func not in self.provided_symbols.values():
+                    self.glabels_to_add.add(jump_func)
                 op_str = jump_func
             elif self.is_branch_insn(insn.mnemonic):
                 op_str_split = op_str.split(" ")

@@ -259,6 +259,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     ld_sections = []
 
     defined_funcs = {}
+    undefined_funcs = set()
     undefined_syms = set()
 
     seg_sizes = {}
@@ -317,6 +318,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
                         processed_segments.append(segment)
 
                         if type(segment) == N64SegCode:
+                            undefined_funcs |= segment.glabels_to_add
                             defined_funcs = {**defined_funcs, **segment.glabels_added}
                             undefined_syms |= segment.undefined_syms_to_add
 
@@ -334,6 +336,16 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
         if verbose:
             log.write(f"saving {config['basename']}.ld")
         write_ldscript(config['basename'], repo_path, ld_sections, options)
+
+    # Write undefined_funcs_auto.txt
+    if verbose:
+        log.write(f"saving undefined_funcs_auto.txt")
+    c_predefined_funcs = set(provided_symbols.keys())
+    to_write = sorted(undefined_funcs - defined_funcs - c_predefined_funcs)
+    if len(to_write) > 0:
+        with open(os.path.join(repo_path, "undefined_funcs_auto.txt"), "w", newline="\n") as f:
+            for line in to_write:
+                f.write(line + " = 0x" + line.split("_")[1][:8].upper() + ";\n")
 
     # write undefined_syms_auto.txt
     if verbose:
