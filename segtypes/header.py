@@ -21,6 +21,9 @@ class N64SegHeader(N64Segment):
     def split(self, rom_bytes, base_path):
         out_dir = self.create_split_dir(base_path, "asm")
 
+        if self.options.get("header_encoding", "ASCII"):
+            encoding = self.options.get("header_encoding", "ASCII")
+
         header_lines = []
         header_lines.append(f".section .{self.name}, \"a\"\n")
         header_lines.append(self.get_line("word", rom_bytes[0x00:0x04], "PI BSB Domain 1 register"))
@@ -31,7 +34,7 @@ class N64SegHeader(N64Segment):
         header_lines.append(self.get_line("word", rom_bytes[0x14:0x18], "Checksum 2"))
         header_lines.append(self.get_line("word", rom_bytes[0x18:0x1C], "Unknown 1"))
         header_lines.append(self.get_line("word", rom_bytes[0x1C:0x20], "Unknown 2"))
-        header_lines.append(".ascii \"" + rom_bytes[0x20:0x34].decode("ASCII").strip().ljust(20) + "\" /* Internal name */")
+        header_lines.append(".ascii \"" + rom_bytes[0x20:0x34].decode(encoding).strip().ljust(20) + "\" /* Internal name */")
         header_lines.append(self.get_line("word", rom_bytes[0x34:0x38], "Unknown 3"))
         header_lines.append(self.get_line("word", rom_bytes[0x38:0x3C], "Cartridge"))
         header_lines.append(self.get_line("ascii", rom_bytes[0x3C:0x3E], "Cartridge ID"))

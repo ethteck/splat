@@ -6,6 +6,7 @@ import zlib
 
 parser = argparse.ArgumentParser(description='Gives information on n64 roms')
 parser.add_argument('rom', help='path to a .z64 rom')
+parser.add_argument('--encoding', help='Text encoding the game header is using, defaults to ASCII, see docs.python.org/2.4/lib/standard-encodings.html for valid encodings', default='ASCII')
 
 country_codes = {
     0x37: "Beta",
@@ -57,16 +58,22 @@ def get_entry_point(program_counter, cic):
     return program_counter - cic["offset"]
 
 
-def get_info(rom_path):
-    return get_info_bytes(read_rom(rom_path))
+def get_info(rom_path, encoding):
+    return get_info_bytes(read_rom(rom_path), encoding)
 
 
-def get_info_bytes(rom_bytes):
+def get_info_bytes(rom_bytes, encoding):
     program_counter = int(rom_bytes[0x8:0xC].hex(), 16)
     libultra_version = chr(rom_bytes[0xF])
     crc1 = rom_bytes[0x10:0x14].hex().upper()
     crc2 = rom_bytes[0x14:0x18].hex().upper()
-    name = rom_bytes[0x20:0x34].decode("ASCII").strip()
+    
+    try:
+        name = rom_bytes[0x20:0x34].decode(encoding).strip()
+    except:
+        print("n64splat could not decode the game name, try using a different encoding by passing the --encoding argument (see docs.python.org/2.4/lib/standard-encodings.html for valid encodings)")
+        exit()
+
     country_code = rom_bytes[0x3E]
 
     cic = get_cic(rom_bytes)
@@ -98,7 +105,7 @@ class N64Rom:
 
 def main():
     args = parser.parse_args()
-    rom = get_info(args.rom)
+    rom = get_info(args.rom, args.encoding)
     print("Image name: " + rom.name)
     print("Country code: " + chr(rom.country_code) + " - " + rom.get_country_name())
     print("Libultra version: " + rom.libultra_version)
