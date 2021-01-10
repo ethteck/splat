@@ -72,7 +72,7 @@ def get_info_bytes(rom_bytes, encoding):
         name = rom_bytes[0x20:0x34].decode(encoding).strip()
     except:
         print("n64splat could not decode the game name, try using a different encoding by passing the --encoding argument (see docs.python.org/2.4/lib/standard-encodings.html for valid encodings)")
-        exit()
+        exit(1)
 
     country_code = rom_bytes[0x3E]
 
