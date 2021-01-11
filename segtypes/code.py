@@ -387,7 +387,7 @@ class N64SegCode(N64Segment):
                     indent_next = False
                     insn_text = " " + insn_text
 
-                asm_insn_text = "  {}{}".format(insn_text.ljust(mnemonic_ljust), op_str)
+                asm_insn_text = "  {}{}".format(insn_text.ljust(mnemonic_ljust), op_str).rstrip()
 
                 func_text.append(asm_comment + asm_insn_text)
 
@@ -479,7 +479,10 @@ class N64SegCode(N64Segment):
                     pass
 
             # Fallback to raw data
-            if len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
+            if len(sym_bytes) % 8 == 0 and mnemonic in ["addiu", "ldc1", "sdc1"]:
+                stype = "double"
+                slen = 8
+            elif len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
                 stype = "word"
                 slen = 4
             elif len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
@@ -499,6 +502,8 @@ class N64SegCode(N64Segment):
                 bits = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
                 if stype == "float":
                     byte_str = floats.format_f32_imm(bits)
+                elif stype == "double":
+                    byte_str = floats.format_f64_imm(bits)
                 else:
                     byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
                 sym_str += byte_str
