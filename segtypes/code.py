@@ -479,7 +479,7 @@ class N64SegCode(N64Segment):
                     pass
 
             # Fallback to raw data
-            if len(sym_bytes) % 8 == 0 and mnemonic in ["addiu", "ldc1", "sdc1"]:
+            if len(sym_bytes) % 8 == 0 and mnemonic in ["ldc1", "sdc1"]:
                 stype = "double"
                 slen = 8
             elif len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
