@@ -435,6 +435,45 @@ class N64SegCode(N64Segment):
 
         return [(s, self.detected_syms[s]) for s in self.detected_syms if s >= vram_start and s <= vram_end]
 
+    def disassemble_symbol(self, sym_bytes, sym_type):
+        sym_str = f".{sym_type} "
+
+        if sym_type == "double":
+            slen = 8
+        elif sym_type in ["float", "word"]:
+            slen = 4
+        elif sym_type == "short":
+            slen = 2
+        else:
+            slen = 1
+
+        i = 0
+        while i < len(sym_bytes):
+            adv_amt = min(slen, len(sym_bytes) - i)
+            bits = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
+
+            byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
+
+            if sym_type in ["float", "double"]:
+                if sym_type == "float":
+                    float_str = floats.format_f32_imm(bits)
+                elif sym_type == "double":
+                    float_str = floats.format_f64_imm(bits)
+
+                # Fall back to .word if we see weird float values
+                if "e-" in float_str or "nan" in float_str:
+                    return self.disassemble_symbol(sym_bytes, "word")
+                else:
+                    byte_str = float_str
+
+            sym_str += byte_str
+
+            i += adv_amt
+
+            if i < len(sym_bytes):
+                sym_str += ", "
+
+        return sym_str
 
     def disassemble_data(self, split_file, rom_bytes):
         ret = ".include \"macro.inc\"\n\n"
@@ -481,38 +520,16 @@ class N64SegCode(N64Segment):
             # Fallback to raw data
             if len(sym_bytes) % 8 == 0 and mnemonic in ["ldc1", "sdc1"]:
                 stype = "double"
-                slen = 8
             elif len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
                 stype = "word"
-                slen = 4
             elif len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
                 stype = "float"
-                slen = 4
             elif len(sym_bytes) % 2 == 0 and mnemonic in ["addiu", "lh", "sh", "lhu"]:
                 stype = "short"
-                slen = 2
             else:
                 stype = "byte"
-                slen = 1
-
-            sym_str += f".{stype} "
-            i = 0
-            while i < len(sym_bytes):
-                adv_amt = min(slen, len(sym_bytes) - i)
-                bits = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
-                if stype == "float":
-                    byte_str = floats.format_f32_imm(bits)
-                elif stype == "double":
-                    byte_str = floats.format_f64_imm(bits)
-                else:
-                    byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
-                sym_str += byte_str
-
-                i += adv_amt
-
-                if i < len(sym_bytes):
-                    sym_str += ", "
-
+            
+            sym_str += self.disassemble_symbol(sym_bytes, stype)
             ret += sym_str
 
         ret += "\n"
