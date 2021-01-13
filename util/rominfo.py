@@ -58,7 +58,7 @@ def get_entry_point(program_counter, cic):
     return program_counter - cic["offset"]
 
 
-def get_info(rom_path, encoding):
+def get_info(rom_path, encoding="ASCII"):
     return get_info_bytes(read_rom(rom_path), encoding)
 
 
@@ -67,7 +67,7 @@ def get_info_bytes(rom_bytes, encoding):
     libultra_version = chr(rom_bytes[0xF])
     crc1 = rom_bytes[0x10:0x14].hex().upper()
     crc2 = rom_bytes[0x14:0x18].hex().upper()
-    
+
     try:
         name = rom_bytes[0x20:0x34].decode(encoding).strip()
     except:
