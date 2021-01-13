@@ -84,7 +84,8 @@ class N64SegCode(N64Segment):
         super().__init__(segment, next_segment, options)
         self.files = parse_segment_files(segment, self.__class__, self.rom_start, self.rom_end, self.name, self.vram_addr)
         self.is_overlay = segment.get("overlay", False)
-        self.labels_to_add = {}
+        self.labels_to_add = set()
+        self.jtbl_glabels = set()
         self.glabels_to_add = set()
         self.special_labels = {}
         self.undefined_syms_to_add = set()
@@ -96,6 +97,8 @@ class N64SegCode(N64Segment):
         self.symbol_ranges = RangeDict()
         self.detected_syms = {}
         self.reported_file_split = False
+        self.jtbl_jumps = {}
+        self.jumptables = {}
 
     @staticmethod
     def get_default_name(addr):
@@ -211,9 +214,7 @@ class N64SegCode(N64Segment):
                 if branch_target_int in self.special_labels:
                     label = self.special_labels[branch_target_int]
                 else:
-                    if func_addr not in self.labels_to_add:
-                        self.labels_to_add[func_addr] = set()
-                    self.labels_to_add[func_addr].add(branch_target_int)
+                    self.labels_to_add.add(branch_target_int)
                     label = ".L" + branch_target[2:].upper()
 
                 op_str = " ".join(op_str_split[:-1] + [label])
@@ -225,6 +226,10 @@ class N64SegCode(N64Segment):
             rom_addr += 4
 
             if mnemonic == "jr":
+                # Record potential jtbl jumps
+                if op_str != "$ra":
+                    self.jtbl_jumps[insn.address] = op_str
+
                 keep_going = False
                 for label in labels:
                     if (label[0] > insn.address and label[1] <= insn.address) or (label[0] <= insn.address and label[1] > insn.address):
@@ -264,21 +269,23 @@ class N64SegCode(N64Segment):
 
         self.detected_syms[addr] = mnemonic
 
-    def get_symbol_name(self, addr, rom_addr=None, funcs=None):
+    def get_symbol_name(self, addr, rom_addr, funcs=None):
         if funcs and addr in funcs:
             return self.get_unique_func_name(addr, rom_addr)
         if addr in self.all_functions:
-            return self.all_functions[addr]
+            return self.all_functions[addr] # todo clean up funcs vs all_functions
         if addr in self.provided_symbols:
             return self.provided_symbols[addr]
-        elif addr in self.symbol_ranges:
+        if addr in self.jumptables:
+            return f"jtbl_{addr:X}_{rom_addr:X}"
+        if addr in self.symbol_ranges:
             ret = self.symbol_ranges.get(addr)
             offset = addr - self.symbol_ranges.getrange(addr).start
             if offset != 0:
                 ret += f"+0x{offset:X}"
             return ret
-        else:
-            return f"D_{addr:X}"
+
+        return f"D_{addr:X}"
 
     # Determine symbols
     def determine_symbols(self, funcs, rom_addr):
@@ -286,9 +293,17 @@ class N64SegCode(N64Segment):
 
         for func_addr in funcs:
             func = funcs[func_addr]
+            func_end_addr = func[-1][0].address + 4
+
+            possible_jtbl_jumps = [(k, v) for k, v in self.jtbl_jumps.items() if k >= func_addr and k < func_end_addr]
+            possible_jtbl_jumps.sort(key=lambda x:x[0])
 
             for i in range(len(func)):
                 insn = func[i][0]
+
+                # Ensure the first item in the list is always ahead of where we're looking
+                while len(possible_jtbl_jumps) > 0 and possible_jtbl_jumps[0][0] < insn.address:
+                    del possible_jtbl_jumps[0]
 
                 if insn.mnemonic == "lui":
                     op_split = insn.op_str.split(", ")
@@ -329,17 +344,25 @@ class N64SegCode(N64Segment):
                                 else:
                                     s_str = s_op_split[-1]
 
-                                s_val = int(s_str, 0)
-
-                                symbol_addr = (lui_val * 0x10000) + s_val
-
+                                symbol_addr = (lui_val * 0x10000) + int(s_str, 0)
                                 symbol_name = self.get_symbol_name(symbol_addr, symbol_addr - next(iter(funcs)) + rom_addr, funcs)
-                                self.store_symbol_access(symbol_addr, s_insn.mnemonic)
+                                symbol_tag = s_insn.mnemonic
+
+                                vram_end = self.vram_addr + self.rom_end - self.rom_start
+                                if symbol_addr > func_addr and symbol_addr < vram_end and len(possible_jtbl_jumps) > 0 and func_end_addr - s_insn.address >= 0x30:
+                                    for jump in possible_jtbl_jumps:
+                                        if jump[1] == s_op_split[0]:
+                                            dist_to_jump = possible_jtbl_jumps[0][0] - s_insn.address
+                                            if dist_to_jump <= 16:
+                                                symbol_name = f"jtbl_{symbol_addr:X}_{self.ram_to_rom(symbol_addr):X}"
+                                                symbol_tag = "jtbl"
+                                                self.jumptables[symbol_addr] = (func_addr, func_end_addr)
+                                                break
+
+                                self.store_symbol_access(symbol_addr, symbol_tag)
                                 symbol_file = self.get_file_for_addr(symbol_addr)
 
                                 if not symbol_file or symbol_file["subtype"] == "bin":
-                                    if not self.options.get("create_detected_syms", False):
-                                        break
                                     if "+" not in symbol_name:
                                         self.undefined_syms_to_add.add((symbol_name, symbol_addr))
 
@@ -365,17 +388,20 @@ class N64SegCode(N64Segment):
             rom_addr_padding = self.options.get("rom_address_padding", None)
 
             for insn in funcs[func]:
+                insn_addr = insn[0].address
                 # Add a label if we need one
-                if func in self.labels_to_add and insn[0].address in self.labels_to_add[func]:
-                    self.labels_to_add[func].remove(insn[0].address)
-                    func_text.append(".L{:X}:".format(insn[0].address))
+                if insn_addr in self.labels_to_add:
+                    self.labels_to_add.remove(insn_addr)
+                    func_text.append(".L{:X}:".format(insn_addr))
+                if insn_addr in self.jtbl_glabels:
+                    func_text.append(f"glabel L{insn_addr:X}_{insn[3]:X}")
 
                 if rom_addr_padding:
                     rom_str = "{0:0{1}X}".format(insn[3], rom_addr_padding)
                 else:
                     rom_str = "{:X}".format(insn[3])
 
-                asm_comment = "/* {} {:X} {} */".format(rom_str, insn[0].address, insn[0].bytes.hex().upper())
+                asm_comment = "/* {} {:X} {} */".format(rom_str, insn_addr, insn[0].bytes.hex().upper())
 
                 if len(insn) > 4:
                     op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
@@ -436,11 +462,14 @@ class N64SegCode(N64Segment):
         return [(s, self.detected_syms[s]) for s in self.detected_syms if s >= vram_start and s <= vram_end]
 
     def disassemble_symbol(self, sym_bytes, sym_type):
-        sym_str = f".{sym_type} "
+        if sym_type == "jtbl":
+            sym_str = ".word "
+        else:
+            sym_str = f".{sym_type} "
 
         if sym_type == "double":
             slen = 8
-        elif sym_type in ["float", "word"]:
+        elif sym_type in ["float", "word", "jtbl"]:
             slen = 4
         elif sym_type == "short":
             slen = 2
@@ -452,7 +481,18 @@ class N64SegCode(N64Segment):
             adv_amt = min(slen, len(sym_bytes) - i)
             bits = int.from_bytes(sym_bytes[i : i + adv_amt], "big")
 
-            byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
+            if sym_type == "jtbl":
+                if bits == 0:
+                    byte_str = "0"
+                else:
+                    rom_addr = self.ram_to_rom(bits)
+
+                    if rom_addr:
+                        byte_str = f"L{bits:X}_{rom_addr:X}"
+                    else:
+                        byte_str = f"0x{bits:X}"
+            else:
+                byte_str = self.provided_symbols.get(bits, '0x{0:0{1}X}'.format(bits, 2 * slen))
 
             if sym_type in ["float", "double"]:
                 if sym_type == "float":
@@ -461,6 +501,7 @@ class N64SegCode(N64Segment):
                     float_str = floats.format_f64_imm(bits)
 
                 # Fall back to .word if we see weird float values
+                # todo cut the symbol in half maybe where we see the first nan or something
                 if "e-" in float_str or "nan" in float_str:
                     return self.disassemble_symbol(sym_bytes, "word")
                 else:
@@ -476,6 +517,7 @@ class N64SegCode(N64Segment):
         return sym_str
 
     def disassemble_data(self, split_file, rom_bytes):
+        rodata_encountered = split_file["subtype"] == "rodata"
         ret = ".include \"macro.inc\"\n\n"
         ret += f'.section .{split_file["subtype"]}'
 
@@ -500,7 +542,7 @@ class N64SegCode(N64Segment):
             end = syms[i + 1][0]
             sym_rom_start = start - split_file["vram"] + split_file["start"]
             sym_rom_end = end - split_file["vram"] + split_file["start"]
-            sym_name = self.get_symbol_name(start)
+            sym_name = self.get_symbol_name(start, sym_rom_start)
             sym_str = f"\n\nglabel {sym_name}\n"
             sym_bytes = rom_bytes[sym_rom_start : sym_rom_end]
 
@@ -518,9 +560,11 @@ class N64SegCode(N64Segment):
                     pass
 
             # Fallback to raw data
-            if len(sym_bytes) % 8 == 0 and mnemonic in ["ldc1", "sdc1"]:
+            if mnemonic == "jtbl":
+                stype = "jtbl"
+            elif len(sym_bytes) % 8 == 0 and mnemonic in ["ldc1", "sdc1"]:
                 stype = "double"
-            elif len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw"]:
+            elif len(sym_bytes) % 4 == 0 and mnemonic in ["addiu", "sw", "lw", "jtbl"]:
                 stype = "word"
             elif len(sym_bytes) % 4 == 0 and mnemonic in ["lwc1", "swc1"]:
                 stype = "float"
@@ -529,6 +573,10 @@ class N64SegCode(N64Segment):
             else:
                 stype = "byte"
             
+            if not rodata_encountered and mnemonic == "jtbl":
+                rodata_encountered = True
+                ret += "\n\n\n.section .rodata"
+
             sym_str += self.disassemble_symbol(sym_bytes, stype)
             ret += sym_str
 
@@ -544,6 +592,25 @@ class N64SegCode(N64Segment):
         ret.append("")
 
         return ret
+
+    def gather_jumptable_labels(self, section_vram, section_rom, rom_bytes):
+        for jumptable in self.jumptables:
+            start, end = self.jumptables[jumptable]
+            rom_offset = section_rom + jumptable - section_vram
+
+            if rom_offset <= 0:
+                return
+
+            while (rom_offset):
+                word = rom_bytes[rom_offset : rom_offset + 4]
+                word_int = int.from_bytes(word, "big")
+                if word_int >= start and word_int <= end:
+                    self.jtbl_glabels.add(word_int)
+                else:
+                    break
+
+                rom_offset += 4
+
 
     def split(self, rom_bytes, base_path):
         md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
@@ -564,12 +631,11 @@ class N64SegCode(N64Segment):
 
                 rom_addr = split_file["start"]
 
-                insns = []
-                for insn in md.disasm(rom_bytes[split_file["start"]: split_file["end"]], split_file["vram"]):
-                    insns.append(insn)
+                insns = [insn for insn in md.disasm(rom_bytes[split_file["start"]: split_file["end"]], split_file["vram"])]
 
                 funcs = self.process_insns(insns, rom_addr)
                 funcs = self.determine_symbols(funcs, rom_addr)
+                self.gather_jumptable_labels(self.vram_addr, self.rom_start, rom_bytes)
                 funcs_text = self.add_labels(funcs)
 
                 if file_type == "c":

@@ -75,6 +75,22 @@ class N64Segment:
     def size(self):
         return self.rom_end - self.rom_start
 
+    @property
+    def vram_end(self):
+        return self.vram_addr + self.size
+
+    def rom_to_ram(self, rom_addr):
+        if rom_addr < self.rom_start or rom_addr > self.rom_end:
+            return None
+
+        return self.vram_addr + rom_addr - self.rom_start
+
+    def ram_to_rom(self, ram_addr):
+        if ram_addr < self.vram_addr or ram_addr > self.vram_end:
+            return None
+
+        return self.rom_start + ram_addr - self.vram_addr
+
     def create_split_dir(self, base_path, subdir):
         out_dir = Path(base_path, subdir)
         out_dir.mkdir(parents=True, exist_ok=True)
