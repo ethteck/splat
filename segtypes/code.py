@@ -397,14 +397,25 @@ class N64SegCode(N64Segment):
             ret[func] = (func_text, rom_addr)
 
             if self.options.get("find_file_boundaries"):
-                if func != next(reversed(list(funcs.keys()))) and self.is_nops([i[0] for i in funcs[func][-2:]]):
-                    new_file_addr = funcs[func][-1][3] + 4
-                    if (new_file_addr % 16) == 0:
-                        if not self.reported_file_split:
-                            self.reported_file_split = True
-                            print(f"Segment {self.name}, function at vram {func:X} ends with nops, indicating a likely file split.")
-                            print("File split suggestions for this segment will follow in config yaml format:")
-                        print(f"      - [0x{new_file_addr:X}, asm]")
+                # If this is not the last function in the file
+                if func != list(funcs.keys())[-1]:
+
+                    # Find where the function returns
+                    jr_pos = None
+                    for i, insn in enumerate(reversed(funcs[func])):
+                        if insn[0].mnemonic == "jr" and insn[0].op_str == "$ra":
+                            jr_pos = i
+                            break
+
+                    # If there is more than 1 nop after the return
+                    if jr_pos and jr_pos > 1 and self.is_nops([i[0] for i in funcs[func][-jr_pos + 1:]]):
+                        new_file_addr = funcs[func][-1][3] + 4
+                        if (new_file_addr % 16) == 0:
+                            if not self.reported_file_split:
+                                self.reported_file_split = True
+                                print(f"Segment {self.name}, function at vram {func:X} ends with extra nops, indicating a likely file split.")
+                                print("File split suggestions for this segment will follow in config yaml format:")
+                            print(f"      - [0x{new_file_addr:X}, asm]")
 
         return ret
 

@@ -308,11 +308,8 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
                     # Cache miss; split
                     cache[segment.unique_id()] = cached
 
-                    try:
-                        segment.did_run = True
-                        segment.split(rom_bytes, repo_path)
-                    except Exception as e:
-                        segment.error(str(e))
+                    segment.did_run = True
+                    segment.split(rom_bytes, repo_path)
 
                     if len(segment.errors) == 0:
                         processed_segments.append(segment)
