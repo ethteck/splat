@@ -347,7 +347,7 @@ def main(rom_path, config_path, repo_path, modes, verbose, ignore_cache=False):
     # write undefined_syms_auto.txt
     if verbose:
         log.write(f"saving undefined_syms_auto.txt")
-    to_write = sorted(undefined_syms, key=lambda x:x[1])
+    to_write = sorted(undefined_syms, key=lambda x:x[0])
     if len(to_write) > 0:
         with open(os.path.join(repo_path, "undefined_syms_auto.txt"), "w", newline="\n") as f:
             for sym in to_write:
