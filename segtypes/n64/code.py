@@ -181,7 +181,7 @@ class CodeSubsegment(Subsegment):
             if self.type == "c":
                 defined_funcs = set()
 
-                if self.options.get("do_c_func_detection", True) and os.path.exists(generic_out_path):
+                if segment.options.get("do_c_func_detection", True) and os.path.exists(generic_out_path):
                     defined_funcs = CodeSubsegment.get_funcs_defined_in_c(generic_out_path)
                     segment.mark_c_funcs_as_defined(defined_funcs)
 
