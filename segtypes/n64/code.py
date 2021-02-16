@@ -179,7 +179,7 @@ class CodeSubsegment(Subsegment):
             funcs_text = segment.add_labels(funcs)
 
             if self.type == "c":
-                if os.path.exists(generic_out_path):
+                if os.path.exists(generic_out_path) and self.options.get("write_all_c_funcs", True):
                     defined_funcs = CodeSubsegment.get_funcs_defined_in_c(generic_out_path)
                     segment.mark_c_funcs_as_defined(defined_funcs)
                 else:
