@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import sys
 from collections import OrderedDict
 from pathlib import Path, PurePath
@@ -97,12 +98,12 @@ class Subsegment():
             self.name + "." + self.get_ext()
         )
 
-    def scan_inner(self, segment, rom_bytes):
+    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
         pass
 
-    def scan(self, segment, rom_bytes):
+    def scan(self, segment, rom_bytes, base_path):
         if self.should_run(segment.options) and not self.name.startswith("."):
-            self.scan_inner(segment, rom_bytes)
+            self.scan_inner(segment, rom_bytes, base_path, self.get_generic_out_path(base_path, segment.options))
 
     def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
         pass
@@ -131,6 +132,7 @@ class Subsegment():
             return Subsegment
 
 class CodeSubsegment(Subsegment):
+    defined_funcs = set()
     md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
     md.detail = True
     md.skipdata = True
@@ -155,10 +157,7 @@ class CodeSubsegment(Subsegment):
         return re.sub(CodeSubsegment.STRIP_C_COMMENTS_RE, replacer, text)
 
     @staticmethod
-    def get_funcs_defined_in_c(c_file):
-        with open(c_file, "r") as f:
-            text = CodeSubsegment.strip_c_comments(f.read())
-
+    def get_funcs_defined_in_c(text):
         return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
 
     @staticmethod
@@ -177,8 +176,21 @@ class CodeSubsegment(Subsegment):
 
         return ret
 
-    def scan_inner(self, segment, rom_bytes):
+    @staticmethod
+    def get_funcs_defined_in_c(c_file):
+        with open(c_file, "r") as f:
+            text = CodeSubsegment.strip_c_comments(f.read())
+
+        return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
+
+    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
         if not self.rom_start == self.rom_end:
+            if self.type == "c":
+                if segment.options.get("do_c_func_detection", True) and os.path.exists(generic_out_path):
+                    # TODO run cpp?
+                    self.defined_funcs = CodeSubsegment.get_funcs_defined_in_c(generic_out_path)
+                    segment.mark_c_funcs_as_defined(self.defined_funcs)
+
             insns = [insn for insn in CodeSubsegment.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
             funcs = segment.process_insns(insns, self.rom_start)
@@ -194,17 +206,12 @@ class CodeSubsegment(Subsegment):
     def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
-                defined_funcs = set()
-                if segment.options.get("do_c_func_detection", True) and os.path.exists(generic_out_path):
-                    defined_funcs = CodeSubsegment.get_funcs_defined_in_c(generic_out_path)
-                    segment.mark_c_funcs_as_defined(defined_funcs)
-
                 asm_out_dir = Segment.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
 
                 for func in self.funcs_text:
                     func_name = segment.get_symbol(func, type="func", local_only=True).name
 
-                    if func_name not in defined_funcs:
+                    if func_name not in self.defined_funcs:
                         segment.create_c_asm_file(self.funcs_text, func, asm_out_dir, self, func_name)
 
                 if not os.path.exists(generic_out_path) and segment.options.get("create_new_c_files", True):
@@ -223,7 +230,7 @@ class CodeSubsegment(Subsegment):
                     f.write("\n".join(out_lines))
 
 class DataSubsegment(Subsegment):
-    def scan_inner(self, segment, rom_bytes):
+    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
         if not self.type.startswith(".") or self.type == ".rodata":
             self.file_text = segment.disassemble_data(self, rom_bytes)
 
@@ -1026,7 +1033,7 @@ class N64SegCode(N64Segment):
 
     def split(self, rom_bytes, base_path):
         for sub in self.subsegments:
-            sub.scan(self, rom_bytes)
+            sub.scan(self, rom_bytes, base_path)
 
         for sub in self.subsegments:
             sub.split(self, rom_bytes, base_path)
