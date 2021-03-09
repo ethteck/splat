@@ -80,6 +80,13 @@ class Subsegment():
             return "pal.png"
         return self.type
 
+    def get_ld_file(self, options):
+        subdir = self.get_out_subdir(options)
+        obj_type = self.get_ld_obj_type(".text")
+        ext = self.get_ext()
+
+        return subdir, f"{self.name}.{ext}", obj_type, self.rom_start
+
     def should_run(self, options):
         return self.type in options["modes"] or "all" in options["modes"]
 
@@ -118,6 +125,8 @@ class Subsegment():
             return PaletteSubsegment
         elif typ == "rgba32":
             return RGBA32Subsegment
+        elif typ == "linker":
+            return LinkerSubsegment
         else:
             return Subsegment
 
@@ -243,6 +252,10 @@ class BinSubsegment(Subsegment):
         with open(generic_out_path, "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
+class LinkerSubsegment(Subsegment):
+    def get_ld_file(self, options):
+        return "", self.name, self.type, self.rom_start
+
 class PaletteSubsegment(Subsegment):
     def should_run(self, options):
         return super().should_run(options) or "img" in options["modes"]
@@ -338,8 +351,15 @@ class N64SegCode(N64Segment):
 
     def __init__(self, segment, next_segment, options):
         super().__init__(segment, next_segment, options)
-        self.rodata_vram_start = -1
-        self.rodata_vram_end = -1
+
+        # TODO Note: These start/end vram options don't really do anything yet
+        self.data_vram_start = segment.get("data_vram_start", -1)
+        self.data_vram_end = segment.get("data_vram_end", -1)
+        self.rodata_vram_start = segment.get("rodata_vram_start", -1)
+        self.rodata_vram_end = segment.get("rodata_vram_end", -1)
+        self.bss_vram_start = segment.get("bss_vram_start", -1)
+        self.bss_vram_end = segment.get("bss_vram_end", -1)
+
         self.subsegments = self.parse_subsegments(segment)
         self.is_overlay = segment.get("overlay", False)
         self.all_symbols = ()
@@ -360,14 +380,7 @@ class N64SegCode(N64Segment):
         return f"code_{addr:X}"
 
     def get_ld_files(self):
-        def transform(sub):
-            subdir = sub.get_out_subdir(self.options)
-            obj_type = sub.get_ld_obj_type(".text")
-            ext = sub.get_ext()
-
-            return subdir, f"{sub.name}.{ext}", obj_type, sub.rom_start
-
-        return [transform(file) for file in self.subsegments]
+        return [sub.get_ld_file(self.options) for sub in self.subsegments]
 
     def get_ld_section_name(self):
         path = PurePath(self.name)
