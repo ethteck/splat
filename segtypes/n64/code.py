@@ -226,8 +226,9 @@ class CodeSubsegment(Subsegment):
                 outpath = Path(os.path.join(asm_out_dir, self.name + ".s"))
                 outpath.parent.mkdir(parents=True, exist_ok=True)
 
-                with open(outpath, "w", newline="\n") as f:
-                    f.write("\n".join(out_lines))
+                if self.type == "asm" or not os.path.exists(outpath):
+                    with open(outpath, "w", newline="\n") as f:
+                        f.write("\n".join(out_lines))
 
 class DataSubsegment(Subsegment):
     def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
