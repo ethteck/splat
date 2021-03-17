@@ -581,7 +581,7 @@ class N64SegCode(N64Segment):
 
         return ret
 
-    def get_file_for_addr(self, addr):
+    def get_subsection_for_ram(self, addr):
         for sub in self.subsegments:
             if sub.contains_vram(addr):
                 return sub
@@ -994,7 +994,8 @@ class N64SegCode(N64Segment):
             func_rodata = list({s for s in self.rodata_syms[func] if s.disasm_str})
             func_rodata.sort(key=lambda s:s.vram_start)
 
-            if self.get_file_for_addr(func_rodata[0].vram_start).type != "rodata":
+            sub = self.get_subsection_for_ram(func_rodata[0].vram_start)
+            if sub and sub.type != "rodata":
                 out_lines.append(".section .rodata")
 
                 for sym in func_rodata:
