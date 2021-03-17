@@ -994,17 +994,18 @@ class N64SegCode(N64Segment):
             func_rodata = list({s for s in self.rodata_syms[func] if s.disasm_str})
             func_rodata.sort(key=lambda s:s.vram_start)
 
-            sub = self.get_subsection_for_ram(func_rodata[0].vram_start)
-            if sub and sub.type != "rodata":
-                out_lines.append(".section .rodata")
+            if len(func_rodata) > 0:
+                sub = self.get_subsection_for_ram(func_rodata[0].vram_start)
+                if sub and sub.type != "rodata":
+                    out_lines.append(".section .rodata")
 
-                for sym in func_rodata:
-                    if sym.disasm_str:
-                        out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
+                    for sym in func_rodata:
+                        if sym.disasm_str:
+                            out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
 
-                out_lines.append("")
-                out_lines.append(".section .text")
-                out_lines.append("")
+                    out_lines.append("")
+                    out_lines.append(".section .text")
+                    out_lines.append("")
 
         out_lines.extend(funcs_text[func][0])
         out_lines.append("")
