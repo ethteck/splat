@@ -2,7 +2,6 @@ import os
 from segtypes.n64.segment import N64Segment
 from util.n64 import Yay0decompress
 from util import options
-from segtypes.linker_entry import LinkerEntry
 
 class N64SegYay0(N64Segment):
     def split(self, rom_bytes, base_path):
@@ -19,8 +18,6 @@ class N64SegYay0(N64Segment):
 
 
     def get_linker_entries(self):
-        return [LinkerEntry(self, options.get_asset_dir() / self.dir / "{self.name}.Yay0")]
+        from segtypes.linker_entry import LinkerEntry
 
-    @staticmethod
-    def get_default_name(addr):
-        return "Yay0/{:X}".format(addr)
+        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.Yay0", ".data")]

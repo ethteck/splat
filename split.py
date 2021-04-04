@@ -190,11 +190,11 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
     options.set("modes", modes)
     options.set("verbose", verbose)
 
-    with open(target_path, "rb") as f:
+    with open(options.get_target_path(), "rb") as f:
         rom_bytes = f.read()
 
     # Create main output dir
-    Path(base_dir).mkdir(parents=True, exist_ok=True)
+    options.get_base_path().mkdir(parents=True, exist_ok=True)
 
     symbol_addrs_path = options.get_symbol_addrs_path()
     all_symbols = gather_symbols(symbol_addrs_path)
@@ -248,7 +248,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
                     cache[segment.unique_id()] = cached
 
                     segment.did_run = True
-                    segment.split(rom_bytes, base_dir)
+                    segment.split(rom_bytes, options.get_base_path())
 
                     if len(segment.errors) == 0:
                         processed_segments.append(segment)
@@ -328,5 +328,5 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    error_code = main(args.config, args.outdir, args.rom, args.modes, args.verbose, not args.new)
+    error_code = main(args.config, args.basedir, args.rom, args.modes, args.verbose, not args.new)
     exit(error_code)

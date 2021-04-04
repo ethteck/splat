@@ -3,7 +3,6 @@ from segtypes.n64.segment import N64Segment
 from pathlib import Path
 from segtypes.segment import Segment
 from util import options
-from segtypes.linker_entry import LinkerEntry
 
 class N64SegHeader(N64Segment):
     def should_run(self):
@@ -20,9 +19,10 @@ class N64SegHeader(N64Segment):
         
         return f".{typ} {dstr} /* {comment} */"
 
-    def split(self, rom_bytes, base_path):
-        out_dir = Segment.create_split_dir(base_path, "asm")
+    def get_src_path(self) -> Path:
+        return options.get_base_path() / f"asm/{self.name}.s"
 
+    def split(self, rom_bytes, base_path):
         encoding = options.get("header_encoding", "ASCII")
 
         header_lines = []
@@ -49,19 +49,19 @@ class N64SegHeader(N64Segment):
         header_lines.append(self.get_line("byte", rom_bytes[0x3F:0x40], "Version"))
         header_lines.append("")
 
-        s_path = os.path.join(out_dir, self.name + ".s")
-        Path(s_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(s_path, "w", newline="\n") as f:
+        src_path = self.get_src_path()
+        src_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(src_path, "w", newline="\n") as f:
             f.write("\n".join(header_lines))
-        self.log(f"Wrote {self.name} to {s_path}")
-
+        self.log(f"Wrote {self.name} to {src_path}")
 
     def get_ld_section_name(self):
         return self.name
 
-
     def get_linker_entries(self):
-        return [LinkerEntry(self, Path("asm/{self.name}.s"))]
+        from segtypes.linker_entry import LinkerEntry
+
+        return [LinkerEntry(self, options.get_base_path() / "asm" / self.dir / f"{self.name}.s", ".data")]
 
     @staticmethod
     def get_default_name(addr):

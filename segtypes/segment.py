@@ -1,9 +1,13 @@
-from typing import Union, Optional, List, Literal
+from typing import TYPE_CHECKING, Union, Optional, List, Literal
 from pathlib import Path, PurePath
 from util import log
 from util import options
 import re
 import sys
+
+# circular import
+if TYPE_CHECKING:
+    from segtypes.linker_entry import LinkerEntry
 
 RomAddr = Union[int, Literal["auto"]]
 
@@ -135,7 +139,7 @@ class Segment:
     def should_run(self):
         return self.extract and options.mode_active(self.type)
 
-    def split(self, rom_bytes: bytes, base_path):
+    def split(self, rom_bytes: bytes, base_path: Path):
         pass
 
     def postsplit(self, segments: List[Union[dict, list]]):
@@ -145,7 +149,6 @@ class Segment:
         return (self.config, self.rom_end)
 
     def get_ld_section(self):
-        replace_ext = bool(options.get("ld_o_replace_extension", True))
         vram_or_rom = self.rom_start if self.vram_start is None else self.vram_start
         subalign_str = f"SUBALIGN({self.subalign})"
 
@@ -157,47 +160,40 @@ class Segment:
 
         i = 0
         do_next = False
-        for subdir, path, obj_type, start in self.get_linker_entries():
+        for entry in self.get_linker_entries():
+            sect_name = str(entry.dest_path).replace(".", "_").replace("/", "_")
+
             # Manual linker segment creation
-            if obj_type == "linker":
+            if entry.section == "linker":
                 s += (
                     "}\n"
-                    f"SPLAT_BEGIN_SEG({path}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
+                    f"SPLAT_BEGIN_SEG({sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
                 )
 
-            # Create new sections for non-0x10 alignment (hack)
-            if start % 0x10 != 0 and i != 0 or do_next:
-                tmp_sect_name = path.replace(".", "_")
-                tmp_sect_name = tmp_sect_name.replace("/", "_")
-                s += (
-                    "}\n"
-                    f"SPLAT_BEGIN_SEG({tmp_sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
-                )
-                do_next = False
+            start = entry.src_segment.rom_start
+            if isinstance(start, int):
+                # Create new sections for non-0x10 alignment (hack)
+                if start % 0x10 != 0 and i != 0 or do_next:
+                    s += (
+                        "}\n"
+                        f"SPLAT_BEGIN_SEG({sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
+                    )
+                    do_next = False
 
-            if start % 0x10 != 0 and i != 0:
-                do_next = True
+                if start % 0x10 != 0 and i != 0:
+                    do_next = True
 
-            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", path)
+            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.dest_path))
             s += f"    {path_cname} = .;\n"
 
-            if subdir == options.get("assets_dir"):
-                path = PurePath(path)
-            else:
-                path = PurePath(subdir) / PurePath(path)
+            if entry.section != "linker":
+                s += f"    BUILD_DIR/{entry.dest_path}({entry.section});\n"
 
-            # Remove leading ..s
-            while path.parts[0] == "..":
-                path = path.relative_to("..")
-
-            path = path.with_suffix(".o" if replace_ext else path.suffix + ".o")
-
-            if obj_type != "linker":
-                s += f"    BUILD_DIR/{path}({obj_type});\n"
             i += 1
 
+        linker_rom_end = f"0x{self.rom_end:X}" if isinstance(self.rom_end, int) else "."
         s += (
-            f"SPLAT_END_SEG({self.name}, 0x{self.rom_end:X})\n"
+            f"SPLAT_END_SEG({self.name}, {linker_rom_end})\n"
         )
 
         return s
@@ -205,7 +201,7 @@ class Segment:
     def get_ld_section_name(self):
         return f"data_{self.rom_start:X}"
 
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> 'List[LinkerEntry]':
         return []
 
     def log(self, msg):

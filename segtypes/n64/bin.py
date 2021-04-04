@@ -3,7 +3,6 @@ from segtypes.n64.segment import N64Segment
 from pathlib import Path
 from segtypes.segment import Segment
 from util import options
-from segtypes.linker_entry import LinkerEntry
 
 class N64SegBin(N64Segment):
     def split(self, rom_bytes, base_path):
@@ -16,7 +15,9 @@ class N64SegBin(N64Segment):
         self.log(f"Wrote {self.name} to {bin_path}")
 
     def get_linker_entries(self):
-        return [LinkerEntry(self, options.get_asset_dir() / self.dir / "{self.name}.bin")]
+        from segtypes.linker_entry import LinkerEntry
+
+        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.bin", ".data")]
 
     @staticmethod
     def get_default_name(addr):

@@ -1,7 +1,6 @@
 from typing import Set, List, Dict
 import os
 import re
-from segtypes.linker_entry import LinkerEntry
 from segtypes.n64.rgba32 import N64SegRgba32
 from segtypes.n64.rgba16 import N64SegRgba16
 import sys
@@ -20,7 +19,7 @@ from segtypes.n64.ia8 import N64SegIa8
 from segtypes.n64.ia16 import N64SegIa16
 from segtypes.n64.palette import N64SegPalette
 from segtypes.n64.segment import N64Segment
-from segtypes.segment import Segment
+from segtypes.segment import RomAddr, Segment
 from util import floats
 from util import options
 from util.symbol import Symbol
@@ -33,13 +32,22 @@ byte_mnemonics = ["lb", "sb", "lbu"]
 img_types = ["i4", "i8", "ia4", "ia8", "ia16", "rgba16", "rgba32", "ci4", "ci8"]
 
 class Subsegment():
-    def __init__(self, start, end, name, type, vram, args, parent):
-        self.rom_start = start
-        self.rom_end = end
-        self.size = self.rom_end - self.rom_start
+    def __init__(self, start: RomAddr, end: RomAddr, name, type, vram: int, args, parent):
+        self.rom_start: RomAddr = start
+        self.rom_end: RomAddr = end
+
+        self.size: RomAddr = "auto"
+        if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
+            self.size = self.rom_end - self.rom_start
+
         self.name = name
+        
         self.vram_start = vram
-        self.vram_end = vram + self.size
+
+        self.vram_end = vram
+        if isinstance(self.size, int):
+            self.vram_end = vram + self.size
+
         self.type = type
         self.args = args
         self.parent = parent
@@ -47,21 +55,18 @@ class Subsegment():
     def contains_vram(self, addr):
         return self.vram_start <= addr < self.vram_end
 
-    def get_out_subdir(self):
+    def get_out_subdir(self) -> Path:
         if self.type.startswith("."):
             if self.parent:
                 return self.parent.get_out_subdir()
             else:
-                return options.get("src_path", "src")
+                return options.get_src_path()
         elif self.type in ["c"]:
-            return options.get("src_path", "src")
+            return options.get_src_path()
         elif self.type in ["asm", "hasm", "header"]:
-            return "asm"
-        elif self.type == "bin":
-            return options.get("assets_dir", "bin")
-        elif self.type in ["i4", "i8", "ia4", "ia8", "ia16", "rgba16", "rgba32", "ci4", "ci8", "palette"]:
-            return options.get("assets_dir", "img")
-        return self.type
+            return options.get_asm_path()
+
+        return options.get_asset_path()
 
     def get_ld_obj_type(self):
         if self.type in "c":
@@ -92,33 +97,30 @@ class Subsegment():
         return self.type
 
     def get_linker_entry(self):
-        dest_path = f"{self.name}.{self.get_ext()}.o"
-        return LinkerEntry(self, dest_path)
+        from segtypes.linker_entry import LinkerEntry
+
+        return LinkerEntry(self, self.get_generic_out_path(), self.get_ld_obj_type())
 
 
     def should_run(self):
-        return options.mode_active(self.type)
+        return self.rom_start != "auto" and options.mode_active(self.type)
 
-    def get_generic_out_path(self, base_path):
-        return os.path.join(
-            base_path,
-            self.get_out_subdir(),
-            self.name + "." + self.get_ext()
-        )
+    def get_generic_out_path(self):
+        return self.get_out_subdir() / f"{self.name}.{self.get_ext()}"
 
     def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
         pass
 
     def scan(self, segment, rom_bytes, base_path):
         if self.should_run() and not self.name.startswith("."):
-            self.scan_inner(segment, rom_bytes, base_path, self.get_generic_out_path(base_path))
+            self.scan_inner(segment, rom_bytes, base_path, self.get_generic_out_path())
 
     def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
         pass
 
     def split(self, segment, rom_bytes, base_path):
         if "skip" not in self.args and self.should_run() and not self.name.startswith("."):
-            self.split_inner(segment, rom_bytes, base_path, self.get_generic_out_path(base_path))
+            self.split_inner(segment, rom_bytes, base_path, self.get_generic_out_path())
 
     @staticmethod
     def create(typ, start, end, name, vram, args, parent):
@@ -232,7 +234,8 @@ class CodeSubsegment(Subsegment):
     def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
-                asm_out_dir = Segment.create_split_dir(base_path, os.path.join("asm", "nonmatchings"))
+                asm_out_dir = options.get_asm_path() / "nonmatchings"
+                asm_out_dir.mkdir(parents=True, exist_ok=True)
 
                 for func in self.funcs_text:
                     func_name = segment.get_symbol(func, type="func", local_only=True).name
@@ -243,16 +246,17 @@ class CodeSubsegment(Subsegment):
                 if not os.path.exists(generic_out_path) and options.get("create_new_c_files", True):
                     segment.create_c_file(self.funcs_text, self, asm_out_dir, base_path, generic_out_path)
             else:
-                asm_out_dir = Segment.create_split_dir(base_path, "asm")
+                asm_out_dir = options.get_asm_path()
+                asm_out_dir.mkdir(parents=True, exist_ok=True)
+
                 out_lines = self.get_standalone_asm_header()
                 for func in self.funcs_text:
                     out_lines.extend(self.funcs_text[func][0])
                     out_lines.append("")
 
-                outpath = Path(os.path.join(asm_out_dir, self.name + ".s"))
-                outpath.parent.mkdir(parents=True, exist_ok=True)
+                outpath = asm_out_dir / (self.name + ".s")
 
-                if self.type == "asm" or not os.path.exists(outpath):
+                if self.type == "asm" or not outpath.exists():
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
 
@@ -263,10 +267,10 @@ class DataSubsegment(Subsegment):
 
     def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
         if not self.type.startswith("."):
-            asm_out_dir = Segment.create_split_dir(base_path, os.path.join("asm", "data"))
+            asm_out_dir = options.get_asm_path() / "data"
+            asm_out_dir.mkdir(parents=True, exist_ok=True)
 
-            outpath = Path(os.path.join(asm_out_dir, self.name + f".{self.type}.s"))
-            outpath.parent.mkdir(parents=True, exist_ok=True)
+            outpath = asm_out_dir / f"{self.name}.{self.type}.s"
 
             if self.file_text:
                 with open(outpath, "w", newline="\n") as f:
@@ -289,7 +293,9 @@ class BinSubsegment(Subsegment):
 
 class LinkerSubsegment(Subsegment):
     def get_linker_entry(self):
-        return LinkerEntry(self, self.name)
+        from segtypes.linker_entry import LinkerEntry
+
+        return LinkerEntry(self, self.get_out_subdir() / self.name, "linker")
 
 class ImageSubsegment(Subsegment):
     def __init__(self, start, end, name, type, vram, args, parent):
@@ -335,7 +341,7 @@ class CI4Subsegment(ImageSubsegment):
             if self.name == image_name:
                 for palette in segment.palettes[self.name]:
                     w = png.Writer(self.width, self.height, palette=palette.palette)
-                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path(base_path))
+                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path())
 
                     self.write(out_path, w, image)
 
@@ -348,7 +354,7 @@ class CI8Subsegment(ImageSubsegment):
             if self.name == image_name:
                 for palette in segment.palettes[self.name]:
                     w = png.Writer(self.width, self.height, palette=palette.palette)
-                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path(base_path))
+                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path())
 
                     self.write(out_path, w, image)
 

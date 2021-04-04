@@ -68,6 +68,6 @@ class N64SegRgba16(N64Segment):
         return self.width * self.height * 2
 
     def get_linker_entries(self):
-        ext = f".{self.type}.png"
+        from segtypes.linker_entry import LinkerEntry
 
-        return [(options.get("assets_dir", "img"), f"{self.name}{ext}", ".data", self.rom_start)]
+        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.png", ".data")]
