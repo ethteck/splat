@@ -38,7 +38,12 @@ def get_asset_path() -> Path:
     return get_basedir() / get_asset_dir()
 
 def get_target_path() -> Path:
-    return get_basedir() / opts.get("target_path")
+    target_path = opts.get("target_path")
+
+    if not target_path:
+        raise Exception("target_path (baserom) option missing in config file")
+
+    return get_basedir() / target_path
 
 def get_cache_path():
     return get_basedir() / opts.get("cache_path", ".splat_cache")
