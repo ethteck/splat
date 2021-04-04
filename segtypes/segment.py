@@ -1,4 +1,5 @@
 from pathlib import Path, PurePath
+from typing import Union
 from util import log
 from util import options
 import re
@@ -7,8 +8,11 @@ import sys
 default_subalign = 16
 
 
-def parse_segment_start(segment):
-    return segment[0] if "start" not in segment else segment["start"]
+def parse_segment_start(segment) -> Union[int, str]:
+    if isinstance(segment, dict):
+        return segment.get("start", "auto")
+    else:
+        return segment[0]
 
 
 def parse_segment_type(segment):
@@ -44,13 +48,13 @@ def parse_segment_subalign(segment):
 class Segment:
     require_unique_name = True
 
-    def __init__(self, segment, next_segment):
+    def __init__(self, segment: Union[dict, list], next_segment: Union[dict, list]):
         self.rom_start = parse_segment_start(segment)
         self.rom_end = parse_segment_start(next_segment)
         self.type = parse_segment_type(segment)
         self.name = parse_segment_name(segment, self.__class__)
+        self.dir = segment.get("dir", ".") if type(segment) is dict else "."
         self.vram_start = parse_segment_vram(segment)
-        self.ld_name_override = segment.get("ld_name") if type(segment) is dict else None
         self.extract = segment.get("extract", True) if type(segment) is dict else True
         self.config = segment
         self.subalign = parse_segment_subalign(segment)
@@ -115,12 +119,13 @@ class Segment:
 
     def get_ld_section(self):
         replace_ext = options.get("ld_o_replace_extension", True)
-        sect_name = self.ld_name_override if self.ld_name_override else self.get_ld_section_name()
         vram_or_rom = self.rom_start if self.vram_start == 0 else self.vram_start
         subalign_str = f"SUBALIGN({self.subalign})"
 
+        linker_rom_start = f"0x{self.rom_start:X}" if isinstance(self.rom_start, int) else "."
+
         s = (
-            f"SPLAT_BEGIN_SEG({sect_name}, 0x{self.rom_start:X}, 0x{vram_or_rom:X}, {subalign_str})\n"
+            f"SPLAT_BEGIN_SEG({self.name}, {linker_rom_start}, 0x{vram_or_rom:X}, {subalign_str})\n"
         )
 
         i = 0
@@ -165,7 +170,7 @@ class Segment:
             i += 1
 
         s += (
-            f"SPLAT_END_SEG({sect_name}, 0x{self.rom_end:X})\n"
+            f"SPLAT_END_SEG({self.name}, 0x{self.rom_end:X})\n"
         )
 
         return s
