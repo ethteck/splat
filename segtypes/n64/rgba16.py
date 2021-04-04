@@ -40,8 +40,8 @@ class N64SegRgba16(N64Segment):
         return super().should_run() or options.mode_active("img")
 
     def split(self, rom_bytes, base_path):
-        out_dir = self.create_parent_dir(base_path + "/" + options.get("assets_dir", "img"), self.name)
-        path = os.path.join(out_dir, os.path.basename(self.name) + ".png")
+        path = options.get_asset_path() / self.dir / (self.name + ".png")
+        path.parent.mkdir(parents=True, exist_ok=True)
 
         data = rom_bytes[self.rom_start: self.rom_end]
 

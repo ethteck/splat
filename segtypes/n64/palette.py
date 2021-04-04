@@ -39,9 +39,7 @@ class N64SegPalette(N64Segment):
         )
 
     def split(self, rom_bytes, base_path):
-        out_dir = self.create_parent_dir(base_path + "/" + options.get("assets_dir", "img"), self.name)
-        self.path = os.path.join(
-            out_dir, os.path.basename(self.name) + ".png")
+        self.path = options.get_asset_path() / self.dir / (self.name + ".png")
 
         data = rom_bytes[self.rom_start: self.rom_end]
 
@@ -62,4 +60,4 @@ class N64SegPalette(N64Segment):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.png", ".data")]
+        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.pal.png", ".data")]

@@ -5,7 +5,7 @@ from util import options
 
 class N64SegYay0(N64Segment):
     def split(self, rom_bytes, base_path):
-        out_dir = options.get_asset_path / self.dir
+        out_dir = options.get_asset_path() / self.dir
         out_dir.mkdir(parents=True, exist_ok=True)
 
         out_path = out_dir / self.name / ".bin"

@@ -45,7 +45,7 @@ class Subsegment():
         self.vram_start = vram
 
         self.vram_end = vram
-        if isinstance(self.size, int):
+        if isinstance(self.size, int) and isinstance(vram, int):
             self.vram_end = vram + self.size
 
         self.type = type
@@ -103,7 +103,7 @@ class Subsegment():
 
 
     def should_run(self):
-        return self.rom_start != "auto" and options.mode_active(self.type)
+        return options.mode_active(self.type)
 
     def get_generic_out_path(self):
         return self.get_out_subdir() / f"{self.name}.{self.get_ext()}"
@@ -341,7 +341,7 @@ class CI4Subsegment(ImageSubsegment):
             if self.name == image_name:
                 for palette in segment.palettes[self.name]:
                     w = png.Writer(self.width, self.height, palette=palette.palette)
-                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path())
+                    out_path = palette.get_generic_out_path()
 
                     self.write(out_path, w, image)
 
@@ -354,7 +354,7 @@ class CI8Subsegment(ImageSubsegment):
             if self.name == image_name:
                 for palette in segment.palettes[self.name]:
                     w = png.Writer(self.width, self.height, palette=palette.palette)
-                    out_path = re.sub(r"\.pal\.png", ".png", palette.get_generic_out_path())
+                    out_path = palette.get_generic_out_path()
 
                     self.write(out_path, w, image)
 
