@@ -11,6 +11,7 @@ import pickle
 from colorama import Style, Fore
 from segtypes.segment import parse_segment_type
 from segtypes.n64.code import N64SegCode
+from util import ld
 from util import log
 from util import options
 from util.symbol import Symbol
@@ -20,7 +21,7 @@ parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file")
 parser.add_argument("--rom", help="path to a .z64 rom")
-parser.add_argument("--outdir", help="a directory in which to extract the rom")
+parser.add_argument("--basedir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
 parser.add_argument("--verbose", action="store_true",
                     help="Enable debug logging")
@@ -29,83 +30,7 @@ parser.add_argument("--new", action="store_true",
 
 sym_isolated_map: Dict[Symbol, int] = {}
 
-def write_ldscript(rom_name, repo_path, sections):
-    with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:
-        f.write(
-            "#ifndef SPLAT_BEGIN_SEG\n"
-                "#ifndef SHIFT\n"
-                    "#define SPLAT_BEGIN_SEG(name, start, vram, subalign) \\\n"
-                    "    . = start;\\\n"
-                    "    name##_ROM_START = .;\\\n"
-                    "    name##_VRAM = ADDR(.name);\\\n"
-                    "    .name vram : AT(name##_ROM_START) subalign {\n"
-                "#else\n"
-                    "#define SPLAT_BEGIN_SEG(name, start, vram, subalign) \\\n"
-                    "    name##_ROM_START = .;\\\n"
-                    "    name##_VRAM = ADDR(.name);\\\n"
-                    "    .name vram : AT(name##_ROM_START) subalign {\n"
-                "#endif\n"
-            "#endif\n"
-            "\n"
-            "#ifndef SPLAT_END_SEG\n"
-                "#ifndef SHIFT\n"
-                    "#define SPLAT_END_SEG(name, end) \\\n"
-                    "    } \\\n"
-                    "    . = end;\\\n"
-                    "    name##_ROM_END = .;\n"
-                "#else\n"
-                    "#define SPLAT_END_SEG(name, end) \\\n"
-                    "    } \\\n"
-                    "    name##_ROM_END = .;\n"
-                "#endif\n"
-            "#endif\n"
-            "\n"
-        )
-
-        if options.get("ld_bare", False):
-            f.write("\n".join(sections))
-        else:
-            f.write(
-                "SECTIONS\n"
-                "{\n"
-                "    "
-            )
-            f.write("\n    ".join(s.replace("\n", "\n    ") for s in sections)[:-4])
-            f.write(
-
-                "    /DISCARD/ :\n"
-                "    {\n"
-                "        *(*);\n"
-                "    }\n"
-                "}\n"
-            )
-
-
-def parse_file_start(split_file):
-    return split_file[0] if "start" not in split_file else split_file["start"]
-
-
-def get_symbol_addrs_path(repo_path):
-    return os.path.join(repo_path, options.get("symbol_addrs_path", "symbol_addrs.txt"))
-
-
-def get_undefined_syms_path(repo_path):
-    return os.path.join(repo_path, options.get("undefined_syms_path", "undefined_syms.txt"))
-
-
-def get_undefined_syms_auto_path(repo_path):
-    return os.path.join(repo_path, options.get("undefined_syms_auto_path", "undefined_syms_auto.txt"))
-
-
-def get_undefined_funcs_auto_path(repo_path):
-    return os.path.join(repo_path, options.get("undefined_funcs_auto_path", "undefined_funcs_auto.txt"))
-
-
-def get_cache_path(repo_path):
-    return os.path.join(repo_path, options.get("cache_path", ".splat_cache"))
-
-
-def gather_symbols(symbol_addrs_path, undefined_syms_path):
+def gather_symbols(symbol_addrs_path):
     symbols = []
 
     # Manual list of func name / addrs
@@ -256,40 +181,23 @@ def get_segment_symbols(segment, all_symbols, all_segments):
 
     return seg_syms, other_syms
 
-def main(config_path, out_dir, target_path, modes, verbose, ignore_cache=False):
+def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False):
     # Load config
     with open(config_path) as f:
         config = yaml.safe_load(f.read())
 
-    options.initialize(config)
+    options.initialize(config, config_path, base_dir, target_path)
     options.set("modes", modes)
     options.set("verbose", verbose)
-
-    if not out_dir:
-        out_dir = options.get("out_dir")
-        if not out_dir:
-            print("Error: Output dir not specified as a command line arg or via the config yaml (out_dir)")
-            sys.exit(2)
-        else:
-            out_dir = os.path.join(Path(config_path).parent, out_dir)
-
-    if not target_path:
-        target_path = options.get("target_path")
-        if not target_path:
-            print("Error: Target binary path not specified as a command line arg or via the config yaml (target_path)")
-            sys.exit(2)
-        else:
-            target_path = os.path.join(out_dir, target_path)
 
     with open(target_path, "rb") as f:
         rom_bytes = f.read()
 
     # Create main output dir
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    Path(base_dir).mkdir(parents=True, exist_ok=True)
 
-    symbol_addrs_path = get_symbol_addrs_path(out_dir)
-    undefined_syms_path = get_undefined_syms_path(out_dir)
-    all_symbols = gather_symbols(symbol_addrs_path, undefined_syms_path)
+    symbol_addrs_path = options.get_symbol_addrs_path()
+    all_symbols = gather_symbols(symbol_addrs_path)
     symbol_ranges = [s for s in all_symbols if s.size > 4]
     platform = get_platform()
 
@@ -301,9 +209,8 @@ def main(config_path, out_dir, target_path, modes, verbose, ignore_cache=False):
     seg_cached = {}
 
     # Load cache
-    cache_path = get_cache_path(out_dir)
     try:
-        with open(cache_path, "rb") as f:
+        with open(options.get_cache_path(), "rb") as f:
             cache = pickle.load(f)
     except Exception:
         cache = {}
@@ -341,7 +248,7 @@ def main(config_path, out_dir, target_path, modes, verbose, ignore_cache=False):
                     cache[segment.unique_id()] = cached
 
                     segment.did_run = True
-                    segment.split(rom_bytes, out_dir)
+                    segment.split(rom_bytes, base_dir)
 
                     if len(segment.errors) == 0:
                         processed_segments.append(segment)
@@ -358,27 +265,23 @@ def main(config_path, out_dir, target_path, modes, verbose, ignore_cache=False):
     # Write ldscript
     if options.mode_active("ld") and not options.get("skip_ld"):
         if verbose:
-            log.write(f"saving {config['basename']}.ld")
-        write_ldscript(config['basename'], out_dir, ld_sections)
+            log.write(f"saving {options.get_ld_script_path}")
+        ld.write_ldscript(ld_sections)
 
     undefined_syms_to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.type == "func"]
     undefined_funcs_to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
 
     # Write undefined_funcs_auto.txt
-    undefined_funcs_auto_path = get_undefined_funcs_auto_path(out_dir)
-
     to_write = undefined_funcs_to_write
     if len(to_write) > 0:
-        with open(undefined_funcs_auto_path, "w", newline="\n") as f:
+        with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
     # write undefined_syms_auto.txt
-    undefined_syms_auto_path = get_undefined_syms_auto_path(out_dir)
-
     to_write = undefined_syms_to_write
     if len(to_write) > 0:
-        with open(undefined_syms_auto_path, "w", newline="\n") as f:
+        with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
@@ -418,7 +321,7 @@ def main(config_path, out_dir, target_path, modes, verbose, ignore_cache=False):
     if cache != {}:
         if verbose:
             print("Writing cache")
-        with open(cache_path, "wb") as f:
+        with open(options.get_cache_path(), "wb") as f:
             pickle.dump(cache, f)
 
     return 0 # no error

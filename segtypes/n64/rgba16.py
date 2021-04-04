@@ -67,7 +67,7 @@ class N64SegRgba16(N64Segment):
     def max_length(self):
         return self.width * self.height * 2
 
-    def get_ld_files(self):
+    def get_linker_entries(self):
         ext = f".{self.type}.png"
 
         return [(options.get("assets_dir", "img"), f"{self.name}{ext}", ".data", self.rom_start)]

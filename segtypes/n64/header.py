@@ -3,6 +3,7 @@ from segtypes.n64.segment import N64Segment
 from pathlib import Path
 from segtypes.segment import Segment
 from util import options
+from segtypes.linker_entry import LinkerEntry
 
 class N64SegHeader(N64Segment):
     def should_run(self):
@@ -59,8 +60,8 @@ class N64SegHeader(N64Segment):
         return self.name
 
 
-    def get_ld_files(self):
-        return [("asm", f"{self.name}.s", ".data", self.rom_start)]
+    def get_linker_entries(self):
+        return [LinkerEntry(self, Path("asm/{self.name}.s"))]
 
     @staticmethod
     def get_default_name(addr):

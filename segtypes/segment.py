@@ -157,7 +157,7 @@ class Segment:
 
         i = 0
         do_next = False
-        for subdir, path, obj_type, start in self.get_ld_files():
+        for subdir, path, obj_type, start in self.get_linker_entries():
             # Manual linker segment creation
             if obj_type == "linker":
                 s += (
@@ -205,8 +205,7 @@ class Segment:
     def get_ld_section_name(self):
         return f"data_{self.rom_start:X}"
 
-    # returns list of (basedir, filename, obj_type)
-    def get_ld_files(self):
+    def get_linker_entries(self):
         return []
 
     def log(self, msg):

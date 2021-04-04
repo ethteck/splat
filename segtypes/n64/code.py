@@ -1,6 +1,7 @@
 from typing import Set, List, Dict
 import os
 import re
+from segtypes.linker_entry import LinkerEntry
 from segtypes.n64.rgba32 import N64SegRgba32
 from segtypes.n64.rgba16 import N64SegRgba16
 import sys
@@ -62,16 +63,15 @@ class Subsegment():
             return options.get("assets_dir", "img")
         return self.type
 
-    def get_ld_obj_type(self, section_name):
+    def get_ld_obj_type(self):
         if self.type in "c":
             return ".text"
-        elif self.type in ["bin", ".data", "data", "i4", "i8", "ia4", "ia8", "ia16", "rgba16", "rgba32", "ci4", "ci8", "palette"]:
-            return ".data"
         elif self.type in [".rodata", "rodata"]:
             return ".rodata"
         elif self.type in [".bss", "bss"]:
             return ".bss"
-        return section_name
+        else:
+            return ".data"
 
     def get_ext(self):
         if self.type.startswith("."):
@@ -91,12 +91,10 @@ class Subsegment():
             return "pal.png"
         return self.type
 
-    def get_ld_file(self):
-        subdir = self.get_out_subdir()
-        obj_type = self.get_ld_obj_type(".text")
-        ext = self.get_ext()
+    def get_linker_entry(self):
+        dest_path = f"{self.name}.{self.get_ext()}.o"
+        return LinkerEntry(self, dest_path)
 
-        return subdir, f"{self.name}.{ext}", obj_type, self.rom_start
 
     def should_run(self):
         return options.mode_active(self.type)
@@ -290,8 +288,8 @@ class BinSubsegment(Subsegment):
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
 class LinkerSubsegment(Subsegment):
-    def get_ld_file(self):
-        return "", self.name, self.type, self.rom_start
+    def get_linker_entry(self):
+        return LinkerEntry(self, self.name)
 
 class ImageSubsegment(Subsegment):
     def __init__(self, start, end, name, type, vram, args, parent):
@@ -405,17 +403,16 @@ class N64SegCode(N64Segment):
 
         for i, subsection_yaml in enumerate(segment_yaml["subsections"]):
             if type(subsection_yaml) is dict:
-                start = subsection_yaml["start"]
-                end = subsection_yaml["end"]
-                name = subsection_yaml.get("name", None)
+                start = subsection_yaml.get("start", "auto")
                 typ = subsection_yaml["type"]
+                name = subsection_yaml.get("name", None)
                 args = subsection_yaml.get("args", [])
             else:
                 start = subsection_yaml[0]
-                end = self.rom_end if i == len(segment_yaml["subsections"]) - 1 else segment_yaml["subsections"][i + 1][0]
-                name = None if len(subsection_yaml) < 3 else subsection_yaml[2]
                 typ = subsection_yaml[1]
+                name = None if len(subsection_yaml) < 3 else subsection_yaml[2]
                 args = subsection_yaml[3:]
+            end = self.rom_end if i == len(segment_yaml["subsections"]) - 1 else segment_yaml["subsections"][i + 1][0]
 
             if start < prev_start:
                 print(f"Error: Code segment {self.name} contains subsections which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
@@ -477,8 +474,8 @@ class N64SegCode(N64Segment):
     def get_default_name(addr):
         return f"code_{addr:X}"
 
-    def get_ld_files(self):
-        return [sub.get_ld_file() for sub in self.subsegments]
+    def get_linker_entries(self):
+        return [sub.get_linker_entry() for sub in self.subsegments]
 
     def get_ld_section_name(self):
         path = PurePath(self.name)

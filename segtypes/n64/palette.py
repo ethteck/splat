@@ -5,6 +5,7 @@ from segtypes.n64.segment import N64Segment
 from util import options
 from util.color import unpack_color
 from util.iter import iter_in_groups
+from segtypes.linker_entry import LinkerEntry
 
 
 class N64SegPalette(N64Segment):
@@ -60,7 +61,5 @@ class N64SegPalette(N64Segment):
     def max_length(self):
         return 256 * 2
 
-    def get_ld_files(self):
-        ext = f".{self.type}.png"
-
-        return [(options.get("assets_dir", "img"), f"{self.name}{ext}", ".data", self.rom_start)]
+    def get_linker_entries(self):
+        return [LinkerEntry(self, options.get_asset_dir() / self.dir / "{self.name}.{self.type}.png")]
