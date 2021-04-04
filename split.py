@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+from typing import Dict
 import argparse
 import importlib
 import importlib.util
@@ -26,7 +27,7 @@ parser.add_argument("--verbose", action="store_true",
 parser.add_argument("--new", action="store_true",
                     help="Only split changed segments in config")
 
-sym_isolated_map = {}
+sym_isolated_map: Dict[Symbol, int] = {}
 
 def write_ldscript(rom_name, repo_path, sections):
     with open(os.path.join(repo_path, rom_name + ".ld"), "w", newline="\n") as f:

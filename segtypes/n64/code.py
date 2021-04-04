@@ -1,3 +1,4 @@
+from typing import Set, List, Dict
 import os
 import re
 from segtypes.n64.rgba32 import N64SegRgba32
@@ -7,7 +8,7 @@ from collections import OrderedDict
 from pathlib import Path, PurePath
 
 import png
-from capstone import *
+from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 from capstone.mips import *
 from segtypes.n64.ci4 import N64SegCi4
 from segtypes.n64.ci8 import N64SegCi8
@@ -159,7 +160,7 @@ class Subsegment():
         return sub_class(start, end, name, typ, vram, args, parent)
 
 class CodeSubsegment(Subsegment):
-    defined_funcs = set()
+    defined_funcs: Set[str] = set()
     md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
     md.detail = True
     md.skipdata = True
@@ -183,9 +184,9 @@ class CodeSubsegment(Subsegment):
                 return s
         return re.sub(CodeSubsegment.STRIP_C_COMMENTS_RE, replacer, text)
 
-    @staticmethod
-    def get_funcs_defined_in_c(text):
-        return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
+    # @staticmethod
+    # def get_funcs_defined_in_c(text):
+    #     return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
 
     @staticmethod
     def get_standalone_asm_header():
@@ -389,7 +390,7 @@ class Ia16Subsegment(ImageSubsegment):
         self.impl_class = N64SegIa16
         
 class N64SegCode(N64Segment):
-    palettes = {}
+    palettes: Dict[str, List[PaletteSubsegment]] = {}
 
     def parse_subsegments(self, segment_yaml):
         prefix = self.name if self.name.endswith("/") else f"{self.name}_"
