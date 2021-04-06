@@ -94,18 +94,18 @@ class Segment:
 
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
-            return vram >= self.vram_start and vram <= self.vram_end
+            return vram >= self.vram_start and vram < self.vram_end
         else:
             return False
 
     def contains_rom(self, rom: int) -> bool:
         if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
-            return rom >= self.rom_start and rom <= self.rom_end
+            return rom >= self.rom_start and rom < self.rom_end
         else:
             return False
 
     def rom_to_ram(self, rom_addr: int) -> Optional[int]:
-        if not self.contains_rom(rom_addr):
+        if not self.contains_rom(rom_addr) and rom_addr != self.rom_end:
             return None
 
         if self.vram_start is not None and isinstance(self.rom_start, int):
@@ -114,7 +114,7 @@ class Segment:
             return None
 
     def ram_to_rom(self, ram_addr: int) -> Optional[int]:
-        if not self.contains_vram(ram_addr):
+        if not self.contains_vram(ram_addr) and ram_addr != self.vram_end:
             return None
 
         if self.vram_start is not None and isinstance(self.rom_start, int):
