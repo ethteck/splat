@@ -62,7 +62,10 @@ def get_symbol_addrs_path():
     return get_base_path() / opts.get("symbol_addrs_path", "symbol_addrs.txt")
 
 def get_ld_script_path():
-    return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
+    return get_base_path() / f"{opts.get('basename')}.ld"
+
+def get_linker_symbol_header_path():
+    return get_base_path() / opts.get("linker_symbol_header_path", "ld_addrs.h")
     
 def get_extensions_path():
     ext_opt = opts.get("extensions_path")

@@ -6,6 +6,7 @@ import importlib
 import importlib.util
 import os
 from pathlib import Path
+import pylibyaml
 import yaml
 import pickle
 from colorama import Style, Fore
@@ -198,7 +199,7 @@ def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
 def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False):
     # Load config
     with open(config_path) as f:
-        config = yaml.safe_load(f.read())
+        config = yaml.load(f.read(), Loader=yaml.SafeLoader)
 
     options.initialize(config, config_path, base_dir, target_path)
     options.set("modes", modes)
@@ -284,6 +285,14 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
         if verbose:
             log.write(f"saving {ld_script_path}")
         ld.write_ldscript(ld_sections)
+
+    # Write linker symbols header
+    ld_header_path = options.get_linker_symbol_header_path()
+    if options.mode_active("ld") and ld_header_path is not None:
+        with open(ld_header_path, "w", newline="\n"):
+            for segment in all_segments:
+                # TODO
+                pass
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
