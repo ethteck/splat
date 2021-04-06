@@ -78,19 +78,13 @@ def get_base_segment_class(seg_type, platform):
     return getattr(segmodule, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}")
 
 
-def get_extension_dir(config_path):
-    if not options.get("extensions"):
-        return None
-    return os.path.join(Path(config_path).parent, options.get("extensions"))
-
-
-def get_extension_class(config_path, seg_type, platform):
-    ext_dir = get_extension_dir(config_path)
-    if ext_dir == None:
+def get_extension_class(seg_type, platform):
+    ext_path = options.get_extensions_path()
+    if not ext_path:
         return None
 
     try:
-        ext_spec = importlib.util.spec_from_file_location(f"{platform}.segtypes.{seg_type}", os.path.join(ext_dir, f"{seg_type}.py"))
+        ext_spec = importlib.util.spec_from_file_location(f"{platform}.segtypes.{seg_type}", ext_path / f"{seg_type}.py")
         ext_mod = importlib.util.module_from_spec(ext_spec)
         ext_spec.loader.exec_module(ext_mod)
     except Exception as err:
@@ -99,8 +93,6 @@ def get_extension_class(config_path, seg_type, platform):
 
     return getattr(ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}")
 
-def get_platform():
-    return options.get("platform", "n64")
 
 def fmt_size(size):
     if size > 1000000:
@@ -111,19 +103,19 @@ def fmt_size(size):
         return str(size) + " B"
 
 
-def initialize_segments(config_path, config_segments):
+def initialize_segments(config_segments):
     seen_segment_names = set()
     ret = []
 
     for i, segment in enumerate(config_segments[:-1]):
         seg_type = parse_segment_type(segment)
 
-        platform = get_platform()
+        platform = options.get("platform", "n64")
 
         segment_class = get_base_segment_class(seg_type, platform)
         if segment_class == None:
             # Look in extensions
-            segment_class = get_extension_class(config_path, seg_type, platform)
+            segment_class = get_extension_class(seg_type, platform)
 
         if segment_class == None:
             log.write(f"fatal error: could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)", status="error")
@@ -181,6 +173,28 @@ def get_segment_symbols(segment, all_symbols, all_segments):
 
     return seg_syms, other_syms
 
+def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
+    unk_size = seg_sizes.get("unk", 0)
+    rest_size = 0
+    total_size = len(rom_bytes)
+
+    for typ in seg_sizes:
+        if typ != "unk":
+            rest_size += seg_sizes[typ]
+
+    assert(unk_size + rest_size == total_size)
+
+    known_ratio = rest_size / total_size
+    unk_ratio = unk_size / total_size
+
+    log.write(f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments")
+    for typ in seg_sizes:
+        if typ != "unk":
+            tmp_size = seg_sizes[typ]
+            tmp_ratio = tmp_size / total_size
+            log.write(f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached")
+    log.write(f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files")
+
 def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False):
     # Load config
     with open(config_path) as f:
@@ -199,7 +213,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
     symbol_addrs_path = options.get_symbol_addrs_path()
     all_symbols = gather_symbols(symbol_addrs_path)
     symbol_ranges = [s for s in all_symbols if s.size > 4]
-    platform = get_platform()
+    platform = options.get("platform", "n64")
 
     processed_segments = []
     ld_sections = []
@@ -216,7 +230,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
         cache = {}
 
     # Initialize segments
-    all_segments = initialize_segments(config_path, config["segments"])
+    all_segments = initialize_segments(config["segments"])
 
     for segment in all_segments:
         if platform == "n64" and type(segment) == N64SegCode: # remove special-case sometime
@@ -248,7 +262,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
                     cache[segment.unique_id()] = cached
 
                     segment.did_run = True
-                    segment.split(rom_bytes, options.get_base_path())
+                    segment.split(rom_bytes)
 
                     if len(segment.errors) == 0:
                         processed_segments.append(segment)
@@ -268,18 +282,15 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
             log.write(f"saving {options.get_ld_script_path}")
         ld.write_ldscript(ld_sections)
 
-    undefined_syms_to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.type == "func"]
-    undefined_funcs_to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
-
     # Write undefined_funcs_auto.txt
-    to_write = undefined_funcs_to_write
+    to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
     # write undefined_syms_auto.txt
-    to_write = undefined_syms_to_write
+    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
@@ -296,26 +307,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
             log.write("") # empty line
 
     # Statistics
-    unk_size = seg_sizes.get("unk", 0)
-    rest_size = 0
-    total_size = len(rom_bytes)
-
-    for typ in seg_sizes:
-        if typ != "unk":
-            rest_size += seg_sizes[typ]
-
-    assert(unk_size + rest_size == total_size)
-
-    known_ratio = rest_size / total_size
-    unk_ratio = unk_size / total_size
-
-    log.write(f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments")
-    for typ in seg_sizes:
-        if typ != "unk":
-            tmp_size = seg_sizes[typ]
-            tmp_ratio = tmp_size / total_size
-            log.write(f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached")
-    log.write(f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files")
+    do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached)
 
     # Save cache
     if cache != {}:

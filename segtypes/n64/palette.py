@@ -38,7 +38,7 @@ class N64SegPalette(N64Segment):
             options.mode_active("ia16")
         )
 
-    def split(self, rom_bytes, base_path):
+    def split(self, rom_bytes):
         self.path = options.get_asset_path() / self.dir / (self.name + ".png")
 
         data = rom_bytes[self.rom_start: self.rom_end]

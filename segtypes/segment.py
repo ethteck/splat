@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 RomAddr = Union[int, Literal["auto"]]
 
-default_subalign = 16
-
 def parse_segment_start(segment: Union[dict, list]) -> RomAddr:
     if isinstance(segment, dict):
         s = segment.get("start", "auto")
@@ -48,7 +46,7 @@ def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
 
 
 def parse_segment_subalign(segment: Union[dict, list]) -> int:
-    default = int(options.get("subalign", default_subalign))
+    default = options.get_subalign()
     if isinstance(segment, dict):
         return int(segment.get("subalign", default))
     return default
@@ -124,22 +122,10 @@ class Segment:
         else:
             return None
 
-    @staticmethod
-    def create_split_dir(base_path, subdir):
-        out_dir = Path(base_path, subdir)
-        out_dir.mkdir(parents=True, exist_ok=True)
-        return out_dir
-
-    @staticmethod
-    def create_parent_dir(base_path, filename):
-        out_dir = Path(base_path, filename).parent
-        out_dir.mkdir(parents=True, exist_ok=True)
-        return out_dir
-
     def should_run(self):
         return self.extract and options.mode_active(self.type)
 
-    def split(self, rom_bytes: bytes, base_path: Path):
+    def split(self, rom_bytes: bytes):
         pass
 
     def postsplit(self, segments: List[Union[dict, list]]):

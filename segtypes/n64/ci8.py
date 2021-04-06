@@ -1,6 +1,5 @@
 from segtypes.n64.rgba16 import N64SegRgba16
 import png
-import os
 from util import options
 
 
@@ -10,7 +9,7 @@ class N64SegCi8(N64SegRgba16):
 
         self.path = None
 
-    def split(self, rom_bytes, base_path):
+    def split(self, rom_bytes):
         self.path = options.get_asset_path() / self.dir / (self.name + ".png")
         self.path.parent.mkdir(parents=True, exist_ok=True)
 

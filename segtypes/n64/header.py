@@ -19,10 +19,10 @@ class N64SegHeader(N64Segment):
         
         return f".{typ} {dstr} /* {comment} */"
 
-    def get_src_path(self) -> Path:
+    def get_out_path(self) -> Path:
         return options.get_base_path() / f"asm/{self.name}.s"
 
-    def split(self, rom_bytes, base_path):
+    def split(self, rom_bytes):
         encoding = options.get("header_encoding", "ASCII")
 
         header_lines = []
@@ -49,7 +49,7 @@ class N64SegHeader(N64Segment):
         header_lines.append(self.get_line("byte", rom_bytes[0x3F:0x40], "Version"))
         header_lines.append("")
 
-        src_path = self.get_src_path()
+        src_path = self.get_out_path()
         src_path.parent.mkdir(parents=True, exist_ok=True)
         with open(src_path, "w", newline="\n") as f:
             f.write("\n".join(header_lines))

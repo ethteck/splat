@@ -1,6 +1,6 @@
 from typing import Union
 from pathlib import Path
-from segtypes.segment import RomAddr, Segment
+from segtypes.segment import Segment
 from segtypes.n64.code import Subsegment
 
 class LinkerEntry:

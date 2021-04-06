@@ -28,17 +28,17 @@ def set(opt, val):
 def get(opt, default=None):
     return opts.get(opt, default)
 
+def get_subalign() -> int:
+    return opts.get("subalign", 16)
+
 def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
 
 def get_base_path() -> Path:
     return Path(opts["base_dir"])
 
-def get_asset_dir() -> str:
-    return opts.get("asset_dir", "assets")
-
 def get_asset_path() -> Path:
-    return get_base_path() / get_asset_dir()
+    return get_base_path() / opts.get("assets_dir", "assets")
 
 def get_target_path() -> Path:
     return get_base_path() / opts["target_path"]
@@ -63,3 +63,10 @@ def get_symbol_addrs_path():
 
 def get_ld_script_path():
     return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
+    
+def get_extensions_path():
+    ext_opt = opts.get("extensions_path")
+    if not ext_opt:
+        return None
+
+    return get_base_path() / ext_opt

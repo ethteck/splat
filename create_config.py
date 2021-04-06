@@ -3,7 +3,6 @@
 import argparse
 from util.n64 import rominfo
 from util.n64 import find_code_length
-from segtypes.n64.code import N64SegCode
 
 parser = argparse.ArgumentParser(description="Create a splat config from a rom (currently only n64 .z64 roms supported)")
 parser.add_argument("rom", help="path to a .z64 rom")

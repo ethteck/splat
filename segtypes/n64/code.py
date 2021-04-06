@@ -108,19 +108,19 @@ class Subsegment():
     def get_generic_out_path(self):
         return self.get_out_subdir() / f"{self.name}.{self.get_ext()}"
 
-    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def scan_inner(self, segment, rom_bytes):
         pass
 
-    def scan(self, segment, rom_bytes, base_path):
+    def scan(self, segment, rom_bytes):
         if self.should_run() and not self.name.startswith("."):
-            self.scan_inner(segment, rom_bytes, base_path, self.get_generic_out_path())
+            self.scan_inner(segment, rom_bytes)
 
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         pass
 
-    def split(self, segment, rom_bytes, base_path):
+    def split(self, segment, rom_bytes):
         if "skip" not in self.args and self.should_run() and not self.name.startswith("."):
-            self.split_inner(segment, rom_bytes, base_path, self.get_generic_out_path())
+            self.split_inner(segment, rom_bytes)
 
     @staticmethod
     def create(typ, start, end, name, vram, args, parent):
@@ -175,6 +175,7 @@ class CodeSubsegment(Subsegment):
         re.MULTILINE
     )
 
+    @staticmethod
     def strip_c_comments(text):
         def replacer(match):
             s = match.group(0)
@@ -211,12 +212,13 @@ class CodeSubsegment(Subsegment):
 
         return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
 
-    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def scan_inner(self, segment, rom_bytes):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
-                if options.get("do_c_func_detection", True) and os.path.exists(generic_out_path):
+                output_path = self.get_generic_out_path()
+                if options.get("do_c_func_detection", True) and os.path.exists(output_path):
                     # TODO run cpp?
-                    self.defined_funcs = CodeSubsegment.get_funcs_defined_in_c(generic_out_path)
+                    self.defined_funcs = CodeSubsegment.get_funcs_defined_in_c(output_path)
                     segment.mark_c_funcs_as_defined(self.defined_funcs)
 
             insns = [insn for insn in CodeSubsegment.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
@@ -231,7 +233,7 @@ class CodeSubsegment(Subsegment):
             segment.gather_jumptable_labels(rom_bytes)
             self.funcs_text = segment.add_labels(funcs)
 
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
                 asm_out_dir = options.get_asm_path() / "nonmatchings"
@@ -243,8 +245,9 @@ class CodeSubsegment(Subsegment):
                     if func_name not in self.defined_funcs:
                         segment.create_c_asm_file(self.funcs_text, func, asm_out_dir, self, func_name)
 
-                if not os.path.exists(generic_out_path) and options.get("create_new_c_files", True):
-                    segment.create_c_file(self.funcs_text, self, asm_out_dir, base_path, generic_out_path)
+                out_path = self.get_generic_out_path()
+                if not os.path.exists(out_path) and options.get("create_new_c_files", True):
+                    segment.create_c_file(self.funcs_text, self, asm_out_dir, out_path)
             else:
                 asm_out_dir = options.get_asm_path()
                 asm_out_dir.mkdir(parents=True, exist_ok=True)
@@ -261,11 +264,11 @@ class CodeSubsegment(Subsegment):
                         f.write("\n".join(out_lines))
 
 class DataSubsegment(Subsegment):
-    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def scan_inner(self, segment, rom_bytes):
         if not self.type.startswith(".") or self.type == ".rodata":
             self.file_text = segment.disassemble_data(self, rom_bytes)
 
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         if not self.type.startswith("."):
             asm_out_dir = options.get_asm_path() / "data"
             asm_out_dir.mkdir(parents=True, exist_ok=True)
@@ -286,9 +289,11 @@ class BssSubsegment(DataSubsegment):
             self.vram_end = self.vram_start + self.size
 
 class BinSubsegment(Subsegment):
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
-        Path(generic_out_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(generic_out_path, "wb") as f:
+    def split_inner(self, segment, rom_bytes):
+        out_path = self.get_generic_out_path()
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
 class LinkerSubsegment(Subsegment):
@@ -306,11 +311,11 @@ class ImageSubsegment(Subsegment):
     def should_run(self):
         return super().should_run() or options.mode_active("img")
 
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         img_bytes = rom_bytes[self.rom_start : self.rom_end]
         image = self.impl_class.parse_image(img_bytes, self.width, self.height, flip_h=False, flip_v=False)
         w = self.impl_class.get_writer(self.width, self.height)
-        self.write(generic_out_path, w, image)
+        self.write(self.get_generic_out_path(), w, image)
     
     def write(self, out_path, writer, image):
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
@@ -318,7 +323,7 @@ class ImageSubsegment(Subsegment):
             writer.write_array(f, image)
 
 class PaletteSubsegment(ImageSubsegment):
-    def scan_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def scan_inner(self, segment, rom_bytes):
         img_bytes = rom_bytes[self.rom_start : self.rom_end]
 
         self.palette = N64SegPalette.parse_palette(img_bytes)
@@ -329,11 +334,11 @@ class PaletteSubsegment(ImageSubsegment):
         else:
             segment.palettes[self.image_name].append(self)
     
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         pass
 
 class CI4Subsegment(ImageSubsegment):
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         img_bytes = rom_bytes[self.rom_start : self.rom_end]
         image = N64SegCi4.parse_image(img_bytes, self.width, self.height)
 
@@ -346,7 +351,7 @@ class CI4Subsegment(ImageSubsegment):
                     self.write(out_path, w, image)
 
 class CI8Subsegment(ImageSubsegment):
-    def split_inner(self, segment, rom_bytes, base_path, generic_out_path):
+    def split_inner(self, segment, rom_bytes):
         img_bytes = rom_bytes[self.rom_start : self.rom_end]
         image = N64SegCi8.parse_image(img_bytes, self.width, self.height)
 
@@ -396,7 +401,7 @@ class Ia16Subsegment(ImageSubsegment):
 class N64SegCode(N64Segment):
     palettes: Dict[str, List[PaletteSubsegment]] = {}
 
-    def parse_subsegments(self, segment_yaml):
+    def parse_subsegments(self, segment_yaml) -> List[Subsegment]:
         prefix = self.name if self.name.endswith("/") else f"{self.name}_"
 
         base_segments = {}
@@ -463,7 +468,7 @@ class N64SegCode(N64Segment):
 
         self.subsegments = self.parse_subsegments(segment)
         self.is_overlay = segment.get("overlay", False)
-        self.all_symbols = ()
+        self.all_symbols = []
         self.seg_symbols = {} # Symbols known to be in this segment
         self.ext_symbols = {} # Symbols not in this segment but also not from other overlapping ram address ranges
         self.symbol_ranges = []
@@ -859,7 +864,7 @@ class N64SegCode(N64Segment):
                             break
 
                     # If there is more than 1 nop after the return
-                    if jr_pos and jr_pos > 1 and self.is_nops([i[0] for i in funcs[func][-jr_pos + 1:]]):
+                    if jr_pos is not None and jr_pos > 1 and self.is_nops([i[0] for i in funcs[func][-jr_pos + 1:]]):
                         new_file_addr = funcs[func][-1][3] + 4
                         if (new_file_addr % 16) == 0:
                             if not self.reported_file_split:
@@ -1110,7 +1115,7 @@ class N64SegCode(N64Segment):
             f.write("\n".join(out_lines))
         self.log(f"Disassembled {func_name} to {outpath}")
 
-    def create_c_file(self, funcs_text, sub, asm_out_dir, base_path, c_path):
+    def create_c_file(self, funcs_text, sub, asm_out_dir, c_path):
         c_lines = self.get_c_preamble()
 
         for func in funcs_text:
@@ -1119,7 +1124,7 @@ class N64SegCode(N64Segment):
                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(sub.name, func_name))
             else:
                 asm_outpath = Path(os.path.join(asm_out_dir, sub.name, func_name + ".s"))
-                rel_asm_outpath = os.path.relpath(asm_outpath, base_path)
+                rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
                 c_lines.append(f"#pragma GLOBAL_ASM(\"{rel_asm_outpath}\")")
             c_lines.append("")
 
@@ -1128,9 +1133,9 @@ class N64SegCode(N64Segment):
             f.write("\n".join(c_lines))
         print(f"Wrote {sub.name} to {c_path}")
 
-    def split(self, rom_bytes, base_path):
+    def split(self, rom_bytes):
         for sub in self.subsegments:
-            sub.scan(self, rom_bytes, base_path)
+            sub.scan(self, rom_bytes)
 
         for sub in self.subsegments:
-            sub.split(self, rom_bytes, base_path)
+            sub.split(self, rom_bytes)
