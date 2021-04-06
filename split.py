@@ -217,6 +217,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
 
     processed_segments = []
     ld_sections = []
+    linker_entries = []
 
     seg_sizes = {}
     seg_split = {}
@@ -271,15 +272,17 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
 
         log.dot(status=segment.status())
         ld_sections.append(segment.get_ld_section())
+        linker_entries.extend(segment.get_linker_entries())
 
     for segment in processed_segments:
         segment.postsplit(processed_segments)
         log.dot(status=segment.status())
 
     # Write ldscript
-    if options.mode_active("ld") and not options.get("skip_ld"):
+    ld_script_path = options.get_ld_script_path()
+    if options.mode_active("ld") and not options.get("skip_ld") and ld_script_path is not None:
         if verbose:
-            log.write(f"saving {options.get_ld_script_path}")
+            log.write(f"saving {ld_script_path}")
         ld.write_ldscript(ld_sections)
 
     # Write undefined_funcs_auto.txt
@@ -316,9 +319,8 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
         with open(options.get_cache_path(), "wb") as f:
             pickle.dump(cache, f)
 
-    return 0 # no error
+    return linker_entries
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    error_code = main(args.config, args.basedir, args.rom, args.modes, args.verbose, not args.new)
-    exit(error_code)
+    main(args.config, args.basedir, args.rom, args.modes, args.verbose, not args.new)

@@ -60,7 +60,7 @@ class Segment:
         self.rom_end = parse_segment_start(next_segment)
         self.type = parse_segment_type(segment)
         self.name = parse_segment_name(segment, self.__class__)
-        self.dir = str(segment.get("dir", ".")) if isinstance(segment, dict) else "."
+        self.dir = Path(segment.get("dir", "")) if isinstance(segment, dict) else Path()
         self.vram_start = parse_segment_vram(segment)
         self.extract = bool(segment.get("extract", True)) if isinstance(segment, dict) else True
         self.config = segment
@@ -147,7 +147,7 @@ class Segment:
         i = 0
         do_next = False
         for entry in self.get_linker_entries():
-            sect_name = str(entry.dest_path).replace(".", "_").replace("/", "_")
+            sect_name = str(entry.object_path).replace(".", "_").replace("/", "_")
 
             # Manual linker segment creation
             if entry.section == "linker":
@@ -156,7 +156,7 @@ class Segment:
                     f"SPLAT_BEGIN_SEG({sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
                 )
 
-            start = entry.src_segment.rom_start
+            start = entry.segment.rom_start
             if isinstance(start, int):
                 # Create new sections for non-0x10 alignment (hack)
                 if start % 0x10 != 0 and i != 0 or do_next:
@@ -169,11 +169,11 @@ class Segment:
                 if start % 0x10 != 0 and i != 0:
                     do_next = True
 
-            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.dest_path))
+            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.object_path))
             s += f"    {path_cname} = .;\n"
 
             if entry.section != "linker":
-                s += f"    BUILD_DIR/{entry.dest_path}({entry.section});\n"
+                s += f"    BUILD_DIR/{entry.object_path}({entry.section});\n"
 
             i += 1
 

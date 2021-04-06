@@ -60,4 +60,9 @@ class N64SegPalette(N64Segment):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return [LinkerEntry(self, options.get_asset_path() / self.dir / f"{self.name}.pal.png", ".data")]
+        return [LinkerEntry(
+            self,
+            [options.get_asset_path() / self.dir / f"{self.name}.png"],
+            options.get_asset_path() / self.dir / f"{self.name}.pal",
+            ".data"
+        )]

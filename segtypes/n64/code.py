@@ -1,4 +1,4 @@
-from typing import Set, List, Dict
+from typing import Set, List, Dict, Optional
 import os
 import re
 from segtypes.n64.rgba32 import N64SegRgba32
@@ -32,7 +32,7 @@ byte_mnemonics = ["lb", "sb", "lbu"]
 img_types = ["i4", "i8", "ia4", "ia8", "ia16", "rgba16", "rgba32", "ci4", "ci8"]
 
 class Subsegment():
-    def __init__(self, start: RomAddr, end: RomAddr, name, type, vram: int, args, parent):
+    def __init__(self, parent: 'Segment', start: RomAddr, end: RomAddr, name, type, vram: int, args, c_sibling: 'Optional[Subsegment]'):
         self.rom_start: RomAddr = start
         self.rom_end: RomAddr = end
 
@@ -51,14 +51,15 @@ class Subsegment():
         self.type = type
         self.args = args
         self.parent = parent
+        self.c_sibling = c_sibling
 
     def contains_vram(self, addr):
         return self.vram_start <= addr < self.vram_end
 
     def get_out_subdir(self) -> Path:
         if self.type.startswith("."):
-            if self.parent:
-                return self.parent.get_out_subdir()
+            if self.c_sibling:
+                return self.c_sibling.get_out_subdir()
             else:
                 return options.get_src_path()
         elif self.type in ["c"]:
@@ -80,8 +81,8 @@ class Subsegment():
 
     def get_ext(self):
         if self.type.startswith("."):
-            if self.parent:
-                return self.parent.get_ext()
+            if self.c_sibling:
+                return self.c_sibling.get_ext()
             else:
                 return "c"
         elif self.type in ["c"]:
@@ -99,14 +100,13 @@ class Subsegment():
     def get_linker_entry(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return LinkerEntry(self, self.get_generic_out_path(), self.get_ld_obj_type())
-
+        return LinkerEntry(self, [self.get_generic_out_path()], self.get_generic_out_path(), self.get_ld_obj_type())
 
     def should_run(self):
         return options.mode_active(self.type)
 
     def get_generic_out_path(self):
-        return self.get_out_subdir() / f"{self.name}.{self.get_ext()}"
+        return self.get_out_subdir() / self.parent.dir / f"{self.name}.{self.get_ext()}"
 
     def scan_inner(self, segment, rom_bytes):
         pass
@@ -123,7 +123,7 @@ class Subsegment():
             self.split_inner(segment, rom_bytes)
 
     @staticmethod
-    def create(typ, start, end, name, vram, args, parent):
+    def create(parent, typ, start, end, name, vram, args, c_sibling):
         if typ in ["data", ".data", "rodata", ".rodata"]:
             sub_class = DataSubsegment
         elif typ in ["bss", ".bss"]:
@@ -157,7 +157,7 @@ class Subsegment():
         else:
             sub_class = Subsegment
         
-        return sub_class(start, end, name, typ, vram, args, parent)
+        return sub_class(parent, start, end, name, typ, vram, args, c_sibling)
 
 class CodeSubsegment(Subsegment):
     defined_funcs: Set[str] = set()
@@ -280,8 +280,8 @@ class DataSubsegment(Subsegment):
                     f.write(self.file_text)
 
 class BssSubsegment(DataSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         #self.rom_start = 0
         self.rom_end = 0
         if type == "bss":
@@ -292,19 +292,32 @@ class BinSubsegment(Subsegment):
     def split_inner(self, segment, rom_bytes):
         out_path = self.get_generic_out_path()
 
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.c_sibling.mkdir(parents=True, exist_ok=True)
         with open(out_path, "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
+    def get_linker_entry(self):
+        from segtypes.linker_entry import LinkerEntry
+
+        path = options.get_asset_path() / self.c_sibling.dir / f"{self.name}.bin"
+
+        return LinkerEntry(
+            self,
+            [path],
+            path,
+            ".data",
+        )
+
+# TODO: reconsider
 class LinkerSubsegment(Subsegment):
     def get_linker_entry(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return LinkerEntry(self, self.get_out_subdir() / self.name, "linker")
+        return LinkerEntry(self, [], self.get_out_subdir() / self.name, "linker")
 
 class ImageSubsegment(Subsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         if len(self.args) >= 2:
             self.width, self.height = self.args
     
@@ -318,7 +331,7 @@ class ImageSubsegment(Subsegment):
         self.write(self.get_generic_out_path(), w, image)
     
     def write(self, out_path, writer, image):
-        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).c_sibling.mkdir(parents=True, exist_ok=True)
         with open(out_path, "wb") as f:
             writer.write_array(f, image)
 
@@ -364,38 +377,38 @@ class CI8Subsegment(ImageSubsegment):
                     self.write(out_path, w, image)
 
 class RGBA32Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegRgba32
 
 class RGBA16Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegRgba16
 
 class I4Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegI4
 
 class I8Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegI8
 
 class Ia4Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegIa4
         
 class Ia8Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegIa8
         
 class Ia16Subsegment(ImageSubsegment):
-    def __init__(self, start, end, name, type, vram, args, parent):
-        super().__init__(start, end, name, type, vram, args, parent)
+    def __init__(self, parent, start, end, name, type, vram, args, c_sibling):
+        super().__init__(parent, start, end, name, type, vram, args, c_sibling)
         self.impl_class = N64SegIa16
         
 class N64SegCode(N64Segment):
@@ -404,7 +417,7 @@ class N64SegCode(N64Segment):
     def parse_subsegments(self, segment_yaml) -> List[Subsegment]:
         prefix = self.name if self.name.endswith("/") else f"{self.name}_"
 
-        base_segments = {}
+        base_segments: Dict[str, Subsegment] = {}
         ret = []
         prev_start = -1
 
@@ -416,7 +429,7 @@ class N64SegCode(N64Segment):
             if type(subsection_yaml) is dict:
                 start = subsection_yaml.get("start", "auto")
                 typ = subsection_yaml["type"]
-                name = subsection_yaml.get("name", None)
+                name: Optional[str] = subsection_yaml.get("name", None)
                 args = subsection_yaml.get("args", [])
             else:
                 start = subsection_yaml[0]
@@ -435,13 +448,14 @@ class N64SegCode(N64Segment):
                 name = self.name + name
 
             vram = self.rom_to_ram(start)
+            assert vram is not None
 
-            subsegment = Subsegment.create(typ, start, end, name, vram, args, base_segments.get(name, None))
+            subsegment = Subsegment.create(self, typ, start, end, name, vram, args, base_segments.get(name, None))
 
             if self.rodata_vram_start == -1 and "rodata" in typ:
-                self.rodata_vram_start = vram
+                self.rodata_vram_start: int = vram
             if self.rodata_vram_end == -1 and "bss" in typ:
-                self.rodata_vram_end = vram
+                self.rodata_vram_end: int = vram
 
             ret.append(subsegment)
 
@@ -451,6 +465,7 @@ class N64SegCode(N64Segment):
             prev_start = start
 
         if self.rodata_vram_start != -1 and self.rodata_vram_end == -1:
+            assert self.vram_end is not None
             self.rodata_vram_end = self.vram_end
 
         return ret
@@ -459,12 +474,12 @@ class N64SegCode(N64Segment):
         super().__init__(segment, next_segment)
 
         # TODO Note: These start/end vram options don't really do anything yet
-        self.data_vram_start = segment.get("data_vram_start", -1)
-        self.data_vram_end = segment.get("data_vram_end", -1)
-        self.rodata_vram_start = segment.get("rodata_vram_start", -1)
-        self.rodata_vram_end = segment.get("rodata_vram_end", -1)
-        self.bss_vram_start = segment.get("bss_vram_start", -1)
-        self.bss_vram_end = segment.get("bss_vram_end", -1)
+        self.data_vram_start: int = segment.get("data_vram_start", -1)
+        self.data_vram_end: int = segment.get("data_vram_end", -1)
+        self.rodata_vram_start: int = segment.get("rodata_vram_start", -1)
+        self.rodata_vram_end: int = segment.get("rodata_vram_end", -1)
+        self.bss_vram_start: int = segment.get("bss_vram_start", -1)
+        self.bss_vram_end: int = segment.get("bss_vram_end", -1)
 
         self.subsegments = self.parse_subsegments(segment)
         self.is_overlay = segment.get("overlay", False)

@@ -61,7 +61,9 @@ class N64SegHeader(N64Segment):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return [LinkerEntry(self, options.get_base_path() / "asm" / self.dir / f"{self.name}.s", ".data")]
+        path = options.get_base_path() / "asm" / self.dir / f"{self.name}.s"
+
+        return [LinkerEntry(self, [path], path, ".data")]
 
     @staticmethod
     def get_default_name(addr):
