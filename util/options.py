@@ -28,6 +28,9 @@ def set(opt, val):
 def get(opt, default=None):
     return opts.get(opt, default)
 
+def get_compiler() -> str:
+    return opts.get("compiler", "IDO")
+
 def get_subalign() -> int:
     return opts.get("subalign", 16)
 
