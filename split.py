@@ -286,19 +286,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
         segment.postsplit(processed_segments)
         log.dot(status=segment.status())
 
-    linker_writer.finish(options.get_ld_script_path())
-
-    # Write linker symbols header
-    ld_header_path = options.get_linker_symbol_header_path()
-    if options.mode_active("ld") and ld_header_path is not None:
-        with open(ld_header_path, "w", newline="\n") as f:
-            f.write("#ifndef _HEADER_SYMBOLS_H_\n")
-            f.write("#define _HEADER_SYMBOLS_H_\n\n")
-            for segment in all_segments:
-                f.write(f"extern Addr {segment.name}_ROM_START;\n")
-                f.write(f"extern Addr {segment.name}_ROM_END;\n")
-                f.write(f"extern Addr {segment.name}_VRAM;\n")
-            f.write("\n#endif\n")
+    linker_writer.save_linker_script(options.get_ld_script_path())
+    linker_writer.save_symbol_header(options.get_linker_symbol_header_path())
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]

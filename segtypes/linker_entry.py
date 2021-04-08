@@ -35,7 +35,10 @@ class LinkerWriterFacade:
     def add(self, segment: Segment):
         self.entries.extend(segment.get_linker_entries())
 
-    def finish(self, path: Path):
+    def save_linker_script(self, path: Path):
+        pass
+
+    def save_symbol_header(self, path: Path):
         pass
 
 class LinkerWriter(LinkerWriterFacade):
@@ -43,6 +46,7 @@ class LinkerWriter(LinkerWriterFacade):
         super().__init__(*args, **kwargs)
 
         self.buffer: List[str] = []
+        self.symbols: List[str] = []
 
         self._writeln("SECTIONS")
         self._writeln("{")
@@ -73,14 +77,14 @@ class LinkerWriter(LinkerWriterFacade):
             # TEMP? use entry.segment_or_subsegment.name
             import re
             path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.object_path))
-            self._writeln(f"{path_cname} = .;")
+            self._write_symbol(path_cname, ".")
 
             if entry.section != "linker":
                 self._writeln(f"{entry.object_path}({entry.section});")
 
         self._end_segment(segment)
 
-    def finish(self, path: Path):
+    def save_linker_script(self, path: Path):
         self._writeln("/DISCARD/ :")
         self._writeln("{")
         self._writeln("*(*);")
@@ -93,8 +97,23 @@ class LinkerWriter(LinkerWriterFacade):
                 f.write(s)
                 f.write("\n")
 
+    def save_symbol_header(self, path: Path):
+        with path.open("w") as f:
+            f.write("#ifndef _HEADER_SYMBOLS_H_\n")
+            f.write("#define _HEADER_SYMBOLS_H_\n\n")
+            for symbol in self.symbols:
+                f.write(f"extern Addr {symbol};\n")
+            f.write("\n#endif\n")
+
     def _writeln(self, line: str):
         self.buffer.append(line)
+
+    def _write_symbol(self, symbol: str, value: Union[str, int]):
+        if isinstance(value, int):
+            value = f"0x{value:X}"
+
+        self._writeln(f"{symbol} = {value};")
+        self.symbols.append(symbol)
 
     def _begin_segment(self, segment: Union[Segment, Subsegment]):
         # force location if not shiftable/auto
@@ -104,8 +123,8 @@ class LinkerWriter(LinkerWriterFacade):
         vram = segment.vram_start
         vram_str = f"0x{vram:X}" if isinstance(vram, int) else ""
 
-        self._writeln(f"{segment.name}_ROM_START = .;")
-        self._writeln(f"{segment.name}_VRAM = ADDR(.{segment.name});")
+        self._write_symbol(f"{segment.name}_ROM_START", ".")
+        self._write_symbol(f"{segment.name}_VRAM", f"ADDR(.{segment.name})")
         self._writeln(f".{segment.name} {vram_str} : AT({segment.name}_ROM_START) SUBALIGN({segment.subalign}) {{")
 
     def _end_segment(self, segment: Union[Segment, Subsegment]):
@@ -113,6 +132,6 @@ class LinkerWriter(LinkerWriterFacade):
 
         # force end if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_end, int):
-            self._writeln(f"{segment.name}_ROM_END = 0x{segment.rom_end:X};")
+            self._write_symbol(f"{segment.name}_ROM_END", segment.rom_end)
         else:
-            self._writeln(f"{segment.name}_ROM_END = .;")
+            self._write_symbol(f"{segment.name}_ROM_END", ".")
