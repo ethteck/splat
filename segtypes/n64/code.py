@@ -31,6 +31,7 @@ short_mnemonics = ["addiu", "lh", "sh", "lhu"]
 byte_mnemonics = ["lb", "sb", "lbu"]
 img_types = ["i4", "i8", "ia4", "ia8", "ia16", "rgba16", "rgba32", "ci4", "ci8"]
 
+# TODO: delete this, add Segment.parent
 class Subsegment():
     def __init__(self, parent: 'Segment', start: RomAddr, end: RomAddr, name, type, vram: int, args, c_sibling: 'Optional[Subsegment]'):
         self.rom_start: RomAddr = start
@@ -52,6 +53,8 @@ class Subsegment():
         self.args = args
         self.parent = parent
         self.c_sibling = c_sibling
+
+        self.subalign = parent.subalign
 
     def contains_vram(self, addr):
         return self.vram_start <= addr < self.vram_end
@@ -499,9 +502,6 @@ class N64SegCode(N64Segment):
 
     def get_linker_entries(self):
         return [sub.get_linker_entry() for sub in self.subsegments]
-
-    def get_ld_section_name(self):
-        return f"{self.name}"
 
     def retrieve_symbol(self, d, k, t):
         if k not in d:

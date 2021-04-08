@@ -55,9 +55,6 @@ class N64SegHeader(N64Segment):
             f.write("\n".join(header_lines))
         self.log(f"Wrote {self.name} to {src_path}")
 
-    def get_ld_section_name(self):
-        return self.name
-
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 

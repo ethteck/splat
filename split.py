@@ -11,7 +11,7 @@ import pickle
 from colorama import Style, Fore
 from segtypes.segment import parse_segment_type
 from segtypes.n64.code import N64SegCode
-from util import ld
+from segtypes.linker_entry import LinkerWriter, LinkerWriterFacade
 from util import log
 from util import options
 from util.symbol import Symbol
@@ -194,7 +194,7 @@ def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
             log.write(f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached")
     log.write(f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files")
 
-def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
+def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> LinkerWriterFacade:
     # Load config
     with open(config_path) as f:
         config = yaml.load(f.read(), Loader=yaml.SafeLoader)
@@ -203,7 +203,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     options.set("modes", modes)
     options.set("verbose", verbose)
 
-    with open(options.get_target_path(), "rb") as f:
+    with options.get_target_path().open("rb") as f:
         rom_bytes = f.read()
 
     # Create main output dir
@@ -215,19 +215,29 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     platform = options.get("platform", "n64")
 
     processed_segments = []
-    ld_sections = []
-    linker_entries = []
 
-    seg_sizes = {}
-    seg_split = {}
-    seg_cached = {}
+    LWClass = LinkerWriter if options.mode_active("ld") else LinkerWriterFacade
+    linker_writer = LWClass(options.get("shiftable", False))
+
+    seg_sizes: Dict[str, int] = {}
+    seg_split: Dict[str, int] = {}
+    seg_cached: Dict[str, int] = {}
 
     # Load cache
-    try:
-        with open(options.get_cache_path(), "rb") as f:
-            cache = pickle.load(f)
-    except Exception:
+    if use_cache:
+        try:
+            with options.get_cache_path().open("rb") as f:
+                cache = pickle.load(f)
+        except Exception:
+            cache = {}
+    else:
         cache = {}
+    
+    # invalidate entire cache if options change
+    if cache.get("__options__") != config.get("options"):
+        cache = {
+            "__options__": config.get("options"),
+        }
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
@@ -270,19 +280,13 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
                     seg_split[typ] += 1
 
         log.dot(status=segment.status())
-        ld_sections.append(segment.get_ld_section())
-        linker_entries.extend(segment.get_linker_entries())
+        linker_writer.add(segment)
 
     for segment in processed_segments:
         segment.postsplit(processed_segments)
         log.dot(status=segment.status())
 
-    # Write ldscript
-    ld_script_path = options.get_ld_script_path()
-    if options.mode_active("ld") and not options.get("skip_ld") and ld_script_path is not None:
-        if verbose:
-            log.write(f"saving {ld_script_path}")
-        ld.write_ldscript(ld_sections)
+    linker_writer.finish(options.get_ld_script_path())
 
     # Write linker symbols header
     ld_header_path = options.get_linker_symbol_header_path()
@@ -324,13 +328,13 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached)
 
     # Save cache
-    if cache != {}:
+    if cache != {} and use_cache:
         if verbose:
             print("Writing cache")
         with open(options.get_cache_path(), "wb") as f:
             pickle.dump(cache, f)
 
-    return linker_entries
+    return linker_writer
 
 if __name__ == "__main__":
     args = parser.parse_args()
