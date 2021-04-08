@@ -73,7 +73,7 @@ class Subsegment():
         return options.get_asset_path()
 
     def get_ld_obj_type(self):
-        if self.type in "c":
+        if self.type in ["c", "asm", "hasm"]:
             return ".text"
         elif self.type in [".rodata", "rodata"]:
             return ".rodata"

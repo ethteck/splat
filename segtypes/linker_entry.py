@@ -48,8 +48,10 @@ class LinkerWriter(LinkerWriterFacade):
         self.buffer: List[str] = []
         self.symbols: List[str] = []
 
+        self._indent_level = 0
+
         self._writeln("SECTIONS")
-        self._writeln("{")
+        self._begin_block()
 
     def add(self, segment: Segment):
         entries = segment.get_linker_entries()
@@ -60,7 +62,7 @@ class LinkerWriter(LinkerWriterFacade):
         do_next = False
         for i, entry in enumerate(entries):
             if entry.section == "linker": # TODO: isinstance is preferable
-                self._writeln("}")
+                self._end_block()
                 self._begin_segment(entry.segment_or_subsegment)
 
             start = entry.segment_or_subsegment.rom_start
@@ -86,11 +88,13 @@ class LinkerWriter(LinkerWriterFacade):
 
     def save_linker_script(self, path: Path):
         self._writeln("/DISCARD/ :")
-        self._writeln("{")
+        self._begin_block()
         self._writeln("*(*);")
-        self._writeln("}")
+        self._end_block()
 
-        self._writeln("}") # SECTIONS
+        self._end_block() # SECTIONS
+
+        assert self._indent_level == 0
 
         with path.open("w") as f:
             for s in self.buffer:
@@ -106,7 +110,18 @@ class LinkerWriter(LinkerWriterFacade):
             f.write("\n#endif\n")
 
     def _writeln(self, line: str):
-        self.buffer.append(line)
+        if len(line) == 0:
+            self.buffer.append(line)
+        else:
+            self.buffer.append("    " * self._indent_level + line)
+
+    def _begin_block(self):
+        self._writeln("{")
+        self._indent_level += 1
+
+    def _end_block(self):
+        self._indent_level -= 1
+        self._writeln("}")
 
     def _write_symbol(self, symbol: str, value: Union[str, int]):
         if isinstance(value, int):
@@ -125,13 +140,16 @@ class LinkerWriter(LinkerWriterFacade):
 
         self._write_symbol(f"{segment.name}_ROM_START", ".")
         self._write_symbol(f"{segment.name}_VRAM", f"ADDR(.{segment.name})")
-        self._writeln(f".{segment.name} {vram_str} : AT({segment.name}_ROM_START) SUBALIGN({segment.subalign}) {{")
+        self._writeln(f".{segment.name} {vram_str} : AT({segment.name}_ROM_START) SUBALIGN({segment.subalign})")
+        self._begin_block()
 
     def _end_segment(self, segment: Union[Segment, Subsegment]):
-        self._writeln("}")
+        self._end_block()
 
         # force end if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_end, int):
             self._write_symbol(f"{segment.name}_ROM_END", segment.rom_end)
         else:
             self._write_symbol(f"{segment.name}_ROM_END", ".")
+
+        self._writeln("")
