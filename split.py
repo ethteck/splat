@@ -287,10 +287,14 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Write linker symbols header
     ld_header_path = options.get_linker_symbol_header_path()
     if options.mode_active("ld") and ld_header_path is not None:
-        with open(ld_header_path, "w", newline="\n"):
+        with open(ld_header_path, "w", newline="\n") as f:
+            f.write("#ifndef _HEADER_SYMBOLS_H_\n")
+            f.write("#define _HEADER_SYMBOLS_H_\n\n")
             for segment in all_segments:
-                # TODO
-                pass
+                f.write(f"extern Addr {segment.name}_ROM_START;\n")
+                f.write(f"extern Addr {segment.name}_ROM_END;\n")
+                f.write(f"extern Addr {segment.name}_VRAM;\n")
+            f.write("\n#endif\n")
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
@@ -330,4 +334,4 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.config, args.basedir, args.rom, args.modes, args.verbose, args.use_cache)
+    main(args.config, args.basedir, args.target, args.modes, args.verbose, args.use_cache)
