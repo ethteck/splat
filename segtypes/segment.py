@@ -134,59 +134,6 @@ class Segment:
     def cache(self):
         return (self.config, self.rom_end)
 
-    def get_ld_section(self):
-        vram_or_rom = self.rom_start if self.vram_start is None else self.vram_start
-        subalign_str = f"SUBALIGN({self.subalign})"
-
-        linker_rom_start = f"0x{self.rom_start:X}" if isinstance(self.rom_start, int) else "."
-
-        s = (
-            f"SPLAT_BEGIN_SEG({self.name}, {linker_rom_start}, 0x{vram_or_rom:X}, {subalign_str})\n"
-        )
-
-        i = 0
-        do_next = False
-        for entry in self.get_linker_entries():
-            sect_name = str(entry.object_path).replace(".", "_").replace("/", "_")
-
-            # Manual linker segment creation
-            if entry.section == "linker":
-                s += (
-                    "}\n"
-                    f"SPLAT_BEGIN_SEG({sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
-                )
-
-            start = entry.segment.rom_start
-            if isinstance(start, int):
-                # Create new sections for non-0x10 alignment (hack)
-                if start % 0x10 != 0 and i != 0 or do_next:
-                    s += (
-                        "}\n"
-                        f"SPLAT_BEGIN_SEG({sect_name}, 0x{start:X}, 0x{self.rom_to_ram(start):X}, {subalign_str})\n"
-                    )
-                    do_next = False
-
-                if start % 0x10 != 0 and i != 0:
-                    do_next = True
-
-            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.object_path))
-            s += f"    {path_cname} = .;\n"
-
-            if entry.section != "linker":
-                s += f"    BUILD_DIR/{entry.object_path}({entry.section});\n"
-
-            i += 1
-
-        linker_rom_end = f"0x{self.rom_end:X}" if isinstance(self.rom_end, int) else "."
-        s += (
-            f"SPLAT_END_SEG({self.name}, {linker_rom_end})\n"
-        )
-
-        return s
-
-    def get_ld_section_name(self):
-        return f"data_{self.rom_start:X}"
-
     def get_linker_entries(self) -> 'List[LinkerEntry]':
         return []
 
