@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from typing import Dict
+from typing import Dict, List
 import argparse
 import importlib
 import importlib.util
@@ -27,7 +27,7 @@ parser.add_argument("--use-cache", action="store_true", help="Only split changed
 
 sym_isolated_map: Dict[Symbol, int] = {}
 
-def gather_symbols(symbol_addrs_path):
+def gather_symbols(symbol_addrs_path) -> List[Symbol]:
     symbols = []
 
     # Manual list of func name / addrs
@@ -297,14 +297,14 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             f.write("\n#endif\n")
 
     # Write undefined_funcs_auto.txt
-    to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
+    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.dead and s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
     # write undefined_syms_auto.txt
-    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.type == "func"]
+    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.dead and not s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
