@@ -79,7 +79,7 @@ class LinkerWriter(LinkerWriterFacade):
             if isinstance(start, int):
                 # Create new sections for non-0x10 alignment (hack)
                 if start % 0x10 != 0 and i != 0 or do_next:
-                    self._writeln("}")
+                    self._end_block()
                     self._begin_segment(entry.segment_or_subsegment)
                     do_next = False
 
