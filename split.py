@@ -243,13 +243,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     all_segments = initialize_segments(config["segments"])
 
     for segment in all_segments:
-        if platform == "n64" and type(segment) == N64SegCode: # remove special-case sometime
-            segment_symbols, other_symbols = get_segment_symbols(segment, all_symbols, all_segments)
-            segment.seg_symbols = segment_symbols
-            segment.ext_symbols = other_symbols
-            segment.all_symbols = all_symbols
-            segment.symbol_ranges = symbol_ranges
-
         typ = segment.type
         if segment.type == "bin" and segment.is_name_default():
             typ = "unk"
@@ -270,6 +263,13 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
                 else:
                     # Cache miss; split
                     cache[segment.unique_id()] = cached
+
+                    if platform == "n64" and type(segment) == N64SegCode: # remove special-case sometime
+                        segment_symbols, other_symbols = get_segment_symbols(segment, all_symbols, all_segments)
+                        segment.seg_symbols = segment_symbols
+                        segment.ext_symbols = other_symbols
+                        segment.all_symbols = all_symbols
+                        segment.symbol_ranges = symbol_ranges
 
                     segment.did_run = True
                     segment.split(rom_bytes)
