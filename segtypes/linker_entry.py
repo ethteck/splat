@@ -12,6 +12,16 @@ def path_to_object_path(path: Path) -> Path:
     path = options.get_build_path() / path.with_suffix(path.suffix + ".o").relative_to(options.get_base_path())
     return clean_up_path(path)
 
+def write_file_if_different(path: Path, new_content: str):
+    if path.exists():
+        old_content = path.read_text()
+    else:
+        old_content = ""
+
+    if old_content != new_content:
+        with path.open("w") as f:
+            f.write(new_content)
+
 class LinkerEntry:
     def __init__(self, segment_or_subsegment: Union[Segment, Subsegment], src_paths: List[Path], object_path: Path, section: str):
         self.segment_or_subsegment = segment_or_subsegment
@@ -96,18 +106,17 @@ class LinkerWriter(LinkerWriterFacade):
 
         assert self._indent_level == 0
 
-        with path.open("w") as f:
-            for s in self.buffer:
-                f.write(s)
-                f.write("\n")
+        write_file_if_different(path, "\n".join(self.buffer) + "\n")
 
     def save_symbol_header(self, path: Path):
-        with path.open("w") as f:
-            f.write("#ifndef _HEADER_SYMBOLS_H_\n")
-            f.write("#define _HEADER_SYMBOLS_H_\n\n")
-            for symbol in self.symbols:
-                f.write(f"extern Addr {symbol};\n")
-            f.write("\n#endif\n")
+        write_file_if_different(path,
+            "#ifndef _HEADER_SYMBOLS_H_\n"
+            "#define _HEADER_SYMBOLS_H_\n"
+            "\n"
+            + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols) +
+            "\n"
+            "#endif\n"
+        )
 
     def _writeln(self, line: str):
         if len(line) == 0:
