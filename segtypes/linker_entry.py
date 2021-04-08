@@ -73,17 +73,17 @@ class LinkerWriter(LinkerWriterFacade):
             # TEMP? use entry.segment_or_subsegment.name
             import re
             path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.object_path))
-            self._writeln(f"{path_cname} = .;")
+            self._writeln(f"    {path_cname} = .;")
 
             if entry.section != "linker":
-                self._writeln(f"{entry.object_path}({entry.section});")
+                self._writeln(f"    {entry.object_path}({entry.section});")
 
         self._end_segment(segment)
 
     def finish(self, path: Path):
         self._writeln("/DISCARD/ :")
         self._writeln("{")
-        self._writeln("*(*);")
+        self._writeln("    *(*);")
         self._writeln("}")
 
         self._writeln("}") # SECTIONS
