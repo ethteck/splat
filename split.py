@@ -223,11 +223,20 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     seg_cached = {}
 
     # Load cache
-    try:
-        with open(options.get_cache_path(), "rb") as f:
-            cache = pickle.load(f)
-    except Exception:
+    if use_cache:
+        try:
+            with open(options.get_cache_path(), "rb") as f:
+                cache = pickle.load(f)
+        except Exception:
+            cache = {}
+    else:
         cache = {}
+    
+    # invalidate entire cache if options change
+    if cache.get("__options__") != config.get("options"):
+        cache = {
+            "__options__": config.get("options"),
+        }
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
