@@ -338,6 +338,16 @@ class ImageSubsegment(Subsegment):
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "wb") as f:
             writer.write_array(f, image)
+    
+    def get_linker_entry(self):
+        from segtypes.linker_entry import LinkerEntry
+
+        return LinkerEntry(
+            self,
+            [options.get_asset_path() / self.parent.dir / f"{self.name}.png"],
+            options.get_asset_path() / self.parent.dir / f"{self.name}.png",
+            ".data"
+        )
 
 class PaletteSubsegment(ImageSubsegment):
     def scan_inner(self, segment, rom_bytes):
@@ -353,6 +363,16 @@ class PaletteSubsegment(ImageSubsegment):
     
     def split_inner(self, segment, rom_bytes):
         pass
+
+    def get_linker_entry(self):
+        from segtypes.linker_entry import LinkerEntry
+
+        return LinkerEntry(
+            self,
+            [options.get_asset_path() / self.parent.dir / f"{self.name}.png"],
+            options.get_asset_path() / self.parent.dir / f"{self.name}.pal",
+            ".data"
+        )
 
 class CI4Subsegment(ImageSubsegment):
     def split_inner(self, segment, rom_bytes):

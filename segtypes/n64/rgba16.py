@@ -1,12 +1,13 @@
 import os
-from segtypes.n64.segment import N64Segment
+from segtypes.n64.img import N64SegImg
 import png
 from util import iter
 from util import options
 from util.color import unpack_color
 import sys
 
-class N64SegRgba16(N64Segment):
+# TODO: move common behaviour to N64ImgSegment and have all image segments extend that instead
+class N64SegRgba16(N64SegImg):
     def __init__(self, segment, next_segment):
         super().__init__(segment, next_segment)
 
