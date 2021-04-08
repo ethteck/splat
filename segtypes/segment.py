@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Union, Optional, List, Literal
-from pathlib import Path, PurePath
+from pathlib import Path
 from util import log
 from util import options
 import re

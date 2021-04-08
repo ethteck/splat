@@ -193,10 +193,6 @@ class CodeSubsegment(Subsegment):
                 return s
         return re.sub(CodeSubsegment.STRIP_C_COMMENTS_RE, replacer, text)
 
-    # @staticmethod
-    # def get_funcs_defined_in_c(text):
-    #     return set(m.group(2) for m in CodeSubsegment.C_FUNC_RE.finditer(text))
-
     @staticmethod
     def get_standalone_asm_header():
         ret = []
@@ -244,7 +240,7 @@ class CodeSubsegment(Subsegment):
     def split_inner(self, segment, rom_bytes):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
-                asm_out_dir = options.get_asm_path() / "nonmatchings"
+                asm_out_dir = options.get_asm_path() / "nonmatchings" / self.parent.dir
                 asm_out_dir.mkdir(parents=True, exist_ok=True)
 
                 for func in self.funcs_text:
@@ -278,7 +274,7 @@ class DataSubsegment(Subsegment):
 
     def split_inner(self, segment, rom_bytes):
         if not self.type.startswith("."):
-            asm_out_dir = options.get_asm_path() / "data"
+            asm_out_dir = options.get_asm_path() / "data" / self.parent.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             outpath = asm_out_dir / f"{self.name}.{self.type}.s"
@@ -423,8 +419,6 @@ class N64SegCode(N64Segment):
     palettes: Dict[str, List[PaletteSubsegment]] = {}
 
     def parse_subsegments(self, segment_yaml) -> List[Subsegment]:
-        prefix = self.name if self.name.endswith("/") else f"{self.name}_"
-
         base_segments: Dict[str, Subsegment] = {}
         ret = []
         prev_start = -1
@@ -442,7 +436,7 @@ class N64SegCode(N64Segment):
             else:
                 start = subsection_yaml[0]
                 typ = subsection_yaml[1]
-                name = None if len(subsection_yaml) < 3 else subsection_yaml[2]
+                name = None if len(subsection_yaml) < 3 else str(subsection_yaml[2])
                 args = subsection_yaml[3:]
             end = self.rom_end if i == len(segment_yaml["subsections"]) - 1 else segment_yaml["subsections"][i + 1][0]
 
@@ -451,9 +445,7 @@ class N64SegCode(N64Segment):
                 sys.exit(1)
 
             if not name:
-                name = self.get_default_name(start) if self.name == self.get_default_name(self.rom_start) else f"{prefix}{start:X}"
-            elif self.name.endswith("/"):
-                name = self.name + name
+                name = self.get_default_name(start)
 
             vram = self.rom_to_ram(start)
             # assert vram is not None
@@ -544,7 +536,7 @@ class N64SegCode(N64Segment):
         else:
             return None
 
-    def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False):
+    def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False, dead=True):
         ret = None
         rom = None
 
@@ -560,6 +552,9 @@ class N64SegCode(N64Segment):
         # Search for symbol ranges
         if not ret and offsets:
             ret = self.retrieve_symbol_from_ranges(addr, rom)
+
+        if not dead and ret and ret.dead:
+            ret = None
 
         # Create the symbol if it doesn't exist
         if not ret and create:
@@ -679,7 +674,7 @@ class N64SegCode(N64Segment):
                     end_func = True
                     continue
 
-            if i < len(insns) - 1 and self.get_symbol(insns[i + 1].address, local_only=True, type="func"):
+            if i < len(insns) - 1 and self.get_symbol(insns[i + 1].address, local_only=True, type="func", dead=False):
                 end_func = True
 
             if end_func:
@@ -916,7 +911,7 @@ class N64SegCode(N64Segment):
 
         for symbol_addr in self.seg_symbols:
             for symbol in self.seg_symbols[symbol_addr]:
-                if sub.contains_vram(symbol.vram_start):
+                if not symbol.dead and sub.contains_vram(symbol.vram_start):
                     ret.append(symbol)
 
         ret.sort(key=lambda s:s.vram_start)

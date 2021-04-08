@@ -21,7 +21,7 @@ class N64SegYay0(N64Segment):
 
         return [LinkerEntry(
             self,
-            options.get_asset_path() / self.dir / f"{self.name}.bin",
+            [options.get_asset_path() / self.dir / f"{self.name}.bin"],
             options.get_asset_path() / self.dir / f"{self.name}.Yay0",
             ".data"
         )]
