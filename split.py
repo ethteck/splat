@@ -5,7 +5,7 @@ import argparse
 import importlib
 import importlib.util
 import os
-from pathlib import Path
+import pylibyaml
 import yaml
 import pickle
 from colorama import Style, Fore
@@ -17,16 +17,13 @@ from util import options
 from util.symbol import Symbol
 import sys
 
-parser = argparse.ArgumentParser(
-    description="Split a rom given a rom, a config, and output directory")
+parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file")
-parser.add_argument("--rom", help="path to a .z64 rom")
+parser.add_argument("--target", help="path to a file to split (.z64 rom)")
 parser.add_argument("--basedir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
-parser.add_argument("--verbose", action="store_true",
-                    help="Enable debug logging")
-parser.add_argument("--new", action="store_true",
-                    help="Only split changed segments in config")
+parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+parser.add_argument("--use-cache", action="store_true", help="Only split changed segments in config")
 
 sym_isolated_map: Dict[Symbol, int] = {}
 
@@ -65,6 +62,8 @@ def gather_symbols(symbol_addrs_path):
                         if info.startswith("rom:"):
                             rom_addr = int(info.split(":")[1], 0)
                             sym.rom = rom_addr
+                        if info.startswith("dead:"):
+                            sym.dead = True
                 symbols.append(sym)
     return symbols
 
@@ -195,10 +194,10 @@ def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
             log.write(f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached")
     log.write(f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files")
 
-def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False):
+def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Load config
     with open(config_path) as f:
-        config = yaml.safe_load(f.read())
+        config = yaml.load(f.read(), Loader=yaml.SafeLoader)
 
     options.initialize(config, config_path, base_dir, target_path)
     options.set("modes", modes)
@@ -255,7 +254,7 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
             if segment.should_run():
                 # Check cache
                 cached = segment.cache()
-                if not ignore_cache and cached == cache.get(segment.unique_id()):
+                if use_cache and cached == cache.get(segment.unique_id()):
                     # Cache hit
                     seg_cached[typ] += 1
                 else:
@@ -284,6 +283,14 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
         if verbose:
             log.write(f"saving {ld_script_path}")
         ld.write_ldscript(ld_sections)
+
+    # Write linker symbols header
+    ld_header_path = options.get_linker_symbol_header_path()
+    if options.mode_active("ld") and ld_header_path is not None:
+        with open(ld_header_path, "w", newline="\n"):
+            for segment in all_segments:
+                # TODO
+                pass
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in all_symbols if s.referenced and not s.defined and s.type == "func"]
@@ -323,4 +330,4 @@ def main(config_path, base_dir, target_path, modes, verbose, ignore_cache=False)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.config, args.basedir, args.rom, args.modes, args.verbose, not args.new)
+    main(args.config, args.basedir, args.rom, args.modes, args.verbose, args.use_cache)

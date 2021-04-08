@@ -295,16 +295,16 @@ class BssSubsegment(DataSubsegment):
 
 class BinSubsegment(Subsegment):
     def split_inner(self, segment, rom_bytes):
-        out_path = self.get_generic_out_path()
+        out_path = options.get_asset_path() / self.parent.dir / f"{self.name}.bin"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        out_path.c_sibling.mkdir(parents=True, exist_ok=True)
         with open(out_path, "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
 
     def get_linker_entry(self):
         from segtypes.linker_entry import LinkerEntry
 
-        path = options.get_asset_path() / self.c_sibling.dir / f"{self.name}.bin"
+        path = options.get_asset_path() / self.parent.dir / f"{self.name}.bin"
 
         return LinkerEntry(
             self,
@@ -335,8 +335,8 @@ class ImageSubsegment(Subsegment):
         w = self.impl_class.get_writer(self.width, self.height)
         self.write(self.get_generic_out_path(), w, image)
     
-    def write(self, out_path, writer, image):
-        Path(out_path).c_sibling.mkdir(parents=True, exist_ok=True)
+    def write(self, out_path: Path, writer: png.Writer, image):
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "wb") as f:
             writer.write_array(f, image)
 
@@ -453,7 +453,7 @@ class N64SegCode(N64Segment):
                 name = self.name + name
 
             vram = self.rom_to_ram(start)
-            assert vram is not None
+            # assert vram is not None
 
             subsegment = Subsegment.create(self, typ, start, end, name, vram, args, base_segments.get(name, None))
 
@@ -503,16 +503,13 @@ class N64SegCode(N64Segment):
 
     @staticmethod
     def get_default_name(addr):
-        return f"code_{addr:X}"
+        return f"{addr:X}"
 
     def get_linker_entries(self):
         return [sub.get_linker_entry() for sub in self.subsegments]
 
     def get_ld_section_name(self):
-        path = PurePath(self.name)
-        name = path.name if path.name != "" else path.parent
-
-        return f"code_{name}"
+        return f"{self.name}"
 
     def retrieve_symbol(self, d, k, t):
         if k not in d:
@@ -1103,7 +1100,7 @@ class N64SegCode(N64Segment):
                     break
 
     def create_c_asm_file(self, funcs_text, func, out_dir, sub, func_name):
-        if options.get("compiler", "IDO") == "GCC":
+        if options.get_compiler() == "GCC":
             out_lines = self.get_gcc_inc_header()
         else:
             out_lines = []
@@ -1140,7 +1137,7 @@ class N64SegCode(N64Segment):
 
         for func in funcs_text:
             func_name = self.get_symbol(func, type="func", local_only=True).name
-            if options.get("compiler", "IDO") == "GCC":
+            if options.get_compiler() == "GCC":
                 c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(sub.name, func_name))
             else:
                 asm_outpath = Path(os.path.join(asm_out_dir, sub.name, func_name + ".s"))

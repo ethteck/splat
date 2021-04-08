@@ -1,4 +1,5 @@
 PyYAML
+pylibyaml
 pypng
 colorama
 capstone
