@@ -20,7 +20,7 @@ class N64SegHeader(N64Segment):
         return f".{typ} {dstr} /* {comment} */"
 
     def get_out_path(self) -> Path:
-        return options.get_base_path() / f"asm/{self.name}.s"
+        return options.get_asm_path() / self.dir / f"{self.name}.s"
 
     def split(self, rom_bytes):
         encoding = options.get("header_encoding", "ASCII")
@@ -61,8 +61,7 @@ class N64SegHeader(N64Segment):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        path = options.get_base_path() / "asm" / self.dir / f"{self.name}.s"
-
+        path = self.get_out_path()
         return [LinkerEntry(self, [path], path, ".data")]
 
     @staticmethod
