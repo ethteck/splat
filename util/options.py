@@ -4,18 +4,18 @@ import sys
 
 opts = {}
 
-def initialize(config: Dict, config_path: str, base_dir=None, target_path=None):
+def initialize(config: Dict, config_path: str, base_path=None, target_path=None):
     global opts
     opts = dict(config.get("options", {}))
 
-    if base_dir:
-        opts["base_dir"] = Path(base_dir)
+    if base_path:
+        opts["base_path"] = Path(base_path)
     else:
-        if not "base_dir" in opts:
-            print("Error: Base output dir not specified as a command line arg or via the config yaml (base_dir)")
+        if not "base_path" in opts:
+            print("Error: Base output dir not specified as a command line arg or via the config yaml (base_path)")
             sys.exit(2)
 
-        opts["base_dir"] = Path(config_path).parent / opts["base_dir"]
+        opts["base_path"] = Path(config_path).parent / opts["base_path"]
 
     if not target_path:
         if "target_path" not in opts:
@@ -35,10 +35,10 @@ def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
 
 def get_base_path() -> Path:
-    return Path(opts["base_dir"])
+    return Path(opts["base_path"])
 
 def get_asset_path() -> Path:
-    return get_base_path() / opts.get("assets_dir", "assets")
+    return get_base_path() / opts.get("assets_path", opts.get("assets_dir", "assets"))
 
 def get_target_path() -> Path:
     return get_base_path() / opts["target_path"]
@@ -63,7 +63,10 @@ def get_symbol_addrs_path():
 
 def get_ld_script_path():
     return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
-    
+
+def get_build_path():
+    return get_base_path() / opts.get("build_path", "build")
+
 def get_extensions_path():
     ext_opt = opts.get("extensions_path")
     if not ext_opt:

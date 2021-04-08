@@ -100,7 +100,12 @@ class Subsegment():
     def get_linker_entry(self):
         from segtypes.linker_entry import LinkerEntry
 
-        return LinkerEntry(self, [self.get_generic_out_path()], self.get_generic_out_path(), self.get_ld_obj_type())
+        return LinkerEntry(
+            self,
+            [self.get_generic_out_path()],
+            self.get_generic_out_path(),
+            self.get_ld_obj_type()
+        )
 
     def should_run(self):
         return options.mode_active(self.type)
