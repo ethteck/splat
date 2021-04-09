@@ -161,7 +161,11 @@ class LinkerWriter(LinkerWriterFacade):
         vram = segment.vram_start
         vram_str = f"0x{vram:X}" if isinstance(vram, int) else ""
 
-        name = to_cname(segment.name)
+        # should be if segment.parent:
+        if isinstance(segment, Subsegment) and segment.parent:
+            name = to_cname(segment.parent.name + "_" + segment.name)
+        else:
+            name = to_cname(segment.name)
 
         self._write_symbol(f"{name}_ROM_START", ".")
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
@@ -171,10 +175,16 @@ class LinkerWriter(LinkerWriterFacade):
     def _end_segment(self, segment: Union[Segment, Subsegment]):
         self._end_block()
 
+        # should be if segment.parent:
+        if isinstance(segment, Subsegment) and segment.parent:
+            name = to_cname(segment.parent.name + "_" + segment.name)
+        else:
+            name = to_cname(segment.name)
+
         # force end if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_end, int):
-            self._write_symbol(f"{to_cname(segment.name)}_ROM_END", segment.rom_end)
+            self._write_symbol(f"{to_cname(name)}_ROM_END", segment.rom_end)
         else:
-            self._write_symbol(f"{to_cname(segment.name)}_ROM_END", ".")
+            self._write_symbol(f"{to_cname(name)}_ROM_END", ".")
 
         self._writeln("")
