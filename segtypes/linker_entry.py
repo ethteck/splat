@@ -3,6 +3,7 @@ from pathlib import Path
 from util import options
 from segtypes.segment import Segment
 from segtypes.n64.code import Subsegment
+import re
 
 # clean 'foo/../bar' to 'bar'
 def clean_up_path(path: Path) -> Path:
@@ -19,8 +20,17 @@ def write_file_if_different(path: Path, new_content: str):
         old_content = ""
 
     if old_content != new_content:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w") as f:
             f.write(new_content)
+
+def to_cname(symbol: str) -> str:
+    symbol = re.sub(r"[^0-9a-zA-Z_]", "_", symbol)
+
+    if symbol[0] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+        symbol = "_" + symbol
+    
+    return symbol
 
 class LinkerEntry:
     def __init__(self, segment_or_subsegment: Union[Segment, Subsegment], src_paths: List[Path], object_path: Path, section: str):
@@ -86,9 +96,7 @@ class LinkerWriter(LinkerWriterFacade):
                 if start % 0x10 != 0 and i != 0:
                     do_next = True
 
-            # TEMP? use entry.segment_or_subsegment.name
-            import re
-            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.object_path))
+            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment_or_subsegment.dir / entry.segment_or_subsegment.name) + ".".join(entry.object_path.suffixes[:-1]))
             self._write_symbol(path_cname, ".")
 
             if entry.section != "linker":
@@ -113,6 +121,8 @@ class LinkerWriter(LinkerWriterFacade):
             "#ifndef _HEADER_SYMBOLS_H_\n"
             "#define _HEADER_SYMBOLS_H_\n"
             "\n"
+            "#include \"common.h\"\n"
+            "\n"
             + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols) +
             "\n"
             "#endif\n"
@@ -133,6 +143,10 @@ class LinkerWriter(LinkerWriterFacade):
         self._writeln("}")
 
     def _write_symbol(self, symbol: str, value: Union[str, int]):
+        import re
+
+        symbol = to_cname(symbol)
+
         if isinstance(value, int):
             value = f"0x{value:X}"
 
@@ -147,9 +161,11 @@ class LinkerWriter(LinkerWriterFacade):
         vram = segment.vram_start
         vram_str = f"0x{vram:X}" if isinstance(vram, int) else ""
 
-        self._write_symbol(f"{segment.name}_ROM_START", ".")
-        self._write_symbol(f"{segment.name}_VRAM", f"ADDR(.{segment.name})")
-        self._writeln(f".{segment.name} {vram_str} : AT({segment.name}_ROM_START) SUBALIGN({segment.subalign})")
+        name = to_cname(segment.name)
+
+        self._write_symbol(f"{name}_ROM_START", ".")
+        self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
+        self._writeln(f".{name} {vram_str} : AT({name}_ROM_START) SUBALIGN({segment.subalign})")
         self._begin_block()
 
     def _end_segment(self, segment: Union[Segment, Subsegment]):
@@ -157,8 +173,8 @@ class LinkerWriter(LinkerWriterFacade):
 
         # force end if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_end, int):
-            self._write_symbol(f"{segment.name}_ROM_END", segment.rom_end)
+            self._write_symbol(f"{to_cname(segment.name)}_ROM_END", segment.rom_end)
         else:
-            self._write_symbol(f"{segment.name}_ROM_END", ".")
+            self._write_symbol(f"{to_cname(segment.name)}_ROM_END", ".")
 
         self._writeln("")

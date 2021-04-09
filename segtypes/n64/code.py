@@ -52,6 +52,7 @@ class Subsegment():
         self.type = type
         self.args = args
         self.parent = parent
+        self.dir = parent.dir
         self.c_sibling = c_sibling
 
         self.subalign = parent.subalign
@@ -65,10 +66,12 @@ class Subsegment():
                 return self.c_sibling.get_out_subdir()
             else:
                 return options.get_src_path()
-        elif self.type in ["c"]:
+        elif self.type in ["c", ".data", ".rodata", ".bss"]:
             return options.get_src_path()
         elif self.type in ["asm", "hasm", "header"]:
             return options.get_asm_path()
+        elif self.type in ["data", "rodata"]:
+            return options.get_asm_path() / "data"
 
         return options.get_asset_path()
 
@@ -92,12 +95,14 @@ class Subsegment():
             return "c"
         elif self.type in ["asm", "hasm", "header"]:
             return "s"
+        elif self.type in ["data", "rodata"]:
+            return self.type + ".s"
         elif self.type == "bin":
             return "bin"
         elif self.type in img_types:
             return "png"
         elif self.type == "palette":
-            return "pal.png"
+            return "png"
         return self.type
 
     def get_linker_entry(self):
@@ -360,7 +365,7 @@ class PaletteSubsegment(ImageSubsegment):
             segment.palettes[self.image_name] = [self]
         else:
             segment.palettes[self.image_name].append(self)
-    
+
     def split_inner(self, segment, rom_bytes):
         pass
 

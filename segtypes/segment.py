@@ -32,6 +32,8 @@ def parse_segment_type(segment: Union[dict, list]) -> str:
 def parse_segment_name(segment: Union[dict, list], segment_class) -> str:
     if isinstance(segment, dict) and "name" in segment:
         return str(segment["name"])
+    elif isinstance(segment, dict) and "dir" in segment:
+        return str(segment["dir"])
     elif isinstance(segment, list) and len(segment) >= 3 and isinstance(segment[2], str):
         return segment[2]
     else:

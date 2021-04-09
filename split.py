@@ -228,13 +228,19 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
         try:
             with options.get_cache_path().open("rb") as f:
                 cache = pickle.load(f)
+            
+            if verbose:
+                log.write(f"Loaded cache ({len(cache.keys())} items)")
         except Exception:
             cache = {}
     else:
         cache = {}
-    
+
     # invalidate entire cache if options change
-    if cache.get("__options__") != config.get("options"):
+    if use_cache and cache.get("__options__") != config.get("options"):
+        if verbose:
+            log.write("Options changed, invalidating cache")
+
         cache = {
             "__options__": config.get("options"),
         }
@@ -319,7 +325,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     # Save cache
     if cache != {} and use_cache:
         if verbose:
-            print("Writing cache")
+            log.write("Writing cache")
         with open(options.get_cache_path(), "wb") as f:
             pickle.dump(cache, f)
 
