@@ -1,21 +1,18 @@
 #! /usr/bin/python3
 
-from typing import Dict, List
+from typing import Dict, List, Union
 import argparse
-import importlib
-import importlib.util
 import os
 import pylibyaml
 import yaml
 import pickle
 from colorama import Style, Fore
-from segtypes.segment import parse_segment_type
-from segtypes.n64.code import N64SegCode
+from segtypes.segment import Segment
 from segtypes.linker_entry import LinkerWriter, LinkerWriterFacade
 from util import log
 from util import options
-from util.symbol import Symbol
-import sys
+from util import symbols
+from util.symbols import Symbol
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file")
@@ -27,71 +24,6 @@ parser.add_argument("--use-cache", action="store_true", help="Only split changed
 
 sym_isolated_map: Dict[Symbol, int] = {}
 
-def gather_symbols(symbol_addrs_path) -> List[Symbol]:
-    symbols = []
-
-    # Manual list of func name / addrs
-    if os.path.exists(symbol_addrs_path):
-        with open(symbol_addrs_path) as f:
-            func_addrs_lines = f.readlines()
-
-        for line in func_addrs_lines:
-            line = line.strip()
-            if not line == "" and not line.startswith("//"):
-                comment_loc = line.find("//")
-                line_ext = ""
-
-                if comment_loc != -1:
-                    line_ext = line[comment_loc + 2:].strip()
-                    line = line[:comment_loc].strip()
-
-                line_split = line.split("=")
-                name = line_split[0].strip()
-                addr = int(line_split[1].strip()[:-1], 0)
-
-                sym = Symbol(addr, given_name=name)
-
-                if line_ext:
-                    for info in line_ext.split(" "):
-                        if info.startswith("type:"):
-                            type = info.split(":")[1]
-                            sym.type = type
-                        if info.startswith("size:"):
-                            size = int(info.split(":")[1], 0)
-                            sym.size = size
-                        if info.startswith("rom:"):
-                            rom_addr = int(info.split(":")[1], 0)
-                            sym.rom = rom_addr
-                        if info.startswith("dead:"):
-                            sym.dead = True
-                symbols.append(sym)
-    return symbols
-
-
-def get_base_segment_class(seg_type, platform):
-    try:
-        segmodule = importlib.import_module(f"segtypes.{platform}.{seg_type}")
-    except ModuleNotFoundError:
-        return None
-
-    return getattr(segmodule, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}")
-
-
-def get_extension_class(seg_type, platform):
-    ext_path = options.get_extensions_path()
-    if not ext_path:
-        return None
-
-    try:
-        ext_spec = importlib.util.spec_from_file_location(f"{platform}.segtypes.{seg_type}", ext_path / f"{seg_type}.py")
-        ext_mod = importlib.util.module_from_spec(ext_spec)
-        ext_spec.loader.exec_module(ext_mod)
-    except Exception as err:
-        log.write(err, status="error")
-        return None
-
-    return getattr(ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}")
-
 
 def fmt_size(size):
     if size > 1000000:
@@ -101,30 +33,24 @@ def fmt_size(size):
     else:
         return str(size) + " B"
 
-
-def initialize_segments(config_segments):
+def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     seen_segment_names = set()
     ret = []
 
-    for i, segment in enumerate(config_segments[:-1]):
-        seg_type = parse_segment_type(segment)
+    for i, seg_yaml in enumerate(config_segments[:-1]):
+        seg_type = Segment.parse_segment_type(seg_yaml)
 
-        platform = options.get("platform", "n64")
+        segment_class = Segment.get_class_for_type(seg_type)
+        
+        this_start = Segment.parse_segment_start(seg_yaml)
+        next_start = Segment.parse_segment_start(config_segments[i + 1])
 
-        segment_class = get_base_segment_class(seg_type, platform)
-        if segment_class == None:
-            # Look in extensions
-            segment_class = get_extension_class(seg_type, platform)
+        segment: Segment = segment_class(seg_yaml, this_start, next_start)
 
-        if segment_class == None:
-            log.write(f"fatal error: could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)", status="error")
-            sys.exit(2)
-
-        segment = segment_class(segment, config_segments[i + 1])
-
-        if segment_class.require_unique_name:
+        if segment.require_unique_name:
             if segment.name in seen_segment_names:
-                segment.error("segment name is not unique")
+                log.error(f"segment name '{segment.name}' is not unique")
+
             seen_segment_names.add(segment.name)
 
         ret.append(segment)
@@ -146,11 +72,11 @@ def is_symbol_isolated(symbol, all_segments):
     sym_isolated_map[symbol] = relevant_segs < 2
     return sym_isolated_map[symbol]
 
-def get_segment_symbols(segment, all_symbols, all_segments):
+def get_segment_symbols(segment, all_segments):
     seg_syms = {}
     other_syms = {}
 
-    for symbol in all_symbols:
+    for symbol in symbols.all_symbols:
         if is_symbol_isolated(symbol, all_segments) and not symbol.rom:
             if segment.contains_vram(symbol.vram_start):
                 if symbol.vram_start not in seg_syms:
@@ -203,18 +129,15 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     options.set("modes", modes)
     options.set("verbose", verbose)
 
-    with options.get_target_path().open("rb") as f:
-        rom_bytes = f.read()
+    with options.get_target_path().open("rb") as f2:
+        rom_bytes = f2.read()
 
     # Create main output dir
     options.get_base_path().mkdir(parents=True, exist_ok=True)
 
-    symbol_addrs_path = options.get_symbol_addrs_path()
-    all_symbols = gather_symbols(symbol_addrs_path)
-    symbol_ranges = [s for s in all_symbols if s.size > 4]
-    platform = options.get("platform", "n64")
+    symbols.initialize()
 
-    processed_segments = []
+    processed_segments: List[Segment] = []
 
     LWClass = LinkerWriter if options.mode_active("ld") else LinkerWriterFacade
     linker_writer = LWClass(options.get("shiftable", False))
@@ -226,8 +149,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     # Load cache
     if use_cache:
         try:
-            with options.get_cache_path().open("rb") as f:
-                cache = pickle.load(f)
+            with options.get_cache_path().open("rb") as f3:
+                cache = pickle.load(f3)
             
             if verbose:
                 log.write(f"Loaded cache ({len(cache.keys())} items)")
@@ -257,33 +180,33 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
             seg_sizes[typ] = 0
             seg_split[typ] = 0
             seg_cached[typ] = 0
-        seg_sizes[typ] += segment.size
+        seg_sizes[typ] += 0 if segment.size is None else segment.size
 
-        if len(segment.errors) == 0:
-            if segment.should_run():
-                # Check cache
+        if segment.should_scan() or segment.should_split():
+            # Check cache
+            if use_cache:
                 cached = segment.cache()
-                if use_cache and cached == cache.get(segment.unique_id()):
-                    # Cache hit
-                    seg_cached[typ] += 1
-                else:
-                    # Cache miss; split
-                    cache[segment.unique_id()] = cached
+            if use_cache and cached == cache.get(segment.unique_id()):
+                # Cache hit
+                seg_cached[typ] += 1
+            else:
+                # Cache miss; split
+                cache[segment.unique_id()] = cached
 
-                    if platform == "n64" and type(segment) == N64SegCode: # remove special-case sometime
-                        segment_symbols, other_symbols = get_segment_symbols(segment, all_symbols, all_segments)
-                        segment.seg_symbols = segment_symbols
-                        segment.ext_symbols = other_symbols
-                        segment.all_symbols = all_symbols
-                        segment.symbol_ranges = symbol_ranges
+                if segment.needs_symbols:
+                    segment_symbols, other_symbols = get_segment_symbols(segment, all_segments)
+                    segment.seg_symbols = segment_symbols
+                    segment.ext_symbols = other_symbols
 
-                    segment.did_run = True
+                segment.did_run = True
+                if segment.should_scan():
+                    segment.scan(rom_bytes)
+                if segment.should_split():
                     segment.split(rom_bytes)
 
-                    if len(segment.errors) == 0:
-                        processed_segments.append(segment)
+                processed_segments.append(segment)
 
-                    seg_split[typ] += 1
+                seg_split[typ] += 1
 
         log.dot(status=segment.status())
         linker_writer.add(segment)
@@ -296,14 +219,14 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     linker_writer.save_symbol_header(options.get_linker_symbol_header_path())
 
     # Write undefined_funcs_auto.txt
-    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.dead and s.type == "func"]
+    to_write = [s for s in symbols.all_symbols if s.referenced and not s.defined and not s.dead and s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
     # write undefined_syms_auto.txt
-    to_write = [s for s in all_symbols if s.referenced and not s.defined and not s.dead and not s.type == "func"]
+    to_write = [s for s in symbols.all_symbols if s.referenced and not s.defined and not s.dead and not s.type == "func"]
     if len(to_write) > 0:
         with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
             for symbol in to_write:
@@ -326,8 +249,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     if cache != {} and use_cache:
         if verbose:
             log.write("Writing cache")
-        with open(options.get_cache_path(), "wb") as f:
-            pickle.dump(cache, f)
+        with open(options.get_cache_path(), "wb") as f4:
+            pickle.dump(cache, f4)
 
     return linker_writer
 

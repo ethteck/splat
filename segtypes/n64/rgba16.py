@@ -1,22 +1,22 @@
-import os
 from segtypes.n64.img import N64SegImg
 import png
 from util import iter
+from util import log
 from util import options
 from util.color import unpack_color
 import sys
 
 # TODO: move common behaviour to N64ImgSegment and have all image segments extend that instead
 class N64SegRgba16(N64SegImg):
-    def __init__(self, segment, next_segment):
-        super().__init__(segment, next_segment)
+    def __init__(self, segment, rom_start, rom_end):
+        super().__init__(segment, rom_start, rom_end)
 
         if type(segment) is dict:
             self.width = segment["width"]
             self.height = segment["height"]
             self.flip = segment.get("flip", "noflip")
         elif len(segment) < 5:
-            self.error("missing parameters")
+            log.error("missing parameters")
         else:
             self.width = segment[3]
             self.height = segment[4]
@@ -26,8 +26,7 @@ class N64SegRgba16(N64SegImg):
             expected_len = int(self.max_length())
             actual_len = self.rom_end - self.rom_start
             if actual_len > expected_len and actual_len - expected_len > self.subalign:
-                print(f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)")
-                sys.exit(1)
+                log.error(f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)")
 
     @property
     def flip_vertical(self):
@@ -37,8 +36,8 @@ class N64SegRgba16(N64SegImg):
     def flip_horizontal(self):
         return self.flip == "both" or self.flip.startswith("h") or self.flip == "x"
 
-    def should_run(self):
-        return super().should_run() or options.mode_active("img")
+    def should_split(self):
+        return super().should_split() or options.mode_active("img")
 
     def split(self, rom_bytes):
         path = options.get_asset_path() / self.dir / (self.name + ".png")

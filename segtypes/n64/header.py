@@ -1,12 +1,10 @@
-import os
 from segtypes.n64.segment import N64Segment
 from pathlib import Path
-from segtypes.segment import Segment
 from util import options
 
 class N64SegHeader(N64Segment):
-    def should_run(self):
-        return N64Segment.should_run(self) or options.mode_active("asm")
+    def should_split(self):
+        return N64Segment.should_split(self) or options.mode_active("asm")
 
     @staticmethod
     def get_line(typ, data, comment):

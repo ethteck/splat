@@ -1,4 +1,3 @@
-from pathlib import Path
 from segtypes.n64.segment import N64Segment
 from util import options
 

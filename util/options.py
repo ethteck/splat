@@ -1,6 +1,6 @@
 from typing import Dict
 from pathlib import Path
-import sys
+from util import log
 
 opts = {}
 
@@ -12,21 +12,22 @@ def initialize(config: Dict, config_path: str, base_path=None, target_path=None)
         opts["base_path"] = Path(base_path)
     else:
         if not "base_path" in opts:
-            print("Error: Base output dir not specified as a command line arg or via the config yaml (base_path)")
-            sys.exit(2)
+            log.error("Error: Base output dir not specified as a command line arg or via the config yaml (base_path)")
 
         opts["base_path"] = Path(config_path).parent / opts["base_path"]
 
     if not target_path:
         if "target_path" not in opts:
-            print("Error: Target binary path not specified as a command line arg or via the config yaml (target_path)")
-            sys.exit(2)
+            log.error("Error: Target binary path not specified as a command line arg or via the config yaml (target_path)")
 
 def set(opt, val):
     opts[opt] = val
     
 def get(opt, default=None):
     return opts.get(opt, default)
+
+def get_platform() -> str:
+    return opts.get("platform", "N64")
 
 def get_compiler() -> str:
     return opts.get("compiler", "IDO")

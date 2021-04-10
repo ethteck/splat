@@ -1,3 +1,4 @@
+import sys
 from colorama import init, Fore, Style
 from typing import Union, Literal
 
@@ -5,7 +6,7 @@ init(autoreset=True)
 
 newline = True
 
-Status = Union[None, Literal["ok"], Literal["warn"], Literal["error", Literal["skip"]]]
+Status = Union[None, Literal["ok"], Literal["warn"], Literal["error"], Literal["skip"]]
 
 def write(*args, status=None, **kwargs):
     global newline
@@ -15,6 +16,10 @@ def write(*args, status=None, **kwargs):
         newline = True
 
     print(status_to_ansi(status) + str(args[0]), *args[1:], **kwargs)
+
+def error(*args, **kwargs):
+    write(*args, **kwargs, status="error")
+    sys.exit(2)
 
 def dot(status: Status = None):
     global newline

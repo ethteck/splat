@@ -1,8 +1,7 @@
-from typing import Union, List, Tuple
+from typing import Union, List
 from pathlib import Path
 from util import options
 from segtypes.segment import Segment
-from segtypes.n64.code import Subsegment
 import re
 
 # clean 'foo/../bar' to 'bar'
@@ -33,19 +32,11 @@ def to_cname(symbol: str) -> str:
     return symbol
 
 class LinkerEntry:
-    def __init__(self, segment_or_subsegment: Union[Segment, Subsegment], src_paths: List[Path], object_path: Path, section: str):
-        self.segment_or_subsegment = segment_or_subsegment
+    def __init__(self, segment: Segment, src_paths: List[Path], object_path: Path, section: str):
+        self.segment = segment
         self.src_paths = [clean_up_path(p) for p in src_paths]
         self.object_path = path_to_object_path(object_path)
         self.section = section
-
-    def segment(self) -> Segment:
-        if isinstance(self.segment_or_subsegment, Segment):
-            return self.segment_or_subsegment
-        else:
-            parent = self.segment_or_subsegment.parent
-            assert isinstance(parent, Segment)
-            return parent
 
 class LinkerWriterFacade:
     def __init__(self, shiftable: bool):
@@ -83,20 +74,20 @@ class LinkerWriter(LinkerWriterFacade):
         for i, entry in enumerate(entries):
             if entry.section == "linker": # TODO: isinstance is preferable
                 self._end_block()
-                self._begin_segment(entry.segment_or_subsegment)
+                self._begin_segment(entry.segment)
 
-            start = entry.segment_or_subsegment.rom_start
+            start = entry.segment.rom_start
             if isinstance(start, int):
                 # Create new sections for non-0x10 alignment (hack)
                 if start % 0x10 != 0 and i != 0 or do_next:
                     self._end_block()
-                    self._begin_segment(entry.segment_or_subsegment)
+                    self._begin_segment(entry.segment)
                     do_next = False
 
                 if start % 0x10 != 0 and i != 0:
                     do_next = True
 
-            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment_or_subsegment.dir / entry.segment_or_subsegment.name) + ".".join(entry.object_path.suffixes[:-1]))
+            path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment.dir / entry.segment.name) + ".".join(entry.object_path.suffixes[:-1]))
             self._write_symbol(path_cname, ".")
 
             if entry.section != "linker":
@@ -153,7 +144,7 @@ class LinkerWriter(LinkerWriterFacade):
         self._writeln(f"{symbol} = {value};")
         self.symbols.append(symbol)
 
-    def _begin_segment(self, segment: Union[Segment, Subsegment]):
+    def _begin_segment(self, segment: Segment):
         # force location if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_start, int):
             self._writeln(f". = 0x{segment.rom_start:X};")
@@ -161,8 +152,7 @@ class LinkerWriter(LinkerWriterFacade):
         vram = segment.vram_start
         vram_str = f"0x{vram:X}" if isinstance(vram, int) else ""
 
-        # should be if segment.parent:
-        if isinstance(segment, Subsegment) and segment.parent:
+        if segment.parent:
             name = to_cname(segment.parent.name + "_" + segment.name)
         else:
             name = to_cname(segment.name)
@@ -172,11 +162,10 @@ class LinkerWriter(LinkerWriterFacade):
         self._writeln(f".{name} {vram_str} : AT({name}_ROM_START) SUBALIGN({segment.subalign})")
         self._begin_block()
 
-    def _end_segment(self, segment: Union[Segment, Subsegment]):
+    def _end_segment(self, segment: Segment):
         self._end_block()
 
-        # should be if segment.parent:
-        if isinstance(segment, Subsegment) and segment.parent:
+        if segment.parent:
             name = to_cname(segment.parent.name + "_" + segment.name)
         else:
             name = to_cname(segment.name)

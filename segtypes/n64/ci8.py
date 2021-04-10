@@ -1,5 +1,6 @@
 from segtypes.n64.rgba16 import N64SegRgba16
 import png
+from util import log
 from util import options
 
 
@@ -21,15 +22,14 @@ class N64SegCi8(N64SegRgba16):
         palettes = [seg for seg in segments if seg.type == "palette" and seg.image_name == self.name]
 
         if len(palettes) == 0:
-            self.error(f"no palette sibling segment exists\n(hint: add a segment with type 'palette' and name '{self.name}')")
-            return
+            log.error(f"no palette sibling segment exists\n(hint: add a segment with type 'palette' and name '{self.name}')")
 
         seen_paths = []
 
         for pal_seg in palettes:
             if pal_seg.path in seen_paths:
-                self.error(f"palette name '{pal_seg.name}' is not unique")
-                return
+                log.error(f"palette name '{pal_seg.name}' is not unique")
+
             seen_paths.append(pal_seg.path)
 
             w = png.Writer(self.width, self.height, palette=pal_seg.palette)
@@ -44,8 +44,7 @@ class N64SegCi8(N64SegRgba16):
 
             with open(self.path, "wb") as f:
                 w.write_array(f, self.image)
-                self.log(
-                    f"No unnamed palette for {self.name}; wrote image data to {self.path}")
+                self.log(f"No unnamed palette for {self.name}; wrote image data to {self.path}")
 
     @staticmethod
     def parse_image(data, width, height, flip_h=False, flip_v=False):

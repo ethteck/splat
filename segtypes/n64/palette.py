@@ -1,16 +1,14 @@
-import os
-import sys
-
 from segtypes.n64.segment import N64Segment
 from util import options
 from util.color import unpack_color
 from util.iter import iter_in_groups
+from util import log
 
 class N64SegPalette(N64Segment):
     require_unique_name = False
 
-    def __init__(self, segment, next_segment):
-        super().__init__(segment, next_segment)
+    def __init__(self, segment, rom_start, rom_end):
+        super().__init__(segment, rom_start, rom_end)
 
         # palette segments must be named as one of the following:
         #  1) same as the relevant ci4/ci8 segment name (max. 1 palette)
@@ -23,11 +21,10 @@ class N64SegPalette(N64Segment):
             expected_len = int(self.max_length())
             actual_len = self.rom_end - self.rom_start
             if actual_len > expected_len and actual_len - expected_len > self.subalign:
-                print(f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)")
-                sys.exit(1)
+                log.error(f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)")
 
-    def should_run(self):
-        return super().should_run() or (
+    def should_split(self):
+        return super().should_split() or (
             options.mode_active("img") or
             options.mode_active("ci4") or
             options.mode_active("ci8") or
