@@ -40,7 +40,7 @@ options:
     type: code
     start: 0x1000
     vram: 0x{:X}
-    subsections:
+    subsegments:
       - [0x1000, asm]
   - type: bin
     start: 0x{:X}

@@ -105,14 +105,14 @@ class Segment:
         self.vram_start = parse_segment_vram(segment)
         self.extract = bool(segment.get("extract", True)) if isinstance(segment, dict) else True
         self.config = segment
-        self.subalign = parse_segment_subalign(segment)
+        self.given_subalign = parse_segment_subalign(segment)
         self.parent:Optional[Segment] = None
-        self.c_sibling:Optional[Segment] = None
         self.args:List[str] = [] if isinstance(segment, dict) else segment[3:]
 
-        self.is_overlay:bool = segment.get("overlay", False) if isinstance(segment, dict) else False
+        self.given_is_overlay:Optional[bool] = segment.get("overlay", False) if isinstance(segment, dict) else False
 
         # For symbols
+        self.c_sibling:Optional[Segment] = None
         self.seg_symbols: Dict[int, Symbol] = {} # Symbols known to be in this segment
         self.ext_symbols: Dict[int, Symbol] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
         self.needs_symbols: bool = False
@@ -140,6 +140,21 @@ class Segment:
             return self.parent.dir / self.given_dir
         else:
             return self.given_dir
+    
+    @property
+    def subalign(self) -> int:
+        if self.parent:
+            return self.parent.subalign
+        else:
+            return self.given_subalign
+    
+    @property
+    def is_overlay(self) -> bool:
+        if self.parent:
+            return self.parent.is_overlay
+        if self.given_is_overlay is not None:
+            return self.given_is_overlay
+        return False
 
     @property
     def size(self) -> Optional[int]:
@@ -203,8 +218,21 @@ class Segment:
     def cache(self):
         return (self.config, self.rom_end)
 
+    def get_linker_section(self) -> str:
+        return ".data"
+
+    def out_path(self) -> Optional[Path]:
+        return None
+
     def get_linker_entries(self) -> "List[LinkerEntry]":
-        return []
+        from segtypes.linker_entry import LinkerEntry
+
+        path = self.out_path()
+
+        if path:
+            return [LinkerEntry(self, [path], path, ".data")]
+        else:
+            return []
 
     def log(self, msg):
         if options.get("verbose", False):

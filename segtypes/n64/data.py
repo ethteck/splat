@@ -1,33 +1,37 @@
+from pathlib import Path
+from typing import Optional
 from util.symbols import Symbol
 from segtypes.n64.code import N64SegCode
 from util import floats, options
 
 class N64SegData(N64SegCode):
+    def out_path(self) -> Optional[Path]:
+        if self.type.startswith("."):
+            return None
+        return options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
+
     def scan(self, rom_bytes: bytes):
         self.file_text = self.disassemble_data(self, rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if self.file_text:
-            asm_out_dir = options.get_asm_path() / "data" / self.dir
-            asm_out_dir.mkdir(parents=True, exist_ok=True)
+            path = self.out_path()
+            
+            if path:
+                path.parent.mkdir(parents=True, exist_ok=True)
 
-            outpath = asm_out_dir / f"{self.name}.{self.type}.s"
-
-            with open(outpath, "w", newline="\n") as f:
-                f.write(self.file_text)
+                with open(path, "w", newline="\n") as f:
+                    f.write(self.file_text)
 
     def get_linker_entries(self):
-        # TODO change if dot
         from segtypes.linker_entry import LinkerEntry
 
-        path = options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
+        if self.c_sibling:
+            path = self.c_sibling.out_path()
+        else:
+            path = self.out_path()
 
-        return [LinkerEntry(
-            self,
-            [path],
-            path,
-            ".data",
-        )]
+        return [LinkerEntry(self, [path], path, ".data")]
 
     def get_symbols_for_file(self, sub):
         ret = []

@@ -5,6 +5,7 @@
 * Some cli args for splat have been renamed. Please consult the usage output (-h or no args) for more information
 * The `name` attribute of a segment now should no longer be a subdirectory but rather a meaningful name for the segment which will be used as the name of the linker section. If your `name` was previously a directory, please change it into a `dir`.
 * The new `dir` attribute of a segment specifies a subdirectory into which files will be saved. You can combine `dir` ("foo") with a subsection file name containing a subdirectory ("bar/out"), and the paths will be joined (foo/bar/out.c)
+* `subsegments` should now be named `subsegments` as they are 
 Note: if the `dir` attribute is specified but the `name` isn't, the `name` effectively becomes `dir` but with directory separation slashes replaced with underscores (foo/bar/baz -> foo_bar_baz)
 
 ### 0.6.5: Bugfixes, rodata migration, and made options static
@@ -23,13 +24,13 @@ The `out_dir` option specifies a directory relative to the config file. If your 
 
 The `target_path` option spcifies a path to the binary file to split, relative to the `out_dir`. If your `baserom.z64` is in the top-level of the repo, you can set `target_path: baserom.z64`, for example.
 
-### 0.6.2: Subsections
+### 0.6.2: subsegments
 I've begun a refactor of the code "files" code, which makes everything cleaner and easier to extend.
 There's also a new option, `create_new_c_files`, which disables the creation of nonexistent c files. This behavior is on by default, but if you want to disable it for any reason, you now have the option to do so.
 
 I am also working on adding bss support as well. It should almost be all set, aside from the changes needed in the linker script.
 
-**Breaking change**: The `files` field in `code` segments should now be renamed to `subsections`.
+**Breaking change**: The `files` field in `code` segments should now be renamed to `subsegments`.
 
 ### 0.6.1: `assets_dir` option
 

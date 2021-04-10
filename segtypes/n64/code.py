@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Set
+from typing import Optional, Set
 import os
 import re
 import sys
@@ -8,14 +8,13 @@ from pathlib import Path
 from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 from capstone.mips import *
 
-from segtypes.n64.segment import N64Segment
-from segtypes.segment import RomAddr, Segment
+from segtypes.segment import Segment
 from util import options
 from util import symbols
 from util.symbols import Symbol
 
 
-class N64SegCode(N64Segment):
+class N64SegCode(Segment):
     double_mnemonics = ["ldc1", "sdc1"]
     word_mnemonics = ["addiu", "sw", "lw", "jtbl"]
     float_mnemonics = ["lwc1", "swc1"]
@@ -83,42 +82,42 @@ class N64SegCode(N64Segment):
 
         return set(m.group(2) for m in N64SegCode.C_FUNC_RE.finditer(text))
 
-    def scan_inner(self, segment, rom_bytes):
+    def scan(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
                 output_path = self.get_generic_out_path()
                 if options.get("do_c_func_detection", True) and os.path.exists(output_path):
                     # TODO run cpp?
                     self.defined_funcs = N64SegCode.get_funcs_defined_in_c(output_path)
-                    segment.mark_c_funcs_as_defined(self.defined_funcs)
+                    self.mark_c_funcs_as_defined(self.defined_funcs)
 
             insns = [insn for insn in N64SegCode.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
-            funcs = segment.process_insns(insns, self.rom_start)
+            funcs = self.process_insns(insns, self.rom_start)
 
             # TODO: someday make func a subclass of symbol and store this disasm info there too
             for func in funcs:
-                segment.get_symbol(func, type="func", create=True, define=True, local_only=True)
+                self.parent.get_symbol(func, type="func", create=True, define=True, local_only=True)
 
-            funcs = segment.determine_symbols(funcs)
-            segment.gather_jumptable_labels(rom_bytes)
-            self.funcs_text = segment.add_labels(funcs)
+            funcs = self.determine_symbols(funcs)
+            self.gather_jumptable_labels(rom_bytes)
+            self.funcs_text = self.add_labels(funcs)
 
-    def split_inner(self, segment, rom_bytes):
+    def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
             if self.type == "c":
                 asm_out_dir = options.get_asm_path() / "nonmatchings" / self.parent.dir
                 asm_out_dir.mkdir(parents=True, exist_ok=True)
 
                 for func in self.funcs_text:
-                    func_name = segment.get_symbol(func, type="func", local_only=True).name
+                    func_name = self.get_symbol(func, type="func", local_only=True).name
 
                     if func_name not in self.defined_funcs:
-                        segment.create_c_asm_file(self.funcs_text, func, asm_out_dir, self, func_name)
+                        self.create_c_asm_file(self.funcs_text, func, asm_out_dir, self, func_name)
 
                 out_path = self.get_generic_out_path()
                 if not os.path.exists(out_path) and options.get("create_new_c_files", True):
-                    segment.create_c_file(self.funcs_text, self, asm_out_dir, out_path)
+                    self.create_c_file(self.funcs_text, self, asm_out_dir, out_path)
             else:
                 asm_out_dir = options.get_asm_path()
                 asm_out_dir.mkdir(parents=True, exist_ok=True)
@@ -133,49 +132,6 @@ class N64SegCode(N64Segment):
                 if self.type == "asm" or not outpath.exists():
                     with open(outpath, "w", newline="\n") as f:
                         f.write("\n".join(out_lines))
-
-    def parse_subsegments(self, segment_yaml) -> List[Segment]:
-        base_segments: Dict[str, Segment] = {}
-        ret = []
-        prev_start: RomAddr = -1
-
-        if "subsections" not in segment_yaml:
-            print(f"Error: Code segment {self.name} is missing a 'subsections' field")
-            sys.exit(2)
-
-        for i, subsection_yaml in enumerate(segment_yaml["subsections"]):
-            typ = Segment.parse_segment_type(subsection_yaml)
-
-            segment_class = Segment.get_class_for_type(typ)
-
-            start = Segment.parse_segment_start(subsection_yaml)
-            end = self.rom_end if i == len(segment_yaml["subsections"]) - 1 else Segment.parse_segment_start(segment_yaml["subsections"][i + 1])
-            
-            if isinstance(start, int) and isinstance(prev_start, int) and start < prev_start:
-                print(f"Error: Code segment {self.name} contains subsections which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
-                sys.exit(1)
-
-            segment: Segment = segment_class(subsection_yaml, start, end)
-            segment.c_sibling = base_segments.get(segment.name, None)
-            segment.parent = self
-
-            if self.rodata_vram_start == -1 and "rodata" in typ:
-                self.rodata_vram_start: Optional[int] = segment.vram_start
-            if self.rodata_vram_end == -1 and "bss" in typ:
-                self.rodata_vram_end: Optional[int] = segment.vram_start
-
-            ret.append(segment)
-
-            if typ in ["c", "asm", "hasm"]:
-                base_segments[segment.name] = segment
-
-            prev_start = start
-
-        if self.rodata_vram_start != -1 and self.rodata_vram_end == -1:
-            assert self.vram_end is not None
-            self.rodata_vram_end = self.vram_end
-
-        return ret
 
     def get_linker_entries(self):
         return [sub.get_linker_entry() for sub in self.subsegments]
@@ -655,10 +611,3 @@ class N64SegCode(N64Segment):
         with open(c_path, "w") as f:
             f.write("\n".join(c_lines))
         print(f"Wrote {sub.name} to {c_path}")
-
-    def split(self, rom_bytes):
-        for sub in self.subsegments:
-            sub.scan(self, rom_bytes)
-
-        for sub in self.subsegments:
-            sub.split(self, rom_bytes)
