@@ -8,7 +8,7 @@ import yaml
 import pickle
 from colorama import Style, Fore
 from segtypes.segment import Segment
-from segtypes.linker_entry import LinkerWriter, LinkerWriterFacade
+from segtypes.linker_entry import LinkerWriter
 from util import log
 from util import options
 from util import symbols
@@ -24,6 +24,7 @@ parser.add_argument("--use-cache", action="store_true", help="Only split changed
 
 sym_isolated_map: Dict[Symbol, int] = {}
 
+linker_writer: LinkerWriter
 
 def fmt_size(size):
     if size > 1000000:
@@ -120,7 +121,7 @@ def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
             log.write(f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached")
     log.write(f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files")
 
-def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> LinkerWriterFacade:
+def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Load config
     with open(config_path) as f:
         config = yaml.load(f.read(), Loader=yaml.SafeLoader)
@@ -138,9 +139,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
     symbols.initialize()
 
     processed_segments: List[Segment] = []
-
-    LWClass = LinkerWriter if options.mode_active("ld") else LinkerWriterFacade
-    linker_writer = LWClass(options.get("shiftable", False))
 
     seg_sizes: Dict[str, int] = {}
     seg_split: Dict[str, int] = {}
@@ -209,14 +207,17 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
                 seg_split[typ] += 1
 
         log.dot(status=segment.status())
-        linker_writer.add(segment)
 
     for segment in processed_segments:
         segment.postsplit(processed_segments)
         log.dot(status=segment.status())
 
-    linker_writer.save_linker_script(options.get_ld_script_path())
-    linker_writer.save_symbol_header(options.get_linker_symbol_header_path())
+    if options.mode_active("ld"):
+        for segment in all_segments:
+            global linker_writer
+            linker_writer = LinkerWriter()
+            linker_writer.save_linker_script()
+            linker_writer.save_symbol_header()
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in symbols.all_symbols if s.referenced and not s.defined and not s.dead and s.type == "func"]
@@ -251,8 +252,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True) -> 
             log.write("Writing cache")
         with open(options.get_cache_path(), "wb") as f4:
             pickle.dump(cache, f4)
-
-    return linker_writer
 
 if __name__ == "__main__":
     args = parser.parse_args()

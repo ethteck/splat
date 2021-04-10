@@ -38,23 +38,10 @@ class LinkerEntry:
         self.object_path = path_to_object_path(object_path)
         self.section = section
 
-class LinkerWriterFacade:
-    def __init__(self, shiftable: bool):
-        self.shiftable = shiftable
+class LinkerWriter():
+    def __init__(self):
+        self.shiftable: bool = options.get("shiftable", False)
         self.entries: List[LinkerEntry] = []
-
-    def add(self, segment: Segment):
-        self.entries.extend(segment.get_linker_entries())
-
-    def save_linker_script(self, path: Path):
-        pass
-
-    def save_symbol_header(self, path: Path):
-        pass
-
-class LinkerWriter(LinkerWriterFacade):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
         self.buffer: List[str] = []
         self.symbols: List[str] = []
@@ -95,7 +82,7 @@ class LinkerWriter(LinkerWriterFacade):
 
         self._end_segment(segment)
 
-    def save_linker_script(self, path: Path):
+    def save_linker_script(self):
         self._writeln("/DISCARD/ :")
         self._begin_block()
         self._writeln("*(*);")
@@ -105,10 +92,10 @@ class LinkerWriter(LinkerWriterFacade):
 
         assert self._indent_level == 0
 
-        write_file_if_different(path, "\n".join(self.buffer) + "\n")
+        write_file_if_different(options.get_ld_script_path(), "\n".join(self.buffer) + "\n")
 
-    def save_symbol_header(self, path: Path):
-        write_file_if_different(path,
+    def save_symbol_header(self):
+        write_file_if_different(options.get_linker_symbol_header_path(),
             "#ifndef _HEADER_SYMBOLS_H_\n"
             "#define _HEADER_SYMBOLS_H_\n"
             "\n"
