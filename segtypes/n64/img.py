@@ -1,5 +1,8 @@
+from pathlib import Path
+from typing import Optional
 from segtypes.n64.segment import N64Segment
+from util import options
 
-# TODO
 class N64SegImg(N64Segment):
-    pass
+    def out_path(self) -> Optional[Path]:
+        return options.get_asset_path() / self.dir / f"{self.name}.png"

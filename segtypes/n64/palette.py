@@ -61,5 +61,5 @@ class N64SegPalette(N64Segment):
             self,
             [options.get_asset_path() / self.dir / f"{self.name}.png"],
             options.get_asset_path() / self.dir / f"{self.name}.pal",
-            ".data"
+            self.get_linker_section()
         )]

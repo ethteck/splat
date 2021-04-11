@@ -111,10 +111,7 @@ class Segment:
 
         self.given_is_overlay:Optional[bool] = segment.get("overlay", False) if isinstance(segment, dict) else False
 
-        # For symbols
-        self.c_sibling:Optional[Segment] = None
-        self.seg_symbols: Dict[int, Symbol] = {} # Symbols known to be in this segment
-        self.ext_symbols: Dict[int, Symbol] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
+        self.sibling:Optional[Segment] = None
         self.needs_symbols: bool = False
 
         if "skip" in self.args:
@@ -230,7 +227,7 @@ class Segment:
         path = self.out_path()
 
         if path:
-            return [LinkerEntry(self, [path], path, ".data")]
+            return [LinkerEntry(self, [path], path, self.get_linker_section())]
         else:
             return []
 

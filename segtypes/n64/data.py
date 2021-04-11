@@ -11,7 +11,7 @@ class N64SegData(N64SegCode):
         return options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
 
     def scan(self, rom_bytes: bytes):
-        self.file_text = self.disassemble_data(self, rom_bytes)
+        self.file_text = self.disassemble_data(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if self.file_text:
@@ -26,29 +26,29 @@ class N64SegData(N64SegCode):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        if self.c_sibling:
-            path = self.c_sibling.out_path()
+        if self.sibling:
+            path = self.sibling.out_path()
         else:
             path = self.out_path()
 
-        return [LinkerEntry(self, [path], path, ".data")]
+        return [LinkerEntry(self, [path], path, self.get_linker_section())]
 
-    def get_symbols_for_file(self, sub):
+    def get_symbols(self):
         ret = []
 
         for symbol_addr in self.seg_symbols:
             for symbol in self.seg_symbols[symbol_addr]:
-                if not symbol.dead and sub.contains_vram(symbol.vram_start):
+                if not symbol.dead and self.contains_vram(symbol.vram_start):
                     ret.append(symbol)
 
         ret.sort(key=lambda s:s.vram_start)
 
         # Ensure we start at the beginning
-        if len(ret) == 0 or ret[0].vram_start != sub.vram_start:
-            ret.insert(0, self.get_symbol(sub.vram_start, create=True, define=True, local_only=True))
+        if len(ret) == 0 or ret[0].vram_start != self.vram_start:
+            ret.insert(0, self.get_symbol(self.vram_start, create=True, define=True, local_only=True))
 
         # Make a dummy symbol here that marks the end of the previous symbol's disasm range
-        ret.append(Symbol(sub.vram_end))
+        ret.append(Symbol(self.vram_end))
 
         return ret
 
@@ -140,15 +140,15 @@ class N64SegData(N64SegCode):
 
         return sym_str
     
-    def disassemble_data(self, sub, rom_bytes):
-        rodata_encountered = sub.type == "rodata"
+    def disassemble_data(self, rom_bytes):
+        rodata_encountered = self.type == "rodata"
         ret = ".include \"macro.inc\"\n\n"
-        ret += f'.section .{sub.type}'
+        ret += f'.section {self.get_linker_section()}'
 
-        if sub.size == 0:
+        if self.size == 0:
             return None
 
-        syms = self.get_symbols_for_file(sub)
+        syms = self.get_symbols()
 
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
@@ -158,7 +158,7 @@ class N64SegData(N64SegCode):
             dis_end = self.ram_to_rom(syms[i + 1].vram_start)
             sym_len = dis_end - dis_start
 
-            if sub.type == "bss":
+            if self.type == "bss":
                 ret += f".space 0x{sym_len:X}"
             else:
                 sym_bytes = rom_bytes[dis_start : dis_end]

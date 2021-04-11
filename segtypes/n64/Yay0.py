@@ -23,5 +23,5 @@ class N64SegYay0(N64Segment):
             self,
             [options.get_asset_path() / self.dir / f"{self.name}.bin"],
             options.get_asset_path() / self.dir / f"{self.name}.Yay0",
-            ".data"
+            self.get_linker_section()
         )]

@@ -1,9 +1,6 @@
-from typing import Optional, Set
-import os
+from typing import Dict, Optional
 import re
-import sys
 from collections import OrderedDict
-from pathlib import Path
 
 from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 from capstone.mips import *
@@ -34,107 +31,32 @@ class N64SegCode(Segment):
         self.jtbl_jumps = {}
         self.jumptables = {}
 
+        # For symbols
+        self.sibling:Optional[Segment] = None
+        self.seg_symbols: Dict[int, Symbol] = {} # Symbols known to be in this segment
+        self.ext_symbols: Dict[int, Symbol] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
+
         self.rodata_syms = {}
         self.needs_symbols = True
-
-    defined_funcs: Set[str] = set()
     
-    STRIP_C_COMMENTS_RE = re.compile(
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
-    )
+    def disassemble_code(self, rom_bytes):
+        insns = [insn for insn in N64SegCode.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
-    C_FUNC_RE = re.compile(
-        r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
-        re.MULTILINE
-    )
+        funcs = self.process_insns(insns, self.rom_start)
 
-    @staticmethod
-    def strip_c_comments(text):
-        def replacer(match):
-            s = match.group(0)
-            if s.startswith("/"):
-                return " "
-            else:
-                return s
-        return re.sub(N64SegCode.STRIP_C_COMMENTS_RE, replacer, text)
+        # TODO: someday make func a subclass of symbol and store this disasm info there too
+        for func in funcs:
+            self.get_symbol(func, type="func", create=True, define=True, local_only=True)
 
-    @staticmethod
-    def get_standalone_asm_header():
-        ret = []
+        funcs = self.determine_symbols(funcs)
+        self.gather_jumptable_labels(rom_bytes)
+        self.funcs_text = self.add_labels(funcs)
 
-        ret.append(".include \"macro.inc\"")
-        ret.append("")
-        ret.append("# assembler directives")
-        ret.append(".set noat      # allow manual use of $at")
-        ret.append(".set noreorder # don't insert nops after branches")
-        ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
-        ret.append("")
-        ret.append(".section .text, \"ax\"")
-        ret.append("")
-
-        return ret
-
-    @staticmethod
-    def get_funcs_defined_in_c(c_file):
-        with open(c_file, "r") as f:
-            text = N64SegCode.strip_c_comments(f.read())
-
-        return set(m.group(2) for m in N64SegCode.C_FUNC_RE.finditer(text))
-
-    def scan(self, rom_bytes: bytes):
-        if not self.rom_start == self.rom_end:
-            if self.type == "c":
-                output_path = self.get_generic_out_path()
-                if options.get("do_c_func_detection", True) and os.path.exists(output_path):
-                    # TODO run cpp?
-                    self.defined_funcs = N64SegCode.get_funcs_defined_in_c(output_path)
-                    self.mark_c_funcs_as_defined(self.defined_funcs)
-
-            insns = [insn for insn in N64SegCode.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
-
-            funcs = self.process_insns(insns, self.rom_start)
-
-            # TODO: someday make func a subclass of symbol and store this disasm info there too
-            for func in funcs:
-                self.parent.get_symbol(func, type="func", create=True, define=True, local_only=True)
-
-            funcs = self.determine_symbols(funcs)
-            self.gather_jumptable_labels(rom_bytes)
-            self.funcs_text = self.add_labels(funcs)
-
-    def split(self, rom_bytes: bytes):
-        if not self.rom_start == self.rom_end:
-            if self.type == "c":
-                asm_out_dir = options.get_asm_path() / "nonmatchings" / self.parent.dir
-                asm_out_dir.mkdir(parents=True, exist_ok=True)
-
-                for func in self.funcs_text:
-                    func_name = self.get_symbol(func, type="func", local_only=True).name
-
-                    if func_name not in self.defined_funcs:
-                        self.create_c_asm_file(self.funcs_text, func, asm_out_dir, self, func_name)
-
-                out_path = self.get_generic_out_path()
-                if not os.path.exists(out_path) and options.get("create_new_c_files", True):
-                    self.create_c_file(self.funcs_text, self, asm_out_dir, out_path)
-            else:
-                asm_out_dir = options.get_asm_path()
-                asm_out_dir.mkdir(parents=True, exist_ok=True)
-
-                out_lines = self.get_standalone_asm_header()
-                for func in self.funcs_text:
-                    out_lines.extend(self.funcs_text[func][0])
-                    out_lines.append("")
-
-                outpath = asm_out_dir / (self.name + ".s")
-
-                if self.type == "asm" or not outpath.exists():
-                    with open(outpath, "w", newline="\n") as f:
-                        f.write("\n".join(out_lines))
+    def get_linker_section(self) -> str:
+        return ".text"
 
     def get_linker_entries(self):
-        return [sub.get_linker_entry() for sub in self.subsegments]
+        pass
 
     def retrieve_symbol(self, d, k, t):
         if k not in d:
@@ -186,6 +108,7 @@ class N64SegCode(Segment):
         if not ret and offsets:
             ret = self.retrieve_symbol_from_ranges(addr, rom)
 
+        # Reject dead symbols unless we allow them
         if not dead and ret and ret.dead:
             ret = None
 
@@ -210,14 +133,6 @@ class N64SegCode(Segment):
                 ret.defined = True
             if reference:
                 ret.referenced = True
-
-        return ret
-
-    def get_gcc_inc_header(self):
-        ret = []
-        ret.append(".set noat      # allow manual use of $at")
-        ret.append(".set noreorder # don't insert nops after branches")
-        ret.append("")
 
         return ret
 
@@ -323,12 +238,6 @@ class N64SegCode(Segment):
             next(reversed(ret.values())).extend(func)
 
         return ret
-
-    def get_subsection_for_ram(self, addr):
-        for sub in self.subsegments:
-            if sub.contains_vram(addr):
-                return sub
-        return None
 
     def update_access_mnemonic(self, sym, mnemonic):
         if not sym.access_mnemonic:
@@ -520,15 +429,6 @@ class N64SegCode(Segment):
 
         return ret
 
-    def get_c_preamble(self):
-        ret = []
-
-        preamble = options.get("generated_c_preamble", "#include \"common.h\"")
-        ret.append(preamble)
-        ret.append("")
-
-        return ret
-
     def gather_jumptable_labels(self, rom_bytes):
         # TODO: use the seg_symbols for this
         # jumptables = [j.type == "jtbl" for j in self.seg_symbols]
@@ -548,66 +448,3 @@ class N64SegCode(Segment):
                     break
 
                 rom_offset += 4
-
-    def mark_c_funcs_as_defined(self, c_funcs):
-        for func_name in c_funcs:
-            found = False
-            for func_addr in self.seg_symbols:
-                for symbol in self.seg_symbols[func_addr]:
-                    if symbol.name == func_name:
-                        symbol.defined = True
-                        found = True
-                        break
-                if found:
-                    break
-
-    def create_c_asm_file(self, funcs_text, func, out_dir, sub, func_name):
-        if options.get_compiler() == "GCC":
-            out_lines = self.get_gcc_inc_header()
-        else:
-            out_lines = []
-
-        if func in self.rodata_syms:
-            func_rodata = list({s for s in self.rodata_syms[func] if s.disasm_str})
-            func_rodata.sort(key=lambda s:s.vram_start)
-
-            if len(func_rodata) > 0:
-                rsub = self.get_subsection_for_ram(func_rodata[0].vram_start)
-                if rsub and rsub.type != "rodata":
-                    out_lines.append(".section .rodata")
-
-                    for sym in func_rodata:
-                        if sym.disasm_str:
-                            out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
-
-                    out_lines.append("")
-                    out_lines.append(".section .text")
-                    out_lines.append("")
-
-        out_lines.extend(funcs_text[func][0])
-        out_lines.append("")
-
-        outpath = Path(os.path.join(out_dir, sub.name, func_name + ".s"))
-        outpath.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(outpath, "w", newline="\n") as f:
-            f.write("\n".join(out_lines))
-        self.log(f"Disassembled {func_name} to {outpath}")
-
-    def create_c_file(self, funcs_text, sub, asm_out_dir, c_path):
-        c_lines = self.get_c_preamble()
-
-        for func in funcs_text:
-            func_name = self.get_symbol(func, type="func", local_only=True).name
-            if options.get_compiler() == "GCC":
-                c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(sub.name, func_name))
-            else:
-                asm_outpath = Path(os.path.join(asm_out_dir, sub.name, func_name + ".s"))
-                rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
-                c_lines.append(f"#pragma GLOBAL_ASM(\"{rel_asm_outpath}\")")
-            c_lines.append("")
-
-        Path(c_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(c_path, "w") as f:
-            f.write("\n".join(c_lines))
-        print(f"Wrote {sub.name} to {c_path}")

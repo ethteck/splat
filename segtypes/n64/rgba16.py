@@ -4,7 +4,6 @@ from util import iter
 from util import log
 from util import options
 from util.color import unpack_color
-import sys
 
 # TODO: move common behaviour to N64ImgSegment and have all image segments extend that instead
 class N64SegRgba16(N64SegImg):
@@ -40,7 +39,7 @@ class N64SegRgba16(N64SegImg):
         return super().should_split() or options.mode_active("img")
 
     def split(self, rom_bytes):
-        path = options.get_asset_path() / self.dir / (self.name + ".png")
+        path = self.out_path()
         path.parent.mkdir(parents=True, exist_ok=True)
 
         data = rom_bytes[self.rom_start: self.rom_end]
@@ -66,10 +65,3 @@ class N64SegRgba16(N64SegImg):
 
     def max_length(self):
         return self.width * self.height * 2
-
-    def get_linker_entries(self):
-        from segtypes.linker_entry import LinkerEntry
-
-        path = options.get_asset_path() / self.dir / f"{self.name}.png"
-
-        return [LinkerEntry(self, [path], path, ".data")]

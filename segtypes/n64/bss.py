@@ -1,10 +1,9 @@
-from pathlib import Path
-from typing import Optional
-from segtypes.n64.code import N64SegCode
+from segtypes.n64.data import N64SegData
+from util import log
 
-class N64SegBss(N64SegCode):
-    def out_path(self) -> Optional[Path]:
-        return None
+class N64SegBss(N64SegData):    
+    def get_linker_section(self) -> str:
+        return ".bss"
 
     def scan(self, rom_bytes: bytes):
         pass
@@ -15,9 +14,9 @@ class N64SegBss(N64SegCode):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        if self.c_sibling:
-            path = self.c_sibling.out_path()
+        if self.sibling:
+            path = self.sibling.out_path()
         else:
-            path = self.out_path()
+            log.error("Unlinked bss sections currently unsupported")
 
-        return [LinkerEntry(self, [path], path, ".bss")]
+        return [LinkerEntry(self, [path], path, self.get_linker_section())]
