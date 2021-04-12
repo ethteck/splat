@@ -85,8 +85,24 @@ class N64SegGroup(N64Segment):
 
     def scan(self, rom_bytes):
         for sub in self.subsegments:
-            sub.scan(rom_bytes)
+            if sub.should_scan():
+                sub.scan(rom_bytes)
 
     def split(self, rom_bytes):
         for sub in self.subsegments:
-            sub.split(rom_bytes)
+            if sub.should_split():
+                sub.split(rom_bytes)
+
+    def should_split(self) -> bool:
+        return self.extract
+    
+    def should_scan(self) -> bool:
+        return self.extract
+
+    def cache(self):
+        c = []
+
+        for sub in self.subsegments:
+            c.append(sub.cache())
+        
+        return c

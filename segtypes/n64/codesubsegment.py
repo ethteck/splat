@@ -356,3 +356,9 @@ class N64SegCodeSubsegment(Segment):
                     break
 
                 rom_offset += 4
+
+    def should_scan(self) -> bool:
+        return self.should_split()
+    
+    def should_split(self) -> bool:
+        return self.extract and options.mode_active("code")

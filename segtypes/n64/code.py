@@ -6,7 +6,6 @@ from util.symbols import Symbol
 
 # code group
 class N64SegCode(N64SegGroup):
-
     def __init__(self, segment, rom_start, rom_end):
         super().__init__(segment, rom_start, rom_end)
 

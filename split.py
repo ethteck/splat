@@ -172,16 +172,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         seg_sizes[typ] += 0 if segment.size is None else segment.size
 
         if segment.should_scan():
-            # Check cache
+            # Check cache but don't write anything
             if use_cache:
-                cached = segment.cache()
-
-                if cached == cache.get(segment.unique_id()):
-                    # Cache hit
+                if segment.cache() == cache.get(segment.unique_id()):
                     continue
-                else:
-                    # Cache miss
-                    cache[segment.unique_id()] = cached
 
             if segment.needs_symbols:
                 segment_symbols, other_symbols = get_segment_symbols(segment, all_segments)
@@ -200,18 +194,19 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Split
     log.write("Starting split")
     for segment in all_segments:
+        if use_cache:
+            cached = segment.cache()
+
+            if cached == cache.get(segment.unique_id()):
+                # Cache hit
+                seg_cached[typ] += 1
+                continue
+            else:
+                # Cache miss; split
+                cache[segment.unique_id()] = cached
+
+        print(segment.name, segment.should_split())
         if segment.should_split():
-            if use_cache:
-                cached = segment.cache()
-
-                if cached == cache.get(segment.unique_id()):
-                    # Cache hit
-                    seg_cached[typ] += 1
-                    continue
-                else:
-                    # Cache miss; split
-                    cache[segment.unique_id()] = cached
-
             segment.split(rom_bytes)
 
         log.dot(status=segment.status())
