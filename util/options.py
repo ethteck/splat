@@ -41,12 +41,7 @@ def get_base_path() -> Path:
     return Path(opts["base_path"])
 
 def get_asset_path() -> Path:
-    asset_paths = opts.get("asset_paths", ["assets"])
-
-    if isinstance(asset_paths, str):
-        asset_paths = [asset_paths]
-
-    return get_base_path() / asset_paths[0]
+    return get_base_path() / opts.get("asset_path", "assets")
 
 def get_target_path() -> Path:
     return get_base_path() / opts["target_path"]
