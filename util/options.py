@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 from pathlib import Path
 from util import log
 
@@ -71,8 +71,11 @@ def get_build_path():
 def get_ld_script_path():
     return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
 
-def get_linker_symbol_header_path() -> Path:
-    return get_base_path() / str(opts.get("linker_symbol_header_path", "ld_addrs.h"))
+def get_linker_symbol_header_path() -> Optional[Path]:
+    if "linker_symbol_header_path" in opts:
+        return get_base_path() / str(opts["linker_symbol_header_path"])
+    else:
+        return None
 
 def get_extensions_path():
     ext_opt = opts.get("extensions_path")

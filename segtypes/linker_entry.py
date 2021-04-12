@@ -95,16 +95,19 @@ class LinkerWriter():
         write_file_if_different(options.get_ld_script_path(), "\n".join(self.buffer) + "\n")
 
     def save_symbol_header(self):
-        write_file_if_different(options.get_linker_symbol_header_path(),
-            "#ifndef _HEADER_SYMBOLS_H_\n"
-            "#define _HEADER_SYMBOLS_H_\n"
-            "\n"
-            "#include \"common.h\"\n"
-            "\n"
-            + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols) +
-            "\n"
-            "#endif\n"
-        )
+        path = options.get_linker_symbol_header_path()
+
+        if path:
+            write_file_if_different(path,
+                "#ifndef _HEADER_SYMBOLS_H_\n"
+                "#define _HEADER_SYMBOLS_H_\n"
+                "\n"
+                "#include \"common.h\"\n"
+                "\n"
+                + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols) +
+                "\n"
+                "#endif\n"
+            )
 
     def _writeln(self, line: str):
         if len(line) == 0:
