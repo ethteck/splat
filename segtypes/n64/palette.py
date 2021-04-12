@@ -27,6 +27,9 @@ class N64SegPalette(N64Segment):
             self.name.split(".")[0]
         ) if type(segment) is dict else self.name.split(".")[0]
 
+        if self.rom_end == "auto":
+            log.error(f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it")
+
         if self.max_length() and isinstance(self.rom_end, int):
             expected_len = int(self.max_length())
             actual_len = self.rom_end - self.rom_start
@@ -60,7 +63,7 @@ class N64SegPalette(N64Segment):
         self.raster.extract = False
 
     def parse_palette(self, rom_bytes):
-        data = rom_bytes[self.rom_start:self.rom_start + self.max_length()]
+        data = rom_bytes[self.rom_start:self.rom_end]
         palette = []
 
         for a, b in iter_in_groups(data, 2):

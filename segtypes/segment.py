@@ -266,7 +266,12 @@ class Segment:
         return self.name == self.get_default_name(self.rom_start)
 
     def unique_id(self):
-        return self.type + "_" + self.name
+        if self.parent:
+            s = self.parent.unique_id() + "_"
+        else:
+            s = ""
+
+        return s + self.type + "_" + self.name
 
     def status(self):
         if len(self.warnings) > 0:
