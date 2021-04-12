@@ -14,7 +14,3 @@ class N64SegBin(N64Segment):
         with open(path, "wb") as f:
             f.write(rom_bytes[self.rom_start : self.rom_end])
         self.log(f"Wrote {self.name} to {path}")
-
-    @staticmethod
-    def get_default_name(addr):
-        return "bin_{:X}".format(addr)

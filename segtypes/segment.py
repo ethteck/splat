@@ -233,9 +233,6 @@ class Segment:
     def split(self, rom_bytes: bytes):
         pass
 
-    def postsplit(self, segments: "List[Segment]"):
-        pass
-
     def cache(self):
         return (self.config, self.rom_end)
 

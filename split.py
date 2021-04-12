@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Set
 import argparse
 import pylibyaml
 import yaml
@@ -11,6 +11,7 @@ from segtypes.linker_entry import LinkerWriter
 from util import log
 from util import options
 from util import symbols
+from util import palettes
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file")
@@ -31,7 +32,7 @@ def fmt_size(size):
         return str(size) + " B"
 
 def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
-    seen_segment_names = set()
+    seen_segment_names: Set[str] = set()
     ret = []
 
     for i, seg_yaml in enumerate(config_segments[:-1]):
@@ -153,6 +154,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         log.write("Loading and processing symbols")
         symbols.initialize(all_segments)
 
+    # Resolve raster/palette siblings
+    if options.mode_active("img"):
+        palettes.initialize(all_segments)
+
     # Scan
     log.write("Starting scan")
     for segment in all_segments:
@@ -201,11 +206,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
         log.dot(status=segment.status())
 
-    # Postsplit #TODO remove
-    for segment in processed_segments:
-        segment.postsplit(processed_segments)
-        log.dot(status=segment.status())
-
     if options.mode_active("ld"):
         global linker_writer
         linker_writer = LinkerWriter()
@@ -228,7 +228,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
-    # print warnings during split/postsplit
+    # print warnings during split
     for segment in all_segments:
         if len(segment.warnings) > 0:
             log.write(f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:")
