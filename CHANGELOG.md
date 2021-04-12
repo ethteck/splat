@@ -1,12 +1,25 @@
 # splat Release Notes
 
 ## 0.7: The Path Update
-**Breaking Changes**
-* Some cli args for splat have been renamed. Please consult the usage output (-h or no args) for more information
-* The `name` attribute of a segment now should no longer be a subdirectory but rather a meaningful name for the segment which will be used as the name of the linker section. If your `name` was previously a directory, please change it into a `dir`.
-* The new `dir` attribute of a segment specifies a subdirectory into which files will be saved. You can combine `dir` ("foo") with a subsection file name containing a subdirectory ("bar/out"), and the paths will be joined (foo/bar/out.c)
-* `subsegments` should now be named `subsegments` as they are 
-Note: if the `dir` attribute is specified but the `name` isn't, the `name` effectively becomes `dir` but with directory separation slashes replaced with underscores (foo/bar/baz -> foo_bar_baz)
+
+* Significantly better performance, especially when using the cache feature (`--use-cache` CLI arg).
+* BREAKING: Some cli args for splat have been renamed. Please consult the usage output (-h or no args) for more information.
+  * `--new` has been renamed to `--use-cache`
+  * `--modes` arg changes:
+    * Image modes have been combined into the `img` mode
+    * Code and ASM modes have been combined into the `code` mode
+* BREAKING: The `name` attribute of a segment now should no longer be a subdirectory but rather a meaningful name for the segment which will be used as the name of the linker section. If your `name` was previously a directory, please change it into a `dir`.
+* BREAKING: `subsections` has been renamed to `subsegments`
+* New `dir` segment attribute specifies a subdirectory into which files will be saved. You can combine `dir` ("foo") with a subsection file name containing a subdirectory ("bar/out"), and the paths will be joined (foo/bar/out.c)
+  * If the `dir` attribute is specified but the `name` isn't, the `name` becomes `dir` with directory separation slashes replaced with underscores (foo/bar/baz -> foo_bar_baz)
+* BREAKING: Many configuration options have been renamed. `_dir` options have been changed to the suffix `_path`.
+* BREAKING: Assets (non-code, like `bin` and images) are now placed in the directory `asset_path` (defaults to `assets`).
+* Linker symbol header generation. Set the `linker_symbol_header_path` option to use.
+  * `typedef u8[] Addr;` is recommended in your `common.h` header.
+* You can now provide `auto` as the `start` attribute for a segment, e.g. `[auto, c, my_file]`. This causes the segment to not be extracted, but linked. This feature is intended for modding.
+* Providing just a ROM address but no type or name for a segment is now valid anywhere in `segments` or `subsegments` rather than just at the end of the ROM. It specifies the end of the previous segment for types that need it (`palette`, `bin`, `Yay0`) and causes the linker to simply write padding until that address.
+* The linker script file is left untouched if the contents have not changed since the previous split.
+* You can now group together segments with `type: group` (similar to `code`). Note that any ASM or C segments must live under a `type: code` segment, not a basic `group`.
 
 ### 0.6.5: Bugfixes, rodata migration, and made options static
 
