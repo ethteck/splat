@@ -247,6 +247,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             log.write("Writing cache")
         with open(options.get_cache_path(), "wb") as f4:
             pickle.dump(cache, f4)
+    
+    return linker_writer
 
 if __name__ == "__main__":
     args = parser.parse_args()

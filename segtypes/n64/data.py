@@ -34,6 +34,9 @@ class N64SegData(N64SegCodeSubsegment):
         else:
             path = self.out_path()
 
+        if path is None:
+            raise Exception(f"data {self.name} has no path")
+
         return [LinkerEntry(self, [path], path, self.get_linker_section())]
 
     def get_symbols(self):
