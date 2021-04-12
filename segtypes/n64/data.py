@@ -7,8 +7,15 @@ from util import floats, options
 class N64SegData(N64SegCodeSubsegment):
     def out_path(self) -> Optional[Path]:
         if self.type.startswith("."):
-            return None
-        return options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
+            if self.sibling:
+                # C file
+                return self.sibling.out_path()
+            else:
+                # Implied C file
+                return options.get_src_path() / self.dir / f"{self.name}.c"
+        else:
+            # ASM
+            return options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
 
     def scan(self, rom_bytes: bytes):
         self.file_text = self.disassemble_data(rom_bytes)
@@ -29,13 +36,7 @@ class N64SegData(N64SegCodeSubsegment):
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
 
-        if self.sibling:
-            path = self.sibling.out_path()
-        else:
-            path = self.out_path()
-
-        if path is None:
-            raise Exception(f"data {self.name} has no path")
+        path = self.out_path()
 
         return [LinkerEntry(self, [path], path, self.get_linker_section())]
 
