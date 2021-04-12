@@ -35,7 +35,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     seen_segment_names: Set[str] = set()
     ret = []
 
-    for i, seg_yaml in enumerate(config_segments[:-1]):
+    for i, seg_yaml in enumerate(config_segments):
+        # rompos marker
+        if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
+            continue
+
         seg_type = Segment.parse_segment_type(seg_yaml)
 
         segment_class = Segment.get_class_for_type(seg_type)
@@ -89,8 +93,6 @@ def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
     for typ in seg_sizes:
         if typ != "unk":
             rest_size += seg_sizes[typ]
-
-    assert(unk_size + rest_size == total_size)
 
     known_ratio = rest_size / total_size
     unk_ratio = unk_size / total_size
@@ -205,7 +207,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
                 # Cache miss; split
                 cache[segment.unique_id()] = cached
 
-        print(segment.name, segment.should_split())
         if segment.should_split():
             segment.split(rom_bytes)
 

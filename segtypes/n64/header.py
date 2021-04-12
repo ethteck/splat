@@ -4,7 +4,7 @@ from util import options
 
 class N64SegHeader(N64Segment):
     def should_split(self):
-        return N64Segment.should_split(self) or options.mode_active("asm")
+        return self.extract and options.mode_active("code")
 
     @staticmethod
     def get_line(typ, data, comment):

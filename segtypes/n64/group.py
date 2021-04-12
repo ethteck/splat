@@ -37,13 +37,17 @@ class N64SegGroup(N64Segment):
             sys.exit(2)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
+            # rompos marker
+            if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
+                continue
+
             typ = Segment.parse_segment_type(subsection_yaml)
 
             segment_class = Segment.get_class_for_type(typ)
 
             start = Segment.parse_segment_start(subsection_yaml)
             end = self.rom_end if i == len(segment_yaml["subsegments"]) - 1 else Segment.parse_segment_start(segment_yaml["subsegments"][i + 1])
-            
+
             if isinstance(start, int) and isinstance(prev_start, int) and start < prev_start:
                 print(f"Error: Code segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
                 sys.exit(1)
