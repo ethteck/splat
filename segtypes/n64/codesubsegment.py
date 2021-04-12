@@ -21,9 +21,6 @@ class N64SegCodeSubsegment(Segment):
     md.detail = True
     md.skipdata = True
 
-    def __init__(self, segment, rom_start, rom_end):
-        super().__init__(segment, rom_start, rom_end)
-
     @property
     def needs_symbols(self) -> bool:
         return True

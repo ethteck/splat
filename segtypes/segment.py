@@ -95,8 +95,8 @@ class Segment:
             return str(segment["name"])
         elif isinstance(segment, dict) and "dir" in segment:
             return str(segment["dir"])
-        elif isinstance(segment, list) and len(segment) >= 3 and isinstance(segment[2], str):
-            return segment[2]
+        elif isinstance(segment, list) and len(segment) >= 3:
+            return str(segment[2])
         else:
             return str(self.__class__.get_default_name(self.rom_start))
 
