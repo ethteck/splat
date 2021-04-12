@@ -149,7 +149,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     all_segments = initialize_segments(config["segments"])
 
     # Load and process symbols
-    symbols.initialize(all_segments)
+    if options.mode_active("code"):
+        log.write("Loading and processing symbols")
+        symbols.initialize(all_segments)
 
     # Scan
     log.write("Starting scan")
@@ -205,11 +207,12 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         log.dot(status=segment.status())
 
     if options.mode_active("ld"):
+        global linker_writer
+        linker_writer = LinkerWriter()
         for segment in all_segments:
-            global linker_writer
-            linker_writer = LinkerWriter()
-            linker_writer.save_linker_script()
-            linker_writer.save_symbol_header()
+            linker_writer.add(segment)
+        linker_writer.save_linker_script()
+        linker_writer.save_symbol_header()
 
     # Write undefined_funcs_auto.txt
     to_write = [s for s in symbols.all_symbols if s.referenced and not s.defined and not s.dead and s.type == "func"]

@@ -1,14 +1,11 @@
 from segtypes.n64.codesubsegment import N64SegCodeSubsegment
 from segtypes.n64.group import N64SegGroup
-from segtypes.n64.code import N64SegCode
 from typing import Optional, Set
 import os
 import re
 from pathlib import Path
 
 from util import options
-
-import os
 
 
 class N64SegC(N64SegCodeSubsegment):
@@ -53,7 +50,7 @@ class N64SegC(N64SegCodeSubsegment):
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.mark_c_funcs_as_defined(self.defined_funcs)
 
-            self.parent.disassemble_code(rom_bytes)
+            self.funcs_text = self.disassemble_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:

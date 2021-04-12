@@ -1,4 +1,3 @@
-from segtypes.n64.code import N64SegCode
 from segtypes.n64.codesubsegment import N64SegCodeSubsegment
 from pathlib import Path
 from typing import Optional
@@ -107,7 +106,7 @@ class N64SegData(N64SegCodeSubsegment):
                 if bits == 0:
                     byte_str = "0"
                 else:
-                    rom_addr = self.ram_to_rom(bits)
+                    rom_addr = self.parent.ram_to_rom(bits)
 
                     if rom_addr:
                         byte_str = f"L{bits:X}_{rom_addr:X}"
@@ -157,9 +156,13 @@ class N64SegData(N64SegCodeSubsegment):
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
             sym = self.parent.get_symbol(syms[i].vram_start, create=True, define=True, local_only=True)
+            
+            if sym.vram_start == 0x80097D90:
+                dog = 5
+            
             sym_str = f"\n\nglabel {sym.name}\n"
-            dis_start = self.ram_to_rom(syms[i].vram_start)
-            dis_end = self.ram_to_rom(syms[i + 1].vram_start)
+            dis_start = self.parent.ram_to_rom(syms[i].vram_start)
+            dis_end = self.parent.ram_to_rom(syms[i + 1].vram_start)
             sym_len = dis_end - dis_start
 
             if self.type == "bss":
@@ -172,13 +175,13 @@ class N64SegData(N64SegCodeSubsegment):
                     stype = "ascii"
                 elif syms[i].type == "jtbl":
                     stype = "jtbl"
-                elif len(sym_bytes) % 8 == 0 and mnemonic in N64SegCode.double_mnemonics:
+                elif len(sym_bytes) % 8 == 0 and mnemonic in N64SegCodeSubsegment.double_mnemonics:
                     stype = "double"
-                elif len(sym_bytes) % 4 == 0 and mnemonic in N64SegCode.float_mnemonics:
+                elif len(sym_bytes) % 4 == 0 and mnemonic in N64SegCodeSubsegment.float_mnemonics:
                     stype = "float"
-                elif len(sym_bytes) % 4 == 0 and sym.vram_start % 4 == 0 and (mnemonic in N64SegCode.word_mnemonics or not mnemonic):
+                elif len(sym_bytes) % 4 == 0 and sym.vram_start % 4 == 0 and (mnemonic in N64SegCodeSubsegment.word_mnemonics or not mnemonic):
                     stype = "word"
-                elif len(sym_bytes) % 2 == 0 and sym.vram_start % 2 == 0 and (mnemonic in N64SegCode.short_mnemonics or not mnemonic):
+                elif len(sym_bytes) % 2 == 0 and sym.vram_start % 2 == 0 and (mnemonic in N64SegCodeSubsegment.short_mnemonics or not mnemonic):
                     stype = "short"
                 else:
                     stype = "byte"

@@ -1,6 +1,3 @@
-from segtypes.n64.data import N64SegData
-from segtypes.n64.bss import N64SegBss
-from segtypes.n64.rodata import N64SegRodata
 from typing import List, Dict, Optional
 import sys
 from segtypes.n64.segment import N64Segment
@@ -59,12 +56,12 @@ class N64SegGroup(N64Segment):
                 segment.vram_start = self.rom_to_ram(segment.rom_start)
 
             # TODO: assumes section order - generalize and stuff
-            if self.data_vram_start == None and isinstance(segment, N64SegData):
+            if self.data_vram_start == None and "data" in segment.type:
                 self.data_vram_start = segment.vram_start
-            if self.rodata_vram_start == None and isinstance(segment, N64SegRodata):
+            if self.rodata_vram_start == None and "rodata" in segment.type:
                 self.data_vram_end = segment.vram_start
                 self.rodata_vram_start = segment.vram_start
-            if self.rodata_vram_end == None and isinstance(segment, N64SegBss):
+            if self.rodata_vram_end == None and "bss" in segment.type:
                 self.rodata_vram_end = segment.vram_start
                 self.bss_vram_start = segment.vram_start
 
@@ -83,7 +80,8 @@ class N64SegGroup(N64Segment):
         return ret
 
     def get_linker_entries(self):
-        return [sub.get_linker_entry() for sub in self.subsegments]
+        # [item for sublist in t for item in sublist]
+        return [entry for sub in self.subsegments for entry in sub.get_linker_entries() ]
 
     def scan(self, rom_bytes):
         for sub in self.subsegments:

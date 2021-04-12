@@ -72,7 +72,7 @@ def is_symbol_isolated(symbol, all_segments):
     sym_isolated_map[symbol] = relevant_segs < 2
     return sym_isolated_map[symbol]
 
-def retrieve_symbol_from_ranges(self, vram, rom=None):
+def retrieve_from_ranges(vram, rom=None):
         rom_matches = []
         ram_matches = []
 
