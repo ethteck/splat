@@ -5,8 +5,8 @@ from util import options
 
 
 class N64SegCi8(N64SegRgba16):
-    def __init__(self, segment, next_segment):
-        super().__init__(segment, next_segment)
+    def __init__(self, segment, rom_start, rom_end):
+        super().__init__(segment, rom_start, rom_end)
 
         self.path = None
 

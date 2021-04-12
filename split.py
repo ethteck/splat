@@ -2,7 +2,6 @@
 
 from typing import Dict, List, Union
 import argparse
-import os
 import pylibyaml
 import yaml
 import pickle
@@ -12,7 +11,6 @@ from segtypes.linker_entry import LinkerWriter
 from util import log
 from util import options
 from util import symbols
-from util.symbols import Symbol
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file")
@@ -21,8 +19,6 @@ parser.add_argument("--basedir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
 parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
 parser.add_argument("--use-cache", action="store_true", help="Only split changed segments in config")
-
-sym_isolated_map: Dict[Symbol, int] = {}
 
 linker_writer: LinkerWriter
 
@@ -58,27 +54,12 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
     return ret
 
-def is_symbol_isolated(symbol, all_segments):
-    if symbol in sym_isolated_map:
-        return sym_isolated_map[symbol]
-
-    relevant_segs = 0
-
-    for segment in all_segments:
-        if segment.contains_vram(symbol.vram_start):
-            relevant_segs += 1
-            if relevant_segs > 1:
-                break
-
-    sym_isolated_map[symbol] = relevant_segs < 2
-    return sym_isolated_map[symbol]
-
 def get_segment_symbols(segment, all_segments):
     seg_syms = {}
     other_syms = {}
 
     for symbol in symbols.all_symbols:
-        if is_symbol_isolated(symbol, all_segments) and not symbol.rom:
+        if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
             if segment.contains_vram(symbol.vram_start):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
@@ -136,8 +117,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Create main output dir
     options.get_base_path().mkdir(parents=True, exist_ok=True)
 
-    symbols.initialize()
-
     processed_segments: List[Segment] = []
 
     seg_sizes: Dict[str, int] = {}
@@ -169,6 +148,11 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
 
+    # Load and process symbols
+    symbols.initialize(all_segments)
+
+    # Scan
+    log.write("Starting scan")
     for segment in all_segments:
         typ = segment.type
         if segment.type == "bin" and segment.is_name_default():
@@ -180,34 +164,42 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             seg_cached[typ] = 0
         seg_sizes[typ] += 0 if segment.size is None else segment.size
 
-        if segment.should_scan() or segment.should_split():
+        if segment.should_scan():
             # Check cache
             if use_cache:
                 cached = segment.cache()
-            if use_cache and cached == cache.get(segment.unique_id()):
-                # Cache hit
-                seg_cached[typ] += 1
-            else:
-                # Cache miss; split
-                cache[segment.unique_id()] = cached
 
-                if segment.needs_symbols:
-                    segment_symbols, other_symbols = get_segment_symbols(segment, all_segments)
-                    segment.seg_symbols = segment_symbols
-                    segment.ext_symbols = other_symbols
+                if cached == cache.get(segment.unique_id()):
+                    # Cache hit
+                    seg_cached[typ] += 1
+                    continue
+                else:
+                    # Cache miss; split
+                    cache[segment.unique_id()] = cached
 
-                segment.did_run = True
-                if segment.should_scan():
-                    segment.scan(rom_bytes)
-                if segment.should_split():
-                    segment.split(rom_bytes)
+            if segment.needs_symbols:
+                segment_symbols, other_symbols = get_segment_symbols(segment, all_segments)
+                segment.given_seg_symbols = segment_symbols
+                segment.given_ext_symbols = other_symbols
 
-                processed_segments.append(segment)
+            segment.did_run = True
+            segment.scan(rom_bytes)
 
-                seg_split[typ] += 1
+            processed_segments.append(segment)
+
+            seg_split[typ] += 1
 
         log.dot(status=segment.status())
 
+    # Split
+    log.write("Starting split")
+    for segment in all_segments:
+        if segment.should_split():
+            segment.split(rom_bytes)
+
+        log.dot(status=segment.status())
+
+    # Postsplit #TODO remove
     for segment in processed_segments:
         segment.postsplit(processed_segments)
         log.dot(status=segment.status())

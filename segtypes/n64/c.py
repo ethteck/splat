@@ -1,3 +1,5 @@
+from segtypes.n64.codesubsegment import N64SegCodeSubsegment
+from segtypes.n64.group import N64SegGroup
 from segtypes.n64.code import N64SegCode
 from typing import Optional, Set
 import os
@@ -9,7 +11,7 @@ from util import options
 import os
 
 
-class N64SegC(N64SegCode):
+class N64SegC(N64SegCodeSubsegment):
     defined_funcs: Set[str] = set()
     
     STRIP_C_COMMENTS_RE = re.compile(
@@ -30,14 +32,14 @@ class N64SegC(N64SegCode):
                 return " "
             else:
                 return s
-        return re.sub(N64SegCode.STRIP_C_COMMENTS_RE, replacer, text)
+        return re.sub(N64SegC.STRIP_C_COMMENTS_RE, replacer, text)
 
     @staticmethod
     def get_funcs_defined_in_c(c_file):
         with open(c_file, "r") as f:
-            text = N64SegCode.strip_c_comments(f.read())
+            text = N64SegC.strip_c_comments(f.read())
 
-        return set(m.group(2) for m in N64SegCode.C_FUNC_RE.finditer(text))
+        return set(m.group(2) for m in N64SegC.C_FUNC_RE.finditer(text))
 
     def out_path(self) -> Optional[Path]:
         return options.get_src_path() / self.dir / f"{self.name}.c"
@@ -51,7 +53,7 @@ class N64SegC(N64SegCode):
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.mark_c_funcs_as_defined(self.defined_funcs)
 
-            self.disassemble_code(rom_bytes)
+            self.parent.disassemble_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
@@ -59,7 +61,7 @@ class N64SegC(N64SegCode):
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             for func in self.funcs_text:
-                func_name = self.get_symbol(func, type="func", local_only=True).name
+                func_name = self.parent.get_symbol(func, type="func", local_only=True).name
 
                 if func_name not in self.defined_funcs:
                     self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_name)
@@ -104,22 +106,23 @@ class N64SegC(N64SegCode):
         else:
             out_lines = []
 
-        if func in self.rodata_syms:
-            func_rodata = list({s for s in self.rodata_syms[func] if s.disasm_str})
-            func_rodata.sort(key=lambda s:s.vram_start)
+        if self.parent and isinstance(self.parent, N64SegGroup):
+            if func in self.parent.rodata_syms:
+                func_rodata = list({s for s in self.parent.rodata_syms[func] if s.disasm_str})
+                func_rodata.sort(key=lambda s:s.vram_start)
 
-            if len(func_rodata) > 0:
-                rsub = self.get_subsegment_for_ram(func_rodata[0].vram_start)
-                if rsub and rsub.type != "rodata":
-                    out_lines.append(".section .rodata")
+                if len(func_rodata) > 0:
+                    rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
+                    if rsub and rsub.type != "rodata":
+                        out_lines.append(".section .rodata")
 
-                    for sym in func_rodata:
-                        if sym.disasm_str:
-                            out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
+                        for sym in func_rodata:
+                            if sym.disasm_str:
+                                out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
 
-                    out_lines.append("")
-                    out_lines.append(".section .text")
-                    out_lines.append("")
+                        out_lines.append("")
+                        out_lines.append(".section .text")
+                        out_lines.append("")
 
         out_lines.extend(funcs_text[func][0])
         out_lines.append("")

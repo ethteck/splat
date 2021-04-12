@@ -1,11 +1,11 @@
-from segtypes.n64.code import N64SegCode
+from segtypes.n64.codesubsegment import N64SegCodeSubsegment
 from typing import Optional
 from pathlib import Path
 
 from util import options
 
 
-class N64SegAsm(N64SegCode):
+class N64SegAsm(N64SegCodeSubsegment):
     def out_path(self) -> Optional[Path]:
         return options.get_asm_path() / self.dir / f"{self.name}.s"
 
@@ -26,8 +26,8 @@ class N64SegAsm(N64SegCode):
         return ret
 
     def scan(self, rom_bytes: bytes):
-        if self.rom_start is not "auto" and self.rom_end is not "auto" and self.rom_start != self.rom_end:
-            self.disassemble_code(rom_bytes)
+        if self.rom_start != "auto" and self.rom_end != "auto" and self.rom_start != self.rom_end:
+            self.funcs_text = self.parent.disassemble_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:

@@ -1,11 +1,12 @@
 import os
-from typing import List
+from typing import Dict, List
 from util import options
 
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
+sym_isolated_map: "Dict[Symbol, bool]" = {}
 
-def initialize():
+def initialize(all_segments):
     global all_symbols
     global symbol_ranges
 
@@ -49,10 +50,45 @@ def initialize():
                         if info.startswith("dead:"):
                             sym.dead = True
                 all_symbols.append(sym)
-    
-    for s in all_symbols:
-        if s.size > 4:
-            symbol_ranges.append(s)
+
+                # Symbol ranges
+                if sym.size > 4:
+                    symbol_ranges.append(sym)
+                
+                is_symbol_isolated(sym, all_segments)
+
+def is_symbol_isolated(symbol, all_segments):
+    if symbol in sym_isolated_map:
+        return sym_isolated_map[symbol]
+
+    relevant_segs = 0
+
+    for segment in all_segments:
+        if segment.contains_vram(symbol.vram_start):
+            relevant_segs += 1
+            if relevant_segs > 1:
+                break
+
+    sym_isolated_map[symbol] = relevant_segs < 2
+    return sym_isolated_map[symbol]
+
+def retrieve_symbol_from_ranges(self, vram, rom=None):
+        rom_matches = []
+        ram_matches = []
+
+        for symbol in symbol_ranges:
+            if symbol.contains_vram(vram):
+                if symbol.rom and rom and symbol.contains_rom(rom):
+                    rom_matches.append(symbol)
+                else:
+                    ram_matches.append(symbol)
+
+        ret = rom_matches + ram_matches
+
+        if len(ret) > 0:
+            return ret[0]
+        else:
+            return None
 
 class Symbol:
     @property

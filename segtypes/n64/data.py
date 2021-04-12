@@ -1,10 +1,11 @@
+from segtypes.n64.code import N64SegCode
+from segtypes.n64.codesubsegment import N64SegCodeSubsegment
 from pathlib import Path
 from typing import Optional
 from util.symbols import Symbol
-from segtypes.n64.code import N64SegCode
 from util import floats, options
 
-class N64SegData(N64SegCode):
+class N64SegData(N64SegCodeSubsegment):
     def out_path(self) -> Optional[Path]:
         if self.type.startswith("."):
             return None
@@ -22,6 +23,9 @@ class N64SegData(N64SegCode):
 
                 with open(path, "w", newline="\n") as f:
                     f.write(self.file_text)
+
+    def get_linker_section(self) -> str:
+        return ".data"
 
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
@@ -45,7 +49,7 @@ class N64SegData(N64SegCode):
 
         # Ensure we start at the beginning
         if len(ret) == 0 or ret[0].vram_start != self.vram_start:
-            ret.insert(0, self.get_symbol(self.vram_start, create=True, define=True, local_only=True))
+            ret.insert(0, self.parent.get_symbol(self.vram_start, create=True, define=True, local_only=True))
 
         # Make a dummy symbol here that marks the end of the previous symbol's disasm range
         ret.append(Symbol(self.vram_end))
@@ -110,7 +114,7 @@ class N64SegData(N64SegCode):
                     else:
                         byte_str = f"0x{bits:X}"
             elif slen == 4 and bits >= 0x80000000:
-                sym = self.get_symbol(bits, reference=True)
+                sym = self.parent.get_symbol(bits, reference=True)
                 if sym:
                     byte_str = sym.name
                 else:
@@ -152,7 +156,7 @@ class N64SegData(N64SegCode):
 
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
-            sym = self.get_symbol(syms[i].vram_start, create=True, define=True, local_only=True)
+            sym = self.parent.get_symbol(syms[i].vram_start, create=True, define=True, local_only=True)
             sym_str = f"\n\nglabel {sym.name}\n"
             dis_start = self.ram_to_rom(syms[i].vram_start)
             dis_end = self.ram_to_rom(syms[i + 1].vram_start)

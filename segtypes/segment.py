@@ -32,6 +32,10 @@ class Segment:
 
     @staticmethod
     def get_class_for_type(seg_type):
+        # so .data loads SegData, for example
+        if seg_type.startswith("."):
+            seg_type = seg_type[1:]
+
         segment_class = Segment.get_base_segment_class(seg_type)
         if segment_class == None:
             # Look in extensions
@@ -112,7 +116,9 @@ class Segment:
         self.given_is_overlay:Optional[bool] = segment.get("overlay", False) if isinstance(segment, dict) else False
 
         self.sibling:Optional[Segment] = None
-        self.needs_symbols: bool = False
+
+        self.given_seg_symbols: Dict[int, Symbol] = {} # Symbols known to be in this segment
+        self.given_ext_symbols: Dict[int, Symbol] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
 
         if "skip" in self.args:
             self.extract = False
@@ -131,6 +137,10 @@ class Segment:
                 print(f"Error: segments out of order - ({self.name} starts at 0x{self.rom_start:X}, but next segment starts at 0x{self.rom_end:X})")
                 sys.exit(1)
     
+    @property
+    def needs_symbols(self) -> bool:
+        return False
+
     @property
     def dir(self) -> Path:
         if self.parent:
@@ -152,6 +162,20 @@ class Segment:
         if self.given_is_overlay is not None:
             return self.given_is_overlay
         return False
+
+    @property
+    def seg_symbols(self) -> Dict[int, Symbol]:
+        if self.parent:
+            return self.parent.seg_symbols
+        else:
+            return self.given_seg_symbols
+
+    @property
+    def ext_symbols(self) -> Dict[int, Symbol]:
+        if self.parent:
+            return self.parent.ext_symbols
+        else:
+            return self.given_ext_symbols
 
     @property
     def size(self) -> Optional[int]:

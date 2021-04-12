@@ -5,11 +5,13 @@ from typing import List, Dict, Optional
 import sys
 from segtypes.n64.segment import N64Segment
 from segtypes.segment import RomAddr, Segment
+from util.symbols import Symbol
 
 class N64SegGroup(N64Segment):
     def __init__(self, segment, rom_start, rom_end):
         super().__init__(segment, rom_start, rom_end)
-        self.subsegments = self.parse_subsegments(segment)
+
+        self.rodata_syms: Dict[int, List[Symbol]] = {}
 
         # TODO Note: These start/end vram options don't really do anything yet
         self.data_vram_start: Optional[int] = segment.get("data_vram_start")
@@ -19,13 +21,22 @@ class N64SegGroup(N64Segment):
         self.bss_vram_start: Optional[int] = segment.get("bss_vram_start")
         self.bss_vram_end: Optional[int] = segment.get("bss_vram_end")
 
+        self.subsegments = self.parse_subsegments(segment)
+
+    @property
+    def needs_symbols(self) -> bool:
+        for seg in self.subsegments:
+            if seg.needs_symbols:
+                return True
+        return False
+
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
         base_segments: Dict[str, Segment] = {}
         ret = []
         prev_start: RomAddr = -1
 
         if "subsegments" not in segment_yaml:
-            print(f"Error: Code segment {self.name} is missing a 'subsegments' field")
+            print(f"Error: Group segment {self.name} is missing a 'subsegments' field")
             sys.exit(2)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
@@ -43,6 +54,9 @@ class N64SegGroup(N64Segment):
             segment: Segment = segment_class(subsection_yaml, start, end)
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
+            
+            if segment.rom_start != "auto":
+                segment.vram_start = self.rom_to_ram(segment.rom_start)
 
             # TODO: assumes section order - generalize and stuff
             if self.data_vram_start == None and isinstance(segment, N64SegData):
@@ -71,15 +85,10 @@ class N64SegGroup(N64Segment):
     def get_linker_entries(self):
         return [sub.get_linker_entry() for sub in self.subsegments]
 
-    def get_subsegment_for_ram(self, addr) -> Optional[Segment]:
+    def scan(self, rom_bytes):
         for sub in self.subsegments:
-            if sub.contains_vram(addr):
-                return sub
-        return None
+            sub.scan(rom_bytes)
 
     def split(self, rom_bytes):
         for sub in self.subsegments:
-            sub.scan(self, rom_bytes)
-
-        for sub in self.subsegments:
-            sub.split(self, rom_bytes)
+            sub.split(rom_bytes)

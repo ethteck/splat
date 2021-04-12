@@ -1,4 +1,5 @@
-from typing import Dict, Optional
+from segtypes.n64.group import N64SegGroup
+from typing import Optional
 import re
 from collections import OrderedDict
 
@@ -10,8 +11,8 @@ from util import options
 from util import symbols
 from util.symbols import Symbol
 
-
-class N64SegCode(Segment):
+# code group
+class N64SegCode(N64SegGroup):
     double_mnemonics = ["ldc1", "sdc1"]
     word_mnemonics = ["addiu", "sw", "lw", "jtbl"]
     float_mnemonics = ["lwc1", "swc1"]
@@ -31,14 +32,10 @@ class N64SegCode(Segment):
         self.jtbl_jumps = {}
         self.jumptables = {}
 
-        # For symbols
-        self.sibling:Optional[Segment] = None
-        self.seg_symbols: Dict[int, Symbol] = {} # Symbols known to be in this segment
-        self.ext_symbols: Dict[int, Symbol] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
+    @property
+    def needs_symbols(self) -> bool:
+        return True
 
-        self.rodata_syms = {}
-        self.needs_symbols = True
-    
     def disassemble_code(self, rom_bytes):
         insns = [insn for insn in N64SegCode.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
@@ -50,13 +47,20 @@ class N64SegCode(Segment):
 
         funcs = self.determine_symbols(funcs)
         self.gather_jumptable_labels(rom_bytes)
-        self.funcs_text = self.add_labels(funcs)
+        return self.add_labels(funcs)
 
-    def get_linker_section(self) -> str:
-        return ".text"
+    def check_rodata_sym(self, func_addr: int, sym: Symbol):
+        if self.rodata_vram_start != None and self.rodata_vram_end != None:
+            if self.rodata_vram_start <= sym.vram_start < self.rodata_vram_end:
+                if func_addr not in self.rodata_syms:
+                    self.rodata_syms[func_addr] = []
+                self.rodata_syms[func_addr].append(sym)
 
-    def get_linker_entries(self):
-        pass
+    def get_subsegment_for_ram(self, addr) -> Optional[Segment]:
+        for sub in self.subsegments:
+            if sub.contains_vram(addr):
+                return sub
+        return None
 
     def retrieve_symbol(self, d, k, t):
         if k not in d:
@@ -72,24 +76,6 @@ class N64SegCode(Segment):
         if len(items) == 0:
             return None
         return items[0]
-
-    def retrieve_symbol_from_ranges(self, vram, rom=None):
-        rom_matches = []
-        ram_matches = []
-
-        for symbol in self.symbol_ranges:
-            if symbol.contains_vram(vram):
-                if symbol.rom and rom and symbol.contains_rom(rom):
-                    rom_matches.append(symbol)
-                else:
-                    ram_matches.append(symbol)
-
-        ret = rom_matches + ram_matches
-
-        if len(ret) > 0:
-            return ret[0]
-        else:
-            return None
 
     def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False, dead=True):
         ret = None
@@ -239,22 +225,6 @@ class N64SegCode(Segment):
 
         return ret
 
-    def update_access_mnemonic(self, sym, mnemonic):
-        if not sym.access_mnemonic:
-            sym.access_mnemonic = mnemonic
-        elif sym.access_mnemonic == "addiu":
-            sym.access_mnemonic = mnemonic
-        elif sym.access_mnemonic in self.double_mnemonics:
-            return
-        elif sym.access_mnemonic in self.float_mnemonics and mnemonic in self.double_mnemonics:
-            sym.access_mnemonic = mnemonic
-        elif sym.access_mnemonic in self.short_mnemonics:
-            return
-        elif sym.access_mnemonic in self.byte_mnemonics:
-            return
-        else:
-            sym.access_mnemonic = mnemonic
-
     # Determine symbols
     def determine_symbols(self, funcs):
         hi_lo_max_distance = options.get("hi_lo_max_distance", 6)
@@ -333,11 +303,9 @@ class N64SegCode(Segment):
                                     if offset != 0:
                                         offset_str = f"+0x{offset:X}"
 
-                                if self.rodata_vram_start != -1 and self.rodata_vram_end != -1:
-                                    if self.rodata_vram_start <= sym.vram_start < self.rodata_vram_end:
-                                        if func_addr not in self.rodata_syms:
-                                            self.rodata_syms[func_addr] = []
-                                        self.rodata_syms[func_addr].append(sym)
+
+                                if self.parent:
+                                    self.parent.check_rodata_sym(func_addr, sym)
 
                                 self.update_access_mnemonic(sym, s_insn.mnemonic)
 
