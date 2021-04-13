@@ -33,13 +33,6 @@ class N64SegData(N64SegCodeSubsegment):
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_linker_entries(self):
-        from segtypes.linker_entry import LinkerEntry
-
-        path = self.out_path()
-
-        return [LinkerEntry(self, [path], path, self.get_linker_section())]
-
     def get_symbols(self):
         ret = []
 
