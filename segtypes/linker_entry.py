@@ -9,8 +9,8 @@ def clean_up_path(path: Path) -> Path:
     return path.resolve().relative_to(options.get_base_path().resolve())
 
 def path_to_object_path(path: Path) -> Path:
-    path = options.get_build_path() / path.with_suffix(path.suffix + ".o").relative_to(options.get_base_path())
-    return clean_up_path(path)
+    path = clean_up_path(path)
+    return options.get_build_path() / path.with_suffix(path.suffix + ".o")
 
 def write_file_if_different(path: Path, new_content: str):
     if path.exists():
