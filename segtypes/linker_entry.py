@@ -137,10 +137,12 @@ class LinkerWriter():
     def _begin_segment(self, segment: Segment):
         # force location if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_start, int):
-            self._writeln(f". = 0x{segment.rom_start:X};")
+            self._writeln(f"__romPos = 0x{segment.rom_start:X};")
         else:
-            # align
-            self._writeln(f". = ALIGN(0x10);")
+            # TODO: align 0x10, preferably
+            pass
+
+        self._writeln(f". = __romPos;")
 
         vram = segment.vram_start
         vram_str = f"0x{vram:X}" if isinstance(vram, int) else ""
@@ -150,7 +152,7 @@ class LinkerWriter():
         else:
             name = to_cname(segment.name)
 
-        self._write_symbol(f"{name}_ROM_START", ".")
+        self._write_symbol(f"{name}_ROM_START", "__romPos")
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
         self._writeln(f".{name} {vram_str} : AT({name}_ROM_START) SUBALIGN({segment.subalign})")
         self._begin_block()
@@ -166,7 +168,9 @@ class LinkerWriter():
         # force end if not shiftable/auto
         if not self.shiftable and isinstance(segment.rom_start, int) and isinstance(segment.rom_end, int):
             self._write_symbol(f"{to_cname(name)}_ROM_END", segment.rom_end)
+            self._writeln(f"__romPos = 0x{segment.rom_end:X};")
         else:
-            self._write_symbol(f"{to_cname(name)}_ROM_END", ".")
+            self._writeln(f"__romPos += SIZEOF(.{name});")
+            self._write_symbol(f"{to_cname(name)}_ROM_END", "__romPos")
 
         self._writeln("")
