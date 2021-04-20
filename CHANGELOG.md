@@ -1,5 +1,11 @@
 # splat Release Notes
 
+## unreleased
+
+* Image segment changes:
+  * BREAKING: Replaced the `flip` parameter with separated `flip_x` and `flip_y` boolean parameters.
+  * Fixed `extract: false` (and `start: auto`) behaviour.
+
 ## 0.7: The Path Update
 
 * Significantly better performance, especially when using the cache feature (`--use-cache` CLI arg).
