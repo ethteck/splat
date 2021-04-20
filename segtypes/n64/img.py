@@ -17,11 +17,15 @@ class N64SegImg(N64Segment):
             self.flip_vertical = bool(segment.get("flip_y", False))
 
             if segment.get("flip"):
-                log.error(f"Error: {self.name}: 'flip' parameter has been removed; use flip_x and flip_y instead")
+                self.warn(f"'flip' parameter for img segments is deprecated; use flip_x and flip_y instead")
+                flip = segment.get("flip")
+
+                self.flip_vertical = flip == "both" or flip.startswith("v") or flip == "y"
+                self.flip_horizontal = flip == "both" or flip.startswith("h") or flip == "x"
         else:
             if self.extract:
                 if len(segment) < 5:
-                    log.error("missing parameters")
+                    log.error(f"Error: {self.name} is missing width and height parameters")
                 self.width = segment[3]
                 self.height = segment[4]
 

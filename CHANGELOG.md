@@ -1,12 +1,13 @@
 # splat Release Notes
 
-## unreleased
+## 0.7.1
 
 * Image segment changes:
-  * BREAKING: Replaced the `flip` parameter with separated `flip_x` and `flip_y` boolean parameters.
+  * Added `flip_x` and `flip_y` boolean parameters to replace `flip`.
+    * `flip` is deprecated and will produce a warning when used.
   * Fixed `extract: false` (and `start: auto`) behaviour.
 
-## 0.7: The Path Update
+## 0.7.0: The Path Update
 
 * Significantly better performance, especially when using the cache feature (`--use-cache` CLI arg).
 * BREAKING: Some cli args for splat have been renamed. Please consult the usage output (-h or no args) for more information.
