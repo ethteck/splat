@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List, Dict, Optional, OrderedDict
 import sys
 from segtypes.n64.segment import N64Segment
