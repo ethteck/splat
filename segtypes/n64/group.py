@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List, Dict, Optional, OrderedDict
+from typing import List, Dict, Optional
 import sys
 from segtypes.n64.segment import N64Segment
 from segtypes.segment import RomAddr, Segment
