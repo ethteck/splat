@@ -103,7 +103,7 @@ class Segment:
             return str(self.get_default_name(rom_start))
 
     def __init__(self, rom_start, rom_end, type, name, vram_start, extract = True, 
-                 given_subalign = options.get_subalign(), given_is_overlay: Optional[bool] = False, given_dir: Path = Path(), args = [], yaml: yaml = {}):
+                 given_subalign = options.get_subalign(), given_is_overlay: Optional[bool] = False, given_dir: Path = Path(), args = [], yaml = {}):
         self.rom_start = rom_start
         self.rom_end = rom_end
         self.type = type
