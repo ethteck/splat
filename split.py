@@ -115,7 +115,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     options.initialize(config, config_path, base_dir, target_path)
     options.set("modes", modes)
-    options.set("verbose", verbose)
+
+    if verbose:
+        options.set("verbose", True)
 
     with options.get_target_path().open("rb") as f2:
         rom_bytes = f2.read()
