@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import hashlib
 from typing import Dict, List, Union, Set, Any
 import argparse
 import pylibyaml
@@ -121,6 +122,12 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     with options.get_target_path().open("rb") as f2:
         rom_bytes = f2.read()
+
+    if "sha1" in config:
+        sha1 = hashlib.sha1(rom_bytes).hexdigest()
+        e_sha1 = config["sha1"]
+        if e_sha1 != sha1:
+            log.error(f"sha1 mismatch: expected {e_sha1}, was {sha1}")
 
     # Create main output dir
     options.get_base_path().mkdir(parents=True, exist_ok=True)
