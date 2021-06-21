@@ -63,6 +63,7 @@ class N64SegGroup(N64Segment):
 
             typ = Segment.parse_segment_type(subsection_yaml)
 
+            # Add dummy segments to be expanded later
             if typ.startswith("all_"):
                 ret.append(Segment("auto", "auto", typ, "", "auto"))
                 continue
@@ -103,7 +104,6 @@ class N64SegGroup(N64Segment):
             prev_start = start
 
         check = True
-
         while check:
             check = self.handle_alls(ret, base_segments)
 
@@ -115,7 +115,7 @@ class N64SegGroup(N64Segment):
 
     def get_linker_entries(self):
         # [item for sublist in t for item in sublist]
-        return [entry for sub in self.subsegments for entry in sub.get_linker_entries() ]
+        return [entry for sub in self.subsegments for entry in sub.get_linker_entries()]
 
     def scan(self, rom_bytes):
         for sub in self.subsegments:

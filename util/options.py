@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from pathlib import Path
 from util import log
 
@@ -37,6 +37,9 @@ def get_subalign() -> int:
 
 def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
+
+def get_section_order() -> List[str]:
+    return opts.get("section_order", [".text", ".data", ".rodata", ".bss"])
 
 def get_base_path() -> Path:
     return Path(opts["base_path"])
