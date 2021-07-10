@@ -50,6 +50,9 @@ class N64SegData(N64SegCodeSubsegment, N64SegGroup):
     def get_linker_section(self) -> str:
         return ".data"
 
+    def get_linker_entries(self):
+        return N64SegCodeSubsegment.get_linker_entries(self)
+
     def check_jtbls(self, rom_bytes, syms: List[Symbol]):
         for i, sym in enumerate(syms):
             if sym.type == "jtbl":
