@@ -17,7 +17,7 @@ class N64SegC(N64SegCodeSubsegment):
     )
 
     C_FUNC_RE = re.compile(
-        r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
+        r"^(static\s+)?[^#\s]+\s+\**([^\s(]+)\(([^;)]*)\)[^;]+?{",
         re.MULTILINE
     )
 
