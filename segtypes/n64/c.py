@@ -79,7 +79,7 @@ class N64SegC(N64SegCodeSubsegment):
     def get_c_preamble(self):
         ret = []
 
-        preamble = options.get("generated_c_preamble", "#include \"common.h\"")
+        preamble = options.get_generated_c_premble()
         ret.append(preamble)
         ret.append("")
 
