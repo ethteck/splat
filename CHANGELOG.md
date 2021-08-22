@@ -2,6 +2,9 @@
 
 ### 0.7.6
 
+* Fixed a bug involving detection of defined functions in c files for GLOBAL_ASM-using projects
+* Added options to disable the creation of undefined_funcs/syms_auto.txt files
+* Add a Vtx segment type for creating c files containg model vertex data in the n64 libultra Vtx format
 * Added a `cpp` segment type which is identical to `c` but looks for a file with the extension ".cpp" instead of ".c".
 
 ### 0.7.5: all_ types and auto_all_sections
