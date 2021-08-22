@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.7.6
+
+* Added a `cpp` segment type which is identical to `c` but looks for a file with the extension ".cpp" instead of ".c".
+
 ### 0.7.5: all_ types and auto_all_sections
 
 If you have a group segment with multiple c files and want splat to automatically create linker entries at a given position for each code object (c, asm, hasm) in the segment, you can use an `all_` type for that section. For example, you can add `[auto, all_bss]` as the last subsegment in a segment. This will direct splat to create a linker entry for each code object in the segment. This saves a lot of time when it comes to manually adding .bss subsegments for bss support, for example. The same thing can be done for data and rodata sections, but note this should probably be done later into a project when all data / rodata is migrated to c files, as the `all_` types lose the rom positioning information that's necessary for splat to do proper disassembly.
