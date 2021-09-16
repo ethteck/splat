@@ -29,6 +29,9 @@ def get(opt, default=None):
 def get_platform() -> str:
     return opts.get("platform", "n64")
 
+def get_endianess() -> str:
+    return "big" if get_platform().upper() == "N64" else "little"
+
 def get_compiler() -> str:
     return opts.get("compiler", "IDO")
 
