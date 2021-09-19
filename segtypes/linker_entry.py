@@ -87,7 +87,6 @@ class LinkerWriter():
 
         self._write_symbol(f"{seg_name}_TEXT_START", ".")
 
-        do_next = False
         text_ended = False
         data_started = False
         data_ended = False
@@ -123,17 +122,6 @@ class LinkerWriter():
             elif not bss_started and "bss" in cur_section:
                 bss_started = True
                 self._write_symbol(f"{seg_name}_BSS_START", ".")
-
-            start = entry.segment.rom_start
-            if isinstance(start, int):
-                # Create new sections for non-subalign alignment (hack)
-                if start % entry.segment.subalign != 0 and i != 0 or do_next:
-                    self._end_block()
-                    self._begin_segment(entry.segment, mid_segment=True)
-                    do_next = False
-
-                if start % entry.segment.subalign != 0 and i != 0:
-                    do_next = True
 
             if entry.object_path and cur_section == ".data":
                 path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment.dir / entry.segment.name) + ".".join(entry.object_path.suffixes[:-1]))
