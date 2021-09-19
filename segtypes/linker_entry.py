@@ -22,7 +22,6 @@ def clean_up_path(path: Path) -> Path:
         pass
     
     # If it wasn't relative to that too, then just return the path as-is
-    print(path)
     return path
 
 def path_to_object_path(path: Path) -> Path:
