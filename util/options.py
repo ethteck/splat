@@ -30,7 +30,7 @@ def get_platform() -> str:
     return opts.get("platform", "n64")
 
 def get_endianess() -> str:
-    return "big" if get_platform().upper() == "N64" else "little"
+    return opts.get("endianess", "little" if get_platform().upper() == "PSX" else "big")
 
 def get_compiler() -> str:
     return opts.get("compiler", "IDO")
