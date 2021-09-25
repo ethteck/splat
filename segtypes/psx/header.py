@@ -27,7 +27,7 @@ class PsxSegHeader(CommonSegHeader):
         header_lines.append(self.get_line("word", rom_bytes[0x40:0x44], "pad"))
         header_lines.append(self.get_line("word", rom_bytes[0x44:0x48], "pad"))
         header_lines.append(self.get_line("word", rom_bytes[0x48:0x4C], "pad"))
-        header_lines.append(self.get_line("ascii", rom_bytes[0x4C:0x80], "Sony Inc"))
+        header_lines.append(self.get_line("ascii", rom_bytes[0x4C:self.rom_end], "Sony Inc"))
 
         header_lines.append("")
 
