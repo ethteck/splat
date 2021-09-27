@@ -124,7 +124,7 @@ class CommonSegCodeSubsegment(Segment):
                     label_name = f".L{branch_target[2:].upper()}"
 
                 op_str = " ".join(op_str_split[:-1] + [label_name])
-            elif mnemonic in ["mtc0", "mfc0", "mtc1", "mfc1", "mtc2", "mfc2"]:
+            elif mnemonic in ["mtc0", "mfc0", "mtc2", "mfc2"]:
                 idx = 2 if big_endian else 1
                 rd = (insn.bytes[idx] & 0xF8) >> 3
                 op_str = op_str.split(" ")[0] + " $" + str(rd)
