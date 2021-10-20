@@ -66,6 +66,7 @@ class LinkerEntry:
 class LinkerWriter():
     def __init__(self):
         self.shiftable: bool = options.get("shiftable", False)
+        self.ignore_discard: bool = options.get("ignore_discard", False)
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
@@ -154,10 +155,11 @@ class LinkerWriter():
         self._end_segment(segment)
 
     def save_linker_script(self):
-        self._writeln("/DISCARD/ :")
-        self._begin_block()
-        self._writeln("*(*);")
-        self._end_block()
+        if not self.ignore_discard:
+            self._writeln("/DISCARD/ :")
+            self._begin_block()
+            self._writeln("*(*);")
+            self._end_block()
 
         self._end_block() # SECTIONS
 
