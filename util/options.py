@@ -77,11 +77,11 @@ def get_create_undefined_syms_auto() -> bool:
 def get_undefined_syms_auto_path():
     return get_base_path() / opts.get("undefined_syms_auto_path", "undefined_syms_auto.txt")
 
-def get_create_objcopy_section_auto():
-    return opts.get("create_objcopy_section_auto", False)
+def get_create_elf_section_list_auto():
+    return opts.get("create_elf_section_list_auto", False)
 
-def get_objcopy_section_path():
-    return get_base_path() / opts.get("objcopy_section_path", "objcopy_sections.txt")
+def get_elf_section_list_path():
+    return get_base_path() / opts.get("elf_section_list_path", "elf_sections.txt")
 
 def get_symbol_addrs_path():
     return get_base_path() / opts.get("symbol_addrs_path", "symbol_addrs.txt")
