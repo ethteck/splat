@@ -8,7 +8,7 @@ import yaml
 import pickle
 from colorama import Style, Fore
 from segtypes.segment import Segment
-from segtypes.linker_entry import LinkerWriter
+from segtypes.linker_entry import LinkerWriter, to_cname
 from util import log
 from util import options
 from util import symbols
@@ -235,6 +235,15 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             linker_writer.add(segment)
         linker_writer.save_linker_script()
         linker_writer.save_symbol_header()
+
+        # write elf_sections.txt - this only lists the generated sections in the elf, not sub sections
+        # that the elf combines into one section
+        if options.get_create_elf_section_list_auto():
+            section_list = ""
+            for segment in all_segments:
+                section_list += "." + to_cname(segment.name) + "\n"
+            with open(options.get_elf_section_list_path(), "w", newline="\n") as f:
+                f.write(section_list)
 
     # Write undefined_funcs_auto.txt
     if options.get_create_undefined_funcs_auto():
