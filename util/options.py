@@ -14,10 +14,7 @@ def initialize(config: Dict, config_path, base_path=None, target_path=None):
         if not "base_path" in opts:
             log.error("Error: Base output dir not specified as a command line arg or via the config yaml (base_path)")
 
-        if type(config_path) == list:
-            opts["base_path"] = Path(config_path[0]).parent / opts["base_path"]
-        else:
-            opts["base_path"] = Path(config_path).parent / opts["base_path"]
+        opts["base_path"] = Path(config_path[0]).parent / opts["base_path"]
 
     if not target_path:
         if "target_path" not in opts:

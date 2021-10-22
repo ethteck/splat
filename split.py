@@ -17,7 +17,7 @@ from util import palettes
 VERSION = "0.7.10"
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
-parser.add_argument("config", help="path to a compatible config .yaml file")
+parser.add_argument("config", help="path to a compatible config .yaml file", action='append')
 parser.add_argument("--target", help="path to a file to split (.z64 rom)")
 parser.add_argument("--basedir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
@@ -114,7 +114,7 @@ def merge_configs(main_config, additional_config):
     # For each key in the dictionary
     # - If list then append to list
     # - If a dictionary then repeat merge on sub dictionary entries
-    # - else assume string or number and replace entry
+    # - Else assume string or number and replace entry
 
     for curkey in additional_config:
         if curkey not in main_config:
@@ -140,15 +140,11 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     log.write(f"splat {VERSION}")
 
     # Load config
-    if type(config_path) == list:
-        config = {}
-        for entry in config_path:
-            with open(entry) as f:
-                additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-            config = merge_configs(config, additional_config)
-    else:
-        with open(config_path) as f:
-            config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    config = {}
+    for entry in config_path:
+        with open(entry) as f:
+            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+        config = merge_configs(config, additional_config)
 
     options.initialize(config, config_path, base_dir, target_path)
     options.set("modes", modes)
