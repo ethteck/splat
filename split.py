@@ -17,7 +17,7 @@ from util import palettes
 VERSION = "0.7.10"
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
-parser.add_argument("config", help="path to a compatible config .yaml file", action='append')
+parser.add_argument("config", help="path to a compatible config .yaml file", nargs='+')
 parser.add_argument("--target", help="path to a file to split (.z64 rom)")
 parser.add_argument("--basedir", help="a directory in which to extract the rom")
 parser.add_argument("--modes", nargs="+", default="all")
