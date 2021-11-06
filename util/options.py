@@ -44,6 +44,9 @@ def get_subalign() -> int:
 def get_generated_c_premble() -> str:
     return opts.get("generated_c_preamble", '#include "common.h"')
 
+def get_generated_s_preamble() -> str:
+    return opts.get("generated_s_preamble")
+
 def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
 

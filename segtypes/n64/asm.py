@@ -17,6 +17,10 @@ class N64SegAsm(CommonSegAsm):
         ret.append(".set noreorder # don't insert nops after branches")
         ret.append(".set gp=64     # allow use of 64-bit general purpose registers")
         ret.append("")
+        preamble = options.get_generated_s_preamble()
+        if (preamble != ""):
+            ret.append(preamble)
+            ret.append("")
         ret.append(".section .text, \"ax\"")
         ret.append("")
 
