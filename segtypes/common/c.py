@@ -173,7 +173,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 c_lines.append("}")
             else:
                 if options.get_compiler() == "GCC":
-                    c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
+                    c_lines.append("INCLUDE_ASM(\"{}\", {});".format("asm/nonmatchings/" + self.name + "/", func_name))
                 else:
                     asm_outpath = Path(os.path.join(asm_out_dir, self.dir, self.name, func_name + ".s"))
                     rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
