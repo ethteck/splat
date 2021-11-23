@@ -157,7 +157,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     if "sha1" in config:
         sha1 = hashlib.sha1(rom_bytes).hexdigest()
-        e_sha1 = config["sha1"]
+        e_sha1 = config["sha1"].lower()
         if e_sha1 != sha1:
             log.error(f"sha1 mismatch: expected {e_sha1}, was {sha1}")
 
