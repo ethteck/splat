@@ -82,12 +82,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             for func in self.funcs_text:
                 func_name = self.parent.get_symbol(func, type="func", local_only=True).name
 
-                if options.get_compiler() == "GCC":
-                    if func_name not in self.defined_funcs:
-                        self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_name)
-                else:
-                    if func_name in self.global_asm_funcs or is_new_c_file:
-                        self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_name)
+                if func_name in self.global_asm_funcs or is_new_c_file:
+                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_name)
 
     def get_gcc_inc_header(self):
         ret = []
