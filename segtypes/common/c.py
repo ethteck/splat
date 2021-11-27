@@ -28,7 +28,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     )
 
     C_GLOBAL_ASM_GCC_RE = re.compile(
-        r"INCLUDE_ASM\(\"(\w+(?:\/)?)*\", (\w+)(?:, \w)*\)",
+        r"INCLUDE_ASM\((\w+, )?\"(\w+(?:\/)?)*\", (\w+)(?:, \w)*\)",
         re.MULTILINE
     )
 
@@ -54,7 +54,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
         if options.get_compiler() == "GCC":
-            return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_GCC_RE.finditer(text))
+            return set(m.group(3) for m in CommonSegC.C_GLOBAL_ASM_GCC_RE.finditer(text))
         else:
             return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text))
 
