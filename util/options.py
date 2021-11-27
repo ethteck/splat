@@ -108,3 +108,6 @@ def get_extensions_path():
         return None
 
     return get_base_path() / ext_opt
+
+def get_use_legacy_include_asm():
+    return opts.get("use_legacy_include_asm", True)

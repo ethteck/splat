@@ -22,8 +22,13 @@ class CommonSegC(CommonSegCodeSubsegment):
         re.MULTILINE
     )
 
-    C_GLOBAL_ASM_RE = re.compile(
-        r"(INCLUDE|GLOBAL)_ASM\(\"(\w+\/)*(\w+)\.s\"\)",
+    C_GLOBAL_ASM_IDO_RE = re.compile(
+        r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)",
+        re.MULTILINE
+    )
+
+    C_GLOBAL_ASM_GCC_RE = re.compile(
+        r"INCLUDE_ASM\(\"(\w+(?:\/)?)*\", (\w+)(?:, \w)*\)",
         re.MULTILINE
     )
 
@@ -42,13 +47,16 @@ class CommonSegC(CommonSegCodeSubsegment):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
-        return set(m.group(2) for m in CommonSegC.C_FUNC_RE.finditer(text))
+        return set(m.group(1) for m in CommonSegC.C_FUNC_RE.finditer(text))
 
     @staticmethod
     def get_global_asm_funcs(c_file):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
-        return set(m.group(3) for m in CommonSegC.C_GLOBAL_ASM_RE.finditer(text))
+        if options.get_compiler() == "GCC":
+            return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_GCC_RE.finditer(text))
+        else:
+            return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text))
 
     def out_path(self) -> Optional[Path]:
         return options.get_src_path() / self.dir / f"{self.name}.c"
@@ -165,7 +173,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                 c_lines.append("}")
             else:
                 if options.get_compiler() == "GCC":
-                    c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
+                    if options.get_use_legacy_include_asm():
+                        c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
+                    else:
+                        c_lines.append("INCLUDE_ASM(\"{}\", {});".format("asm/nonmatchings/" + self.name + "/", func_name))
                 else:
                     asm_outpath = Path(os.path.join(asm_out_dir, self.dir, self.name, func_name + ".s"))
                     rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
