@@ -14,7 +14,7 @@ def initialize(all_segments):
     symbol_ranges = []
 
     symbol_addrs_path = options.get_symbol_addrs_path()
-    
+
     # Manual list of func name / addrs
     if os.path.exists(symbol_addrs_path):
         with open(symbol_addrs_path) as f:
@@ -49,12 +49,14 @@ def initialize(all_segments):
                             sym.rom = rom_addr
                         if info.startswith("dead:"):
                             sym.dead = True
+                        if info.startswith("defined:"):
+                            sym.defined = True
                 all_symbols.append(sym)
 
                 # Symbol ranges
                 if sym.size > 4:
                     symbol_ranges.append(sym)
-                
+
                 is_symbol_isolated(sym, all_segments)
 
 def is_symbol_isolated(symbol, all_segments):
