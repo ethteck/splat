@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union, Literal
 from pathlib import Path
 from util import log
 
@@ -29,7 +29,7 @@ def get(opt, default=None):
 def get_platform() -> str:
     return opts.get("platform", "n64")
 
-def get_endianess() -> str:
+def get_endianess() -> Union[Literal["little"], Literal["big"]]:
     return opts.get("endianess", "little" if get_platform().upper() == "PSX" else "big")
 
 def get_compiler() -> str:
