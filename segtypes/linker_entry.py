@@ -117,10 +117,7 @@ class LinkerWriter():
                 data_ended = True
                 self._write_symbol(f"{seg_name}_DATA_END", ".")
 
-                if not bss_started and i < (len(entries) - 1) and "bss" in entries[i + 1].section:
-                    bss_started = True
-                    self._write_symbol(f"{seg_name}_BSS_START", ".")
-            elif not bss_started and "bss" in cur_section:
+            if data_ended and not bss_started and "bss" in cur_section:
                 bss_started = True
                 self._write_symbol(f"{seg_name}_BSS_START", ".")
 
