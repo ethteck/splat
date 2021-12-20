@@ -60,6 +60,8 @@ class LinkerEntry:
         self.section = section
         if self.section == "linker" or self.section == "linker_offset":
             self.object_path = None
+        elif self.segment.type == "lib":
+            self.object_path = object_path
         else:
             self.object_path = path_to_object_path(object_path)
 
@@ -133,7 +135,7 @@ class LinkerWriter():
                     if start % 0x10 != 0 and i != 0:
                         force_new_section = True
 
-            if entry.object_path and cur_section == ".data":
+            if entry.object_path and cur_section == ".data" and entry.segment.type != "lib":
                 path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment.dir / entry.segment.name) + ".".join(entry.object_path.suffixes[:-1]))
                 self._write_symbol(path_cname, ".")
 
