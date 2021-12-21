@@ -1,7 +1,7 @@
 from segtypes.n64.segment import N64Segment
 from segtypes.linker_entry import LinkerEntry
 
-from util import options
+from util import options, log
 
 class CommonSegLib(N64Segment):
 
