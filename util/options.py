@@ -114,3 +114,6 @@ def get_use_legacy_include_asm():
 
 def get_lib_path() -> Path:
     return get_base_path() / opts.get("lib_path", "lib")
+
+def get_migrate_rodata_to_functions() -> bool:
+    return opts.get("migrate_rodata_to_functions", True)

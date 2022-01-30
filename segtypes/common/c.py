@@ -129,7 +129,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             out_lines = []
 
         if self.parent and isinstance(self.parent, CommonSegGroup):
-            if func in self.parent.rodata_syms:
+            if func in self.parent.rodata_syms and options.get_migrate_rodata_to_functions():
                 func_rodata = list({s for s in self.parent.rodata_syms[func] if s.disasm_str})
                 func_rodata.sort(key=lambda s:s.vram_start)
 
