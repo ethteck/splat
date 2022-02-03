@@ -117,3 +117,6 @@ def get_lib_path() -> Path:
 
 def get_migrate_rodata_to_functions() -> bool:
     return opts.get("migrate_rodata_to_functions", True)
+
+def get_asm_function_macro() -> str:
+    return opts.get("asm_function_macro", "glabel")
