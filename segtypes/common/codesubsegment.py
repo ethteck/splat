@@ -280,6 +280,8 @@ class CommonSegCodeSubsegment(Segment):
 
     def add_labels(self, funcs, addsuffix):
         ret = {}
+        
+        function_macro = options.get_asm_function_macro()
 
         for func in funcs:
             func_text = []
@@ -287,7 +289,7 @@ class CommonSegCodeSubsegment(Segment):
             # Add function glabel
             rom_addr = funcs[func][0][3]
             sym = self.parent.get_symbol(func, type="func", create=True, define=True, local_only=True)
-            func_text.append(f"glabel {sym.name}")
+            func_text.append(f"{function_macro} {sym.name}")
 
             indent_next = False
 
