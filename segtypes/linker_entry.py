@@ -87,13 +87,16 @@ class LinkerWriter():
 
         seg_name = get_segment_cname(segment)
 
+        # TODO ANY ORDER
         self._write_symbol(f"{seg_name}_TEXT_START", ".")
 
         force_new_section = False
+        text_started = True
         text_ended = False
         data_started = False
         data_ended = False
         bss_started = False
+        bss_ended = False
         cur_section = None
 
         for i, entry in enumerate(entries):
@@ -107,6 +110,7 @@ class LinkerWriter():
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f". - {get_segment_cname(segment)}_ROM_START")
                 continue
 
+            # TODO ANY ORDER
             # text/data/bss START/END labels
             if not data_started and ("data" in cur_section or "rodata" in cur_section):
                 if not text_ended:
@@ -141,15 +145,13 @@ class LinkerWriter():
 
             self._writeln(f"{entry.object_path}({cur_section});")
 
-        if not text_ended:
+        # TODO ANY ORDER
+        if text_started and not text_ended:
             self._write_symbol(f"{seg_name}_TEXT_END", ".")
-        if not data_started:
-            self._write_symbol(f"{seg_name}_DATA_START", ".")
-        if not data_ended:
+        if data_started and not data_ended:
             self._write_symbol(f"{seg_name}_DATA_END", ".")
-        if not bss_started:
-            self._write_symbol(f"{seg_name}_BSS_START", ".")
-        self._write_symbol(f"{seg_name}_BSS_END", ".")
+        if bss_started and not bss_ended:
+            self._write_symbol(f"{seg_name}_BSS_END", ".")
 
         self._end_segment(segment)
 

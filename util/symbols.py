@@ -47,10 +47,13 @@ def initialize(all_segments):
                         if info.startswith("rom:"):
                             rom_addr = int(info.split(":")[1], 0)
                             sym.rom = rom_addr
+                        # TODO proper type parsing
                         if info.startswith("dead:"):
                             sym.dead = True
                         if info.startswith("defined:"):
                             sym.defined = True
+                        if info.startswith("extract:"):
+                            sym.extract = False
                 all_symbols.append(sym)
 
                 # Symbol ranges
@@ -142,3 +145,4 @@ class Symbol:
         self.access_mnemonic = None
         self.disasm_str = None
         self.dead = False
+        self.extract = True

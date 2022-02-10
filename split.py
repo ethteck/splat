@@ -264,7 +264,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         linker_writer.save_linker_script()
         linker_writer.save_symbol_header()
 
-        # write elf_sections.txt - this only lists the generated sections in the elf, not sub sections
+        # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
         # that the elf combines into one section
         if options.get_create_elf_section_list_auto():
             section_list = ""

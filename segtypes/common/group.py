@@ -13,6 +13,7 @@ class CommonSegGroup(CommonSegment):
 
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
+        # TODO ANY ORDER
         # TODO: move this to CommonSegCode
         if isinstance(yaml, dict):
             # TODO Note: These start/end vram options don't really do anything yet
@@ -25,9 +26,9 @@ class CommonSegGroup(CommonSegment):
             bss_vram = Range()
 
         self.section_boundaries = {
-            "data": data_vram,
-            "rodata": rodata_vram,
-            "bss": bss_vram,
+            ".data": data_vram,
+            ".rodata": rodata_vram,
+            ".bss": bss_vram,
         }
 
         self.subsegments = self.parse_subsegments(yaml)
@@ -90,8 +91,7 @@ class CommonSegGroup(CommonSegment):
         prev_start: RomAddr = -1
         inserts: OrderedDict[str, int] = OrderedDict() # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
-        sections = ["data", "rodata", "bss"]
-        found_sections = {"data": Range(), "rodata": Range(), "bss": Range()} # Stores yaml index where a section was first found
+        found_sections = {s_name:Range() for s_name in self.section_order} # Stores yaml index where a section was first found
 
         if "subsegments" not in segment_yaml:
             return []
@@ -112,8 +112,7 @@ class CommonSegGroup(CommonSegment):
                 typ = Segment.parse_segment_type(subsection_yaml)
                 if typ.startswith("all_"):
                     typ = typ[4:]
-                elif typ.startswith("."):
-                    typ = typ[1:]
+
                 if typ in found_sections:
                     if cur_section is None:
                         # Starting point
@@ -137,7 +136,7 @@ class CommonSegGroup(CommonSegment):
             if cur_section is not None:
                 found_sections[cur_section].end = len(segment_yaml["subsegments"])
 
-            inserts = self.find_inserts(found_sections, sections)
+            inserts = self.find_inserts(found_sections, self.section_order)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
             # rompos marker
@@ -168,15 +167,16 @@ class CommonSegGroup(CommonSegment):
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
 
+            # TODO ANY ORDER
             # TODO: assumes section order - generalize and stuff
-            if not self.section_boundaries["data"].has_start() and "data" in segment.type:
-                self.section_boundaries["data"].start = segment.vram_start
-            if not self.section_boundaries["rodata"].has_start() and "rodata" in segment.type:
-                self.section_boundaries["data"].end = segment.vram_start
-                self.section_boundaries["rodata"].start = segment.vram_start
-            if not self.section_boundaries["rodata"].has_end() and "bss" in segment.type:
-                self.section_boundaries["rodata"].end = segment.vram_start
-                self.section_boundaries["bss"].start = segment.vram_start
+            if not self.section_boundaries[".data"].has_start() and "data" in segment.type:
+                self.section_boundaries[".data"].start = segment.vram_start
+            if not self.section_boundaries[".rodata"].has_start() and "rodata" in segment.type:
+                self.section_boundaries[".data"].end = segment.vram_start
+                self.section_boundaries[".rodata"].start = segment.vram_start
+            if not self.section_boundaries[".rodata"].has_end() and "bss" in segment.type:
+                self.section_boundaries[".rodata"].end = segment.vram_start
+                self.section_boundaries[".bss"].start = segment.vram_start
 
             ret.append(segment)
 
@@ -208,9 +208,10 @@ class CommonSegGroup(CommonSegment):
         while check:
             check = self.handle_alls(ret, base_segments)
 
-        if self.section_boundaries["rodata"].has_start() and not self.section_boundaries["rodata"].has_end():
+        # TODO ANY ORDER
+        if self.section_boundaries[".rodata"].has_start() and not self.section_boundaries["rodata"].has_end():
             assert self.vram_end is not None
-            self.section_boundaries["rodata"].end = self.vram_end
+            self.section_boundaries[".rodata"].end = self.vram_end
 
         return ret
 

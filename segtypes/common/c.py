@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from util import log, options
+from util.symbols import Symbol
 
 
 class CommonSegC(CommonSegCodeSubsegment):
@@ -88,10 +89,11 @@ class CommonSegC(CommonSegCodeSubsegment):
                     is_new_c_file = True
 
             for func in self.funcs_text:
-                func_name = self.parent.get_symbol(func, type="func", local_only=True).name
+                func_sym = self.parent.get_symbol(func, type="func", local_only=True)
+                assert(func_sym is not None)
 
-                if func_name in self.global_asm_funcs or is_new_c_file:
-                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_name)
+                if func_sym.name in self.global_asm_funcs or is_new_c_file:
+                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_sym.name)
 
     def get_gcc_inc_header(self):
         ret = []
@@ -122,14 +124,20 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if found:
                     break
 
-    def create_c_asm_file(self, funcs_text, func, out_dir, func_name):
+    def create_c_asm_file(self, funcs_text, func, out_dir, func_sym: Symbol):
+        outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
+
+        # Skip extraction if the file exists and the symbol is marked as extract=false
+        if outpath.exists() and not func_sym.extract:
+            return
+
         if options.get_compiler() == "GCC":
             out_lines = self.get_gcc_inc_header()
         else:
             out_lines = []
 
         if self.parent and isinstance(self.parent, CommonSegGroup):
-            if func in self.parent.rodata_syms and options.get_migrate_rodata_to_functions():
+            if options.get_migrate_rodata_to_functions() and func in self.parent.rodata_syms:
                 func_rodata = list({s for s in self.parent.rodata_syms[func] if s.disasm_str})
                 func_rodata.sort(key=lambda s:s.vram_start)
 
@@ -149,12 +157,11 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_lines.extend(funcs_text[func][0])
         out_lines.append("")
 
-        outpath = Path(os.path.join(out_dir, self.name, func_name + ".s"))
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
         with open(outpath, "w", newline="\n") as f:
             f.write("\n".join(out_lines))
-        self.log(f"Disassembled {func_name} to {outpath}")
+        self.log(f"Disassembled {func_sym.name} to {outpath}")
 
     def create_c_file(self, funcs_text, asm_out_dir, c_path):
         c_lines = self.get_c_preamble()

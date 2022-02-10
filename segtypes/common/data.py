@@ -1,4 +1,3 @@
-from segtypes.common.code import CommonSegCode
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
 from pathlib import Path
@@ -55,7 +54,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         return CommonSegCodeSubsegment.get_linker_entries(self)
 
     def check_jtbls(self, rom_bytes, syms: List[Symbol]):
-        endian = options.get_endianess()
+        endianness = options.get_endianess()
+
         for i, sym in enumerate(syms):
             if sym.type == "jtbl":
                 start = self.get_most_parent().ram_to_rom(syms[i].vram_start)
@@ -66,13 +66,14 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 b = 0
                 last_bits = 0
                 while b < len(sym_bytes):
-                    bits = int.from_bytes(sym_bytes[b : b + 4], endian)
+                    bits = int.from_bytes(sym_bytes[b : b + 4], endianness)
 
                     if last_bits != 0 and bits != 0 and abs(last_bits - bits) > 0x100000:
                         new_sym_rom_start = start + b
                         new_sym_ram_start = self.get_most_parent().rom_to_ram(new_sym_rom_start)
                         sym.size = new_sym_rom_start - sym.rom
 
+                        # Create new symbol - this is not a valid jump table
                         syms.insert(i + 1, self.get_most_parent().get_symbol(new_sym_ram_start, create=True, define=True, local_only=True))
                         return False
 
@@ -304,7 +305,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 if dis_start % 2 != 0:
                     stype = "byte"
 
-                if not rodata_encountered and mnemonic == "jtbl":
+                # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)
+                if not rodata_encountered and mnemonic == "jtbl" and self.get_most_parent().rodata_follows_data:
                     rodata_encountered = True
                     ret += "\n\n\n.section .rodata"
 

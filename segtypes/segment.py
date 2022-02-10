@@ -7,7 +7,6 @@ from pathlib import Path
 from util import log
 from util import options
 from util.symbols import Symbol
-import sys
 
 # circular import
 if TYPE_CHECKING:
@@ -29,6 +28,11 @@ def parse_segment_subalign(segment: Union[dict, list]) -> int:
         return int(segment.get("subalign", default))
     return default
 
+def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
+    default = options.get_section_order()
+    if isinstance(segment, dict):
+        return segment.get("section_order", default)
+    return default
 
 class Segment:
     require_unique_name = True
@@ -125,6 +129,7 @@ class Segment:
         self.given_dir = given_dir
         self.given_seg_symbols: Dict[int, List[Symbol]] = {} # Symbols known to be in this segment
         self.given_ext_symbols: Dict[int, List[Symbol]] = {} # Symbols not in this segment but also not from other overlapping ram address ranges
+        self.given_section_order: List[str] = options.get_section_order()
 
         self.parent:Optional[Segment] = None
         self.sibling:Optional[Segment] = None
@@ -159,7 +164,9 @@ class Segment:
         given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
         args:List[str] = [] if isinstance(yaml, dict) else yaml[3:]
 
-        return cls(rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml)
+        ret = cls(rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml)
+        cls.given_section_order = parse_segment_section_order(yaml)
+        return ret
 
     @property
     def needs_symbols(self) -> bool:
@@ -214,6 +221,16 @@ class Segment:
             return self.vram_start + self.size
         else:
             return None
+    
+    @property
+    def section_order(self) -> List[str]:
+        return self.given_section_order
+    
+    @property
+    def rodata_follows_data(self) -> bool:
+        if ".rodata" not in self.section_order or ".data" not in self.section_order:
+            return False
+        return self.section_order.index(".rodata") - self.section_order.index(".data") == 1
 
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:

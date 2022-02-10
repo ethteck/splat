@@ -19,6 +19,7 @@ class CommonSegCode(CommonSegGroup):
     def needs_symbols(self) -> bool:
         return True
 
+    # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):
         if self.section_boundaries["rodata"].is_complete():
             if self.section_boundaries["rodata"].start <= sym.vram_start < self.section_boundaries["rodata"].end:
@@ -47,7 +48,7 @@ class CommonSegCode(CommonSegGroup):
             return None
         return items[0]
 
-    def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False, dead=True):
+    def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Optional[Symbol]:
         ret = None
         rom = None
 
