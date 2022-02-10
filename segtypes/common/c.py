@@ -93,7 +93,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 assert(func_sym is not None)
 
                 if func_sym.name in self.global_asm_funcs or is_new_c_file:
-                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_sym.name)
+                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_sym)
 
     def get_gcc_inc_header(self):
         ret = []

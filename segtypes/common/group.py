@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from typing import List, Dict
-import sys
 from util.range import Range
 from util import log, options
 from segtypes.common.segment import CommonSegment
@@ -13,24 +12,8 @@ class CommonSegGroup(CommonSegment):
 
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
-        # TODO ANY ORDER
         # TODO: move this to CommonSegCode
-        if isinstance(yaml, dict):
-            # TODO Note: These start/end vram options don't really do anything yet
-            data_vram = Range(yaml.get("data_vram_start"), yaml.get("data_vram_end"))
-            rodata_vram = Range(yaml.get("rodata_vram_start"), yaml.get("rodata_vram_end"))
-            bss_vram = Range(yaml.get("bss_vram_start"), yaml.get("bss_vram_end"))
-        else:
-            data_vram = Range()
-            rodata_vram = Range()
-            bss_vram = Range()
-
-        self.section_boundaries = {
-            ".data": data_vram,
-            ".rodata": rodata_vram,
-            ".bss": bss_vram,
-        }
-
+        self.section_boundaries = {s_name: Range() for s_name in self.section_boundaries}
         self.subsegments = self.parse_subsegments(yaml)
 
     @property
@@ -91,7 +74,7 @@ class CommonSegGroup(CommonSegment):
         prev_start: RomAddr = -1
         inserts: OrderedDict[str, int] = OrderedDict() # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
-        found_sections = {s_name:Range() for s_name in self.section_order} # Stores yaml index where a section was first found
+        found_sections = {k:Range() for k in self.section_boundaries} # Stores yaml index where a section was first found
 
         if "subsegments" not in segment_yaml:
             return []

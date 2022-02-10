@@ -47,7 +47,7 @@ def initialize(all_segments):
                         if info.startswith("rom:"):
                             rom_addr = int(info.split(":")[1], 0)
                             sym.rom = rom_addr
-                        # TODO proper type parsing
+                        # TODO proper value parsing
                         if info.startswith("dead:"):
                             sym.dead = True
                         if info.startswith("defined:"):
