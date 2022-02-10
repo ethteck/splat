@@ -30,6 +30,7 @@ def get(opt, default=None):
 def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
 
+# TODO standardize names of options for categories & decide whether to stick to get_ or drop it
 ################################################################################
 # Debug / logging options
 ################################################################################

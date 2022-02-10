@@ -200,6 +200,7 @@ class CommonSegCodeSubsegment(Segment):
             for i in range(len(func)):
                 insn = func[i][0]
 
+                # TODO any order
                 # Ensure the first item in the list is always ahead of where we're looking
                 while len(possible_jtbl_jumps) > 0 and possible_jtbl_jumps[0][0] < insn.address:
                     del possible_jtbl_jumps[0]
@@ -249,15 +250,18 @@ class CommonSegCodeSubsegment(Segment):
                                 sym = None
                                 offset_str = ""
 
-                                if symbol_addr > func_addr and symbol_addr < self.parent.vram_end and len(possible_jtbl_jumps) > 0 and func_end_addr - s_insn.address >= 0x30:
-                                    for jump in possible_jtbl_jumps:
-                                        if jump[1] == s_op_split[0]:
-                                            dist_to_jump = possible_jtbl_jumps[0][0] - s_insn.address
-                                            if dist_to_jump <= 16:
-                                                sym = self.parent.get_symbol(symbol_addr, create=True, reference=True, type="jtbl", local_only=True)
+                                # Ensure this is in a place that could be the .rodata section #TODO ANY ORDER
+                                if symbol_addr > func_addr and symbol_addr < self.parent.vram_end:
+                                    # If we've seen possible jumps to a jumptable and this symbol isn't too close to the end of the function
+                                    if len(possible_jtbl_jumps) > 0 and func_end_addr - s_insn.address >= 0x30:
+                                        for jump in possible_jtbl_jumps:
+                                            if jump[1] == s_op_split[0]:
+                                                dist_to_jump = possible_jtbl_jumps[0][0] - s_insn.address
+                                                if dist_to_jump <= 16:
+                                                    sym = self.parent.get_symbol(symbol_addr, create=True, reference=True, type="jtbl", local_only=True)
 
-                                                self.parent.jumptables[symbol_addr] = (func_addr, func_end_addr)
-                                                break
+                                                    self.parent.jumptables[symbol_addr] = (func_addr, func_end_addr)
+                                                    break
 
                                 if not sym:
                                     sym = self.parent.get_symbol(symbol_addr, create=True, offsets=True, reference=True)
@@ -363,6 +367,7 @@ class CommonSegCodeSubsegment(Segment):
 
         return ret
 
+    # TODO ANY ORDER ?
     def gather_jumptable_labels(self, rom_bytes):
         # TODO: use the seg_symbols for this
         # jumptables = [j.type == "jtbl" for j in self.seg_symbols]
