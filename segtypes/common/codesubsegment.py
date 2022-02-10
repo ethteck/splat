@@ -187,7 +187,7 @@ class CommonSegCodeSubsegment(Segment):
 
     # Determine symbols
     def determine_symbols(self, funcs):
-        hi_lo_max_distance = options.get("hi_lo_max_distance", 6)
+        hi_lo_max_distance = options.hi_lo_max_distance()
         ret = {}
 
         for func_addr in funcs:
@@ -293,8 +293,8 @@ class CommonSegCodeSubsegment(Segment):
 
             indent_next = False
 
-            mnemonic_ljust = options.get("mnemonic_ljust", 11)
-            rom_addr_padding = options.get("rom_address_padding", None)
+            mnemonic_ljust = options.mnemonic_ljust()
+            rom_addr_padding = options.rom_address_padding()
 
             for insn in funcs[func]:
                 insn_addr = insn[0].address
@@ -340,7 +340,7 @@ class CommonSegCodeSubsegment(Segment):
 
             ret[func] = (func_text, rom_addr)
 
-            if options.get("find_file_boundaries"):
+            if options.find_file_boundaries():
                 # If this is not the last function in the file
                 if func != list(funcs.keys())[-1]:
 

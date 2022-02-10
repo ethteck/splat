@@ -80,7 +80,7 @@ class CommonSegGroup(CommonSegment):
             return []
 
         # Mark any manually added dot types
-        if options.get("auto_all_sections"):
+        if options.auto_all_sections():
             cur_section = None
 
             for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):

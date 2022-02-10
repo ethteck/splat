@@ -66,7 +66,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         if self.rom_start is not None and self.rom_end is not None and self.rom_start != self.rom_end:
             path = self.out_path()
             if path:
-                if options.get("do_c_func_detection", True) and os.path.exists(path):
+                if options.do_c_func_detection() and os.path.exists(path):
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.mark_c_funcs_as_defined(self.defined_funcs)
@@ -84,7 +84,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             c_path = self.out_path()
             if c_path:
-                if not os.path.exists(c_path) and options.get("create_new_c_files", True):
+                if not os.path.exists(c_path) and options.get_create_c_files():
                     self.create_c_file(self.funcs_text, asm_out_dir, c_path)
                     is_new_c_file = True
 

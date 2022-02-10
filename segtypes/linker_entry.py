@@ -67,8 +67,8 @@ class LinkerEntry:
 
 class LinkerWriter():
     def __init__(self):
-        self.shiftable: bool = options.get("shiftable", False)
-        self.linker_discard_section: bool = options.get("linker_discard_section", True)
+        self.shiftable: bool = options.get_shiftable()
+        self.linker_discard_section: bool = options.linker_discard_section()
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
@@ -127,7 +127,7 @@ class LinkerWriter():
                 bss_started = True
                 self._write_symbol(f"{seg_name}_BSS_START", ".")
 
-            if options.get("enable_ld_alignment_hack", False):
+            if options.enable_ld_alignment_hack():
                 start = entry.segment.rom_start
                 if isinstance(start, int):
                     # Create new sections for non-subalign alignment (hack)

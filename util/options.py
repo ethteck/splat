@@ -30,6 +30,14 @@ def get(opt, default=None):
 def mode_active(mode):
     return mode in opts["modes"] or "all" in opts["modes"]
 
+################################################################################
+# Debug / logging options
+################################################################################
+
+# Determines whether to log more verbose output
+def verbose() -> bool:
+    return opts.get("verbose", False)
+
 
 ################################################################################
 # Global options
@@ -55,10 +63,6 @@ def get_endianess() -> Union[Literal["little"], Literal["big"]]:
 # this can be overridden per-segment
 def get_section_order() -> List[str]:
     return opts.get("section_order", [".text", ".data", ".rodata", ".bss"])
-
-# Determines the default subalign value to be specified in the generated linker script
-def get_subalign() -> int:
-    return opts.get("subalign", 16)
 
 # Determines the code that is inserted by default in generated .c files
 def get_generated_c_premble() -> str:
@@ -88,10 +92,6 @@ def get_symbol_addrs_path():
 # Determines the path to the project build directory
 def get_build_path():
     return get_base_path() / opts.get("build_path", "build")
-
-# Determines the desired path to the linker script that splat will generate
-def get_ld_script_path():
-    return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
 
 # Determines the path to the source code directory
 def get_src_path() -> Path:
@@ -131,13 +131,6 @@ def get_create_elf_section_list_auto():
 def get_elf_section_list_path():
     return get_base_path() / opts.get("elf_section_list_path", "elf_sections.txt")
 
-# Determines the desired path to the linker symbol header, which exposes externed definitions for all segment ram/rom start/end locations
-def get_linker_symbol_header_path() -> Optional[Path]:
-    if "linker_symbol_header_path" in opts:
-        return get_base_path() / str(opts["linker_symbol_header_path"])
-    else:
-        return None
-
 # Determines the path in which to search for custom splat extensions
 def get_extensions_path():
     ext_opt = opts.get("extensions_path")
@@ -152,8 +145,63 @@ def get_lib_path() -> Path:
 
 
 ################################################################################
-# Assembly-related options
+# Linker script options
 ################################################################################
+
+# Determines the desired path to the linker script that splat will generate
+def get_ld_script_path():
+    return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
+
+# Determines the default subalign value to be specified in the generated linker script
+def get_subalign() -> int:
+    return opts.get("subalign", 16)
+
+# Determines whether to automatically configure the linker script to link against common sections for all files 
+# when the yaml doesn't have specific configurations for these sections. See release notes for details
+def auto_all_sections() -> bool:
+    return opts.get("auto_all_sections", False)
+
+# Determines the desired path to the linker symbol header, which exposes externed definitions for all segment ram/rom start/end locations
+def get_linker_symbol_header_path() -> Optional[Path]:
+    if "linker_symbol_header_path" in opts:
+        return get_base_path() / str(opts["linker_symbol_header_path"])
+    else:
+        return None
+
+# Determines whether to create a shiftable linker script (EXPERIMENTAL)
+def get_shiftable() -> bool:
+    return opts.get("shiftable", False)
+
+# Determines whether to add a discard section to the linker script
+def linker_discard_section() -> bool:
+    return opts.get("linker_discard_section", True)
+
+# Determines whether to use a silly hack in the linker script to maybe help enforce alignment (DO NOT USE?)
+def enable_ld_alignment_hack() -> bool:
+    return opts.get("enable_ld_alignment_hack", False)
+
+
+################################################################################
+# C file options
+################################################################################
+
+# Determines whether to create new c files if they don't exist
+def get_create_c_files() -> bool:
+    return opts.get("create_c_files", True)
+
+# Determines whether to detect matched/unmatched functions in existing c files
+# so we can avoid creating .s files for already-decompiled functions
+def do_c_func_detection() -> bool:
+    return opts.get("do_c_func_detection", True)
+
+
+################################################################################
+# (Dis)assembly-related options
+################################################################################
+
+# Determines whether to detect and hint to the user about likely file splits when disassembling
+def find_file_boundaries() -> bool:
+    return opts.get("find_file_boundaries", True)
 
 # Determines whether to attempt to automatically migrate rodata into functions (only works in certain circumstances)
 def get_migrate_rodata_to_functions() -> bool:
@@ -162,6 +210,22 @@ def get_migrate_rodata_to_functions() -> bool:
 # Determines the macro used to declare functions in asm files
 def get_asm_function_macro() -> str:
     return opts.get("asm_function_macro", "glabel")
+
+# Determines the maximum number of instructions to attempt to match hi/lo pairs for symbols when disassembling
+def hi_lo_max_distance() -> int:
+    return opts.get("hi_lo_max_distance", 6)
+
+# Determines the number of characters to left align before the TODO finish documenting
+def mnemonic_ljust() -> int:
+    return opts.get("mnemonic_ljust", 11)
+
+# Determines whether to pad the rom address 
+def rom_address_padding() -> bool:
+    return opts.get("rom_address_padding", False)
+
+# TODO document
+def asm_endlabels() -> bool:
+    return opts.get("asm_endlabels", False)
 
 
 ################################################################################

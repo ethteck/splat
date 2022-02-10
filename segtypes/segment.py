@@ -294,7 +294,7 @@ class Segment:
             return []
 
     def log(self, msg):
-        if options.get("verbose", False):
+        if options.verbose():
             log.write(f"{self.type} {self.name}: {msg}")
 
     def warn(self, msg: str):
