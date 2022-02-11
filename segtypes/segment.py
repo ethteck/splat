@@ -232,6 +232,12 @@ class Segment:
             return False
         return self.section_order.index(".rodata") - self.section_order.index(".data") == 1
 
+    @property
+    def text_follows_rodata(self) -> bool:
+        if ".text" not in self.section_order or ".rodata" not in self.section_order:
+            return False
+        return self.section_order.index(".text") - self.section_order.index(".rodata") == 1
+
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
             return vram >= self.vram_start and vram < self.vram_end

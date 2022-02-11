@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from typing import List, Dict
+from segtypes.common.linker_section import dotless_type_equals
 from util.range import Range
 from util import log, options
 from segtypes.common.segment import CommonSegment
@@ -13,7 +14,7 @@ class CommonSegGroup(CommonSegment):
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
         # TODO: move this to CommonSegCode
-        self.section_boundaries = {s_name: Range() for s_name in self.section_boundaries}
+        self.section_boundaries = OrderedDict((s_name, Range()) for s_name in self.section_boundaries)
         self.subsegments = self.parse_subsegments(yaml)
 
     @property
@@ -48,7 +49,7 @@ class CommonSegGroup(CommonSegment):
                 return True
         return False
 
-    def find_inserts(self, found_sections: Dict[str, Range], section_order) -> "OrderedDict[str, int]":
+    def find_inserts(self, found_sections: OrderedDict[str, Range], section_order) -> "OrderedDict[str, int]":
         inserts = OrderedDict()
 
         for i, section in enumerate(section_order):
@@ -74,7 +75,7 @@ class CommonSegGroup(CommonSegment):
         prev_start: RomAddr = -1
         inserts: OrderedDict[str, int] = OrderedDict() # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
-        found_sections = {k:Range() for k in self.section_boundaries} # Stores yaml index where a section was first found
+        found_sections = OrderedDict((s_name, Range()) for s_name in self.section_boundaries) # Stores yaml index where a section was first found
 
         if "subsegments" not in segment_yaml:
             return []
@@ -150,16 +151,12 @@ class CommonSegGroup(CommonSegment):
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
 
-            # TODO ANY ORDER
-            # TODO: assumes section order - generalize and stuff
-            if not self.section_boundaries[".data"].has_start() and "data" in segment.type:
-                self.section_boundaries[".data"].start = segment.vram_start
-            if not self.section_boundaries[".rodata"].has_start() and "rodata" in segment.type:
-                self.section_boundaries[".data"].end = segment.vram_start
-                self.section_boundaries[".rodata"].start = segment.vram_start
-            if not self.section_boundaries[".rodata"].has_end() and "bss" in segment.type:
-                self.section_boundaries[".rodata"].end = segment.vram_start
-                self.section_boundaries[".bss"].start = segment.vram_start
+            for i, section in enumerate(self.section_order):
+                if not self.section_boundaries[section].has_start() and dotless_type_equals(section, segment.type):
+                    if i > 0:
+                        prev_section = self.section_order[i - 1]
+                        self.section_boundaries[prev_section].end = segment.vram_start
+                    self.section_boundaries[section].start = segment.vram_start
 
             ret.append(segment)
 
@@ -191,7 +188,7 @@ class CommonSegGroup(CommonSegment):
         while check:
             check = self.handle_alls(ret, base_segments)
 
-        # TODO ANY ORDER
+        # TODO why is this necessary?
         if self.section_boundaries[".rodata"].has_start() and not self.section_boundaries["rodata"].has_end():
             assert self.vram_end is not None
             self.section_boundaries[".rodata"].end = self.vram_end
