@@ -54,7 +54,7 @@ def get_base_path() -> Path:
     return Path(opts["base_path"])
 
 def get_asset_path() -> Path:
-    return Path(get_base_path() / opts.get("asset_path", "assets")).relative_to(get_base_path())
+    return get_base_path() / opts.get("asset_path", "assets")
 
 def get_target_path() -> Path:
     return get_base_path() / opts["target_path"]
@@ -90,8 +90,7 @@ def get_symbol_addrs_path():
     return get_base_path() / opts.get("symbol_addrs_path", "symbol_addrs.txt")
 
 def get_build_path():
-    # TODO maybe can just return build_path...
-    return Path(get_base_path() / opts.get("build_path", "build")).relative_to(get_base_path())
+    return get_base_path() / opts.get("build_path", "build")
 
 def get_ld_script_path():
     return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
