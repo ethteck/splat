@@ -336,7 +336,7 @@ class CommonSegCodeSubsegment(Segment):
 
                                 sym_label = sym.name + offset_str
 
-                                func[i] += ("%hi({})".format(sym_label),)                                
+                                func[i] += ("%hi({})".format(sym_label),)
                                 func[j] += ("%lo({}){}".format(sym_label, reg_ext),)
                                 break
             ret[func_addr] = func
@@ -353,7 +353,7 @@ class CommonSegCodeSubsegment(Segment):
             # Add function glabel
             rom_addr = funcs[func][0][3]
             sym = self.parent.get_symbol(func, type="func", create=True, define=True, local_only=True)
-            if options.get("compiler", "IDO") == "SN64":
+            if options.get_compiler() == "SN64":
                 func_text.append(f".globl {sym.name}")
                 func_text.append(f".ent {sym.name}")
                 func_text.append(f"{sym.name}:")

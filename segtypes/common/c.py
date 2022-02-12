@@ -73,8 +73,12 @@ class CommonSegC(CommonSegCodeSubsegment):
             close_paren_pos = CommonSegC.get_close_parenthesis(text, pos + len("INCLUDE_ASM("))
             macro_contents = text[pos:close_paren_pos]
             macro_args = macro_contents.split(',')
-            if len(macro_args) >= 3:
-                yield macro_args[2].strip(' )')
+            if options.get_use_legacy_include_asm():
+                if len(macro_args) >= 3:
+                    yield macro_args[2].strip(' )')
+            else:
+                if len(macro_args) >= 2:
+                    yield macro_args[1].strip(' )')
 
     @staticmethod
     def get_global_asm_funcs(c_file):
