@@ -119,3 +119,6 @@ def get_migrate_rodata_to_functions() -> bool:
 
 def get_asm_function_macro() -> str:
     return opts.get("asm_function_macro", "glabel")
+
+def use_o_as_suffix() -> bool:
+    return opts.get("o_as_suffix", False)

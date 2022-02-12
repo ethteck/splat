@@ -11,7 +11,7 @@ class CommonSegAsm(CommonSegCodeSubsegment):
 
     def scan(self, rom_bytes: bytes):
         if self.rom_start != "auto" and self.rom_end != "auto" and self.rom_start != self.rom_end:
-            self.funcs_text = self.disassemble_code(rom_bytes, options.get("asm_endlabels", False))
+            self.funcs_text = self.disassemble_code(rom_bytes, options.get("asm_endlabels", False), is_asm=True)
 
     def get_file_header(self):
         return []
