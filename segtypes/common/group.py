@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from typing import List, Dict
+import typing
 from segtypes.common.linker_section import dotless_type
 from util.range import Range
 from util import log, options
@@ -49,7 +50,7 @@ class CommonSegGroup(CommonSegment):
                 return True
         return False
 
-    def find_inserts(self, found_sections: OrderedDict[str, Range]) -> "OrderedDict[str, int]":
+    def find_inserts(self, found_sections: typing.OrderedDict[str, Range]) -> "OrderedDict[str, int]":
         inserts = OrderedDict()
 
         section_order = self.section_order
