@@ -28,11 +28,6 @@ class CommonSegC(CommonSegCodeSubsegment):
         re.MULTILINE
     )
 
-    C_GLOBAL_ASM_GCC_RE = re.compile(
-        r"INCLUDE_ASM\((\w+, )?\"(\w+(?:\/)?)*\", (\w+)(?:, \w)*\)",
-        re.MULTILINE
-    )
-
     @staticmethod
     def strip_c_comments(text):
         def replacer(match):
@@ -51,11 +46,47 @@ class CommonSegC(CommonSegCodeSubsegment):
         return set(m.group(1) for m in CommonSegC.C_FUNC_RE.finditer(text))
 
     @staticmethod
+    def find_all_instances(str, sub):
+        start = 0
+        while True:
+            start = str.find(sub, start)
+            if start == -1: return
+            yield start
+            start += len(sub)
+    
+    @staticmethod
+    def get_close_parenthesis(str, pos):
+        paren_count = 0
+        while True:
+            cur_char = str[pos]
+            if cur_char == '(':
+                paren_count += 1
+            elif cur_char == ')':
+                if paren_count == 0:
+                    return pos + 1
+                else:
+                    paren_count -= 1
+            pos += 1
+
+    @staticmethod
+    def find_include_asm(text: str):
+        for pos in CommonSegC.find_all_instances(text, "INCLUDE_ASM("):
+            close_paren_pos = CommonSegC.get_close_parenthesis(text, pos + len("INCLUDE_ASM("))
+            macro_contents = text[pos:close_paren_pos]
+            macro_args = macro_contents.split(',')
+            if options.get_use_legacy_include_asm():
+                if len(macro_args) >= 3:
+                    yield macro_args[2].strip(' )')
+            else:
+                if len(macro_args) >= 2:
+                    yield macro_args[1].strip(' )')
+
+    @staticmethod
     def get_global_asm_funcs(c_file):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
-        if options.get_compiler() == "GCC":
-            return set(m.group(3) for m in CommonSegC.C_GLOBAL_ASM_GCC_RE.finditer(text))
+        if options.get_compiler() in ["GCC", "SN64"]:
+            return set(CommonSegC.find_include_asm(text))
         else:
             return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text))
 
@@ -88,12 +119,12 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(self.funcs_text, asm_out_dir, c_path)
                     is_new_c_file = True
 
-            for func in self.funcs_text:
-                func_sym = self.parent.get_symbol(func, type="func", local_only=True)
+            for func_addr in self.funcs_text:
+                func_sym = self.parent.get_symbol(func_addr, type="func", local_only=True)
                 assert(func_sym is not None)
 
                 if func_sym.name in self.global_asm_funcs or is_new_c_file:
-                    self.create_c_asm_file(self.funcs_text, func, asm_out_dir, func_sym)
+                    self.create_c_asm_file(self.funcs_text, func_addr, asm_out_dir, func_sym)
 
     def get_gcc_inc_header(self):
         ret = []
@@ -124,7 +155,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if found:
                     break
 
-    def create_c_asm_file(self, funcs_text, func, out_dir, func_sym: Symbol):
+    def create_c_asm_file(self, funcs_text, func_addr, out_dir, func_sym: Symbol):
         outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -137,8 +168,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             out_lines = []
 
         if self.parent and isinstance(self.parent, CommonSegGroup):
-            if options.get_migrate_rodata_to_functions() and func in self.parent.rodata_syms:
-                func_rodata = list({s for s in self.parent.rodata_syms[func] if s.disasm_str})
+            if options.get_migrate_rodata_to_functions() and func_addr in self.parent.rodata_syms:
+                func_rodata = list({s for s in self.parent.rodata_syms[func_addr] if s.disasm_str})
                 func_rodata.sort(key=lambda s:s.vram_start)
 
                 if len(func_rodata) > 0:
@@ -154,13 +185,16 @@ class CommonSegC(CommonSegCodeSubsegment):
                         out_lines.append(".section .text")
                         out_lines.append("")
 
-        out_lines.extend(funcs_text[func][0])
+        out_lines.extend(funcs_text[func_addr][0])
         out_lines.append("")
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
         with open(outpath, "w", newline="\n") as f:
-            f.write("\n".join(out_lines))
+            if options.get_compiler() == "SN64":
+                f.write("\r\n".join(out_lines))
+            else:
+                f.write("\n".join(out_lines))
         self.log(f"Disassembled {func_sym.name} to {outpath}")
 
     def create_c_file(self, funcs_text, asm_out_dir, c_path):
@@ -171,11 +205,11 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             # Terrible hack to "auto-decompile" empty functions
             # TODO move disassembly into funcs_text or somewhere we can access it from here
-            if len(funcs_text[func][0]) == 3 and funcs_text[func][0][1][-3:] == "$ra" and funcs_text[func][0][2][-3:] == "nop":
+            if len(funcs_text[func][0]) == 3 and funcs_text[func][0][1][-3:] in ["$ra", "$31"] and funcs_text[func][0][2][-3:] == "nop":
                 c_lines.append("void " + func_name + "(void) {")
                 c_lines.append("}")
             else:
-                if options.get_compiler() == "GCC":
+                if options.get_compiler() in ["GCC", "SN64"]:
                     if options.get_use_legacy_include_asm():
                         c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
                     else:

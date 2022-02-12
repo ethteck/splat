@@ -79,7 +79,7 @@ def get_base_path() -> Path:
 
 # Determines the asset path of the project. Assets such as raw binary files are stored here
 def get_asset_path() -> Path:
-    return Path(get_base_path() / opts.get("asset_path", "assets")).relative_to(get_base_path())
+    return get_base_path() / opts.get("asset_path", "assets")
 
 # Determines the path to the target binary
 def get_target_path() -> Path:
@@ -143,6 +143,10 @@ def get_extensions_path():
 # Determines the path to library files that are to be linked into the target binary
 def get_lib_path() -> Path:
     return get_base_path() / opts.get("lib_path", "lib")
+
+# Determines whether to use .o as the suffix for all binary files?... TODO document
+def use_o_as_suffix() -> bool:
+    return opts.get("o_as_suffix", False)
 
 
 ################################################################################

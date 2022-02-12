@@ -27,7 +27,11 @@ def clean_up_path(path: Path) -> Path:
 
 def path_to_object_path(path: Path) -> Path:
     path = clean_up_path(path)
-    return options.get_build_path() / path.with_suffix(path.suffix + ".o")
+    if options.use_o_as_suffix():
+        full_suffix = ".o"
+    else:
+        full_suffix = path.suffix + ".o"
+    return options.get_build_path() / path.with_suffix(full_suffix)
 
 def write_file_if_different(path: Path, new_content: str):
     if path.exists():

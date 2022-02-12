@@ -16,6 +16,40 @@ class CommonSegCodeSubsegment(Segment):
     float_mnemonics = ["lwc1", "swc1"]
     short_mnemonics = ["addiu", "lh", "sh", "lhu"]
     byte_mnemonics = ["lb", "sb", "lbu"]
+    reg_numbers = {
+        "$zero": "$0",
+        "$at":   "$1",
+        "$v0":   "$2",
+        "$v1":   "$3",
+        "$a0":   "$4",
+        "$a1":   "$5",
+        "$a2":   "$6",
+        "$a3":   "$7",
+        "$t0":   "$8",
+        "$t1":   "$9",
+        "$t2":   "$10",
+        "$t3":   "$11",
+        "$t4":   "$12",
+        "$t5":   "$13",
+        "$t6":   "$14",
+        "$t7":   "$15",
+        "$s0":   "$16",
+        "$s1":   "$17",
+        "$s2":   "$18",
+        "$s3":   "$19",
+        "$s4":   "$20",
+        "$s5":   "$21",
+        "$s6":   "$22",
+        "$s7":   "$23",
+        "$t8":   "$24",
+        "$t9":   "$25",
+        "$k0":   "$26",
+        "$k1":   "$27",
+        "$gp":   "$28",
+        "$sp":   "$sp",
+        "$fp":   "$30",
+        "$ra":   "$31"
+    }
 
     if options.get_endianess() == "big":
         capstone_mode = CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN
@@ -43,11 +77,17 @@ class CommonSegCodeSubsegment(Segment):
     @staticmethod
     def is_branch_insn(mnemonic):
         return (mnemonic.startswith("b") and not mnemonic.startswith("binsl") and not mnemonic == "break") or mnemonic == "j"
+    
+    @staticmethod
+    def replace_reg_names(op_str):
+        for regname, regnum in CommonSegCodeSubsegment.reg_numbers.items():
+            op_str = op_str.replace(regname, regnum)
+        return op_str
 
-    def disassemble_code(self, rom_bytes, addsuffix=False):
+    def disassemble_code(self, rom_bytes, addsuffix=False, is_asm=False):
         insns = [insn for insn in CommonSegCodeSubsegment.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
-        funcs = self.process_insns(insns, self.rom_start)
+        funcs = self.process_insns(insns, self.rom_start, is_asm=is_asm)
 
         # TODO: someday make func a subclass of symbol and store this disasm info there too
         for func in funcs:
@@ -57,7 +97,7 @@ class CommonSegCodeSubsegment(Segment):
         self.gather_jumptable_labels(rom_bytes)
         return self.add_labels(funcs, addsuffix)
 
-    def process_insns(self, insns, rom_addr):
+    def process_insns(self, insns, rom_addr, is_asm=False):
         assert(isinstance(self.parent, CommonSegCode))
         self.parent: CommonSegCode = self.parent
 
@@ -90,12 +130,18 @@ class CommonSegCodeSubsegment(Segment):
             if func_sym and func_sym.size > 4:
                 hard_size = func_sym.size / 4
 
+            if options.get_compiler() == "SN64":
+                op_str = self.replace_reg_names(op_str)
+
             if mnemonic == "move":
                 # Let's get the actual instruction out
                 idx = 3 if big_endian else 0
                 opcode = insn.bytes[idx] & 0b00111111
 
-                op_str += ", $zero"
+                if options.get_compiler() == "SN64":
+                    op_str += ", $0"
+                else:
+                    op_str += ", $zero"
 
                 if opcode == 37:
                     mnemonic = "or"
@@ -128,6 +174,21 @@ class CommonSegCodeSubsegment(Segment):
                 idx = 2 if big_endian else 1
                 rd = (insn.bytes[idx] & 0xF8) >> 3
                 op_str = op_str.split(" ")[0] + " $" + str(rd)
+            elif mnemonic == "break" and op_str in ["6", "7"] and options.get_compiler() == "SN64" and not is_asm:
+                # SN64's assembler expands div to have break if dividing by zero
+                # However, the break it generates is different than the one it generates with `break N`
+                # So we replace break instrutions for SN64 with the exact word that the assembler generates when expanding div
+                if op_str == "6":
+                    mnemonic = ".word 0x0006000D"
+                    op_str = ""
+                elif op_str == "7":
+                    mnemonic = ".word 0x0007000D"
+                    op_str = ""
+            elif mnemonic in ["div", "divu"] and options.get_compiler() == "SN64" and not is_asm:
+                # SN64's assembler also doesn't like assembling `div $0, a, b` with .set noat active
+                # Removing the $0 fixes this issue
+                if op_str.startswith("$0, "):
+                    op_str = op_str[4:]
 
             func.append((insn, mnemonic, op_str, rom_addr))
             rom_addr += 4
@@ -136,7 +197,7 @@ class CommonSegCodeSubsegment(Segment):
 
             if mnemonic == "jr":
                 # Record potential jtbl jumps
-                if op_str != "$ra":
+                if op_str not in ["$ra", "$31"]:
                     self.parent.jtbl_jumps[insn.address] = op_str
 
                 keep_going = False
@@ -243,6 +304,9 @@ class CommonSegCodeSubsegment(Segment):
                                     reg_ext = s_op_split[-1][junk_search.start():]
                                 else:
                                     s_str = s_op_split[-1]
+                                
+                                if options.get_compiler() == "SN64":
+                                    reg_ext = CommonSegCodeSubsegment.replace_reg_names(reg_ext)
 
                                 symbol_addr = (lui_val * 0x10000) + int(s_str, 0)
 
@@ -294,7 +358,12 @@ class CommonSegCodeSubsegment(Segment):
             # Add function glabel
             rom_addr = funcs[func][0][3]
             sym = self.parent.get_symbol(func, type="func", create=True, define=True, local_only=True)
-            func_text.append(f"{function_macro} {sym.name}")
+            if options.get_compiler() == "SN64":
+                func_text.append(f".globl {sym.name}")
+                func_text.append(f".ent {sym.name}")
+                func_text.append(f"{sym.name}:")
+            else:
+                func_text.append(f"{function_macro} {sym.name}")
 
             indent_next = False
 
@@ -315,7 +384,10 @@ class CommonSegCodeSubsegment(Segment):
                 else:
                     rom_str = "{:X}".format(insn[3])
 
-                asm_comment = "/* {} {:X} {} */".format(rom_str, insn_addr, insn[0].bytes.hex().upper())
+                if options.get_compiler() == "SN64":
+                    asm_comment = ""
+                else:
+                    asm_comment = "/* {} {:X} {} */".format(rom_str, insn_addr, insn[0].bytes.hex().upper())
 
                 if len(insn) > 4:
                     op_str = ", ".join(insn[2].split(", ")[:-1] + [insn[4]])
@@ -340,7 +412,9 @@ class CommonSegCodeSubsegment(Segment):
                 if insn[0].mnemonic != "branch" and insn[0].mnemonic.startswith("b") or insn[0].mnemonic.startswith("j"):
                     indent_next = True
 
-            if addsuffix:
+            if options.get_compiler() == "SN64":
+                func_text.append(f".end {sym.name}")
+            elif addsuffix:
                 func_text.append(f"endlabel {sym.name}")
 
             ret[func] = (func_text, rom_addr)
@@ -352,7 +426,7 @@ class CommonSegCodeSubsegment(Segment):
                     # Find where the function returns
                     jr_pos: Optional[int] = None
                     for i, insn in enumerate(reversed(funcs[func])):
-                        if insn[0].mnemonic == "jr" and insn[0].op_str == "$ra":
+                        if insn[0].mnemonic == "jr" and insn[0].op_str in ["$ra", "$31"]:
                             jr_pos = i
                             break
 
