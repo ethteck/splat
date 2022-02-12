@@ -49,8 +49,11 @@ class CommonSegGroup(CommonSegment):
                 return True
         return False
 
-    def find_inserts(self, found_sections: OrderedDict[str, Range], section_order) -> "OrderedDict[str, int]":
+    def find_inserts(self, found_sections: OrderedDict[str, Range]) -> "OrderedDict[str, int]":
         inserts = OrderedDict()
+
+        section_order = self.section_order
+        section_order.remove(".text")
 
         for i, section in enumerate(section_order):
             if not found_sections[section].has_start():
@@ -120,7 +123,7 @@ class CommonSegGroup(CommonSegment):
             if cur_section is not None:
                 found_sections[cur_section].end = len(segment_yaml["subsegments"])
 
-            inserts = self.find_inserts(found_sections, self.section_order)
+            inserts = self.find_inserts(found_sections)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
             # rompos marker
@@ -189,7 +192,7 @@ class CommonSegGroup(CommonSegment):
             check = self.handle_alls(ret, base_segments)
 
         # TODO why is this necessary?
-        if self.section_boundaries[".rodata"].has_start() and not self.section_boundaries["rodata"].has_end():
+        if self.section_boundaries[".rodata"].has_start() and not self.section_boundaries[".rodata"].has_end():
             assert self.vram_end is not None
             self.section_boundaries[".rodata"].end = self.vram_end
 
