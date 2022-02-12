@@ -1,5 +1,6 @@
 from typing import Union, List
 from pathlib import Path
+from segtypes.common.linker_section import LinkerSection, dotless_type
 from util import options
 from segtypes.segment import Segment
 import os
@@ -87,16 +88,9 @@ class LinkerWriter():
 
         seg_name = get_segment_cname(segment)
 
-        # TODO ANY ORDER
-        self._write_symbol(f"{seg_name}_TEXT_START", ".")
+        section_labels = [LinkerSection(l) for l in options.ld_section_labels() if l in options.get_section_order()]
 
         force_new_section = False
-        text_started = True
-        text_ended = False
-        data_started = False
-        data_ended = False
-        bss_started = False
-        bss_ended = False
         cur_section = None
 
         for i, entry in enumerate(entries):
@@ -109,23 +103,15 @@ class LinkerWriter():
             elif cur_section == "linker_offset":
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f". - {get_segment_cname(segment)}_ROM_START")
                 continue
-
-            # TODO ANY ORDER
-            # text/data/bss START/END labels
-            if not data_started and ("data" in cur_section or "rodata" in cur_section):
-                if not text_ended:
-                    text_ended = True
-                    self._write_symbol(f"{seg_name}_TEXT_END", ".")
-
-                data_started = True
-                self._write_symbol(f"{seg_name}_DATA_START", ".")
-            elif data_started and not data_ended and "data" not in cur_section and "rodata" not in cur_section:
-                data_ended = True
-                self._write_symbol(f"{seg_name}_DATA_END", ".")
-
-            if data_ended and not bss_started and "bss" in cur_section:
-                bss_started = True
-                self._write_symbol(f"{seg_name}_BSS_START", ".")
+            
+            for i, section in enumerate(section_labels):
+                if not section.started and section.name == cur_section:
+                    if i > 0:
+                        if not section_labels[i - 1].ended:
+                            section_labels[i - 1].ended = True
+                            self._write_symbol(f"{seg_name}_{section_labels[i - 1].name.upper()}_END", ".")
+                    section.started = True
+                    self._write_symbol(f"{seg_name}_{section.name.upper()}_START", ".")
 
             if options.enable_ld_alignment_hack():
                 start = entry.segment.rom_start
@@ -145,13 +131,9 @@ class LinkerWriter():
 
             self._writeln(f"{entry.object_path}({cur_section});")
 
-        # TODO ANY ORDER
-        if text_started and not text_ended:
-            self._write_symbol(f"{seg_name}_TEXT_END", ".")
-        if data_started and not data_ended:
-            self._write_symbol(f"{seg_name}_DATA_END", ".")
-        if bss_started and not bss_ended:
-            self._write_symbol(f"{seg_name}_BSS_END", ".")
+        for section in section_labels:
+            if section.started and not section.ended:
+                self._write_symbol(f"{seg_name}_{dotless_type(section.name).upper()}_END", ".")
 
         self._end_segment(segment)
 

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-def dotless_type_equals(sect1: str, sect2: str) -> bool:
-    return sect1 == sect2 or sect1[1:] == sect2 or sect1 == sect2[1:]
+def dotless_type(type: str) -> str:
+    return type[1:] if type[0] == '.' else type
 
 @dataclass
 class LinkerSection:
     name: str
-    started: bool
-    ended: bool
+    started: bool = False
+    ended: bool = False

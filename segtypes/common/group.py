@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from typing import List, Dict
-from segtypes.common.linker_section import dotless_type_equals
+from segtypes.common.linker_section import dotless_type
 from util.range import Range
 from util import log, options
 from segtypes.common.segment import CommonSegment
@@ -14,7 +14,7 @@ class CommonSegGroup(CommonSegment):
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
         # TODO: move this to CommonSegCode
-        self.section_boundaries = OrderedDict((s_name, Range()) for s_name in self.section_boundaries)
+        self.section_boundaries = OrderedDict((s_name, Range()) for s_name in options.get_section_order())
         self.subsegments = self.parse_subsegments(yaml)
 
     @property
@@ -152,7 +152,7 @@ class CommonSegGroup(CommonSegment):
             segment.parent = self
 
             for i, section in enumerate(self.section_order):
-                if not self.section_boundaries[section].has_start() and dotless_type_equals(section, segment.type):
+                if not self.section_boundaries[section].has_start() and dotless_type(section) == dotless_type(segment.type):
                     if i > 0:
                         prev_section = self.section_order[i - 1]
                         self.section_boundaries[prev_section].end = segment.vram_start
