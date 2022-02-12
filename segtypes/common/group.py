@@ -29,7 +29,7 @@ class CommonSegGroup(CommonSegment):
             if elem.type.startswith("all_"):
                 alls = []
 
-                rep_type = f".{elem.type[4:]}"
+                rep_type = f"{elem.type[4:]}"
                 replace_class = Segment.get_class_for_type(rep_type)
 
                 for base in base_segs.items():
