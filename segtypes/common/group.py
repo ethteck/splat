@@ -99,6 +99,8 @@ class CommonSegGroup(CommonSegment):
                 typ = Segment.parse_segment_type(subsection_yaml)
                 if typ.startswith("all_"):
                     typ = typ[4:]
+                if not typ.startswith("."):
+                    typ = f".{typ}"
 
                 if typ in found_sections:
                     if cur_section is None:

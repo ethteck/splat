@@ -113,9 +113,9 @@ class LinkerWriter():
                     if i > 0:
                         if not section_labels[i - 1].ended:
                             section_labels[i - 1].ended = True
-                            self._write_symbol(f"{seg_name}_{section_labels[i - 1].name.upper()}_END", ".")
+                            self._write_symbol(f"{seg_name}{section_labels[i - 1].name.upper()}_END", ".")
                     section.started = True
-                    self._write_symbol(f"{seg_name}_{section.name.upper()}_START", ".")
+                    self._write_symbol(f"{seg_name}{section.name.upper()}_START", ".")
 
             if options.enable_ld_alignment_hack():
                 start = entry.segment.rom_start
