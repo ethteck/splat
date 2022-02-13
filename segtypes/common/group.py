@@ -8,7 +8,10 @@ from segtypes.common.segment import CommonSegment
 from segtypes.segment import RomAddr, Segment
 from util.symbols import Symbol
 
+CODE_TYPES = ["c", "asm", "hasm"]
+
 class CommonSegGroup(CommonSegment):
+
     def __init__(self, rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml):
         super().__init__(rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml)
 
@@ -146,7 +149,7 @@ class CommonSegGroup(CommonSegment):
             end = self.get_next_seg_start(i, segment_yaml["subsegments"])
 
             if isinstance(start, int) and isinstance(prev_start, int) and start < prev_start:
-                log.error(f"Error: Code segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
+                log.error(f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
 
             vram = None
             if start != "auto":
@@ -167,7 +170,7 @@ class CommonSegGroup(CommonSegment):
             ret.append(segment)
 
             # todo change
-            if typ in ["c", "asm", "hasm"]:
+            if typ in CODE_TYPES:
                 base_segments[segment.name] = segment
 
             prev_start = start
@@ -205,8 +208,14 @@ class CommonSegGroup(CommonSegment):
         return [entry for sub in self.subsegments for entry in sub.get_linker_entries()]
 
     def scan(self, rom_bytes):
+        # Always scan code first
         for sub in self.subsegments:
-            if sub.should_scan():
+            if sub.type in CODE_TYPES and sub.should_scan():
+                sub.scan(rom_bytes)
+
+        # Scan everyone else
+        for sub in self.subsegments:
+            if sub.type not in CODE_TYPES and sub.should_scan():
                 sub.scan(rom_bytes)
 
     def split(self, rom_bytes):
@@ -227,11 +236,3 @@ class CommonSegGroup(CommonSegment):
             c.append(sub.cache())
 
         return c
-
-    def get_most_parent(self):
-        seg = self
-
-        while seg.parent:
-            seg = seg.parent
-
-        return seg

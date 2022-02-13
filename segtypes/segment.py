@@ -289,6 +289,14 @@ class Segment:
     def out_path(self) -> Optional[Path]:
         return None
 
+    def get_most_parent(self):
+        seg = self
+
+        while seg.parent:
+            seg = seg.parent
+
+        return seg
+
     def get_linker_entries(self) -> "List[LinkerEntry]":
         from segtypes.linker_entry import LinkerEntry
 

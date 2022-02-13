@@ -351,6 +351,7 @@ class CommonSegCodeSubsegment(Segment):
         ret = {}
         
         function_macro = options.get_asm_function_macro()
+        data_macro = options.get_asm_data_macro()
 
         for func in funcs:
             func_text = []
@@ -374,7 +375,7 @@ class CommonSegCodeSubsegment(Segment):
                 insn_addr = insn[0].address
                 # Add a label if we need one
                 if insn_addr in self.parent.jtbl_glabels_to_add:
-                    func_text.append(f"glabel L{insn_addr:X}_{insn[3]:X}")
+                    func_text.append(f"{data_macro} L{insn_addr:X}_{insn[3]:X}")
                 elif insn_addr in self.parent.labels_to_add:
                     self.parent.labels_to_add.remove(insn_addr)
                     func_text.append(".L{:X}:".format(insn_addr))

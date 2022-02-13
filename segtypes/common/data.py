@@ -273,7 +273,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             mnemonic = syms[i].access_mnemonic
             sym = self.get_most_parent().get_symbol(syms[i].vram_start, create=True, define=True, local_only=True)
 
-            sym_str = f"\n\nglabel {sym.name}\n"
+            sym_str = f"\n\n{options.get_asm_data_macro()} {sym.name}\n"
             dis_start = self.get_most_parent().ram_to_rom(syms[i].vram_start)
             dis_end = self.get_most_parent().ram_to_rom(syms[i + 1].vram_start)
             sym_len = dis_end - dis_start

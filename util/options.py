@@ -220,6 +220,10 @@ def get_migrate_rodata_to_functions() -> bool:
 def get_asm_function_macro() -> str:
     return opts.get("asm_function_macro", "glabel")
 
+# Determines the macro used to declare data symbols in asm files
+def get_asm_data_macro() -> str:
+    return opts.get("asm_data_macro", "glabel")
+
 # Determines the maximum number of instructions to attempt to match hi/lo pairs for symbols when disassembling
 def hi_lo_max_distance() -> int:
     return opts.get("hi_lo_max_distance", 6)
