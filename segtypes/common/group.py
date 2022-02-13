@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List, Dict
+from typing import List, Dict, Optional
 import typing
 from segtypes.common.linker_section import dotless_type
 from util.range import Range
@@ -236,3 +236,9 @@ class CommonSegGroup(CommonSegment):
             c.append(sub.cache())
 
         return c
+
+    def get_subsegment_for_ram(self, addr) -> Optional[Segment]:
+        for sub in self.subsegments:
+            if sub.contains_vram(addr):
+                return sub
+        return None

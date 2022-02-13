@@ -1,5 +1,8 @@
+from dataclasses import dataclass
 import os
 from typing import Dict, List
+
+from capstone import CsInsn
 from util import options
 
 all_symbols: "List[Symbol]" = []
@@ -97,7 +100,7 @@ def retrieve_from_ranges(vram, rom=None):
 
 class Symbol:
     @property
-    def default_name(self):
+    def default_name(self) -> str:
         suffix = f"_{self.vram_start:X}"
 
         if self.in_overlay:
@@ -124,7 +127,7 @@ class Symbol:
         self.in_overlay = True
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.given_name if self.given_name else self.default_name
 
     def contains_vram(self, offset):
@@ -133,7 +136,7 @@ class Symbol:
     def contains_rom(self, offset):
         return offset >= self.rom and offset < self.rom_end
 
-    def __init__(self, vram, given_name=None, rom=None, type="unknown", in_overlay=False, size=4):
+    def __init__(self, vram, given_name: str = "", rom=None, type="unknown", in_overlay=False, size=4):
         self.defined = False
         self.referenced = False
         self.vram_start = vram
@@ -141,8 +144,22 @@ class Symbol:
         self.type = type
         self.in_overlay = in_overlay
         self.size = size
-        self.given_name = given_name
+        self.given_name: str = given_name
         self.access_mnemonic = None
         self.disasm_str = None
         self.dead = False
         self.extract = True
+
+@dataclass
+class Instruction:
+    instruction: CsInsn
+    mnemonic: str
+    op_str: str
+    rom_addr: int
+    ext: str = ""
+
+class Function(Symbol):
+    def __init__(self, vram, given_name="", rom=None, type="unknown", in_overlay=False, size=4):
+        super().__init__(vram, given_name=given_name, rom=rom, type="func", in_overlay=in_overlay, size=size)
+        self.type = "func"
+        self.insns: List[Instruction] = []

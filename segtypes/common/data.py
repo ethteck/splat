@@ -74,7 +74,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                         sym.size = new_sym_rom_start - sym.rom
 
                         # Create new symbol - this is not a valid jump table
-                        syms.insert(i + 1, self.get_most_parent().get_symbol(new_sym_ram_start, create=True, define=True, local_only=True))
+                        syms.insert(i + 1, self.get_most_parent().create_symbol(new_sym_ram_start, define=True, local_only=True))
                         return False
 
                     if bits != 0:
@@ -91,7 +91,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         for i in range(self.rom_start, self.rom_end, 4):
             bits = int.from_bytes(rom_bytes[i : i + 4], endian)
             if self.contains_vram(bits):
-                symset.add(self.get_most_parent().get_symbol(bits, create=True, define=True, local_only=True))
+                symset.add(self.get_most_parent().create_symbol(bits, define=True, local_only=True))
 
         for symbol_addr in self.seg_symbols:
             for symbol in self.seg_symbols[symbol_addr]:
@@ -103,7 +103,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         # Ensure we start at the beginning
         if len(ret) == 0 or ret[0].vram_start != self.vram_start:
-            ret.insert(0, self.get_most_parent().get_symbol(self.vram_start, create=True, define=True, local_only=True))
+            ret.insert(0, self.get_most_parent().create_symbol(self.vram_start, define=True, local_only=True))
 
         # Make a dummy symbol here that marks the end of the previous symbol's disasm range
         ret.append(Symbol(self.vram_end))
@@ -271,7 +271,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
-            sym = self.get_most_parent().get_symbol(syms[i].vram_start, create=True, define=True, local_only=True)
+            sym = self.get_most_parent().create_symbol(syms[i].vram_start, define=True, local_only=True)
 
             sym_str = f"\n\n{options.get_asm_data_macro()} {sym.name}\n"
             dis_start = self.get_most_parent().ram_to_rom(syms[i].vram_start)

@@ -6,7 +6,8 @@ from pathlib import Path
 
 from util import log
 from util import options
-from util.symbols import Symbol
+from util import symbols
+from util.symbols import Function, Symbol
 
 # circular import
 if TYPE_CHECKING:
@@ -289,7 +290,7 @@ class Segment:
     def out_path(self) -> Optional[Path]:
         return None
 
-    def get_most_parent(self):
+    def get_most_parent(self) -> "Segment":
         seg = self
 
         while seg.parent:
@@ -339,3 +340,78 @@ class Segment:
     @staticmethod
     def get_default_name(addr) -> str:
         return f"{addr:X}"
+
+    def retrieve_symbol(self, d, k, t):
+        if k not in d:
+            return None
+
+        if t:
+            items = [s for s in d[k] if s.type == t or s.type == "unknown"]
+        else:
+            items = d[k]
+
+        if len(items) > 1:
+            pass #print(f"Trying to retrieve {k:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
+        if len(items) == 0:
+            return None
+        return items[0]
+
+    def get_symbol(self, addr, type=None, create=False, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Optional[Symbol]:
+        ret = None
+        rom = None
+
+        in_segment = self.contains_vram(addr)
+
+        if in_segment:
+            # If the vram address is within this segment, we can calculate the symbol's rom address
+            rom = self.ram_to_rom(addr)
+            ret = self.retrieve_symbol(self.seg_symbols, addr, type)
+        elif not local_only:
+            ret = self.retrieve_symbol(self.ext_symbols, addr, type)
+
+        # Search for symbol ranges
+        if not ret and offsets:
+            ret = symbols.retrieve_from_ranges(addr, rom)
+
+        # Reject dead symbols unless we allow them
+        if not dead and ret and ret.dead:
+            ret = None
+
+        # Create the symbol if it doesn't exist
+        if not ret and create:
+            if type == "func":
+                ret = Function(addr, rom=rom)
+            else:
+                ret = Symbol(addr, rom=rom, type=type)
+            symbols.all_symbols.append(ret)
+
+            if in_segment:
+                if self.is_overlay:
+                    ret.set_in_overlay()
+                if addr not in self.seg_symbols:
+                    self.seg_symbols[addr] = []
+                self.seg_symbols[addr].append(ret)
+            elif not local_only:
+                if addr not in self.ext_symbols:
+                    self.ext_symbols[addr] = []
+                self.ext_symbols[addr].append(ret)
+
+        if ret:
+            if define:
+                ret.defined = True
+            if reference:
+                ret.referenced = True
+
+        return ret
+
+    def create_symbol(self, addr, type=None, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Symbol:
+        ret = self.get_symbol(addr, type=type, create=True, define=define, reference=reference, offsets=offsets, local_only=local_only, dead=dead)
+        assert ret is not None
+
+        return ret
+
+    def create_function(self, addr, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Function:
+        ret = self.get_symbol(addr, type="func", create=True, define=define, reference=reference, offsets=offsets, local_only=local_only, dead=dead)
+        assert ret is not None and isinstance(ret, Function)
+
+        return ret
