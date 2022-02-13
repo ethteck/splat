@@ -7,7 +7,7 @@ from pathlib import Path
 from util import log
 from util import options
 from util import symbols
-from util.symbols import Function, Symbol
+from util.symbols import Symbol
 
 # circular import
 if TYPE_CHECKING:
@@ -379,10 +379,7 @@ class Segment:
 
         # Create the symbol if it doesn't exist
         if not ret and create:
-            if type == "func":
-                ret = Function(addr, rom=rom)
-            else:
-                ret = Symbol(addr, rom=rom, type=type)
+            ret = Symbol(addr, rom=rom, type=type)
             symbols.all_symbols.append(ret)
 
             if in_segment:
@@ -407,11 +404,5 @@ class Segment:
     def create_symbol(self, addr, type=None, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Symbol:
         ret = self.get_symbol(addr, type=type, create=True, define=define, reference=reference, offsets=offsets, local_only=local_only, dead=dead)
         assert ret is not None
-
-        return ret
-
-    def create_function(self, addr, define=False, reference=False, offsets=False, local_only=False, dead=True) -> Function:
-        ret = self.get_symbol(addr, type="func", create=True, define=define, reference=reference, offsets=offsets, local_only=local_only, dead=dead)
-        assert ret is not None and isinstance(ret, Function)
 
         return ret

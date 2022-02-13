@@ -10,7 +10,7 @@ from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN, CS_MO
 from capstone.mips import *
 
 from segtypes.segment import Segment
-from util.symbols import Function, Instruction, Symbol
+from util.symbols import Instruction, Symbol
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
@@ -90,7 +90,7 @@ class CommonSegCodeSubsegment(Segment):
     def disassemble_code(self, rom_bytes, addsuffix=False, is_asm=False):
         insns: List[CsInsn] = [insn for insn in CommonSegCodeSubsegment.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
-        funcs: typing.OrderedDict[int, Function] = self.process_insns(insns, self.rom_start, is_asm=is_asm)
+        funcs: typing.OrderedDict[int, Symbol] = self.process_insns(insns, self.rom_start, is_asm=is_asm)
 
         # TODO: set these in creation
         for func in funcs.values():
@@ -101,11 +101,11 @@ class CommonSegCodeSubsegment(Segment):
         self.gather_jumptable_labels(rom_bytes)
         return self.add_labels(funcs, addsuffix)
 
-    def process_insns(self, insns: List[CsInsn], rom_addr, is_asm=False) -> typing.OrderedDict[int, Function]:
+    def process_insns(self, insns: List[CsInsn], rom_addr, is_asm=False) -> typing.OrderedDict[int, Symbol]:
         assert(isinstance(self.parent, CommonSegCode))
         self.parent: CommonSegCode = self.parent
 
-        ret: typing.OrderedDict[int, Function] = OrderedDict()
+        ret: typing.OrderedDict[int, Symbol] = OrderedDict()
 
         end_func = False
         start_new_func = True
@@ -130,7 +130,7 @@ class CommonSegCodeSubsegment(Segment):
             hard_size = 0
 
             if start_new_func:
-                func: Function = self.parent.create_function(insn.address)
+                func: Symbol = self.parent.create_symbol(insn.address, type="func")
                 start_new_func = False
 
             if func.size > 4:
@@ -252,7 +252,7 @@ class CommonSegCodeSubsegment(Segment):
             sym.access_mnemonic = mnemonic
 
     # Determine symbols
-    def determine_symbols(self, funcs: typing.OrderedDict[int, Function]):
+    def determine_symbols(self, funcs: typing.OrderedDict[int, Symbol]):
         hi_lo_max_distance = options.hi_lo_max_distance()
 
         for func_addr in funcs:
@@ -348,7 +348,7 @@ class CommonSegCodeSubsegment(Segment):
                                 func.insns[j].ext += "%lo({}){}".format(sym_label, reg_ext)
                                 break
 
-    def add_labels(self, funcs: typing.OrderedDict[int, Function], addsuffix):
+    def add_labels(self, funcs: typing.OrderedDict[int, Symbol], addsuffix):
         ret = {}
         
         function_macro = options.get_asm_function_macro()

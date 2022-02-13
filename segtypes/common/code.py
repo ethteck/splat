@@ -1,8 +1,5 @@
 from segtypes.common.group import CommonSegGroup
-from typing import Optional
-from segtypes.segment import Segment
-from util import symbols
-from util.symbols import Function, Symbol
+from util.symbols import Symbol
 
 # code group
 class CommonSegCode(CommonSegGroup):

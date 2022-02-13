@@ -98,6 +98,14 @@ def retrieve_from_ranges(vram, rom=None):
         else:
             return None
 
+@dataclass
+class Instruction:
+    instruction: CsInsn
+    mnemonic: str
+    op_str: str
+    rom_addr: int
+    ext: str = ""
+
 class Symbol:
     @property
     def default_name(self) -> str:
@@ -145,21 +153,8 @@ class Symbol:
         self.in_overlay = in_overlay
         self.size = size
         self.given_name: str = given_name
+        self.insns: List[Instruction] = []
         self.access_mnemonic = None
         self.disasm_str = None
         self.dead = False
         self.extract = True
-
-@dataclass
-class Instruction:
-    instruction: CsInsn
-    mnemonic: str
-    op_str: str
-    rom_addr: int
-    ext: str = ""
-
-class Function(Symbol):
-    def __init__(self, vram, given_name="", rom=None, type="unknown", in_overlay=False, size=4):
-        super().__init__(vram, given_name=given_name, rom=rom, type="func", in_overlay=in_overlay, size=size)
-        self.type = "func"
-        self.insns: List[Instruction] = []
