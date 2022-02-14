@@ -24,7 +24,7 @@ class CommonSegAsm(CommonSegCodeSubsegment):
 
                 out_lines = self.get_file_header()
 
-                self.funcs_text = self.split_code(options.asm_endlabels())
+                self.funcs_text = self.split_code(rom_bytes)
 
                 for func in self.funcs_text:
                     out_lines.extend(self.funcs_text[func][0])

@@ -236,9 +236,9 @@ def mnemonic_ljust() -> int:
 def rom_address_padding() -> bool:
     return opts.get("rom_address_padding", False)
 
-# TODO document
-def asm_endlabels() -> bool:
-    return opts.get("asm_endlabels", False)
+# Determines the macro used at the end of a function, such as endlabel or .end
+def get_asm_end_label() -> str:
+    return opts.get("asm_endlabels", "")
 
 
 ################################################################################

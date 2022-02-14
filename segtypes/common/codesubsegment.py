@@ -99,10 +99,10 @@ class CommonSegCodeSubsegment(Segment):
             func.size = len(func.insns) * 4
 
         self.determine_symbols()
-        self.gather_jumptable_labels(rom_bytes)
 
-    def split_code(self, add_suffix=False):
-        return self.add_labels(add_suffix)
+    def split_code(self, rom_bytes):
+        self.gather_jumptable_labels(rom_bytes)
+        return self.add_labels()
 
     def process_insns(self, insns: List[CsInsn], rom_addr, is_asm=False) -> typing.OrderedDict[int, Symbol]:
         assert(isinstance(self.parent, CommonSegCode))
@@ -361,7 +361,7 @@ class CommonSegCodeSubsegment(Segment):
                                 func.insns[j].hi_lo_reg = reg_ext
                                 break
 
-    def add_labels(self, add_suffix):
+    def add_labels(self):
         ret = {}
         
         function_macro = options.get_asm_function_macro()
@@ -369,16 +369,14 @@ class CommonSegCodeSubsegment(Segment):
 
         for func_addr in self.funcs:
             func_text = []
-
-            # Add function glabel
             func = self.funcs[func_addr]
-            rom_addr = func.rom
+
+            # Add function label
+            func_text.append(f"{function_macro} {func.name}")
+
             if options.get_compiler() == "SN64":
-                func_text.append(f".globl {func.name}")
                 func_text.append(f".ent {func.name}")
                 func_text.append(f"{func.name}:")
-            else:
-                func_text.append(f"{function_macro} {func.name}")
 
             indent_next = False
 
@@ -431,12 +429,13 @@ class CommonSegCodeSubsegment(Segment):
                 if insn.instruction.mnemonic != "branch" and insn.instruction.mnemonic.startswith("b") or insn.instruction.mnemonic.startswith("j"):
                     indent_next = True
 
-            if options.get_compiler() == "SN64":
-                func_text.append(f".end {func.name}")
-            elif add_suffix:
-                func_text.append(f"endlabel {func.name}")
+            end_label = options.get_asm_end_label()
 
-            ret[func_addr] = (func_text, rom_addr)
+            # TODO have SN64 populate this option automatically
+            if options.get_compiler() == "SN64" or end_label:
+                func_text.append(f"{end_label} {func.name}")
+
+            ret[func_addr] = (func_text, func.rom)
 
             if options.find_file_boundaries():
                 # If this is not the last function in the file

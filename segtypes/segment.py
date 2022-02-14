@@ -384,7 +384,7 @@ class Segment:
 
             if in_segment:
                 if self.is_overlay:
-                    ret.set_in_overlay()
+                    ret.in_overlay = True
                 if addr not in self.seg_symbols:
                     self.seg_symbols[addr] = []
                 self.seg_symbols[addr].append(ret)

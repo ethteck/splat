@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from logging import Logger
 import os
 from typing import Dict, List, Optional
 
@@ -8,6 +9,12 @@ from util import options
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
+
+def is_truey(str: str) -> bool:
+    return str.lower() in ["true", "on", "yes", "y"]
+
+def is_falsey(str: str) -> bool:
+    return str.lower() in ["false", "off", "no", "n"]
 
 def initialize(all_segments):
     global all_symbols
@@ -41,22 +48,28 @@ def initialize(all_segments):
 
                 if line_ext:
                     for info in line_ext.split(" "):
-                        if info.startswith("type:"):
-                            type = info.split(":")[1]
-                            sym.type = type
-                        if info.startswith("size:"):
-                            size = int(info.split(":")[1], 0)
-                            sym.size = size
-                        if info.startswith("rom:"):
-                            rom_addr = int(info.split(":")[1], 0)
-                            sym.rom = rom_addr
-                        # TODO proper value parsing
-                        if info.startswith("dead:"):
-                            sym.dead = True
-                        if info.startswith("defined:"):
-                            sym.defined = True
-                        if info.startswith("extract:"):
-                            sym.extract = False
+                        if ":" in info:
+                            if info.startswith("type:"):
+                                type = info.split(":")[1]
+                                sym.type = type
+                            if info.startswith("size:"):
+                                size = int(info.split(":")[1], 0)
+                                sym.size = size
+                            if info.startswith("rom:"):
+                                rom_addr = int(info.split(":")[1], 0)
+                                sym.rom = rom_addr
+
+                            val = str(info.split(":")[1])
+                            tf_val = True if is_truey(val) else False if is_falsey(val) else None
+                            if not tf_val:
+                                Logger.error(f"Invalid value {val} for attribute on line: {line}")
+
+                            if info.startswith("dead:"):
+                                sym.dead = tf_val or False
+                            if info.startswith("defined:"):
+                                sym.defined = tf_val or False
+                            if info.startswith("extract:"):
+                                sym.extract = tf_val or True
                 all_symbols.append(sym)
 
                 # Symbol ranges
@@ -135,9 +148,6 @@ class Symbol:
     @property
     def vram_end(self):
         return self.vram_start + self.size
-
-    def set_in_overlay(self):
-        self.in_overlay = True
 
     @property
     def name(self) -> str:

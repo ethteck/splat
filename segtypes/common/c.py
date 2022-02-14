@@ -113,7 +113,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             is_new_c_file = False
 
-            self.funcs_text = self.split_code(options.asm_endlabels())
+            self.funcs_text = self.split_code(rom_bytes)
 
             c_path = self.out_path()
             if c_path:
