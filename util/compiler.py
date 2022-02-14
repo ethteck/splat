@@ -4,8 +4,8 @@ from dataclasses import dataclass
 @dataclass
 class Compiler:
     name: str
-    function_label_macro: str = ""
-    data_label_macro: str = ""
+    asm_function_macro: str = "glabel"
+    asm_data_macro: str = "glabel"
     asm_end_label: str = ""
     c_newline: str = "\n"
     asm_inc_header: str = ""
@@ -17,6 +17,8 @@ GCC = Compiler(
 
 SN64 = Compiler(
     "SN64",
+    asm_function_macro=".globl",
+    asm_data_macro=".globl",
     asm_end_label=".end",
     c_newline="\r\n",
 )

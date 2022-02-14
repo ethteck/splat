@@ -217,6 +217,10 @@ def c_newline() -> str:
 def find_file_boundaries() -> bool:
     return opts.get("find_file_boundaries", True)
 
+# Determines the maximum number of instructions to attempt to match hi/lo pairs for symbols when disassembling
+def hi_lo_max_distance() -> int:
+    return opts.get("hi_lo_max_distance", 6)
+
 # Determines whether to attempt to automatically migrate rodata into functions (only works in certain circumstances)
 def get_migrate_rodata_to_functions() -> bool:
     return opts.get("migrate_rodata_to_functions", True)
@@ -227,15 +231,15 @@ def asm_inc_header() -> str:
 
 # Determines the macro used to declare functions in asm files
 def get_asm_function_macro() -> str:
-    return opts.get("asm_function_macro", "glabel")
+    return opts.get("asm_function_macro", get_compiler().asm_function_macro)
 
 # Determines the macro used to declare data symbols in asm files
 def get_asm_data_macro() -> str:
-    return opts.get("asm_data_macro", "glabel")
+    return opts.get("asm_data_macro", get_compiler().asm_data_macro)
 
-# Determines the maximum number of instructions to attempt to match hi/lo pairs for symbols when disassembling
-def hi_lo_max_distance() -> int:
-    return opts.get("hi_lo_max_distance", 6)
+# Determines the macro used at the end of a function, such as endlabel or .end
+def get_asm_end_label() -> str:
+    return opts.get("asm_endlabels", get_compiler().asm_end_label)
 
 # Determines the number of characters to left align before the TODO finish documenting
 def mnemonic_ljust() -> int:
@@ -244,11 +248,6 @@ def mnemonic_ljust() -> int:
 # Determines whether to pad the rom address 
 def rom_address_padding() -> bool:
     return opts.get("rom_address_padding", False)
-
-# Determines the macro used at the end of a function, such as endlabel or .end
-def get_asm_end_label() -> str:
-    return opts.get("asm_endlabels", get_compiler().asm_end_label)
-
 
 ################################################################################
 # N64-specific options
