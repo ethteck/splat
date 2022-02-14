@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from capstone import CsInsn
 from util import options
@@ -104,7 +104,12 @@ class Instruction:
     mnemonic: str
     op_str: str
     rom_addr: int
-    ext: str = ""
+    is_hi:bool = False
+    is_lo:bool = False
+    hi_lo_sym:Optional["Symbol"] = None
+    sym_offset_str: str = ""
+    hi_lo_reg: str = ""
+
 
 class Symbol:
     @property

@@ -87,19 +87,22 @@ class CommonSegCodeSubsegment(Segment):
             op_str = op_str.replace(regname, regnum)
         return op_str
 
-    def disassemble_code(self, rom_bytes, addsuffix=False, is_asm=False):
+    def scan_code(self, rom_bytes, is_asm=False):
         insns: List[CsInsn] = [insn for insn in CommonSegCodeSubsegment.md.disasm(rom_bytes[self.rom_start : self.rom_end], self.vram_start)]
 
-        funcs: typing.OrderedDict[int, Symbol] = self.process_insns(insns, self.rom_start, is_asm=is_asm)
+        self.funcs: typing.OrderedDict[int, Symbol] = self.process_insns(insns, self.rom_start, is_asm=is_asm)
 
         # TODO: set these in creation
-        for func in funcs.values():
+        for func in self.funcs.values():
             func.define = True
             func.local_only = True
+            func.size = len(func.insns) * 4
 
-        self.determine_symbols(funcs)
+        self.determine_symbols()
         self.gather_jumptable_labels(rom_bytes)
-        return self.add_labels(funcs, addsuffix)
+
+    def split_code(self, add_suffix=False):
+        return self.add_labels(add_suffix)
 
     def process_insns(self, insns: List[CsInsn], rom_addr, is_asm=False) -> typing.OrderedDict[int, Symbol]:
         assert(isinstance(self.parent, CommonSegCode))
@@ -252,53 +255,58 @@ class CommonSegCodeSubsegment(Segment):
             sym.access_mnemonic = mnemonic
 
     # Determine symbols
-    def determine_symbols(self, funcs: typing.OrderedDict[int, Symbol]):
+    def determine_symbols(self):
         hi_lo_max_distance = options.hi_lo_max_distance()
 
-        for func_addr in funcs:
-            func = funcs[func_addr]
+        for func_addr in self.funcs:
+            func = self.funcs[func_addr]
             func_end_addr = func.insns[-1].instruction.address + 4
 
             possible_jtbl_jumps = [(k, v) for k, v in self.parent.jtbl_jumps.items() if k >= func_addr and k < func_end_addr]
             possible_jtbl_jumps.sort(key=lambda x:x[0])
 
             for i in range(len(func.insns)):
-                insn:CsInsn = func.insns[i].instruction
+                hi_insn:CsInsn = func.insns[i].instruction
 
                 # Ensure the first item in the list is always ahead of where we're looking
-                while len(possible_jtbl_jumps) > 0 and possible_jtbl_jumps[0][0] < insn.address:
+                while len(possible_jtbl_jumps) > 0 and possible_jtbl_jumps[0][0] < hi_insn.address:
                     del possible_jtbl_jumps[0]
 
-                if insn.mnemonic == "lui":
-                    op_split = insn.op_str.split(", ")
-                    reg = op_split[0]
+                # All hi/lo pairs start with a lui
+                if hi_insn.mnemonic == "lui":
+                    op_split = hi_insn.op_str.split(", ")
+                    hi_reg = op_split[0]
 
                     if not op_split[1].startswith("0x"):
                         continue
 
                     lui_val = int(op_split[1], 0)
+
+                    # Assumes all luis are going to load from 0x80000000 or higher (maybe false)
                     if lui_val >= 0x8000:
+                        # Iterate over the next few instructions to see if we can find a matching lo
                         for j in range(i + 1, min(i + hi_lo_max_distance, len(func.insns))):
-                            s_insn = func.insns[j].instruction
+                            lo_insn = func.insns[j].instruction
 
-                            s_op_split = s_insn.op_str.split(", ")
+                            s_op_split = lo_insn.op_str.split(", ")
 
-                            if s_insn.mnemonic == "lui" and reg == s_op_split[0]:
+                            if lo_insn.mnemonic == "lui" and hi_reg == s_op_split[0]:
                                 break
 
-                            if s_insn.mnemonic in ["addiu", "ori"]:
-                                s_reg = s_op_split[-2]
+                            if lo_insn.mnemonic in ["addiu", "ori"]:
+                                lo_reg = s_op_split[-2]
                             else:
-                                s_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1: -1]
+                                lo_reg = s_op_split[-1][s_op_split[-1].rfind("(") + 1: -1]
 
 
-                            if reg == s_reg:
-                                if s_insn.mnemonic not in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu", "lwc1", "swc1", "ldc1", "sdc1"]:
+                            if hi_reg == lo_reg:
+                                if lo_insn.mnemonic not in ["addiu", "lw", "sw", "lh", "sh", "lhu", "lb", "sb", "lbu", "lwc1", "swc1", "ldc1", "sdc1"]:
                                     break
 
                                 # Match!
                                 reg_ext = ""
 
+                                # I forgot what this is doing
                                 junk_search = re.search(
                                     r"[\(]", s_op_split[-1])
                                 if junk_search is not None:
@@ -322,10 +330,10 @@ class CommonSegCodeSubsegment(Segment):
                                     # Sanity check that the symbol is within this segment's vram
                                     if self.parent.vram_end and symbol_addr < self.parent.vram_end:
                                         # If we've seen possible jumps to a jumptable and this symbol isn't too close to the end of the function
-                                        if len(possible_jtbl_jumps) > 0 and func_end_addr - s_insn.address >= 0x30:
+                                        if len(possible_jtbl_jumps) > 0 and func_end_addr - lo_insn.address >= 0x30:
                                             for jump in possible_jtbl_jumps:
                                                 if jump[1] == s_op_split[0]:
-                                                    dist_to_jump = possible_jtbl_jumps[0][0] - s_insn.address
+                                                    dist_to_jump = possible_jtbl_jumps[0][0] - lo_insn.address
                                                     if dist_to_jump <= 16:
                                                         sym = self.parent.create_symbol(symbol_addr, reference=True, type="jtbl", local_only=True)
 
@@ -341,38 +349,43 @@ class CommonSegCodeSubsegment(Segment):
                                 if self.parent:
                                     self.parent.check_rodata_sym(func_addr, sym)
 
-                                self.update_access_mnemonic(sym, s_insn.mnemonic)
+                                self.update_access_mnemonic(sym, lo_insn.mnemonic)
 
-                                sym_label = sym.name + offset_str
-                                func.insns[i].ext += "%hi({})".format(sym_label)
-                                func.insns[j].ext += "%lo({}){}".format(sym_label, reg_ext)
+                                func.insns[i].is_hi = True
+                                func.insns[i].hi_lo_sym = sym
+                                func.insns[i].sym_offset_str = offset_str
+
+                                func.insns[j].is_lo = True
+                                func.insns[j].hi_lo_sym = sym
+                                func.insns[j].sym_offset_str = offset_str
+                                func.insns[j].hi_lo_reg = reg_ext
                                 break
 
-    def add_labels(self, funcs: typing.OrderedDict[int, Symbol], addsuffix):
+    def add_labels(self, add_suffix):
         ret = {}
         
         function_macro = options.get_asm_function_macro()
         data_macro = options.get_asm_data_macro()
 
-        for func in funcs:
+        for func_addr in self.funcs:
             func_text = []
 
             # Add function glabel
-            rom_addr = funcs[func].rom
-            sym = self.parent.create_symbol(func, type="func", define=True, local_only=True)
+            func = self.funcs[func_addr]
+            rom_addr = func.rom
             if options.get_compiler() == "SN64":
-                func_text.append(f".globl {sym.name}")
-                func_text.append(f".ent {sym.name}")
-                func_text.append(f"{sym.name}:")
+                func_text.append(f".globl {func.name}")
+                func_text.append(f".ent {func.name}")
+                func_text.append(f"{func.name}:")
             else:
-                func_text.append(f"{function_macro} {sym.name}")
+                func_text.append(f"{function_macro} {func.name}")
 
             indent_next = False
 
             mnemonic_ljust = options.mnemonic_ljust()
             rom_addr_padding = options.rom_address_padding()
 
-            for insn in funcs[func].insns:
+            for insn in func.insns:
                 insn_addr = insn.instruction.address
                 # Add a label if we need one
                 if insn_addr in self.parent.jtbl_glabels_to_add:
@@ -391,8 +404,12 @@ class CommonSegCodeSubsegment(Segment):
                 else:
                     asm_comment = "/* {} {:X} {} */".format(rom_str, insn_addr, insn.instruction.bytes.hex().upper())
 
-                if insn.ext:
-                    op_str = ", ".join(insn.op_str.split(", ")[:-1] + [insn.ext])
+                if insn.is_hi:
+                    assert insn.hi_lo_sym
+                    op_str = ", ".join(insn.op_str.split(", ")[:-1] + [f"%hi({insn.hi_lo_sym.name}{insn.sym_offset_str})"])
+                elif insn.is_lo:
+                    assert insn.hi_lo_sym
+                    op_str = ", ".join(insn.op_str.split(", ")[:-1] + [f"%lo({insn.hi_lo_sym.name}{insn.sym_offset_str}){insn.hi_lo_reg}"])
                 else:
                     op_str = insn.op_str
 
@@ -415,30 +432,30 @@ class CommonSegCodeSubsegment(Segment):
                     indent_next = True
 
             if options.get_compiler() == "SN64":
-                func_text.append(f".end {sym.name}")
-            elif addsuffix:
-                func_text.append(f"endlabel {sym.name}")
+                func_text.append(f".end {func.name}")
+            elif add_suffix:
+                func_text.append(f"endlabel {func.name}")
 
-            ret[func] = (func_text, rom_addr)
+            ret[func_addr] = (func_text, rom_addr)
 
             if options.find_file_boundaries():
                 # If this is not the last function in the file
-                if func != list(funcs.keys())[-1]:
+                if func_addr != list(self.funcs.keys())[-1]:
 
                     # Find where the function returns
                     jr_pos: Optional[int] = None
-                    for i, insn in enumerate(reversed(funcs[func].insns)):
+                    for i, insn in enumerate(reversed(func.insns)):
                         if insn.instruction.mnemonic == "jr" and insn.instruction.op_str in ["$ra", "$31"]:
                             jr_pos = i
                             break
 
                     # If there is more than 1 nop after the return
-                    if jr_pos is not None and jr_pos > 1 and self.is_nops([insn.instruction for insn in funcs[func].insns[-jr_pos + 1:]]):
-                        new_file_addr = funcs[func].insns[-1].rom_addr + 4
+                    if jr_pos is not None and jr_pos > 1 and self.is_nops([insn.instruction for insn in func.insns[-jr_pos + 1:]]):
+                        new_file_addr = func.insns[-1].rom_addr + 4
                         if (new_file_addr % 16) == 0:
                             if not self.parent.reported_file_split:
                                 self.parent.reported_file_split = True
-                                print(f"Segment {self.name}, function at vram {func:X} ends with extra nops, indicating a likely file split.")
+                                print(f"Segment {self.name}, function at vram {func_addr:X} ends with extra nops, indicating a likely file split.")
                                 print("File split suggestions for this segment will follow in config yaml format:")
                             print(f"      - [0x{new_file_addr:X}, asm]")
 

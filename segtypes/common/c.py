@@ -103,7 +103,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.mark_c_funcs_as_defined(self.defined_funcs)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
 
-            self.funcs_text = self.disassemble_code(rom_bytes)
+            self.scan_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
@@ -112,6 +112,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             is_new_c_file = False
+
+            self.funcs_text = self.split_code(options.asm_endlabels())
 
             c_path = self.out_path()
             if c_path:

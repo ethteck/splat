@@ -1,3 +1,4 @@
+from typing import Dict, Tuple
 from segtypes.common.group import CommonSegGroup
 from util.symbols import Symbol
 
@@ -10,7 +11,7 @@ class CommonSegCode(CommonSegGroup):
         self.labels_to_add = set()
         self.jtbl_glabels_to_add = set()
         self.jtbl_jumps = {}
-        self.jumptables = {}
+        self.jumptables:Dict[int, Tuple[int, int]] = {}
 
     @property
     def needs_symbols(self) -> bool:
