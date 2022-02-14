@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional, Union, Literal
 from pathlib import Path
 from util import log
+from util import compiler
+from util.compiler import Compiler
 
 opts = {}
 
@@ -52,9 +54,8 @@ def get_platform() -> str:
     return opts.get("platform", "n64")
 
 # Determines the compiler used to compile the target binary
-# Currently supported: IDO, GCC
-def get_compiler() -> str:
-    return opts.get("compiler", "IDO")
+def get_compiler() -> Compiler:
+    return compiler.for_name(opts.get("compiler", "IDO"))
 
 # Determines the endianness of the target binary
 def get_endianess() -> Union[Literal["little"], Literal["big"]]:
@@ -203,6 +204,10 @@ def get_create_c_files() -> bool:
 def do_c_func_detection() -> bool:
     return opts.get("do_c_func_detection", True)
 
+# Determines the newline char(s) to be used in c files
+def c_newline() -> str:
+    return opts.get("c_newline", get_compiler().c_newline)
+
 
 ################################################################################
 # (Dis)assembly-related options
@@ -215,6 +220,10 @@ def find_file_boundaries() -> bool:
 # Determines whether to attempt to automatically migrate rodata into functions (only works in certain circumstances)
 def get_migrate_rodata_to_functions() -> bool:
     return opts.get("migrate_rodata_to_functions", True)
+
+# Determines the header to be used in every asm file that's included from c files
+def asm_inc_header() -> str:
+    return opts.get("asm_inc_header", get_compiler().asm_inc_header)
 
 # Determines the macro used to declare functions in asm files
 def get_asm_function_macro() -> str:
@@ -238,7 +247,7 @@ def rom_address_padding() -> bool:
 
 # Determines the macro used at the end of a function, such as endlabel or .end
 def get_asm_end_label() -> str:
-    return opts.get("asm_endlabels", "")
+    return opts.get("asm_endlabels", get_compiler().asm_end_label)
 
 
 ################################################################################
@@ -251,10 +260,10 @@ def get_header_encoding() -> str:
 
 
 ################################################################################
-# GCC-specific options
+# Compiler-specific options
 ################################################################################
 
 # Determines whether to use a legacy INCLUDE_ASM macro format in c files
-# only applies to GCC
+# only applies to GCC/SN64
 def get_use_legacy_include_asm():
     return opts.get("use_legacy_include_asm", True)

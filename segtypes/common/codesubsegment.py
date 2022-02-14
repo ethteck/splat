@@ -10,6 +10,7 @@ from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN, CS_MO
 from capstone.mips import *
 
 from segtypes.segment import Segment
+from util.compiler import SN64
 from util.symbols import Instruction, Symbol
 
 # abstract class for c, asm, data, etc
@@ -139,7 +140,7 @@ class CommonSegCodeSubsegment(Segment):
             if func.size > 4:
                 hard_size = func.size / 4
 
-            if options.get_compiler() == "SN64":
+            if options.get_compiler() == SN64:
                 op_str = self.replace_reg_names(op_str)
 
             if mnemonic == "move":
@@ -147,7 +148,7 @@ class CommonSegCodeSubsegment(Segment):
                 idx = 3 if big_endian else 0
                 opcode = insn.bytes[idx] & 0b00111111
 
-                if options.get_compiler() == "SN64":
+                if options.get_compiler() == SN64:
                     op_str += ", $0"
                 else:
                     op_str += ", $zero"
@@ -182,7 +183,7 @@ class CommonSegCodeSubsegment(Segment):
                 idx = 2 if big_endian else 1
                 rd = (insn.bytes[idx] & 0xF8) >> 3
                 op_str = op_str.split(" ")[0] + " $" + str(rd)
-            elif mnemonic == "break" and op_str in ["6", "7"] and options.get_compiler() == "SN64" and not is_asm:
+            elif mnemonic == "break" and op_str in ["6", "7"] and options.get_compiler() == SN64 and not is_asm:
                 # SN64's assembler expands div to have break if dividing by zero
                 # However, the break it generates is different than the one it generates with `break N`
                 # So we replace break instrutions for SN64 with the exact word that the assembler generates when expanding div
@@ -192,7 +193,7 @@ class CommonSegCodeSubsegment(Segment):
                 elif op_str == "7":
                     mnemonic = ".word 0x0007000D"
                     op_str = ""
-            elif mnemonic in ["div", "divu"] and options.get_compiler() == "SN64" and not is_asm:
+            elif mnemonic in ["div", "divu"] and options.get_compiler() == SN64 and not is_asm:
                 # SN64's assembler also doesn't like assembling `div $0, a, b` with .set noat active
                 # Removing the $0 fixes this issue
                 if op_str.startswith("$0, "):
@@ -317,7 +318,7 @@ class CommonSegCodeSubsegment(Segment):
                                 else:
                                     s_str = s_op_split[-1]
                                 
-                                if options.get_compiler() == "SN64":
+                                if options.get_compiler() == SN64:
                                     reg_ext = CommonSegCodeSubsegment.replace_reg_names(reg_ext)
 
                                 symbol_addr = (lui_val * 0x10000) + int(s_str, 0)
@@ -374,7 +375,7 @@ class CommonSegCodeSubsegment(Segment):
             # Add function label
             func_text.append(f"{function_macro} {func.name}")
 
-            if options.get_compiler() == "SN64":
+            if options.get_compiler() == SN64:
                 func_text.append(f".ent {func.name}")
                 func_text.append(f"{func.name}:")
 
@@ -397,7 +398,7 @@ class CommonSegCodeSubsegment(Segment):
                 else:
                     rom_str = "{:X}".format(insn.rom_addr)
 
-                if options.get_compiler() == "SN64":
+                if options.get_compiler() == SN64:
                     asm_comment = ""
                 else:
                     asm_comment = "/* {} {:X} {} */".format(rom_str, insn_addr, insn.instruction.bytes.hex().upper())
@@ -431,8 +432,7 @@ class CommonSegCodeSubsegment(Segment):
 
             end_label = options.get_asm_end_label()
 
-            # TODO have SN64 populate this option automatically
-            if options.get_compiler() == "SN64" or end_label:
+            if end_label:
                 func_text.append(f"{end_label} {func.name}")
 
             ret[func_addr] = (func_text, func.rom)

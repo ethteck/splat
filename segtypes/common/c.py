@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from util import log, options
+from util.compiler import GCC, SN64
 from util.symbols import Symbol
 
 
@@ -85,7 +86,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def get_global_asm_funcs(c_file):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
-        if options.get_compiler() in ["GCC", "SN64"]:
+        if options.get_compiler() in [GCC, SN64]:
             return set(CommonSegC.find_include_asm(text))
         else:
             return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text))
@@ -128,14 +129,6 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if func_sym.name in self.global_asm_funcs or is_new_c_file:
                     self.create_c_asm_file(self.funcs_text, func_addr, asm_out_dir, func_sym)
 
-    def get_gcc_inc_header(self):
-        ret = []
-        ret.append(".set noat      # allow manual use of $at")
-        ret.append(".set noreorder # don't insert nops after branches")
-        ret.append("")
-
-        return ret
-
     def get_c_preamble(self):
         ret = []
 
@@ -164,10 +157,10 @@ class CommonSegC(CommonSegCodeSubsegment):
         if outpath.exists() and not func_sym.extract:
             return
 
-        if options.get_compiler() == "GCC":
-            out_lines = self.get_gcc_inc_header()
-        else:
-            out_lines = []
+        out_lines = []
+
+        if options.asm_inc_header():
+            out_lines.extend(options.asm_inc_header().split("\n"))
 
         if self.parent and isinstance(self.parent, CommonSegGroup):
             if options.get_migrate_rodata_to_functions() and func_addr in self.parent.rodata_syms:
@@ -193,10 +186,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
         with open(outpath, "w", newline="\n") as f:
-            if options.get_compiler() == "SN64":
-                f.write("\r\n".join(out_lines))
-            else:
-                f.write("\n".join(out_lines))
+            newline_sep = options.c_newline()
+            f.write(newline_sep.join(out_lines))
         self.log(f"Disassembled {func_sym.name} to {outpath}")
 
     def create_c_file(self, funcs_text, asm_out_dir, c_path):
@@ -211,7 +202,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 c_lines.append("void " + func_name + "(void) {")
                 c_lines.append("}")
             else:
-                if options.get_compiler() in ["GCC", "SN64"]:
+                if options.get_compiler() in [GCC, SN64]:
                     if options.get_use_legacy_include_asm():
                         c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
                     else:
