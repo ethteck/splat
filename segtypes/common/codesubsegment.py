@@ -472,7 +472,7 @@ class CommonSegCodeSubsegment(Segment):
 
             while (rom_offset):
                 word = rom_bytes[rom_offset : rom_offset + 4]
-                word_int = int.from_bytes(word, "big")
+                word_int = int.from_bytes(word, options.get_endianess())
                 if word_int >= start and word_int <= end:
                     self.parent.jtbl_glabels_to_add.add(word_int)
                 else:
