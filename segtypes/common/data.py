@@ -242,6 +242,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             try:
                 ascii_str = sym_bytes.decode("EUC-JP")
                 # ascii_str = ascii_str.rstrip("\x00")
+                ascii_str = ascii_str.replace("\\", "\\\\")  # escape back slashes
+                ascii_str = ascii_str.replace("\"", "\\\"")  # escape quotes
                 ascii_str = ascii_str.replace("\x00", "\\0")
                 ascii_str = ascii_str.replace("\n", "\\n")
 
