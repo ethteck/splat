@@ -117,6 +117,7 @@ class Instruction:
     mnemonic: str
     op_str: str
     rom_addr: int
+    is_gp:bool = False
     is_hi:bool = False
     is_lo:bool = False
     hi_lo_sym:Optional["Symbol"] = None
