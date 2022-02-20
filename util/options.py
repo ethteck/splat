@@ -149,6 +149,9 @@ def get_lib_path() -> Path:
 def use_o_as_suffix() -> bool:
     return opts.get("o_as_suffix", False)
 
+# the value of the $gp register to correctly calculate offset to %gp_rel relocs
+def get_gp() -> int:
+    return opts.get("gp_value")
 
 ################################################################################
 # Linker script options
