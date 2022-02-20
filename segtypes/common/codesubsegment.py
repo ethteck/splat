@@ -287,8 +287,7 @@ class CommonSegCodeSubsegment(Segment):
 
                     sym = self.parent.create_symbol(symbol_addr, offsets=True, reference=True)
                     offset = symbol_addr - sym.vram_start
-                    if offset != 0:
-                        offset_str = f"+0x{offset:X}"
+                    offset_str = f"+0x{offset:X}"
 
                     if self.parent:
                         self.parent.check_rodata_sym(func_addr, sym)
