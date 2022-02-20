@@ -12,6 +12,7 @@ from capstone.mips import *
 from segtypes.segment import Segment
 from util.compiler import SN64
 from util.symbols import Instruction, Symbol
+from util import log
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
@@ -273,8 +274,32 @@ class CommonSegCodeSubsegment(Segment):
                 while len(possible_jtbl_jumps) > 0 and possible_jtbl_jumps[0][0] < hi_insn.address:
                     del possible_jtbl_jumps[0]
 
+                # Find gp relative reads and writes e.g  lw $a1, 0x670($gp)
+                if hi_insn.op_str.endswith("($gp)"):
+                    gp_base = options.get_gp()
+                    if gp_base is None:
+                        log.error("gp_value not set in yaml, can't calculate %gp_rel reloc value for " + hi_insn.op_str)
+
+                    op_split = hi_insn.op_str.split(", ")
+                    gp_offset = op_split[1][:-5] # extract the 0x670 part
+                    gp_offset = int(gp_offset, 16)
+                    symbol_addr = gp_base + gp_offset
+
+                    sym = self.parent.create_symbol(symbol_addr, offsets=True, reference=True)
+                    offset = symbol_addr - sym.vram_start
+                    if offset != 0:
+                        offset_str = f"+0x{offset:X}"
+
+                    if self.parent:
+                        self.parent.check_rodata_sym(func_addr, sym)
+
+                    self.update_access_mnemonic(sym, hi_insn.mnemonic)
+
+                    func.insns[i].is_gp = True
+                    func.insns[i].hi_lo_sym = sym
+                    func.insns[i].sym_offset_str = offset_str
                 # All hi/lo pairs start with a lui
-                if hi_insn.mnemonic == "lui":
+                elif hi_insn.mnemonic == "lui":
                     op_split = hi_insn.op_str.split(", ")
                     hi_reg = op_split[0]
 
@@ -409,6 +434,8 @@ class CommonSegCodeSubsegment(Segment):
                 elif insn.is_lo:
                     assert insn.hi_lo_sym
                     op_str = ", ".join(insn.op_str.split(", ")[:-1] + [f"%lo({insn.hi_lo_sym.name}{insn.sym_offset_str}){insn.hi_lo_reg}"])
+                elif insn.is_gp:
+                    op_str = ", ".join(insn.op_str.split(", ")[:-1] + [f"%gp_rel({insn.hi_lo_sym.name}{insn.sym_offset_str})($gp)"])
                 else:
                     op_str = insn.op_str
 

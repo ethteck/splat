@@ -84,6 +84,9 @@ class LinkerWriter():
         self._writeln("SECTIONS")
         self._begin_block()
 
+        if options.get_gp() is not None:
+            self._writeln("_gp = " + f"0x{options.get_gp():X};")
+
     def add(self, segment: Segment):
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
