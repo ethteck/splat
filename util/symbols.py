@@ -31,54 +31,53 @@ def initialize(all_segments):
             with open(symbol_addrs_path) as f:
                 func_addrs_lines = func_addrs_lines + f.readlines()
 
-    if len(func_addrs_lines) > 0:
-        for line in func_addrs_lines:
-            line = line.strip()
-            if not line == "" and not line.startswith("//"):
-                comment_loc = line.find("//")
-                line_ext = ""
+    for line in func_addrs_lines:
+        line = line.strip()
+        if not line == "" and not line.startswith("//"):
+            comment_loc = line.find("//")
+            line_ext = ""
 
-                if comment_loc != -1:
-                    line_ext = line[comment_loc + 2:].strip()
-                    line = line[:comment_loc].strip()
+            if comment_loc != -1:
+                line_ext = line[comment_loc + 2:].strip()
+                line = line[:comment_loc].strip()
 
-                line_split = line.split("=")
-                name = line_split[0].strip()
-                addr = int(line_split[1].strip()[:-1], 0)
+            line_split = line.split("=")
+            name = line_split[0].strip()
+            addr = int(line_split[1].strip()[:-1], 0)
 
-                sym = Symbol(addr, given_name=name)
+            sym = Symbol(addr, given_name=name)
 
-                if line_ext:
-                    for info in line_ext.split(" "):
-                        if ":" in info:
-                            if info.startswith("type:"):
-                                type = info.split(":")[1]
-                                sym.type = type
-                            if info.startswith("size:"):
-                                size = int(info.split(":")[1], 0)
-                                sym.size = size
-                            if info.startswith("rom:"):
-                                rom_addr = int(info.split(":")[1], 0)
-                                sym.rom = rom_addr
+            if line_ext:
+                for info in line_ext.split(" "):
+                    if ":" in info:
+                        if info.startswith("type:"):
+                            type = info.split(":")[1]
+                            sym.type = type
+                        if info.startswith("size:"):
+                            size = int(info.split(":")[1], 0)
+                            sym.size = size
+                        if info.startswith("rom:"):
+                            rom_addr = int(info.split(":")[1], 0)
+                            sym.rom = rom_addr
 
-                            val = str(info.split(":")[1])
-                            tf_val = True if is_truey(val) else False if is_falsey(val) else None
-                            if not tf_val:
-                                Logger.error(f"Invalid value {val} for attribute on line: {line}")
+                        val = str(info.split(":")[1])
+                        tf_val = True if is_truey(val) else False if is_falsey(val) else None
+                        if not tf_val:
+                            Logger.error(f"Invalid value {val} for attribute on line: {line}")
 
-                            if info.startswith("dead:"):
-                                sym.dead = tf_val or False
-                            if info.startswith("defined:"):
-                                sym.defined = tf_val or False
-                            if info.startswith("extract:"):
-                                sym.extract = tf_val or True
-                all_symbols.append(sym)
+                        if info.startswith("dead:"):
+                            sym.dead = tf_val or False
+                        if info.startswith("defined:"):
+                            sym.defined = tf_val or False
+                        if info.startswith("extract:"):
+                            sym.extract = tf_val or True
+            all_symbols.append(sym)
 
-                # Symbol ranges
-                if sym.size > 4:
-                    symbol_ranges.append(sym)
+            # Symbol ranges
+            if sym.size > 4:
+                symbol_ranges.append(sym)
 
-                is_symbol_isolated(sym, all_segments)
+            is_symbol_isolated(sym, all_segments)
 
 def is_symbol_isolated(symbol, all_segments):
     if symbol in sym_isolated_map:
