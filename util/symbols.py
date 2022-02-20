@@ -22,14 +22,16 @@ def initialize(all_segments):
 
     all_symbols = []
     symbol_ranges = []
-
-    symbol_addrs_path = options.get_symbol_addrs_path()
+    func_addrs_lines = []
+    symbol_addrs_paths = options.get_symbol_addrs_paths()
 
     # Manual list of func name / addrs
-    if os.path.exists(symbol_addrs_path):
-        with open(symbol_addrs_path) as f:
-            func_addrs_lines = f.readlines()
+    for symbol_addrs_path in symbol_addrs_paths:
+        if os.path.exists(symbol_addrs_path):
+            with open(symbol_addrs_path) as f:
+                func_addrs_lines = func_addrs_lines + f.readlines()
 
+    if len(func_addrs_lines) > 0:
         for line in func_addrs_lines:
             line = line.strip()
             if not line == "" and not line.startswith("//"):

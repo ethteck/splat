@@ -88,8 +88,13 @@ def get_target_path() -> Path:
 
 # Determines the path to the symbol addresses file
 # this file is to be updated by the user and contains addresses of symbols as well as optional metadata such as rom address, type, and more
-def get_symbol_addrs_path():
-    return get_base_path() / opts.get("symbol_addrs_path", "symbol_addrs.txt")
+# it is possible to use more than one file by using a comma seperated listed of inputs
+def get_symbol_addrs_paths():
+    paths = opts.get("symbol_addrs_path", "symbol_addrs.txt").split(",")
+    fullPaths = []
+    for path in paths:
+        fullPaths.append(get_base_path() / path)
+    return paths
 
 # Determines the path to the project build directory
 def get_build_path():
