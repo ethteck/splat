@@ -1,5 +1,6 @@
 from typing import Union, List
 from pathlib import Path
+from segtypes.common.linker_section import LinkerSection, dotless_type
 from util import options
 from segtypes.segment import Segment
 import os
@@ -30,7 +31,7 @@ def path_to_object_path(path: Path) -> Path:
         full_suffix = ".o"
     else:
         full_suffix = path.suffix + ".o"
-    return options.get_build_path() / path.with_suffix(full_suffix)
+    return clean_up_path(options.get_build_path() / path.with_suffix(full_suffix))
 
 def write_file_if_different(path: Path, new_content: str):
     if path.exists():
@@ -71,8 +72,8 @@ class LinkerEntry:
 
 class LinkerWriter():
     def __init__(self):
-        self.shiftable: bool = options.get("shiftable", False)
-        self.linker_discard_section: bool = options.get("linker_discard_section", True)
+        self.shiftable: bool = options.get_shiftable()
+        self.linker_discard_section: bool = options.linker_discard_section()
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
@@ -91,13 +92,9 @@ class LinkerWriter():
 
         seg_name = get_segment_cname(segment)
 
-        self._write_symbol(f"{seg_name}_TEXT_START", ".")
+        section_labels = [LinkerSection(l) for l in options.ld_section_labels() if l in options.get_section_order()]
 
         force_new_section = False
-        text_ended = False
-        data_started = False
-        data_ended = False
-        bss_started = False
         cur_section = None
 
         for i, entry in enumerate(entries):
@@ -110,24 +107,17 @@ class LinkerWriter():
             elif cur_section == "linker_offset":
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f". - {get_segment_cname(segment)}_ROM_START")
                 continue
+            
+            for i, section in enumerate(section_labels):
+                if not section.started and section.name == cur_section:
+                    if i > 0:
+                        if not section_labels[i - 1].ended:
+                            section_labels[i - 1].ended = True
+                            self._write_symbol(f"{seg_name}{section_labels[i - 1].name.upper()}_END", ".")
+                    section.started = True
+                    self._write_symbol(f"{seg_name}{section.name.upper()}_START", ".")
 
-            # text/data/bss START/END labels
-            if not data_started and ("data" in cur_section or "rodata" in cur_section):
-                if not text_ended:
-                    text_ended = True
-                    self._write_symbol(f"{seg_name}_TEXT_END", ".")
-
-                data_started = True
-                self._write_symbol(f"{seg_name}_DATA_START", ".")
-            elif data_started and not data_ended and "data" not in cur_section and "rodata" not in cur_section:
-                data_ended = True
-                self._write_symbol(f"{seg_name}_DATA_END", ".")
-
-            if data_ended and not bss_started and "bss" in cur_section:
-                bss_started = True
-                self._write_symbol(f"{seg_name}_BSS_START", ".")
-
-            if options.get("enable_ld_alignment_hack", False):
+            if options.enable_ld_alignment_hack():
                 start = entry.segment.rom_start
                 if isinstance(start, int):
                     # Create new sections for non-subalign alignment (hack)
@@ -145,15 +135,9 @@ class LinkerWriter():
 
             self._writeln(f"{entry.object_path}({cur_section});")
 
-        if not text_ended:
-            self._write_symbol(f"{seg_name}_TEXT_END", ".")
-        if not data_started:
-            self._write_symbol(f"{seg_name}_DATA_START", ".")
-        if not data_ended:
-            self._write_symbol(f"{seg_name}_DATA_END", ".")
-        if not bss_started:
-            self._write_symbol(f"{seg_name}_BSS_START", ".")
-        self._write_symbol(f"{seg_name}_BSS_END", ".")
+        for section in section_labels:
+            if section.started and not section.ended:
+                self._write_symbol(f"{seg_name}_{dotless_type(section.name).upper()}_END", ".")
 
         self._end_segment(segment)
 

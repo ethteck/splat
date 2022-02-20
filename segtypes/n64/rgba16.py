@@ -1,8 +1,6 @@
 from segtypes.n64.img import N64SegImg
 import png
 from util import iter
-from util import log
-from util import options
 from util.color import unpack_color
 
 # TODO: move common behaviour to N64ImgSegment and have all image segments extend that instead

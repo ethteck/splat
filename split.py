@@ -14,7 +14,7 @@ from util import options
 from util import symbols
 from util import palettes
 
-VERSION = "0.7.10.1"
+VERSION = "0.8.0.0"
 
 parser = argparse.ArgumentParser(description="Split a rom given a rom, a config, and output directory")
 parser.add_argument("config", help="path to a compatible config .yaml file", nargs='+')
@@ -264,7 +264,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         linker_writer.save_linker_script()
         linker_writer.save_symbol_header()
 
-        # write elf_sections.txt - this only lists the generated sections in the elf, not sub sections
+        # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
         # that the elf combines into one section
         if options.get_create_elf_section_list_auto():
             section_list = ""

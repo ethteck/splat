@@ -4,7 +4,7 @@ from util import options
 
 class N64SegHeader(CommonSegHeader):
     def parse_header(self, rom_bytes):
-        encoding = options.get("header_encoding", "ASCII")
+        encoding = options.get_header_encoding()
 
         header_lines = []
         header_lines.append(f".section .data\n")
