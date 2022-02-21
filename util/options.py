@@ -86,15 +86,18 @@ def get_asset_path() -> Path:
 def get_target_path() -> Path:
     return get_base_path() / opts["target_path"]
 
-# Determines the path to the symbol addresses file
-# this file is to be updated by the user and contains addresses of symbols as well as optional metadata such as rom address, type, and more
-# it is possible to use more than one file by using a comma seperated listed of inputs
-def get_symbol_addrs_paths():
-    paths = opts.get("symbol_addrs_path", "symbol_addrs.txt").split(",")
-    fullPaths = []
-    for path in paths:
-        fullPaths.append(get_base_path() / path)
-    return paths
+# Determines the path to the symbol addresses file(s)
+# A symbol_addrs file is to be updated/curated manually and contains addresses of symbols
+# as well as optional metadata such as rom address, type, and more
+#
+# It's possible to use more than one file by supplying a comma-seperated listed of inputs
+def get_symbol_addrs_paths() -> List[Path]:
+    paths:Union[List[str], str] = opts.get("symbol_addrs_path", "symbol_addrs.txt")
+
+    if isinstance(paths, str):
+        return [get_base_path() / paths]
+    else:
+        return [get_base_path() / path for path in paths]
 
 # Determines the path to the project build directory
 def get_build_path():

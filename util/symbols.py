@@ -23,10 +23,9 @@ def initialize(all_segments):
     all_symbols = []
     symbol_ranges = []
     func_addrs_lines = []
-    symbol_addrs_paths = options.get_symbol_addrs_paths()
 
     # Manual list of func name / addrs
-    for symbol_addrs_path in symbol_addrs_paths:
+    for symbol_addrs_path in options.get_symbol_addrs_paths():
         if os.path.exists(symbol_addrs_path):
             with open(symbol_addrs_path) as f:
                 func_addrs_lines = func_addrs_lines + f.readlines()
