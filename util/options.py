@@ -90,7 +90,7 @@ def get_target_path() -> Path:
 # A symbol_addrs file is to be updated/curated manually and contains addresses of symbols
 # as well as optional metadata such as rom address, type, and more
 #
-# It's possible to use more than one file by supplying a comma-seperated listed of inputs
+# It's possible to use more than one file by supplying a list instead of a string
 def get_symbol_addrs_paths() -> List[Path]:
     paths:Union[List[str], str] = opts.get("symbol_addrs_path", "symbol_addrs.txt")
 
