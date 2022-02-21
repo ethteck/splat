@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from logging import Logger
-import os
 from typing import Dict, List, Optional
 
 from capstone import CsInsn
@@ -22,15 +21,15 @@ def initialize(all_segments):
 
     all_symbols = []
     symbol_ranges = []
-    func_addrs_lines = []
+    sym_addrs_lines = []
 
     # Manual list of func name / addrs
-    for symbol_addrs_path in options.get_symbol_addrs_paths():
-        if os.path.exists(symbol_addrs_path):
-            with open(symbol_addrs_path) as f:
-                func_addrs_lines = func_addrs_lines + f.readlines()
+    for path in options.get_symbol_addrs_paths():
+        if path.exists():
+            with open(path) as f:
+                sym_addrs_lines += f.readlines()
 
-    for line in func_addrs_lines:
+    for line in sym_addrs_lines:
         line = line.strip()
         if not line == "" and not line.startswith("//"):
             comment_loc = line.find("//")
@@ -61,7 +60,7 @@ def initialize(all_segments):
 
                         val = str(info.split(":")[1])
                         tf_val = True if is_truey(val) else False if is_falsey(val) else None
-                        if not tf_val:
+                        if tf_val is None:
                             Logger.error(f"Invalid value {val} for attribute on line: {line}")
 
                         if info.startswith("dead:"):
