@@ -18,7 +18,7 @@ class N64SegHeader(CommonSegHeader):
         header_lines.append(self.get_line("word", rom_bytes[0x1C:0x20], "Unknown 2"))
 
         if encoding != "word":
-            header_lines.append(".ascii \"" + rom_bytes[0x20:0x34].decode(encoding).strip().ljust(20) + "\" /* Internal name */")
+            header_lines.append(f".ascii \"" + rom_bytes[0x20:0x34].decode(encoding).strip().ljust(20) + "\" /* Internal name */")
         else:
             for i in range(0x20, 0x34, 4):
                 header_lines.append(self.get_line("word", rom_bytes[i:i+4], "Internal name"))

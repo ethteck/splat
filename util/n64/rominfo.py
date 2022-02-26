@@ -1,14 +1,19 @@
 #! /usr/bin/python3
 
 import argparse
+import itertools
+import struct
+
+from pathlib import Path
+
 from capstone import *
 from capstone.mips import *
 import hashlib
 import zlib
 
-parser = argparse.ArgumentParser(description='Gives information on n64 roms')
-parser.add_argument('rom', help='path to a .z64 rom')
-parser.add_argument('--encoding', help='Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings', default='ASCII')
+parser = argparse.ArgumentParser(description='Gives information on N64 roms')
+parser.add_argument('rom', help='path to an N64 rom')
+parser.add_argument('--encoding', help='Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings')
 
 country_codes = {
     0x00: "Unknown",
@@ -44,6 +49,10 @@ crc_to_cic = {
 }
 
 
+def swap_bytes(data):
+    return bytes(itertools.chain.from_iterable(struct.pack(">H", x) for x, in struct.iter_unpack("<H", data)))
+
+
 def read_rom(rom):
     with open(rom, "rb") as f:
         return f.read()
@@ -61,11 +70,38 @@ def get_entry_point(program_counter, cic):
     return program_counter - cic["offset"]
 
 
-def get_info(rom_path, encoding="ASCII", bytes=None):
-    if not bytes:
-        return get_info_bytes(read_rom(rom_path), encoding)
-    else:
-        return get_info_bytes(bytes, encoding)
+def guess_encoding(rom_bytes):
+    header = rom_bytes[0x20:0x34]
+    encodings = ["ASCII", "shift_jis", "euc-jp"]
+    for encoding in encodings:
+        try:
+            header.decode(encoding)
+            return encoding
+        except UnicodeDecodeError:
+            # we guessed wrong...
+            pass
+
+    print("Unknown ROM encoding, please raise an Issue with us")
+    exit(1)
+
+
+def get_info(rom_path, rom_bytes=None, encoding=None):
+    if not rom_bytes:
+        rom_bytes = read_rom(rom_path)
+
+    if rom_path.suffix.lower() == ".n64":
+        print("Warning: Input file has .n64 suffix, byte-swapping!")
+        rom_bytes = swap_bytes(rom_bytes)
+        as_z64 = rom_path.with_suffix(".z64")
+        if not as_z64.exists():
+            print(f"Writing down {as_z64}")
+            with open(as_z64, "wb") as o:
+                o.write(rom_bytes)
+
+    if encoding is None:
+        encoding = guess_encoding(rom_bytes)
+
+    return get_info_bytes(rom_bytes, encoding)
 
 
 def get_info_bytes(rom_bytes, encoding):
@@ -95,12 +131,13 @@ def get_info_bytes(rom_bytes, encoding):
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    return N64Rom(name, country_code, libultra_version, crc1, crc2, cic, entry_point, len(rom_bytes), compiler, sha1)
+    return N64Rom(name, encoding, country_code, libultra_version, crc1, crc2, cic, entry_point, len(rom_bytes), compiler, sha1)
 
 
 class N64Rom:
-    def __init__(self, name, country_code, libultra_version, crc1, crc2, cic, entry_point, size, compiler, sha1):
+    def __init__(self, name, encoding, country_code, libultra_version, crc1, crc2, cic, entry_point, size, compiler, sha1):
         self.name = name
+        self.encoding = encoding
         self.country_code = country_code
         self.libultra_version = libultra_version
         self.crc1 = crc1
@@ -113,6 +150,7 @@ class N64Rom:
 
     def get_country_name(self):
         return country_codes[self.country_code]
+
 
 def get_compiler_info(rom_bytes, entry_point, print_result=True):
     md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
@@ -132,11 +170,13 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
         print(f"{branches} branches and {jumps} jumps detected in the first code segment. Compiler is most likely {compiler}")
     return compiler
 
+
 # TODO: support .n64 extension
 def main():
     args = parser.parse_args()
     rom_bytes = read_rom(args.rom)
-    rom = get_info(args.rom, args.encoding, rom_bytes)
+    encoding = args.encoding or guess_encoding(rom_bytes)
+    rom = get_info(Path(args.rom), rom_bytes, encoding)
 
     print("Image name: " + rom.name)
     print("Country code: " + chr(rom.country_code) + " - " + rom.get_country_name())
@@ -145,9 +185,11 @@ def main():
     print("CRC2: " + rom.crc2)
     print("CIC: " + rom.cic["ntsc-name"] + " / " + rom.cic["pal-name"])
     print("RAM entry point: " + hex(rom.entry_point))
+    print("Encoding: " + encoding)
     print("")
 
     get_compiler_info(rom_bytes, rom.entry_point)
+
 
 if __name__ == "__main__":
     main()
