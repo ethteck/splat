@@ -6,10 +6,10 @@ import struct
 
 from pathlib import Path
 
-from capstone import *
-from capstone.mips import *
 import hashlib
 import zlib
+
+from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 
 parser = argparse.ArgumentParser(description='Gives information on N64 roms')
 parser.add_argument('rom', help='path to an N64 rom')
@@ -53,9 +53,19 @@ def swap_bytes(data):
     return bytes(itertools.chain.from_iterable(struct.pack(">H", x) for x, in struct.iter_unpack("<H", data)))
 
 
-def read_rom(rom):
-    with open(rom, "rb") as f:
-        return f.read()
+def read_rom(rom_path):
+    with open(rom_path, "rb") as f:
+        rom_bytes = f.read()
+
+    if rom_path.suffix.lower() == ".n64":
+        print("Warning: Input file has .n64 suffix, byte-swapping!")
+        rom_bytes = swap_bytes(rom_bytes)
+        as_z64 = rom_path.with_suffix(".z64")
+        if not as_z64.exists():
+            print(f"Writing down {as_z64}")
+            with open(as_z64, "wb") as o:
+                o.write(rom_bytes)
+    return rom_bytes
 
 
 def get_cic(rom_bytes):
@@ -88,15 +98,6 @@ def guess_header_encoding(rom_bytes):
 def get_info(rom_path, rom_bytes=None, header_encoding=None):
     if not rom_bytes:
         rom_bytes = read_rom(rom_path)
-
-    if rom_path.suffix.lower() == ".n64":
-        print("Warning: Input file has .n64 suffix, byte-swapping!")
-        rom_bytes = swap_bytes(rom_bytes)
-        as_z64 = rom_path.with_suffix(".z64")
-        if not as_z64.exists():
-            print(f"Writing down {as_z64}")
-            with open(as_z64, "wb") as o:
-                o.write(rom_bytes)
 
     if header_encoding is None:
         header_encoding = guess_header_encoding(rom_bytes)
@@ -176,9 +177,8 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
 # TODO: support .n64 extension
 def main():
     args = parser.parse_args()
-    rom_bytes = read_rom(args.rom)
-    header_encoding = args.header_encoding or guess_header_encoding(rom_bytes)
-    rom = get_info(Path(args.rom), rom_bytes, header_encoding)
+    rom_bytes = read_rom(Path(args.rom))
+    rom = get_info(Path(args.rom), rom_bytes, args.header_encoding)
 
     print("Image name: " + rom.name)
     print("Country code: " + chr(rom.country_code) + " - " + rom.get_country_name())
