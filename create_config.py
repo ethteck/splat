@@ -22,7 +22,7 @@ options:
   base_path: .
   compiler: {rom.compiler}
   find_file_boundaries: True
-  header_encoding: {rom.encoding}
+  header_encoding: {rom.header_encoding}
   # platform: n64
   # undefined_funcs_auto_path: undefined_funcs_auto.txt
   # undefined_syms_auto_path: undefined_syms_auto.txt

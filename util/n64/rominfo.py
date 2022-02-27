@@ -13,7 +13,7 @@ import zlib
 
 parser = argparse.ArgumentParser(description='Gives information on N64 roms')
 parser.add_argument('rom', help='path to an N64 rom')
-parser.add_argument('--encoding', help='Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings')
+parser.add_argument('--header-encoding', help='Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings')
 
 country_codes = {
     0x00: "Unknown",
@@ -70,7 +70,7 @@ def get_entry_point(program_counter, cic):
     return program_counter - cic["offset"]
 
 
-def guess_encoding(rom_bytes):
+def guess_header_encoding(rom_bytes):
     header = rom_bytes[0x20:0x34]
     encodings = ["ASCII", "shift_jis", "euc-jp"]
     for encoding in encodings:
@@ -81,11 +81,11 @@ def guess_encoding(rom_bytes):
             # we guessed wrong...
             pass
 
-    print("Unknown ROM encoding, please raise an Issue with us")
+    print("Unknown header encoding, please raise an Issue with us")
     exit(1)
 
 
-def get_info(rom_path, rom_bytes=None, encoding=None):
+def get_info(rom_path, rom_bytes=None, header_encoding=None):
     if not rom_bytes:
         rom_bytes = read_rom(rom_path)
 
@@ -98,22 +98,22 @@ def get_info(rom_path, rom_bytes=None, encoding=None):
             with open(as_z64, "wb") as o:
                 o.write(rom_bytes)
 
-    if encoding is None:
-        encoding = guess_encoding(rom_bytes)
+    if header_encoding is None:
+        header_encoding = guess_header_encoding(rom_bytes)
 
-    return get_info_bytes(rom_bytes, encoding)
+    return get_info_bytes(rom_bytes, header_encoding)
 
 
-def get_info_bytes(rom_bytes, encoding):
+def get_info_bytes(rom_bytes, header_encoding):
     program_counter = int(rom_bytes[0x8:0xC].hex(), 16)
     libultra_version = chr(rom_bytes[0xF])
     crc1 = rom_bytes[0x10:0x14].hex().upper()
     crc2 = rom_bytes[0x14:0x18].hex().upper()
 
     try:
-        name = rom_bytes[0x20:0x34].decode(encoding).strip()
+        name = rom_bytes[0x20:0x34].decode(header_encoding).strip()
     except:
-        print("splat could not decode the game name; try using a different encoding by passing the --encoding argument (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)")
+        print("splat could not decode the game name; try using a different encoding by passing the --header-encoding argument (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)")
         exit(1)
 
     country_code = rom_bytes[0x3E]
@@ -131,13 +131,15 @@ def get_info_bytes(rom_bytes, encoding):
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    return N64Rom(name, encoding, country_code, libultra_version, crc1, crc2, cic, entry_point, len(rom_bytes), compiler, sha1)
+    return N64Rom(name, header_encoding, country_code, libultra_version, crc1, crc2,
+                  cic, entry_point, len(rom_bytes), compiler, sha1)
 
 
 class N64Rom:
-    def __init__(self, name, encoding, country_code, libultra_version, crc1, crc2, cic, entry_point, size, compiler, sha1):
+    def __init__(self, name, header_encoding, country_code, libultra_version, crc1, crc2,
+                 cic, entry_point, size, compiler, sha1):
         self.name = name
-        self.encoding = encoding
+        self.header_encoding = header_encoding
         self.country_code = country_code
         self.libultra_version = libultra_version
         self.crc1 = crc1
@@ -166,7 +168,7 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
             branches += 1
 
     compiler = "IDO" if branches > jumps else "GCC"
-    if (print_result):
+    if print_result:
         print(f"{branches} branches and {jumps} jumps detected in the first code segment. Compiler is most likely {compiler}")
     return compiler
 
@@ -175,8 +177,8 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
 def main():
     args = parser.parse_args()
     rom_bytes = read_rom(args.rom)
-    encoding = args.encoding or guess_encoding(rom_bytes)
-    rom = get_info(Path(args.rom), rom_bytes, encoding)
+    header_encoding = args.header_encoding or guess_header_encoding(rom_bytes)
+    rom = get_info(Path(args.rom), rom_bytes, header_encoding)
 
     print("Image name: " + rom.name)
     print("Country code: " + chr(rom.country_code) + " - " + rom.get_country_name())
@@ -185,7 +187,7 @@ def main():
     print("CRC2: " + rom.crc2)
     print("CIC: " + rom.cic["ntsc-name"] + " / " + rom.cic["pal-name"])
     print("RAM entry point: " + hex(rom.entry_point))
-    print("Encoding: " + encoding)
+    print("Header encoding: " + rom.header_encoding)
     print("")
 
     get_compiler_info(rom_bytes, rom.entry_point)
