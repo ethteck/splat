@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from logging import Logger
 from typing import Dict, List, Optional
 
 from capstone import CsInsn
-from util import options
+from util import options, log
 
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
@@ -51,17 +50,20 @@ def initialize(all_segments):
                         if info.startswith("type:"):
                             type = info.split(":")[1]
                             sym.type = type
+                            continue
                         if info.startswith("size:"):
                             size = int(info.split(":")[1], 0)
                             sym.size = size
+                            continue
                         if info.startswith("rom:"):
                             rom_addr = int(info.split(":")[1], 0)
                             sym.rom = rom_addr
+                            continue
 
                         val = str(info.split(":")[1])
                         tf_val = True if is_truey(val) else False if is_falsey(val) else None
                         if tf_val is None:
-                            Logger.error(f"Invalid value {val} for attribute on line: {line}")
+                            log.error(f"Invalid value {val} for attribute on line: {line}")
 
                         if info.startswith("dead:"):
                             sym.dead = tf_val or False
