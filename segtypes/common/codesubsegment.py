@@ -82,7 +82,7 @@ class CommonSegCodeSubsegment(Segment):
     @staticmethod
     def is_branch_insn(mnemonic):
         return (mnemonic.startswith("b") and not mnemonic.startswith("binsl") and not mnemonic == "break") or mnemonic == "j"
-    
+
     @staticmethod
     def replace_reg_names(op_str):
         for regname, regnum in CommonSegCodeSubsegment.reg_numbers.items():
@@ -282,7 +282,10 @@ class CommonSegCodeSubsegment(Segment):
 
                     op_split = hi_insn.op_str.split(", ")
                     gp_offset = op_split[1][:-5] # extract the 0x670 part
-                    gp_offset = int(gp_offset, 16)
+                    if len(gp_offset) == 0:
+                        gp_offset = 0
+                    else:
+                        gp_offset = int(gp_offset, 16)
                     symbol_addr = gp_base + gp_offset
 
                     sym = self.parent.create_symbol(symbol_addr, offsets=True, reference=True)
@@ -341,7 +344,7 @@ class CommonSegCodeSubsegment(Segment):
                                     reg_ext = s_op_split[-1][junk_search.start():]
                                 else:
                                     s_str = s_op_split[-1]
-                                
+
                                 if options.get_compiler() == SN64:
                                     reg_ext = CommonSegCodeSubsegment.replace_reg_names(reg_ext)
 
@@ -388,7 +391,7 @@ class CommonSegCodeSubsegment(Segment):
 
     def add_labels(self):
         ret = {}
-        
+
         function_macro = options.get_asm_function_macro()
         data_macro = options.get_asm_data_macro()
 
