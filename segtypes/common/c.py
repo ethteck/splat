@@ -20,7 +20,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     )
 
     C_FUNC_RE = re.compile(
-        r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
+        r"^(?:static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
         re.MULTILINE
     )
 
@@ -54,7 +54,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             if start == -1: return
             yield start
             start += len(sub)
-    
+
     @staticmethod
     def get_close_parenthesis(str, pos):
         paren_count = 0
@@ -101,8 +101,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if options.do_c_func_detection() and os.path.exists(path):
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
-                    self.mark_c_funcs_as_defined(self.defined_funcs)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
+                    self.mark_c_funcs_as_defined({*self.defined_funcs, *self.global_asm_funcs})
 
             self.scan_code(rom_bytes)
 
