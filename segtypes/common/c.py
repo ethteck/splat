@@ -20,7 +20,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     )
 
     C_FUNC_RE = re.compile(
-        r"^(static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
+        r"^(?:static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
         re.MULTILINE
     )
 
@@ -44,7 +44,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
-        return set(m.group(2) for m in CommonSegC.C_FUNC_RE.finditer(text))
+        return set(m.group(1) for m in CommonSegC.C_FUNC_RE.finditer(text))
 
     @staticmethod
     def find_all_instances(str, sub):
