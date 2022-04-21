@@ -17,7 +17,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 return options.get_src_path() / self.dir / f"{self.name}.c"
         else:
             # ASM
-            return options.get_asm_path() / "data" / self.dir / f"{self.name}.{self.type}.s"
+            return options.get_data_path() / self.dir / f"{self.name}.{self.type}.s"
 
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)

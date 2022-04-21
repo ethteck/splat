@@ -109,7 +109,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
 
-            asm_out_dir = options.get_asm_path() / "nonmatchings" / self.dir
+            asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             is_new_c_file = False
@@ -208,7 +208,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     else:
                         c_lines.append("INCLUDE_ASM(\"{}\", {});".format(asm_out_dir / self.name, func_name))
                 else:
-                    asm_outpath = Path(os.path.join(asm_out_dir, self.dir, self.name, func_name + ".s"))
+                    asm_outpath = Path(os.path.join(asm_out_dir, self.name, func_name + ".s"))
                     rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
                     c_lines.append(f"#pragma GLOBAL_ASM(\"{rel_asm_outpath}\")")
             c_lines.append("")
