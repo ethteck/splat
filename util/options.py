@@ -111,6 +111,14 @@ def get_src_path() -> Path:
 def get_asm_path() -> Path:
     return get_base_path() / opts.get("asm_path", "asm")
 
+# Determines the path to the asm data directory
+def get_data_path() -> Path:
+    return get_base_path() / opts.get("data_path", get_asm_path() / "data")
+
+# Determines the path to the asm nonmatchings directory
+def get_nonmatchings_path() -> Path:
+    return get_base_path() / opts.get("nonmatchings_path", get_asm_path() / "nonmatchings")
+
 # Determines the path to the cache file (used when supplied --use-cache via the CLI)
 def get_cache_path():
     return get_base_path() / opts.get("cache_path", ".splat_cache")

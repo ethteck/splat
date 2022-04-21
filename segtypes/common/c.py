@@ -109,7 +109,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
 
-            asm_out_dir = options.get_asm_path() / "nonmatchings" / self.dir
+            asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             is_new_c_file = False
