@@ -13,7 +13,7 @@ def initialize(config: Dict, config_path, base_path=None, target_path=None):
     if base_path:
         opts["base_path"] = Path(base_path)
     else:
-        if not "base_path" in opts:
+        if "base_path" not in opts:
             log.error("Error: Base output dir not specified as a command line arg or via the config yaml (base_path)")
 
         opts["base_path"] = Path(config_path[0]).parent / opts["base_path"]
@@ -29,7 +29,7 @@ def get(opt, default=None):
     return opts.get(opt, default)
 
 # Returns whether the given mode is currently enabled
-def mode_active(mode):
+def mode_active(mode) -> bool:
     return mode in opts["modes"] or "all" in opts["modes"]
 
 # TODO standardize names of options for categories & decide whether to stick to get_ or drop it
@@ -92,7 +92,7 @@ def get_target_path() -> Path:
 #
 # It's possible to use more than one file by supplying a list instead of a string
 def get_symbol_addrs_paths() -> List[Path]:
-    paths:Union[List[str], str] = opts.get("symbol_addrs_path", "symbol_addrs.txt")
+    paths: Union[List[str], str] = opts.get("symbol_addrs_path", "symbol_addrs.txt")
 
     if isinstance(paths, str):
         return [get_base_path() / paths]
@@ -100,7 +100,7 @@ def get_symbol_addrs_paths() -> List[Path]:
         return [get_base_path() / path for path in paths]
 
 # Determines the path to the project build directory
-def get_build_path():
+def get_build_path() -> Path:
     return get_base_path() / opts.get("build_path", "build")
 
 # Determines the path to the source code directory
@@ -113,14 +113,18 @@ def get_asm_path() -> Path:
 
 # Determines the path to the asm data directory
 def get_data_path() -> Path:
-    return get_base_path() / opts.get("data_path", get_asm_path() / "data")
+    if "data_path" in opts:
+        return get_base_path() / opts["data_path"]
+    return get_asm_path() / "data"
 
 # Determines the path to the asm nonmatchings directory
 def get_nonmatchings_path() -> Path:
-    return get_base_path() / opts.get("nonmatchings_path", get_asm_path() / "nonmatchings")
+    if "nonmatchings_path" in opts:
+        return get_base_path() / opts["nonmatchings_path"]
+    return get_asm_path() / "nonmatchings"
 
 # Determines the path to the cache file (used when supplied --use-cache via the CLI)
-def get_cache_path():
+def get_cache_path() -> Path:
     return get_base_path() / opts.get("cache_path", ".splat_cache")
 
 # Determines whether to create an automatically-generated undefined functions file
@@ -129,7 +133,7 @@ def get_create_undefined_funcs_auto() -> bool:
     return opts.get("create_undefined_funcs_auto", True)
 
 # Determines the path to the undefined_funcs_auto file
-def get_undefined_funcs_auto_path():
+def get_undefined_funcs_auto_path() -> Path:
     return get_base_path() / opts.get("undefined_funcs_auto_path", "undefined_funcs_auto.txt")
 
 # Determines whether to create an automatically-generated undefined symbols file
@@ -138,19 +142,19 @@ def get_create_undefined_syms_auto() -> bool:
     return opts.get("create_undefined_syms_auto", True)
 
 # Determines the path to the undefined_symbols_auto file
-def get_undefined_syms_auto_path():
+def get_undefined_syms_auto_path() -> Path:
     return get_base_path() / opts.get("undefined_syms_auto_path", "undefined_syms_auto.txt")
 
 # TODO document
-def get_create_elf_section_list_auto():
+def get_create_elf_section_list_auto() -> bool:
     return opts.get("create_elf_section_list_auto", False)
 
 # TODO document
-def get_elf_section_list_path():
+def get_elf_section_list_path() -> Path:
     return get_base_path() / opts.get("elf_section_list_path", "elf_sections.txt")
 
 # Determines the path in which to search for custom splat extensions
-def get_extensions_path():
+def get_extensions_path() -> Optional[Path]:
     ext_opt = opts.get("extensions_path")
     if not ext_opt:
         return None
@@ -174,14 +178,14 @@ def get_gp() -> Optional[int]:
 ################################################################################
 
 # Determines the desired path to the linker script that splat will generate
-def get_ld_script_path():
+def get_ld_script_path() -> Path:
     return get_base_path() / opts.get("ld_script_path", f"{opts.get('basename')}.ld")
 
 # Determines the default subalign value to be specified in the generated linker script
 def get_subalign() -> int:
     return opts.get("subalign", 16)
 
-# Determines whether to automatically configure the linker script to link against common sections for all files 
+# Determines whether to automatically configure the linker script to link against common sections for all files
 # when the yaml doesn't have specific configurations for these sections. See release notes for details
 def auto_all_sections() -> bool:
     return opts.get("auto_all_sections", False)
@@ -264,7 +268,7 @@ def get_asm_end_label() -> str:
 def mnemonic_ljust() -> int:
     return opts.get("mnemonic_ljust", 11)
 
-# Determines whether to pad the rom address 
+# Determines whether to pad the rom address
 def rom_address_padding() -> bool:
     return opts.get("rom_address_padding", False)
 
@@ -283,5 +287,5 @@ def get_header_encoding() -> str:
 
 # Determines whether to use a legacy INCLUDE_ASM macro format in c files
 # only applies to GCC/SN64
-def get_use_legacy_include_asm():
+def get_use_legacy_include_asm() -> bool:
     return opts.get("use_legacy_include_asm", True)
