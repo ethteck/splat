@@ -52,7 +52,7 @@ def format_f32_imm(num: int) -> str:
         return str(value)
 
     ret = fmt(prec)
-    if "." not in ret:
+    if "." not in ret and "e" not in ret:
         ret += ".0"
     return ret
 
