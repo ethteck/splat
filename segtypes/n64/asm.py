@@ -8,7 +8,7 @@ class N64SegAsm(CommonSegAsm):
     def get_file_header():
         ret = []
 
-        ret.append(".include \"macro.inc\"")
+        ret.append('.include "macro.inc"')
         ret.append("")
         ret.append("# assembler directives")
         ret.append(".set noat      # allow manual use of $at")
@@ -19,7 +19,7 @@ class N64SegAsm(CommonSegAsm):
         if preamble:
             ret.append(preamble)
             ret.append("")
-        ret.append(".section .text, \"ax\"")
+        ret.append('.section .text, "ax"')
         ret.append("")
 
         return ret

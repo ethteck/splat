@@ -8,11 +8,14 @@ all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
 
+
 def is_truey(str: str) -> bool:
     return str.lower() in ["true", "on", "yes", "y"]
 
+
 def is_falsey(str: str) -> bool:
     return str.lower() in ["false", "off", "no", "n"]
+
 
 def initialize(all_segments):
     global all_symbols
@@ -35,7 +38,7 @@ def initialize(all_segments):
             line_ext = ""
 
             if comment_loc != -1:
-                line_ext = line[comment_loc + 2:].strip()
+                line_ext = line[comment_loc + 2 :].strip()
                 line = line[:comment_loc].strip()
 
             line_split = line.split("=")
@@ -61,9 +64,13 @@ def initialize(all_segments):
                             continue
 
                         val = str(info.split(":")[1])
-                        tf_val = True if is_truey(val) else False if is_falsey(val) else None
+                        tf_val = (
+                            True if is_truey(val) else False if is_falsey(val) else None
+                        )
                         if tf_val is None:
-                            log.error(f"Invalid value {val} for attribute on line: {line}")
+                            log.error(
+                                f"Invalid value {val} for attribute on line: {line}"
+                            )
 
                         if info.startswith("dead:"):
                             sym.dead = tf_val or False
@@ -78,6 +85,7 @@ def initialize(all_segments):
                 symbol_ranges.append(sym)
 
             is_symbol_isolated(sym, all_segments)
+
 
 def is_symbol_isolated(symbol, all_segments):
     if symbol in sym_isolated_map:
@@ -94,23 +102,25 @@ def is_symbol_isolated(symbol, all_segments):
     sym_isolated_map[symbol] = relevant_segs < 2
     return sym_isolated_map[symbol]
 
+
 def retrieve_from_ranges(vram, rom=None):
-        rom_matches = []
-        ram_matches = []
+    rom_matches = []
+    ram_matches = []
 
-        for symbol in symbol_ranges:
-            if symbol.contains_vram(vram):
-                if symbol.rom and rom and symbol.contains_rom(rom):
-                    rom_matches.append(symbol)
-                else:
-                    ram_matches.append(symbol)
+    for symbol in symbol_ranges:
+        if symbol.contains_vram(vram):
+            if symbol.rom and rom and symbol.contains_rom(rom):
+                rom_matches.append(symbol)
+            else:
+                ram_matches.append(symbol)
 
-        ret = rom_matches + ram_matches
+    ret = rom_matches + ram_matches
 
-        if len(ret) > 0:
-            return ret[0]
-        else:
-            return None
+    if len(ret) > 0:
+        return ret[0]
+    else:
+        return None
+
 
 @dataclass
 class Instruction:
@@ -118,10 +128,10 @@ class Instruction:
     mnemonic: str
     op_str: str
     rom_addr: int
-    is_gp:bool = False
-    is_hi:bool = False
-    is_lo:bool = False
-    hi_lo_sym:Optional["Symbol"] = None
+    is_gp: bool = False
+    is_hi: bool = False
+    is_lo: bool = False
+    hi_lo_sym: Optional["Symbol"] = None
     sym_offset_str: str = ""
     hi_lo_reg: str = ""
 
@@ -136,7 +146,7 @@ class Symbol:
 
         if self.type == "func":
             prefix = "func"
-        elif self.type =="jtbl":
+        elif self.type == "jtbl":
             prefix = "jtbl"
         else:
             prefix = "D"
@@ -161,7 +171,15 @@ class Symbol:
     def contains_rom(self, offset):
         return offset >= self.rom and offset < self.rom_end
 
-    def __init__(self, vram, given_name: str = "", rom=None, type="unknown", in_overlay=False, size=4):
+    def __init__(
+        self,
+        vram,
+        given_name: str = "",
+        rom=None,
+        type="unknown",
+        in_overlay=False,
+        size=4,
+    ):
         self.defined = False
         self.referenced = False
         self.vram_start = vram

@@ -8,6 +8,7 @@ newline = True
 
 Status = Optional[str]
 
+
 def write(*args, status=None, **kwargs):
     global newline
 
@@ -17,15 +18,18 @@ def write(*args, status=None, **kwargs):
 
     print(status_to_ansi(status) + str(args[0]), *args[1:], **kwargs)
 
+
 def error(*args, **kwargs):
     write(*args, **kwargs, status="error")
     sys.exit(2)
+
 
 def dot(status: Status = None):
     global newline
 
     print(status_to_ansi(status) + ".", end="")
     newline = False
+
 
 def status_to_ansi(status: Status):
     if status == "ok":

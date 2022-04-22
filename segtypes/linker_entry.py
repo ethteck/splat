@@ -25,6 +25,7 @@ def clean_up_path(path: Path) -> Path:
     # If it wasn't relative to that too, then just return the path as-is
     return path
 
+
 def path_to_object_path(path: Path) -> Path:
     path = clean_up_path(path)
     if options.use_o_as_suffix():
@@ -32,6 +33,7 @@ def path_to_object_path(path: Path) -> Path:
     else:
         full_suffix = path.suffix + ".o"
     return clean_up_path(options.get_build_path() / path.with_suffix(full_suffix))
+
 
 def write_file_if_different(path: Path, new_content: str):
     if path.exists():
@@ -44,13 +46,15 @@ def write_file_if_different(path: Path, new_content: str):
         with path.open("w") as f:
             f.write(new_content)
 
+
 def to_cname(symbol: str) -> str:
     symbol = re.sub(r"[^0-9a-zA-Z_]", "_", symbol)
 
-    if symbol[0] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+    if symbol[0] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
         symbol = "_" + symbol
 
     return symbol
+
 
 def get_segment_cname(segment: Segment) -> str:
     if segment.parent:
@@ -58,8 +62,11 @@ def get_segment_cname(segment: Segment) -> str:
     else:
         return to_cname(segment.name)
 
+
 class LinkerEntry:
-    def __init__(self, segment: Segment, src_paths: List[Path], object_path: Path, section: str):
+    def __init__(
+        self, segment: Segment, src_paths: List[Path], object_path: Path, section: str
+    ):
         self.segment = segment
         self.src_paths = [clean_up_path(p) for p in src_paths]
         self.section = section
@@ -70,7 +77,8 @@ class LinkerEntry:
         else:
             self.object_path = path_to_object_path(object_path)
 
-class LinkerWriter():
+
+class LinkerWriter:
     def __init__(self):
         self.shiftable: bool = options.get_shiftable()
         self.linker_discard_section: bool = options.linker_discard_section()
@@ -95,7 +103,11 @@ class LinkerWriter():
 
         seg_name = get_segment_cname(segment)
 
-        section_labels = [LinkerSection(l) for l in options.ld_section_labels() if l in options.get_section_order()]
+        section_labels = [
+            LinkerSection(l)
+            for l in options.ld_section_labels()
+            if l in options.get_section_order()
+        ]
 
         force_new_section = False
         cur_section = None
@@ -103,20 +115,26 @@ class LinkerWriter():
         for i, entry in enumerate(entries):
             cur_section = entry.section
 
-            if cur_section == "linker": # TODO: isinstance is preferable
+            if cur_section == "linker":  # TODO: isinstance is preferable
                 self._end_block()
                 self._begin_segment(entry.segment)
                 continue
             elif cur_section == "linker_offset":
-                self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f". - {get_segment_cname(segment)}_ROM_START")
+                self._write_symbol(
+                    f"{get_segment_cname(entry.segment)}_OFFSET",
+                    f". - {get_segment_cname(segment)}_ROM_START",
+                )
                 continue
-            
+
             for i, section in enumerate(section_labels):
                 if not section.started and section.name == cur_section:
                     if i > 0:
                         if not section_labels[i - 1].ended:
                             section_labels[i - 1].ended = True
-                            self._write_symbol(f"{seg_name}{section_labels[i - 1].name.upper()}_END", ".")
+                            self._write_symbol(
+                                f"{seg_name}{section_labels[i - 1].name.upper()}_END",
+                                ".",
+                            )
                     section.started = True
                     self._write_symbol(f"{seg_name}{section.name.upper()}_START", ".")
 
@@ -132,15 +150,26 @@ class LinkerWriter():
                     if start % 0x10 != 0 and i != 0:
                         force_new_section = True
 
-            if entry.object_path and cur_section == ".data" and entry.segment.type != "lib":
-                path_cname = re.sub(r"[^0-9a-zA-Z_]", "_", str(entry.segment.dir / entry.segment.name) + ".".join(entry.object_path.suffixes[:-1]))
+            if (
+                entry.object_path
+                and cur_section == ".data"
+                and entry.segment.type != "lib"
+            ):
+                path_cname = re.sub(
+                    r"[^0-9a-zA-Z_]",
+                    "_",
+                    str(entry.segment.dir / entry.segment.name)
+                    + ".".join(entry.object_path.suffixes[:-1]),
+                )
                 self._write_symbol(path_cname, ".")
 
             self._writeln(f"{entry.object_path}({cur_section});")
 
         for section in section_labels:
             if section.started and not section.ended:
-                self._write_symbol(f"{seg_name}_{dotless_type(section.name).upper()}_END", ".")
+                self._write_symbol(
+                    f"{seg_name}_{dotless_type(section.name).upper()}_END", "."
+                )
 
         self._end_segment(segment)
 
@@ -151,25 +180,28 @@ class LinkerWriter():
             self._writeln("*(*);")
             self._end_block()
 
-        self._end_block() # SECTIONS
+        self._end_block()  # SECTIONS
 
         assert self._indent_level == 0
 
-        write_file_if_different(options.get_ld_script_path(), "\n".join(self.buffer) + "\n")
+        write_file_if_different(
+            options.get_ld_script_path(), "\n".join(self.buffer) + "\n"
+        )
 
     def save_symbol_header(self):
         path = options.get_linker_symbol_header_path()
 
         if path:
-            write_file_if_different(path,
+            write_file_if_different(
+                path,
                 "#ifndef _HEADER_SYMBOLS_H_\n"
                 "#define _HEADER_SYMBOLS_H_\n"
                 "\n"
-                "#include \"common.h\"\n"
+                '#include "common.h"\n'
                 "\n"
-                + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols) +
-                "\n"
-                "#endif\n"
+                + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols)
+                + "\n"
+                "#endif\n",
             )
 
     def _writeln(self, line: str):
@@ -218,7 +250,9 @@ class LinkerWriter():
         self._write_symbol(f"{name}_ROM_START", "__romPos")
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
 
-        self._writeln(f".{name} {vram_str}: AT({name}_ROM_START) SUBALIGN({segment.subalign})")
+        self._writeln(
+            f".{name} {vram_str}: AT({name}_ROM_START) SUBALIGN({segment.subalign})"
+        )
         self._begin_block()
 
     def _end_segment(self, segment: Segment):
@@ -227,7 +261,11 @@ class LinkerWriter():
         name = get_segment_cname(segment)
 
         # force end if not shiftable/auto
-        if not self.shiftable and isinstance(segment.rom_start, int) and isinstance(segment.rom_end, int):
+        if (
+            not self.shiftable
+            and isinstance(segment.rom_start, int)
+            and isinstance(segment.rom_end, int)
+        ):
             self._write_symbol(f"{name}_ROM_END", segment.rom_end)
             self._writeln(f"__romPos = 0x{segment.rom_end:X};")
         else:

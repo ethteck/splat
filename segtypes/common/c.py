@@ -16,17 +16,15 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     STRIP_C_COMMENTS_RE = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
+        re.DOTALL | re.MULTILINE,
     )
 
     C_FUNC_RE = re.compile(
-        r"^(?:static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{",
-        re.MULTILINE
+        r"^(?:static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{", re.MULTILINE
     )
 
     C_GLOBAL_ASM_IDO_RE = re.compile(
-        r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)",
-        re.MULTILINE
+        r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)", re.MULTILINE
     )
 
     @staticmethod
@@ -37,6 +35,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 return " "
             else:
                 return s
+
         return re.sub(CommonSegC.STRIP_C_COMMENTS_RE, replacer, text)
 
     @staticmethod
@@ -51,7 +50,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         start = 0
         while True:
             start = str.find(sub, start)
-            if start == -1: return
+            if start == -1:
+                return
             yield start
             start += len(sub)
 
@@ -60,9 +60,9 @@ class CommonSegC(CommonSegCodeSubsegment):
         paren_count = 0
         while True:
             cur_char = str[pos]
-            if cur_char == '(':
+            if cur_char == "(":
                 paren_count += 1
-            elif cur_char == ')':
+            elif cur_char == ")":
                 if paren_count == 0:
                     return pos + 1
                 else:
@@ -72,15 +72,17 @@ class CommonSegC(CommonSegCodeSubsegment):
     @staticmethod
     def find_include_asm(text: str):
         for pos in CommonSegC.find_all_instances(text, "INCLUDE_ASM("):
-            close_paren_pos = CommonSegC.get_close_parenthesis(text, pos + len("INCLUDE_ASM("))
+            close_paren_pos = CommonSegC.get_close_parenthesis(
+                text, pos + len("INCLUDE_ASM(")
+            )
             macro_contents = text[pos:close_paren_pos]
-            macro_args = macro_contents.split(',')
+            macro_args = macro_contents.split(",")
             if options.get_use_legacy_include_asm():
                 if len(macro_args) >= 3:
-                    yield macro_args[2].strip(' )')
+                    yield macro_args[2].strip(" )")
             else:
                 if len(macro_args) >= 2:
-                    yield macro_args[1].strip(' )')
+                    yield macro_args[1].strip(" )")
 
     @staticmethod
     def get_global_asm_funcs(c_file):
@@ -89,20 +91,28 @@ class CommonSegC(CommonSegCodeSubsegment):
         if options.get_compiler() in [GCC, SN64]:
             return set(CommonSegC.find_include_asm(text))
         else:
-            return set(m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text))
+            return set(
+                m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text)
+            )
 
     def out_path(self) -> Optional[Path]:
         return options.get_src_path() / self.dir / f"{self.name}.c"
 
     def scan(self, rom_bytes: bytes):
-        if self.rom_start is not None and self.rom_end is not None and self.rom_start != self.rom_end:
+        if (
+            self.rom_start is not None
+            and self.rom_end is not None
+            and self.rom_start != self.rom_end
+        ):
             path = self.out_path()
             if path:
                 if options.do_c_func_detection() and os.path.exists(path):
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
-                    self.mark_c_funcs_as_defined({*self.defined_funcs, *self.global_asm_funcs})
+                    self.mark_c_funcs_as_defined(
+                        {*self.defined_funcs, *self.global_asm_funcs}
+                    )
 
             self.scan_code(rom_bytes)
 
@@ -123,11 +133,15 @@ class CommonSegC(CommonSegCodeSubsegment):
                     is_new_c_file = True
 
             for func_addr in self.funcs_text:
-                func_sym = self.parent.get_symbol(func_addr, type="func", local_only=True)
-                assert(func_sym is not None)
+                func_sym = self.parent.get_symbol(
+                    func_addr, type="func", local_only=True
+                )
+                assert func_sym is not None
 
                 if func_sym.name in self.global_asm_funcs or is_new_c_file:
-                    self.create_c_asm_file(self.funcs_text, func_addr, asm_out_dir, func_sym)
+                    self.create_c_asm_file(
+                        self.funcs_text, func_addr, asm_out_dir, func_sym
+                    )
 
     def get_c_preamble(self):
         ret = []
@@ -163,9 +177,14 @@ class CommonSegC(CommonSegCodeSubsegment):
             out_lines.extend(options.asm_inc_header().split("\n"))
 
         if self.parent and isinstance(self.parent, CommonSegGroup):
-            if options.get_migrate_rodata_to_functions() and func_addr in self.parent.rodata_syms:
-                func_rodata = list({s for s in self.parent.rodata_syms[func_addr] if s.disasm_str})
-                func_rodata.sort(key=lambda s:s.vram_start)
+            if (
+                options.get_migrate_rodata_to_functions()
+                and func_addr in self.parent.rodata_syms
+            ):
+                func_rodata = list(
+                    {s for s in self.parent.rodata_syms[func_addr] if s.disasm_str}
+                )
+                func_rodata.sort(key=lambda s: s.vram_start)
 
                 if len(func_rodata) > 0:
                     rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
@@ -174,7 +193,9 @@ class CommonSegC(CommonSegCodeSubsegment):
 
                         for sym in func_rodata:
                             if sym.disasm_str:
-                                out_lines.extend(sym.disasm_str.replace("\n\n", "\n").split("\n"))
+                                out_lines.extend(
+                                    sym.disasm_str.replace("\n\n", "\n").split("\n")
+                                )
 
                         out_lines.append("")
                         out_lines.append(".section .text")
@@ -198,19 +219,33 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             # Terrible hack to "auto-decompile" empty functions
             # TODO move disassembly into funcs_text or somewhere we can access it from here
-            if len(funcs_text[func][0]) == 3 and funcs_text[func][0][1][-3:] in ["$ra", "$31"] and funcs_text[func][0][2][-3:] == "nop":
+            if (
+                len(funcs_text[func][0]) == 3
+                and funcs_text[func][0][1][-3:] in ["$ra", "$31"]
+                and funcs_text[func][0][2][-3:] == "nop"
+            ):
                 c_lines.append("void " + func_name + "(void) {")
                 c_lines.append("}")
             else:
                 if options.get_compiler() in [GCC, SN64]:
                     if options.get_use_legacy_include_asm():
-                        c_lines.append("INCLUDE_ASM(s32, \"{}\", {});".format(self.name, func_name))
+                        c_lines.append(
+                            'INCLUDE_ASM(s32, "{}", {});'.format(self.name, func_name)
+                        )
                     else:
-                        c_lines.append("INCLUDE_ASM(\"{}\", {});".format(asm_out_dir / self.name, func_name))
+                        c_lines.append(
+                            'INCLUDE_ASM("{}", {});'.format(
+                                asm_out_dir / self.name, func_name
+                            )
+                        )
                 else:
-                    asm_outpath = Path(os.path.join(asm_out_dir, self.name, func_name + ".s"))
-                    rel_asm_outpath = os.path.relpath(asm_outpath, options.get_base_path())
-                    c_lines.append(f"#pragma GLOBAL_ASM(\"{rel_asm_outpath}\")")
+                    asm_outpath = Path(
+                        os.path.join(asm_out_dir, self.name, func_name + ".s")
+                    )
+                    rel_asm_outpath = os.path.relpath(
+                        asm_outpath, options.get_base_path()
+                    )
+                    c_lines.append(f'#pragma GLOBAL_ASM("{rel_asm_outpath}")')
             c_lines.append("")
 
         Path(c_path).parent.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,7 @@
 from segtypes.common.data import CommonSegData
 from util import options, log
 
+
 class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"

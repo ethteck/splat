@@ -11,9 +11,12 @@ import zlib
 
 from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 
-parser = argparse.ArgumentParser(description='Gives information on N64 roms')
-parser.add_argument('rom', help='path to an N64 rom')
-parser.add_argument('--header-encoding', help='Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings')
+parser = argparse.ArgumentParser(description="Gives information on N64 roms")
+parser.add_argument("rom", help="path to an N64 rom")
+parser.add_argument(
+    "--header-encoding",
+    help="Text encoding the game header is using; see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings",
+)
 
 country_codes = {
     0x00: "Unknown",
@@ -45,12 +48,16 @@ crc_to_cic = {
     0x0B050EE0: {"ntsc-name": "6103", "pal-name": "7103", "offset": 0x100000},
     0x98BC2C86: {"ntsc-name": "6105", "pal-name": "7105", "offset": 0x000000},
     0xACC8580A: {"ntsc-name": "6106", "pal-name": "7106", "offset": 0x200000},
-    0x00000000: {"ntsc-name": "unknown", "pal-name": "unknown", "offset": 0x0000000}
+    0x00000000: {"ntsc-name": "unknown", "pal-name": "unknown", "offset": 0x0000000},
 }
 
 
 def swap_bytes(data):
-    return bytes(itertools.chain.from_iterable(struct.pack(">H", x) for x, in struct.iter_unpack("<H", data)))
+    return bytes(
+        itertools.chain.from_iterable(
+            struct.pack(">H", x) for x, in struct.iter_unpack("<H", data)
+        )
+    )
 
 
 def read_rom(rom_path):
@@ -114,7 +121,9 @@ def get_info_bytes(rom_bytes, header_encoding):
     try:
         name = rom_bytes[0x20:0x34].decode(header_encoding).strip()
     except:
-        print("splat could not decode the game name; try using a different encoding by passing the --header-encoding argument (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)")
+        print(
+            "splat could not decode the game name; try using a different encoding by passing the --header-encoding argument (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)"
+        )
         exit(1)
 
     country_code = rom_bytes[0x3E]
@@ -132,13 +141,36 @@ def get_info_bytes(rom_bytes, header_encoding):
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    return N64Rom(name, header_encoding, country_code, libultra_version, crc1, crc2,
-                  cic, entry_point, len(rom_bytes), compiler, sha1)
+    return N64Rom(
+        name,
+        header_encoding,
+        country_code,
+        libultra_version,
+        crc1,
+        crc2,
+        cic,
+        entry_point,
+        len(rom_bytes),
+        compiler,
+        sha1,
+    )
 
 
 class N64Rom:
-    def __init__(self, name, header_encoding, country_code, libultra_version, crc1, crc2,
-                 cic, entry_point, size, compiler, sha1):
+    def __init__(
+        self,
+        name,
+        header_encoding,
+        country_code,
+        libultra_version,
+        crc1,
+        crc2,
+        cic,
+        entry_point,
+        size,
+        compiler,
+        sha1,
+    ):
         self.name = name
         self.header_encoding = header_encoding
         self.country_code = country_code
@@ -170,7 +202,9 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
 
     compiler = "IDO" if branches > jumps else "GCC"
     if print_result:
-        print(f"{branches} branches and {jumps} jumps detected in the first code segment. Compiler is most likely {compiler}")
+        print(
+            f"{branches} branches and {jumps} jumps detected in the first code segment. Compiler is most likely {compiler}"
+        )
     return compiler
 
 

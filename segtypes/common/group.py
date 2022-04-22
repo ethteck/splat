@@ -10,15 +10,42 @@ from util.symbols import Symbol
 
 CODE_TYPES = ["c", "asm", "hasm"]
 
-class CommonSegGroup(CommonSegment):
 
-    def __init__(self, rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml):
-        super().__init__(rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml)
+class CommonSegGroup(CommonSegment):
+    def __init__(
+        self,
+        rom_start,
+        rom_end,
+        type,
+        name,
+        vram_start,
+        extract,
+        given_subalign,
+        given_is_overlay,
+        given_dir,
+        args,
+        yaml,
+    ):
+        super().__init__(
+            rom_start,
+            rom_end,
+            type,
+            name,
+            vram_start,
+            extract,
+            given_subalign,
+            given_is_overlay,
+            given_dir,
+            args,
+            yaml,
+        )
 
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
         # TODO: move this to CommonSegCode
-        self.section_boundaries = OrderedDict((s_name, Range()) for s_name in options.get_section_order())
+        self.section_boundaries = OrderedDict(
+            (s_name, Range()) for s_name in options.get_section_order()
+        )
         self.subsegments = self.parse_subsegments(yaml)
 
     @property
@@ -42,7 +69,19 @@ class CommonSegGroup(CommonSegment):
                         vram_start = elem.rom_start - self.rom_start + self.vram_start
                     else:
                         vram_start = "auto"
-                    rep = replace_class(elem.rom_start, elem.rom_end, rep_type, base[0], vram_start, False, self.given_subalign, self.given_is_overlay, self.given_dir, [], {})
+                    rep = replace_class(
+                        elem.rom_start,
+                        elem.rom_end,
+                        rep_type,
+                        base[0],
+                        vram_start,
+                        False,
+                        self.given_subalign,
+                        self.given_is_overlay,
+                        self.given_dir,
+                        [],
+                        {},
+                    )
                     rep.sibling = base[1]
                     rep.parent = self
                     alls.append(rep)
@@ -53,7 +92,9 @@ class CommonSegGroup(CommonSegment):
                 return True
         return False
 
-    def find_inserts(self, found_sections: typing.OrderedDict[str, Range]) -> "OrderedDict[str, int]":
+    def find_inserts(
+        self, found_sections: typing.OrderedDict[str, Range]
+    ) -> "OrderedDict[str, int]":
         inserts = OrderedDict()
 
         section_order = self.section_order
@@ -74,15 +115,25 @@ class CommonSegGroup(CommonSegment):
         return inserts
 
     def get_next_seg_start(self, i, subsegment_yamls):
-        return self.rom_end if i == len(subsegment_yamls) - 1 else Segment.parse_segment_start(subsegment_yamls[i + 1])
+        return (
+            self.rom_end
+            if i == len(subsegment_yamls) - 1
+            else Segment.parse_segment_start(subsegment_yamls[i + 1])
+        )
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
         base_segments: OrderedDict[str, Segment] = OrderedDict()
         ret = []
         prev_start: RomAddr = -1
-        inserts: OrderedDict[str, int] = OrderedDict() # Used to manually add "all_" types for sections not otherwise defined in the yaml
+        inserts: OrderedDict[
+            str, int
+        ] = (
+            OrderedDict()
+        )  # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
-        found_sections = OrderedDict((s_name, Range()) for s_name in self.section_boundaries) # Stores yaml index where a section was first found
+        found_sections = OrderedDict(
+            (s_name, Range()) for s_name in self.section_boundaries
+        )  # Stores yaml index where a section was first found
 
         if "subsegments" not in segment_yaml:
             return []
@@ -115,9 +166,13 @@ class CommonSegGroup(CommonSegment):
                         if cur_section != typ:
                             # We're changing sections
                             if found_sections[cur_section].has_end():
-                                log.error(f"Section {cur_section} end encountered but was already ended earlier!")
+                                log.error(
+                                    f"Section {cur_section} end encountered but was already ended earlier!"
+                                )
                             if found_sections[typ].has_start():
-                                log.error(f"Section {typ} start encounted but has already started earlier!")
+                                log.error(
+                                    f"Section {typ} start encounted but has already started earlier!"
+                                )
 
                             # End the current section
                             found_sections[cur_section].end = i
@@ -148,20 +203,30 @@ class CommonSegGroup(CommonSegment):
 
             end = self.get_next_seg_start(i, segment_yaml["subsegments"])
 
-            if isinstance(start, int) and isinstance(prev_start, int) and start < prev_start:
-                log.error(f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})")
+            if (
+                isinstance(start, int)
+                and isinstance(prev_start, int)
+                and start < prev_start
+            ):
+                log.error(
+                    f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})"
+                )
 
             vram = None
             if start != "auto":
                 assert isinstance(start, int)
                 vram = self.get_most_parent().rom_to_ram(start)
 
-            segment: Segment = Segment.from_yaml(segment_class, subsection_yaml, start, end, vram)
+            segment: Segment = Segment.from_yaml(
+                segment_class, subsection_yaml, start, end, vram
+            )
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
 
             for i, section in enumerate(self.section_order):
-                if not self.section_boundaries[section].has_start() and dotless_type(section) == dotless_type(segment.type):
+                if not self.section_boundaries[section].has_start() and dotless_type(
+                    section
+                ) == dotless_type(segment.type):
                     if i > 0:
                         prev_section = self.section_order[i - 1]
                         self.section_boundaries[prev_section].end = segment.vram_start
@@ -191,14 +256,19 @@ class CommonSegGroup(CommonSegment):
                 rom_start = "auto"
                 vram_start = "auto"
 
-            ret.insert(idx, (Segment(rom_start, "auto", "all_" + section, "", vram_start)))
+            ret.insert(
+                idx, (Segment(rom_start, "auto", "all_" + section, "", vram_start))
+            )
 
         check = True
         while check:
             check = self.handle_alls(ret, base_segments)
 
         # TODO why is this necessary?
-        if self.section_boundaries[".rodata"].has_start() and not self.section_boundaries[".rodata"].has_end():
+        if (
+            self.section_boundaries[".rodata"].has_start()
+            and not self.section_boundaries[".rodata"].has_end()
+        ):
             assert self.vram_end is not None
             self.section_boundaries[".rodata"].end = self.vram_end
 

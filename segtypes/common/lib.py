@@ -3,10 +3,35 @@ from segtypes.linker_entry import LinkerEntry
 
 from util import options, log
 
-class CommonSegLib(N64Segment):
 
-    def __init__(self, rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml):
-        super().__init__(rom_start, rom_end, type, name, vram_start, extract, given_subalign, given_is_overlay, given_dir, args, yaml)
+class CommonSegLib(N64Segment):
+    def __init__(
+        self,
+        rom_start,
+        rom_end,
+        type,
+        name,
+        vram_start,
+        extract,
+        given_subalign,
+        given_is_overlay,
+        given_dir,
+        args,
+        yaml,
+    ):
+        super().__init__(
+            rom_start,
+            rom_end,
+            type,
+            name,
+            vram_start,
+            extract,
+            given_subalign,
+            given_is_overlay,
+            given_dir,
+            args,
+            yaml,
+        )
         if isinstance(yaml, dict):
             log.error("Error: 'dict' not currently supported for 'lib' segment")
             return
