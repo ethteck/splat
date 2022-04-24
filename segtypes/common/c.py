@@ -192,7 +192,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                         out_lines.append(".section .rodata")
 
                         for sym in func_rodata:
-                            if sym.disasm_str:
+                            if sym.extract and sym.disasm_str:
+                                out_lines.append("")
+                                out_lines.append(f"{options.get_asm_data_macro()} {sym.name}")
                                 out_lines.extend(
                                     sym.disasm_str.replace("\n\n", "\n").split("\n")
                                 )

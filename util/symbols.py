@@ -73,11 +73,11 @@ def initialize(all_segments):
                             )
 
                         if info.startswith("dead:"):
-                            sym.dead = tf_val or False
+                            sym.dead = tf_val if tf_val is not None else False
                         if info.startswith("defined:"):
-                            sym.defined = tf_val or False
+                            sym.defined = tf_val if tf_val is not None else False
                         if info.startswith("extract:"):
-                            sym.extract = tf_val or True
+                            sym.extract = tf_val if tf_val is not None else True
             all_symbols.append(sym)
 
             # Symbol ranges
