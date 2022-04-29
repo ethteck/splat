@@ -8,13 +8,16 @@ all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
 
+TRUEY_VALS = ["true", "on", "yes", "y"]
+FALSEY_VALS = ["false", "off", "no", "n"]
+
 
 def is_truey(str: str) -> bool:
-    return str.lower() in ["true", "on", "yes", "y"]
+    return str.lower() in TRUEY_VALS
 
 
 def is_falsey(str: str) -> bool:
-    return str.lower() in ["false", "off", "no", "n"]
+    return str.lower() in FALSEY_VALS
 
 
 def initialize(all_segments):
@@ -23,68 +26,112 @@ def initialize(all_segments):
 
     all_symbols = []
     symbol_ranges = []
-    sym_addrs_lines = []
 
     # Manual list of func name / addrs
     for path in options.get_symbol_addrs_paths():
         if path.exists():
             with open(path) as f:
-                sym_addrs_lines += f.readlines()
+                sym_addrs_lines = f.readlines()
+                for line_num, line in enumerate(sym_addrs_lines):
+                    line = line.strip()
+                    if not line == "" and not line.startswith("//"):
+                        comment_loc = line.find("//")
+                        line_main = line
+                        line_ext = ""
 
-    for line in sym_addrs_lines:
-        line = line.strip()
-        if not line == "" and not line.startswith("//"):
-            comment_loc = line.find("//")
-            line_ext = ""
+                        if comment_loc != -1:
+                            line_ext = line[comment_loc + 2 :].strip()
+                            line_main = line[:comment_loc].strip()
 
-            if comment_loc != -1:
-                line_ext = line[comment_loc + 2 :].strip()
-                line = line[:comment_loc].strip()
-
-            line_split = line.split("=")
-            name = line_split[0].strip()
-            addr = int(line_split[1].strip()[:-1], 0)
-
-            sym = Symbol(addr, given_name=name)
-
-            if line_ext:
-                for info in line_ext.split(" "):
-                    if ":" in info:
-                        if info.startswith("type:"):
-                            type = info.split(":")[1]
-                            sym.type = type
-                            continue
-                        if info.startswith("size:"):
-                            size = int(info.split(":")[1], 0)
-                            sym.size = size
-                            continue
-                        if info.startswith("rom:"):
-                            rom_addr = int(info.split(":")[1], 0)
-                            sym.rom = rom_addr
-                            continue
-
-                        val = str(info.split(":")[1])
-                        tf_val = (
-                            True if is_truey(val) else False if is_falsey(val) else None
-                        )
-                        if tf_val is None:
-                            log.error(
-                                f"Invalid value {val} for attribute on line: {line}"
+                        try:
+                            line_split = line_main.split("=")
+                            name = line_split[0].strip()
+                            addr = int(line_split[1].strip()[:-1], 0)
+                        except:
+                            log.parsing_error_preamble(path, line_num, line)
+                            log.write("Line should be of the form")
+                            log.write(
+                                "<function_name> = <address> // attr0:val0 attr1:val1 [...]"
                             )
+                            log.write("with <address> in hex preceded by 0x, or dec")
+                            log.write("")
+                            raise
 
-                        if info.startswith("dead:"):
-                            sym.dead = tf_val if tf_val is not None else False
-                        if info.startswith("defined:"):
-                            sym.defined = tf_val if tf_val is not None else False
-                        if info.startswith("extract:"):
-                            sym.extract = tf_val if tf_val is not None else True
-            all_symbols.append(sym)
+                        sym = Symbol(addr, given_name=name)
 
-            # Symbol ranges
-            if sym.size > 4:
-                symbol_ranges.append(sym)
+                        if line_ext:
+                            for info in line_ext.split(" "):
+                                if ":" in info:
+                                    if info.count(':') > 1:
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(f"Too many ':'s in '{info}'")
+                                        log.error("")
 
-            is_symbol_isolated(sym, all_segments)
+                                    attr_name, attr_val = info.split(":")
+                                    if attr_name == "":
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(f"Missing attribute name in '{info}', is there extra whitespace?")
+                                        log.error("")
+                                    if attr_val == "":
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(f"Missing attribute value in '{info}', is there extra whitespace?")
+                                        log.error("")
+
+
+                                    # Non-Boolean attributes
+                                    try:
+                                        if attr_name == "type":
+                                            type = attr_val
+                                            sym.type = type
+                                            continue
+                                        if attr_name == "size":
+                                            size = int(attr_val, 0)
+                                            sym.size = size
+                                            continue
+                                        if attr_name == "rom:":
+                                            rom_addr = int(attr_val, 0)
+                                            sym.rom = rom_addr
+                                            continue
+                                    except:
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(
+                                            f"value of attribute '{attr_name}' could not be read:"
+                                        )
+                                        log.write("")
+                                        raise
+
+                                    # Boolean attributes
+                                    tf_val = (
+                                        True
+                                        if is_truey(attr_val)
+                                        else False
+                                        if is_falsey(attr_val)
+                                        else None
+                                    )
+                                    if tf_val is None:
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(
+                                            f"Invalid Boolean value '{attr_val}' for attribute '{attr_name}', should be one of"
+                                        )
+                                        log.write([*TRUEY_VALS, *FALSEY_VALS])
+                                        log.error("")
+
+                                    if attr_name == "dead":
+                                        sym.dead = tf_val
+                                        continue
+                                    if attr_name == "defined":
+                                        sym.defined = tf_val
+                                        continue
+                                    if attr_name == "extract":
+                                        sym.extract = tf_val
+                                        continue
+                        all_symbols.append(sym)
+
+                        # Symbol ranges
+                        if sym.size > 4:
+                            symbol_ranges.append(sym)
+
+                        is_symbol_isolated(sym, all_segments)
 
 
 def is_symbol_isolated(symbol, all_segments):
