@@ -36,14 +36,15 @@ def initialize(all_segments):
                     line = line.strip()
                     if not line == "" and not line.startswith("//"):
                         comment_loc = line.find("//")
+                        line_main = line
                         line_ext = ""
 
                         if comment_loc != -1:
                             line_ext = line[comment_loc + 2 :].strip()
-                            line = line[:comment_loc].strip()
+                            line_main = line[:comment_loc].strip()
 
                         try:
-                            line_split = line.split("=")
+                            line_split = line_main.split("=")
                             name = line_split[0].strip()
                             addr = int(line_split[1].strip()[:-1], 0)
                         except:
@@ -63,10 +64,19 @@ def initialize(all_segments):
                                 if ":" in info:
                                     if info.count(':') > 1:
                                         log.parsing_error_preamble(path, line_num, line)
-                                        log.write(f"Too many ':'s in {info}")
+                                        log.write(f"Too many ':'s in '{info}'")
                                         log.error("")
 
                                     attr_name, attr_val = info.split(":")
+                                    if attr_name == "":
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(f"Missing attribute name in '{info}', is there extra whitespace?")
+                                        log.error("")
+                                    if attr_val == "":
+                                        log.parsing_error_preamble(path, line_num, line)
+                                        log.write(f"Missing attribute value in '{info}', is there extra whitespace?")
+                                        log.error("")
+
 
                                     # Non-Boolean attributes
                                     try:
