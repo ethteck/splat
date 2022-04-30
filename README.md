@@ -10,6 +10,15 @@
 *A **Binary Splitting Tool** to assist **Decompilation** / **Modding** projects*
 
 <br>
+
+---
+
+[<kbd> <br> Examples <br> </kbd>][Examples]
+[<kbd> <br> Wiki <br> </kbd>][Wiki]
+[<kbd> <br> Changelog <br> </kbd>][Changelog]
+
+---
+
 <br>
 
 ## Supported Binaries
@@ -21,12 +30,14 @@
 
 <br>
 
+## Requirements
+
+Python package requirements can be installed via `pip3 install -r requirements.txt`
+
+<br>
+
 The Makefile `setup` target calls splat with a config file that you can use for reference.
 
-Please check out the [wiki] for more information including [examples] of projects that use splat.
-
-### Requirements
-Python package requirements can be installed via `pip3 install -r requirements.txt`
 
 
 
@@ -35,6 +46,7 @@ Python package requirements can be installed via `pip3 install -r requirements.t
 [Examples]: https://github.com/ethteck/splat/wiki/Examples
 [Wiki]: https://github.com/ethteck/splat/wiki
 
+[Changelog]: Documentation/Changelog.md
 [License]: LICENSE
 
 <!---------------------------------[ Badges ]---------------------------------->
