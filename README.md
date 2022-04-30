@@ -13,6 +13,7 @@
 
 ---
 
+[<kbd> <br> Install <br> </kbd>][Install]
 [<kbd> <br> Examples <br> </kbd>][Examples]
 [<kbd> <br> Wiki <br> </kbd>][Wiki]
 [<kbd> <br> Changelog <br> </kbd>][Changelog]
@@ -30,16 +31,6 @@
 
 <br>
 
-## Requirements
-
-Python package requirements can be installed via `pip3 install -r requirements.txt`
-
-<br>
-
-The Makefile `setup` target calls splat with a config file that you can use for reference.
-
-
-
 
 <!----------------------------------------------------------------------------->
 
@@ -47,6 +38,7 @@ The Makefile `setup` target calls splat with a config file that you can use for 
 [Wiki]: https://github.com/ethteck/splat/wiki
 
 [Changelog]: Documentation/Changelog.md
+[Install]: Documentation/Install.md
 [License]: LICENSE
 
 <!---------------------------------[ Badges ]---------------------------------->
