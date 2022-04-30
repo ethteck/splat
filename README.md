@@ -1,7 +1,7 @@
 
-<div align = center>
-
 [![Badge License]][License]
+
+<div align = center>
  
 <br>
   
@@ -45,6 +45,6 @@
 
 <!---------------------------------[ Badges ]---------------------------------->
 
-[Badge PlayStation]: https://img.shields.io/badge/PSX-003791?style=for-the-badge&logo=PlayStation&logoColor=white&logoWidth=200 'PlayStation X'
+[Badge PlayStation]: https://img.shields.io/badge/PSX-003791?style=for-the-badge&logo=PlayStation&logoColor=white&logoWidth=200 'PlayStationX'
 [Badge Nintendo]: https://img.shields.io/badge/N64-E60012?style=for-the-badge&logo=Nintendo&logoColor=white&logoWidth=200 'Nintendo64'
 [Badge License]: https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge
