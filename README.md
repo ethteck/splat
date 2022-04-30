@@ -1,13 +1,16 @@
 
-[![Badge License]][License]
+<div align = center>
 
+[![Badge License]][License]
+ 
+<br>
+  
 # Splat
 
 *A **Binary Splitting Tool** to assist **Decompilation** / **Modding** projects*
 
 <br>
-
-<div align = center>
+<br>
 
 ## Supported Binaries
 
