@@ -13,8 +13,8 @@
 
 ---
 
-[<kbd> <br> Examples <br> </kbd>][Examples]
-[<kbd> <br> Wiki <br> </kbd>][Wiki]
+[<kbd> <br> Examples <br> </kbd>][Examples] 
+[<kbd> <br> Wiki <br> </kbd>][Wiki] 
 [<kbd> <br> Changelog <br> </kbd>][Changelog]
 
 ---
@@ -22,6 +22,8 @@
 <br>
 
 ## Supported Binaries
+    
+<br>
 
 ![Badge Nintendo] <br>
 ![Badge PlayStation]
