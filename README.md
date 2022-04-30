@@ -23,6 +23,8 @@
 <br>
 
 ## Supported Binaries
+    
+<br>
 
 ![Badge Nintendo] <br>
 ![Badge PlayStation]
