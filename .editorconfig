@@ -8,5 +8,5 @@ insert_final_newline = true
 
 [{*.{py,yml,md},Makefile}]
 charset = utf-8
-indent_style = tab
+indent_style = space
 indent_size = 4

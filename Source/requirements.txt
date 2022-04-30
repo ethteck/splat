@@ -1,5 +1,8 @@
+mypy
+black
 PyYAML
 pylibyaml
 pypng
 colorama
 capstone
+types-PyYAML
