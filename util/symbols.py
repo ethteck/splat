@@ -88,7 +88,7 @@ def initialize(all_segments):
                                             size = int(attr_val, 0)
                                             sym.size = size
                                             continue
-                                        if attr_name == "rom:":
+                                        if attr_name == "rom":
                                             rom_addr = int(attr_val, 0)
                                             sym.rom = rom_addr
                                             continue
