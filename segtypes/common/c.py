@@ -194,7 +194,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                         for sym in func_rodata:
                             if sym.extract and sym.disasm_str:
                                 out_lines.append("")
-                                out_lines.append(f"{options.get_asm_data_macro()} {sym.name}")
+                                out_lines.append(
+                                    f"{options.get_asm_data_macro()} {sym.name}"
+                                )
                                 out_lines.extend(
                                     sym.disasm_str.replace("\n\n", "\n").split("\n")
                                 )
@@ -231,8 +233,13 @@ class CommonSegC(CommonSegCodeSubsegment):
             else:
                 if options.get_compiler() in [GCC, SN64]:
                     if options.get_use_legacy_include_asm():
+                        rel_asm_out_dir = asm_out_dir.relative_to(
+                            options.get_nonmatchings_path()
+                        )
                         c_lines.append(
-                            'INCLUDE_ASM(s32, "{}", {});'.format(self.name, func_name)
+                            'INCLUDE_ASM(s32, "{}", {});'.format(
+                                rel_asm_out_dir / self.name, func_name
+                            )
                         )
                     else:
                         c_lines.append(
