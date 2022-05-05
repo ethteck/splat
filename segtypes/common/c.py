@@ -224,7 +224,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             # Terrible hack to "auto-decompile" empty functions
             # TODO move disassembly into funcs_text or somewhere we can access it from here
             if (
-                len(funcs_text[func][0]) == 3
+                options.get_auto_decompile_empty_functions()
+                and len(funcs_text[func][0]) == 3
                 and funcs_text[func][0][1][-3:] in ["$ra", "$31"]
                 and funcs_text[func][0][2][-3:] == "nop"
             ):
@@ -236,17 +237,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                         rel_asm_out_dir = asm_out_dir.relative_to(
                             options.get_nonmatchings_path()
                         )
-                        c_lines.append(
-                            'INCLUDE_ASM(s32, "{}", {});'.format(
-                                rel_asm_out_dir / self.name, func_name
-                            )
-                        )
+                        c_lines.append(f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func_name});')
                     else:
-                        c_lines.append(
-                            'INCLUDE_ASM("{}", {});'.format(
-                                asm_out_dir / self.name, func_name
-                            )
-                        )
+                        c_lines.append(f'INCLUDE_ASM("{asm_out_dir / self.name}", {func_name});')
                 else:
                     asm_outpath = Path(
                         os.path.join(asm_out_dir, self.name, func_name + ".s")

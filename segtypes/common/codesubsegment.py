@@ -70,7 +70,7 @@ class CommonSegCodeSubsegment(Segment):
         capstone_mode = CS_MODE_MIPS32 | CS_MODE_LITTLE_ENDIAN
 
     md = Cs(CS_ARCH_MIPS, capstone_mode)
-    md.detail = True
+    md.detail = False
     md.skipdata = True
 
     @property
