@@ -12,12 +12,14 @@ class CommonSegBss(CommonSegData):
     def split(self, rom_bytes: bytes):
         pass
 
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> "List[LinkerEntry]":
         from segtypes.linker_entry import LinkerEntry
 
         if self.sibling:
             path = self.sibling.out_path()
         else:
-            path = options.get_src_path() / self.name
+            path = self.out_path()
+
+        print(self.out_path())
 
         return [LinkerEntry(self, [path], path, self.get_linker_section())]
