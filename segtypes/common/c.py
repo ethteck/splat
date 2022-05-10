@@ -237,9 +237,13 @@ class CommonSegC(CommonSegCodeSubsegment):
                         rel_asm_out_dir = asm_out_dir.relative_to(
                             options.get_nonmatchings_path()
                         )
-                        c_lines.append(f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func_name});')
+                        c_lines.append(
+                            f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func_name});'
+                        )
                     else:
-                        c_lines.append(f'INCLUDE_ASM("{asm_out_dir / self.name}", {func_name});')
+                        c_lines.append(
+                            f'INCLUDE_ASM("{asm_out_dir / self.name}", {func_name});'
+                        )
                 else:
                     asm_outpath = Path(
                         os.path.join(asm_out_dir, self.name, func_name + ".s")

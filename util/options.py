@@ -268,9 +268,11 @@ def ld_section_labels() -> List[str]:
 def get_create_c_files() -> bool:
     return opts.get("create_c_files", True)
 
+
 # Determines whether to "auto-decompile" empty functions
 def get_auto_decompile_empty_functions() -> bool:
     return opts.get("auto_decompile_empty_functions", True)
+
 
 # Determines whether to detect matched/unmatched functions in existing c files
 # so we can avoid creating .s files for already-decompiled functions

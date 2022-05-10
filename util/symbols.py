@@ -62,7 +62,7 @@ def initialize(all_segments):
                         if line_ext:
                             for info in line_ext.split(" "):
                                 if ":" in info:
-                                    if info.count(':') > 1:
+                                    if info.count(":") > 1:
                                         log.parsing_error_preamble(path, line_num, line)
                                         log.write(f"Too many ':'s in '{info}'")
                                         log.error("")
@@ -70,13 +70,16 @@ def initialize(all_segments):
                                     attr_name, attr_val = info.split(":")
                                     if attr_name == "":
                                         log.parsing_error_preamble(path, line_num, line)
-                                        log.write(f"Missing attribute name in '{info}', is there extra whitespace?")
+                                        log.write(
+                                            f"Missing attribute name in '{info}', is there extra whitespace?"
+                                        )
                                         log.error("")
                                     if attr_val == "":
                                         log.parsing_error_preamble(path, line_num, line)
-                                        log.write(f"Missing attribute value in '{info}', is there extra whitespace?")
+                                        log.write(
+                                            f"Missing attribute value in '{info}', is there extra whitespace?"
+                                        )
                                         log.error("")
-
 
                                     # Non-Boolean attributes
                                     try:
