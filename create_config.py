@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import sys
 import argparse
 from pathlib import Path
 
@@ -9,11 +10,17 @@ parser = argparse.ArgumentParser(description="Create a splat config from an N64 
 parser.add_argument("rom", help="Path to a .z64/.n64 ROM")
 
 
-def main(rom_path):
-    rom = rominfo.get_info(rom_path)
+def main(rom_path: Path):
+    if not rom_path.exists():
+        sys.exit(f"ROM file {rom_path} does not exist ({rom_path.absolute()})")
+    if rom_path.is_dir():
+        sys.exit(f"Path {rom_path} is a directory ({rom_path.absolute()})")
+    rom_bytes = rominfo.read_rom(rom_path)
+
+    rom = rominfo.get_info(rom_path, rom_bytes)
     basename = rom.name.replace(" ", "").lower()
 
-    header = f"""
+    header = f"""\
 name: {rom.name.title()} ({rom.get_country_name()})
 sha1: {rom.sha1}
 options:
@@ -33,14 +40,11 @@ options:
   # build_path: build
   # extensions_path: tools/splat_ext
   # auto_all_sections: True
-""".lstrip()
+"""
 
-    with open(rom_path, "rb") as f:
-        fbytes = f.read()
+    first_section_end = find_code_length.run(rom_bytes, 0x1000, rom.entry_point)
 
-    first_section_end = find_code_length.run(fbytes, 0x1000, rom.entry_point)
-
-    segments = f"""
+    segments = f"""\
 segments:
   - name: header
     type: header
@@ -57,12 +61,13 @@ segments:
   - type: bin
     start: 0x{first_section_end:X}
   - [0x{rom.size:X}]
-""".lstrip()
+"""
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
         print(f"Writing config to {out_file}")
-        f.write(header + segments)
+        f.write(header)
+        f.write(segments)
 
 
 if __name__ == "__main__":
