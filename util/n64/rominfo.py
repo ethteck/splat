@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+from dataclasses import dataclass
+
 import sys
 import argparse
 import itertools
@@ -48,16 +50,11 @@ country_codes = {
 }
 
 
+@dataclass
 class CIC:
-    def __init__(
-        self,
-        ntsc_name: str,
-        pal_name: str,
-        offset: int,
-    ):
-        self.ntsc_name = ntsc_name
-        self.pal_name = pal_name
-        self.offset = offset
+    ntsc_name: str
+    pal_name: str
+    offset: int
 
 
 crc_to_cic = {
