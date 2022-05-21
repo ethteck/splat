@@ -239,10 +239,14 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             word = int.from_bytes(bytes[i : i + 4], options.get_endianess())
 
             # If the word doesn't contain an address in the current function, this isn't a valid jump table
-            if not jtbl_func.contains_vram(word) or word == jtbl_func.vram_start:
+            if not jtbl_func.contains_vram(word):
                 # Allow jump tables that are of a minimum length and end in 0s
                 if i < min_jtbl_len or any(b != 0 for b in bytes[i:]):
                     return False
+
+            # A label of a jump table shouldn't point to the start of the function
+            if word == jtbl_func.vram_start:
+                return False
 
         # Mark this symbol as a jump table and record the jump table for later
         sym.type = "jtbl"
