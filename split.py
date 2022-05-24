@@ -239,8 +239,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     if options.get_platform() == "n64":
         context.fillDefaultBannedSymbols()
-        context.fillLibultraSymbols()
-        context.fillHardwareRegs()
+        # context.fillLibultraSymbols()
+        # context.fillHardwareRegs()
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"], context)

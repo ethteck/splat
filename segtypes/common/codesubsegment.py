@@ -119,15 +119,18 @@ class CommonSegCodeSubsegment(Segment):
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referencedVram in funcSpimDisasm.referencedVRams:
-            symType = None
             contextSym = self.context.getAnySymbol(referencedVram)
             if contextSym is not None:
+                if contextSym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
+                    continue
+                symType = None
                 if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
                     symType = "jtbl"
                     self.parent.jumptables[referencedVram] = (funcSpimDisasm.vram, funcSpimDisasm.vramEnd)
                 elif contextSym.type == spimdisasm.common.SymbolSpecialType.function:
                     symType = "func"
-            self.parent.create_symbol(referencedVram, type=symType, reference=True)
+                sym = self.parent.create_symbol(referencedVram, type=symType, reference=True)
+                sym.given_name = contextSym.name
 
         for labelOffset in funcSpimDisasm.localLabels:
             labelVram = funcSpimDisasm.vram + labelOffset
@@ -164,6 +167,10 @@ class CommonSegCodeSubsegment(Segment):
                 sym = self.parent.create_symbol(
                     symAddress, offsets=True, reference=True
                 )
+
+                contextSym = self.context.getAnySymbol(symAddress)
+                if contextSym is not None:
+                    sym.given_name = contextSym.name
 
                 if mnemonic in self.double_mnemonics + self.word_mnemonics + self.float_mnemonics + self.short_mnemonics + self.byte_mnemonics:
                     self.update_access_mnemonic(sym, mnemonic)
