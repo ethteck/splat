@@ -13,6 +13,7 @@ from util import log
 from util import options
 from util import symbols
 from util import palettes
+from util import compiler
 
 import tools.spimdisasm.spimdisasm as spimdisasm
 
@@ -224,6 +225,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG
     else:
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
+
+    if options.get_compiler() == compiler.SN64:
+        spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
+        spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
 
     # Initialize a spimdisasm context
     context = spimdisasm.common.Context()
