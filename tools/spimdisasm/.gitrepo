@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:Decompollaborate/spimdisasm.git
+	branch = master
+	commit = 3c7e477493f05cef2f759bf223c8fe2cbaa09aba
+	parent = e3971cd1e64dd12fb1a14c5035f356633e858ff1
+	method = merge
+	cmdver = 0.4.3
