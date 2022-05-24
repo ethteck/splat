@@ -252,7 +252,7 @@ class Symbol:
         self.size = size
         self.given_name: str = given_name
         self.insns: List[Instruction] = []
-        self.access_mnemonic = None
+        self.access_mnemonic: Optional[str] = None
         self.disasm_str = None
         self.dead = False
         self.extract = True

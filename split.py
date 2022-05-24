@@ -229,6 +229,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     if options.get_compiler() == compiler.SN64:
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
+        spimdisasm.common.GlobalConfig.ASM_COMMENT = False
+
+    spimdisasm.common.GlobalConfig.GP_VALUE = options.get_gp()
 
     # Initialize a spimdisasm context
     context = spimdisasm.common.Context()
