@@ -6,17 +6,6 @@ from segtypes.common.code import CommonSegCode
 from collections import OrderedDict
 import re
 
-from capstone import (
-    Cs,
-    CS_ARCH_MIPS,
-    CS_MODE_MIPS64,
-    CS_MODE_BIG_ENDIAN,
-    CS_MODE_MIPS32,
-    CS_MODE_LITTLE_ENDIAN,
-    CsInsn,
-)
-from capstone.mips import *
-
 from segtypes.segment import Segment
 from util.compiler import SN64
 from util.symbols import Instruction, Symbol
@@ -66,15 +55,6 @@ class CommonSegCodeSubsegment(Segment):
         "$ra": "$31",
     }
 
-    if options.get_endianess() == "big":
-        capstone_mode = CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN
-    else:
-        capstone_mode = CS_MODE_MIPS32 | CS_MODE_LITTLE_ENDIAN
-
-    md = Cs(CS_ARCH_MIPS, capstone_mode)
-    md.detail = False
-    md.skipdata = True
-
     @property
     def needs_symbols(self) -> bool:
         return True
@@ -83,7 +63,8 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     @staticmethod
-    def is_nops(insns: List[CsInsn]) -> bool:
+    # def is_nops(insns: List[CsInsn]) -> bool:
+    def is_nops(insns: list) -> bool:
         for insn in insns:
             if insn.mnemonic != "nop":
                 return False
@@ -139,7 +120,8 @@ class CommonSegCodeSubsegment(Segment):
         return self.add_labels()
 
     def process_insns(
-        self, insns: List[CsInsn], rom_addr, is_asm=False
+        # self, insns: List[CsInsn], rom_addr, is_asm=False
+        self, insns: list, rom_addr, is_asm=False
     ) -> typing.OrderedDict[int, Symbol]:
         assert isinstance(self.parent, CommonSegCode)
         self.parent: CommonSegCode = self.parent

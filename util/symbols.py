@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from capstone import CsInsn
 from util import options, log
 
 import tools.spimdisasm.spimdisasm as spimdisasm
@@ -186,7 +185,7 @@ def retrieve_from_ranges(vram, rom=None):
 
 @dataclass
 class Instruction:
-    instruction: CsInsn
+    # instruction: CsInsn
     mnemonic: str
     op_str: str
     rom_addr: int
