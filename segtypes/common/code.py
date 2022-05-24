@@ -87,6 +87,7 @@ class CommonSegCode(CommonSegGroup):
                         rep_type,
                         base[0],
                         vram_start,
+                        self.context,
                         False,
                         self.given_subalign,
                         self.given_is_overlay,

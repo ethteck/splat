@@ -121,26 +121,25 @@ class CommonSegCodeSubsegment(Segment):
             if instrOffset in funcSpimDisasm.pointersPerInstruction:
                 symAddress = funcSpimDisasm.pointersPerInstruction[instrOffset]
 
-                sym = self.parent.create_symbol(
-                    symAddress, offsets=True, reference=True
-                )
-
                 contextSym = self.context.getAnySymbol(symAddress)
                 if contextSym is not None:
+                    sym = self.parent.create_symbol(
+                        symAddress, offsets=True, reference=True
+                    )
                     sym.given_name = contextSym.name
 
-                if (
-                    mnemonic
-                    in self.double_mnemonics
-                    + self.word_mnemonics
-                    + self.float_mnemonics
-                    + self.short_mnemonics
-                    + self.byte_mnemonics
-                ):
-                    self.update_access_mnemonic(sym, mnemonic)
+                    if (
+                        mnemonic
+                        in self.double_mnemonics
+                        + self.word_mnemonics
+                        + self.float_mnemonics
+                        + self.short_mnemonics
+                        + self.byte_mnemonics
+                    ):
+                        self.update_access_mnemonic(sym, mnemonic)
 
-                if self.parent:
-                    self.parent.check_rodata_sym(funcSpimDisasm.vram, sym)
+                    if self.parent:
+                        self.parent.check_rodata_sym(funcSpimDisasm.vram, sym)
 
     def update_access_mnemonic(self, sym: Symbol, mnemonic: str):
         if not sym.access_mnemonic:
