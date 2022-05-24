@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:Decompollaborate/spimdisasm.git
 	branch = master
-	commit = 3c7e477493f05cef2f759bf223c8fe2cbaa09aba
-	parent = e3971cd1e64dd12fb1a14c5035f356633e858ff1
+	commit = 1301340130f8cca539d12c486deff3a1037a8787
+	parent = 411bde54be5344b3fed8bee7ebf52429768f9277
 	method = merge
 	cmdver = 0.4.3
