@@ -228,7 +228,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     spimdisasm.mips.instructions.InstructionConfig.VR4300_COP0_NAMED_REGISTERS = False
 
     spimdisasm.mips.instructions.InstructionConfig.OPCODE_LJUST = (
-        options.mnemonic_ljust()
+        options.mnemonic_ljust() - 1
     )
 
     if options.get_endianess() == "big":
