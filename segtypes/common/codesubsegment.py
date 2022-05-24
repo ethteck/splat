@@ -91,21 +91,7 @@ class CommonSegCodeSubsegment(Segment):
         for func in self.textSection.symbolList:
             assert(isinstance(func, spimdisasm.mips.symbols.SymbolFunction))
 
-            sym = self.parent.create_symbol(func.vram, type="func")
-            sym.given_name = func.name
-
-            # Gather symbols found by spimdisasm and create those symbols in splat's side
-            for referencedVram in func.referencedVRams:
-                symType = None
-                contextSym = self.context.getAnySymbol(referencedVram)
-                if contextSym is not None:
-                    if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
-                        symType = "jtbl"
-                        assert(func.vram is not None)
-                        self.parent.jumptables[referencedVram] = (func.vram, func.vram + func.nInstr*4)
-                    elif contextSym.type == spimdisasm.common.SymbolSpecialType.function:
-                        symType = "func"
-                sym = self.parent.create_symbol(referencedVram, type=symType, reference=True)
+            self.process_insns(func, self.rom_start, is_asm=is_asm)
 
         # Process jumptable labels and pass them to pyMipsDisas
         self.gather_jumptable_labels(rom_bytes)
@@ -121,46 +107,76 @@ class CommonSegCodeSubsegment(Segment):
 
     def process_insns(
         # self, insns: List[CsInsn], rom_addr, is_asm=False
-        self, insns: list, rom_addr, is_asm=False
-    ) -> typing.OrderedDict[int, Symbol]:
+        self, funcMipsDisasm: spimdisasm.mips.symbols.SymbolFunction, rom_addr: int, is_asm=False
+    ):
         assert isinstance(self.parent, CommonSegCode)
+        assert funcMipsDisasm.vram is not None
         self.parent: CommonSegCode = self.parent
 
-        ret: typing.OrderedDict[int, Symbol] = OrderedDict()
+        funcSym = self.parent.create_symbol(funcMipsDisasm.vram, type="func")
+        funcSym.given_name = funcMipsDisasm.name
 
-        end_func = False
-        start_new_func = True
-        labels = []
+        # Gather symbols found by spimdisasm and create those symbols in splat's side
+        for referencedVram in funcMipsDisasm.referencedVRams:
+            symType = None
+            contextSym = self.context.getAnySymbol(referencedVram)
+            if contextSym is not None:
+                if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
+                    symType = "jtbl"
+                    self.parent.jumptables[referencedVram] = (funcMipsDisasm.vram, funcMipsDisasm.vram + funcMipsDisasm.nInstr*4)
+                elif contextSym.type == spimdisasm.common.SymbolSpecialType.function:
+                    symType = "func"
+            self.parent.create_symbol(referencedVram, type=symType, reference=True)
+
+        # ret: typing.OrderedDict[int, Symbol] = OrderedDict()
+
+        # end_func = False
+        # start_new_func = True
+        # labels = []
 
         big_endian = options.get_endianess() == "big"
 
         # Collect labels
-        for insn in insns:
-            if self.is_branch_insn(insn.mnemonic):
-                op_str_split = insn.op_str.split(" ")
-                branch_target = op_str_split[-1]
-                branch_addr = int(branch_target, 0)
-                labels.append((insn.address, branch_addr))
+        # for insn in insns:
+        #     if insn.isBranch():
+        #         op_str_split = insn.op_str.split(" ")
+        #         branch_target = op_str_split[-1]
+        #         branch_addr = int(branch_target, 0)
+        #         labels.append((insn.address, branch_addr))
+
+        for labelOffset in funcMipsDisasm.localLabels:
+            labelVram = funcMipsDisasm.vram + labelOffset
+            label_sym = self.parent.get_symbol(
+                labelVram, type="label", reference=True, local_only=True
+            )
+
+            if label_sym is not None:
+                contextSym = self.context.getGenericLabel(labelVram)
+                if contextSym is not None:
+                    contextSym.name = label_sym.name
+            else:
+                self.parent.labels_to_add.add(labelVram)
 
         # Main loop
-        for i, insn in enumerate(insns):
-            mnemonic = insn.mnemonic
-            op_str = insn.op_str
+        for i, insn in enumerate(funcMipsDisasm.instructions):
+            mnemonic = insn.getOpcodeName()
+            # op_str = insn.op_str
+            insn_address = funcSym.vram_start + i*4
 
             # If this is non-zero, disasm size insns
             hard_size = 0
 
-            if start_new_func:
-                func: Symbol = self.parent.create_symbol(insn.address, type="func")
-                start_new_func = False
+            # if start_new_func:
+            #     func: Symbol = self.parent.create_symbol(insn.address, type="func")
+            #     start_new_func = False
 
-            if func.size > 4:
-                hard_size = func.size / 4
+            # if funcSym.size > 4:
+            #     hard_size = funcSym.size / 4
 
-            if options.get_compiler() == SN64:
-                op_str = self.replace_reg_names(op_str)
+            # if options.get_compiler() == SN64:
+            #     op_str = self.replace_reg_names(op_str)
 
-            if mnemonic == "move":
+            if mnemonic == "move" and False:
                 # Let's get the actual instruction out
                 idx = 3 if big_endian else 0
                 opcode = insn.bytes[idx] & 0b00111111
@@ -178,13 +194,15 @@ class CommonSegCodeSubsegment(Segment):
                     mnemonic = "addu"
                 else:
                     print("INVALID INSTRUCTION " + str(insn), opcode)
-            elif mnemonic == "jal":
+            elif mnemonic == "jal" and False:
                 jal_addr = int(op_str, 0)
                 jump_func = self.parent.create_symbol(
                     jal_addr, type="func", reference=True
                 )
                 op_str = jump_func.name
-            elif self.is_branch_insn(insn.mnemonic):
+            # elif self.is_branch_insn(insn.mnemonic):
+            elif insn.isBranch() and False:
+                # ??
                 op_str_split = op_str.split(" ")
                 branch_target = op_str_split[-1]
                 branch_target_int = int(branch_target, 0)
@@ -200,15 +218,16 @@ class CommonSegCodeSubsegment(Segment):
                     label_name = f".L{branch_target[2:].upper()}"
 
                 op_str = " ".join(op_str_split[:-1] + [label_name])
-            elif mnemonic in ["mtc0", "mfc0", "mtc2", "mfc2"]:
+            elif mnemonic in ["mtc0", "mfc0", "mtc2", "mfc2"] and False:
                 idx = 2 if big_endian else 1
                 rd = (insn.bytes[idx] & 0xF8) >> 3
                 op_str = op_str.split(" ")[0] + " $" + str(rd)
             elif (
                 mnemonic == "break"
-                and op_str in ["6", "7"]
+                # and op_str in ["6", "7"]
                 and options.get_compiler() == SN64
                 and not is_asm
+                and False
             ):
                 # SN64's assembler expands div to have break if dividing by zero
                 # However, the break it generates is different than the one it generates with `break N`
@@ -223,59 +242,62 @@ class CommonSegCodeSubsegment(Segment):
                 mnemonic in ["div", "divu"]
                 and options.get_compiler() == SN64
                 and not is_asm
+                and False
             ):
                 # SN64's assembler also doesn't like assembling `div $0, a, b` with .set noat active
                 # Removing the $0 fixes this issue
                 if op_str.startswith("$0, "):
                     op_str = op_str[4:]
 
-            func.insns.append(Instruction(insn, mnemonic, op_str, rom_addr))
+            # func.insns.append(Instruction(insn, mnemonic, op_str, rom_addr))
+            funcSym.insns.append(Instruction(insn, mnemonic, rom_addr))
             rom_addr += 4
 
-            size_remaining = hard_size - len(func.insns) if hard_size > 0 else 0
+            # size_remaining = hard_size - len(func.insns) if hard_size > 0 else 0
 
             if mnemonic == "jr":
                 # Record potential jtbl jumps
-                if op_str not in ["$ra", "$31"]:
-                    self.parent.jtbl_jumps[insn.address] = op_str
+                rs = insn.getRegisterName(insn.rs)
+                if rs not in ["$ra", "$31"]:
+                    self.parent.jtbl_jumps[insn_address] = rs
 
-                keep_going = False
-                for label in labels:
-                    if (label[0] > insn.address and label[1] <= insn.address) or (
-                        label[0] <= insn.address and label[1] > insn.address
-                    ):
-                        keep_going = True
-                        break
-                if not keep_going and not size_remaining:
-                    end_func = True
-                    continue
+                # keep_going = False
+                # for label in labels:
+                #     if (label[0] > insn.address and label[1] <= insn.address) or (
+                #         label[0] <= insn.address and label[1] > insn.address
+                #     ):
+                #         keep_going = True
+                #         break
+                # if not keep_going and not size_remaining:
+                #     end_func = True
+                #     continue
 
             # Stop here if a size was specified and we have disassembled up to the size
-            if hard_size > 0 and size_remaining == 0:
-                end_func = True
+            # if hard_size > 0 and size_remaining == 0:
+            #     end_func = True
 
-            if i < len(insns) - 1 and self.parent.get_symbol(
-                insns[i + 1].address, local_only=True, type="func", dead=False
-            ):
-                end_func = True
+            # if i < len(insns) - 1 and self.parent.get_symbol(
+            #     insns[i + 1].address, local_only=True, type="func", dead=False
+            # ):
+            #     end_func = True
 
-            if end_func:
-                if (
-                    self.is_nops(insns[i:])
-                    or i < len(insns) - 1
-                    and insns[i + 1].mnemonic != "nop"
-                ):
-                    end_func = False
-                    start_new_func = True
-                    ret[func.vram_start] = func
+            #if end_func:
+            #    if (
+            #        self.is_nops(insns[i:])
+            #        or i < len(insns) - 1
+            #        and insns[i + 1].mnemonic != "nop"
+            #    ):
+            #        end_func = False
+            #        # start_new_func = True
+            #        ret[func.vram_start] = func
 
-        # Add the last function (or append nops to the previous one)
-        if not self.is_nops([insn.instruction for insn in func.insns]):
-            ret[func.vram_start] = func
-        else:
-            next(reversed(ret.values())).insns.extend(func.insns)
+        ## Add the last function (or append nops to the previous one)
+        #if not self.is_nops([insn.instruction for insn in func.insns]):
+        #    ret[func.vram_start] = func
+        #else:
+        #    next(reversed(ret.values())).insns.extend(func.insns)
 
-        return ret
+        #return ret
 
     def update_access_mnemonic(self, sym, mnemonic):
         if not sym.access_mnemonic:
@@ -312,7 +334,8 @@ class CommonSegCodeSubsegment(Segment):
             possible_jtbl_jumps.sort(key=lambda x: x[0])
 
             for i in range(len(func.insns)):
-                hi_insn: CsInsn = func.insns[i].instruction
+                # hi_insn: CsInsn = func.insns[i].instruction
+                hi_insn = func.insns[i].instruction
 
                 # Ensure the first item in the list is always ahead of where we're looking
                 while (

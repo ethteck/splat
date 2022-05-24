@@ -132,14 +132,16 @@ def initialize(all_segments, context: spimdisasm.common.Context):
                         all_symbols.append(sym)
 
                         if sym.type == "func":
-                            context.addFunction(addr, name)
+                            contextSym = context.addFunction(addr, name)
+                            contextSym.size = sym.size
                         else:
-                            context.addFunction(addr, name) # People may have not typed functions properly, so just assume everything could be a function for now...
+                            contextSym = context.addFunction(addr, name) # People may have not typed functions properly, so just assume everything could be a function for now...
+                            contextSym.size = sym.size
                             contextSym = context.addSymbol(addr, name)
                             if sym.type != "data":
                                 contextSym.type = sym.type
                             contextSym.size = sym.size
-                            contextSym.isUserDefined = True
+                            contextSym.isUserDeclared = True
 
                         # Symbol ranges
                         if sym.size > 4:
@@ -185,9 +187,9 @@ def retrieve_from_ranges(vram, rom=None):
 
 @dataclass
 class Instruction:
-    # instruction: CsInsn
+    instruction: spimdisasm.mips.instructions.InstructionBase
     mnemonic: str
-    op_str: str
+    # op_str: str
     rom_addr: int
     is_gp: bool = False
     is_hi: bool = False
