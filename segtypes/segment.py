@@ -401,12 +401,12 @@ class Segment:
     def get_default_name(addr) -> str:
         return f"{addr:X}"
 
-    def retrieve_symbol(self, d, k, t):
+    def retrieve_symbol(self, d:  Dict[int, List[Symbol]], k: int, t: Optional[str]) -> Optional[Symbol]:
         if k not in d:
             return None
 
         if t:
-            items = [s for s in d[k] if s.type == t or s.type == "unknown"]
+            items = [s for s in d[k] if s.type == t or s.type == "unknown" or s.type is None]
         else:
             items = d[k]
 
@@ -418,14 +418,14 @@ class Segment:
 
     def get_symbol(
         self,
-        addr,
-        type=None,
-        create=False,
-        define=False,
-        reference=False,
-        offsets=False,
-        local_only=False,
-        dead=True,
+        addr: int,
+        type: Optional[str]=None,
+        create: bool=False,
+        define: bool=False,
+        reference: bool=False,
+        offsets: bool=False,
+        local_only: bool=False,
+        dead: bool=True,
     ) -> Optional[Symbol]:
         ret = None
         rom = None
@@ -473,13 +473,13 @@ class Segment:
 
     def create_symbol(
         self,
-        addr,
-        type=None,
-        define=False,
-        reference=False,
-        offsets=False,
-        local_only=False,
-        dead=True,
+        addr: int,
+        type: Optional[str]=None,
+        define: bool=False,
+        reference: bool=False,
+        offsets: bool=False,
+        local_only: bool=False,
+        dead: bool=True,
     ) -> Symbol:
         ret = self.get_symbol(
             addr,

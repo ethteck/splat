@@ -252,8 +252,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     if options.get_platform() == "n64":
         context.fillDefaultBannedSymbols()
-        # context.fillLibultraSymbols()
-        # context.fillHardwareRegs()
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"], context)
@@ -302,6 +300,20 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
         log.dot(status=segment.status())
 
+    # Pass any new info found by splat to pyMipsDisasm
+    for s in symbols.all_symbols:
+        if s.type == "func":
+            if s.vram_start in context.symbols:
+                del context.symbols[s.vram_start]
+            contextSym = context.addFunction(s.vram_start, s.name)
+            contextSym.isDefined = s.defined
+        else:
+            if s.vram_start in context.symbols:
+                contextSym = context.symbols[s.vram_start]
+            else:
+                contextSym = context.addSymbol(s.vram_start, s.name)
+            contextSym.isDefined = s.defined
+
     # Split
     log.write("Starting split")
     for segment in all_segments:
@@ -341,26 +353,29 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Write undefined_funcs_auto.txt
     if options.get_create_undefined_funcs_auto():
         to_write: List[spimdisasm.common.ContextSymbol] = []
-        for _, s in context.functions.items():
+        for s in context.functions.values():
             if s.referenceCounter > 0 and not s.isDefined:
-                to_write.append(s)
+                if context.getSymbol(s.vram, False) is None:
+                    to_write.append(s)
 
-        if len(to_write) > 0:
-            with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
-                for symbol in to_write:
-                    f.write(f"{symbol.name} = 0x{symbol.vram:X};\n")
+        to_write.sort(key=lambda x: x.vram)
+        with open(options.get_undefined_funcs_auto_path(), "w", newline="\n") as f:
+            for symbol in to_write:
+                f.write(f"{symbol.name} = 0x{symbol.vram:X};\n")
 
     # write undefined_syms_auto.txt
     if options.get_create_undefined_syms_auto():
         to_write: List[spimdisasm.common.ContextSymbol] = []
-        for _, s in context.symbols.items():
+        for s in context.symbols.values():
             if not s.isDefined:
-                to_write.append(s)
+                funcSym = context.getFunction(s.vram)
+                if funcSym is None or not funcSym.isDefined:
+                    to_write.append(s)
 
-        if len(to_write) > 0:
-            with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
-                for symbol in to_write:
-                    f.write(f"{symbol.name} = 0x{symbol.vram:X};\n")
+        to_write.sort(key=lambda x: x.vram)
+        with open(options.get_undefined_syms_auto_path(), "w", newline="\n") as f:
+            for symbol in to_write:
+                f.write(f"{symbol.name} = 0x{symbol.vram:X};\n")
 
     # print warnings during split
     for segment in all_segments:

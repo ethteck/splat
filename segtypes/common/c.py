@@ -135,6 +135,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     is_new_c_file = True
 
             for func in self.textSection.symbolList:
+                assert func.vram is not None
                 func_sym = self.parent.get_symbol(
                     func.vram, type="func", local_only=True
                 )
@@ -168,6 +169,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         self, func: spimdisasm.mips.symbols.SymbolBase, out_dir, func_sym: Symbol
     ):
         outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
+        assert func.vram is not None
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not func_sym.extract:

@@ -134,10 +134,14 @@ def initialize(all_segments, context: spimdisasm.common.Context):
                         if sym.type == "func":
                             contextSym = context.addFunction(addr, name)
                             contextSym.size = sym.size
+                            contextSym.isUserDeclared = True
                         else:
-                            # People may have not typed functions properly, so just assume everything could be a function for now...
-                            contextSym = context.addFunction(addr, name)
-                            contextSym.size = sym.size
+                            if sym.type == "unknown":
+                                # People may have not typed functions properly, so just assume everything could be a function for now...
+                                contextSym = context.addFunction(addr, name)
+                                contextSym.size = sym.size
+                                contextSym.isUserDeclared = True
+
                             contextSym = context.addSymbol(addr, name)
                             if sym.type != "data":
                                 contextSym.type = sym.type
@@ -236,20 +240,20 @@ class Symbol:
 
     def __init__(
         self,
-        vram,
+        vram: int,
         given_name: str = "",
-        rom=None,
-        type="unknown",
-        in_overlay=False,
-        size=4,
+        rom: Optional[int]=None,
+        type: Optional[str]="unknown",
+        in_overlay: bool=False,
+        size: int=4,
     ):
-        self.defined = False
-        self.referenced = False
-        self.vram_start = vram
-        self.rom = rom
-        self.type = type
-        self.in_overlay = in_overlay
-        self.size = size
+        self.defined: bool = False
+        self.referenced: bool = False
+        self.vram_start: int = vram
+        self.rom: Optional[int] = rom
+        self.type: Optional[str] = type
+        self.in_overlay: bool = in_overlay
+        self.size: int = size
         self.given_name: str = given_name
         self.insns: List[Instruction] = []
         self.access_mnemonic: Optional[str] = None
