@@ -108,7 +108,29 @@ class CommonSegCodeSubsegment(Segment):
         self.textSection.analyze()
 
         for func in self.textSection.symbolList:
-            self.parent.create_symbol(func.vram, type="func")
+            assert(isinstance(func, spimdisasm.mips.symbols.SymbolFunction))
+
+            sym = self.parent.create_symbol(func.vram, type="func")
+            sym.given_name = func.name
+
+            # Gather symbols found by spimdisasm and create those symbols in splat's side
+            for referencedVram in func.referencedVRams:
+                symType = None
+                contextSym = self.context.getAnySymbol(referencedVram)
+                if contextSym is not None:
+                    if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
+                        symType = "jtbl"
+                        assert(func.vram is not None)
+                        self.parent.jumptables[referencedVram] = (func.vram, func.vram + func.nInstr*4)
+                    elif contextSym.type == spimdisasm.common.SymbolSpecialType.function:
+                        symType = "func"
+                sym = self.parent.create_symbol(referencedVram, type=symType, reference=True)
+
+        # Process jumptable labels and pass them to pyMipsDisas
+        self.gather_jumptable_labels(rom_bytes)
+        for jtblLabelVram in self.parent.jtbl_glabels_to_add:
+            print(jtblLabelVram)
+            self.context.addJumpTableLabel(jtblLabelVram, f"L{jtblLabelVram:X}_{self.ram_to_rom(jtblLabelVram):X}")
 
     def split_code(self, rom_bytes):
         self.gather_jumptable_labels(rom_bytes)
