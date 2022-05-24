@@ -9,6 +9,8 @@ from util import options
 from util import symbols
 from util.symbols import Symbol
 
+import tools.spimdisasm.spimdisasm as spimdisasm
+
 # circular import
 if TYPE_CHECKING:
     from segtypes.linker_entry import LinkerEntry
@@ -133,6 +135,7 @@ class Segment:
         type,
         name,
         vram_start,
+        context: spimdisasm.common.Context,
         extract=True,
         given_subalign=options.get_subalign(),
         given_is_overlay: Optional[bool] = False,
@@ -146,6 +149,7 @@ class Segment:
         self.name = name
         self.vram_start = vram_start
         self.extract = extract
+        self.context: spimdisasm.common.Context = context
 
         self.given_subalign = given_subalign
         self.given_is_overlay = given_is_overlay
@@ -190,6 +194,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: RomAddr,
         rom_end: RomAddr,
+        context: spimdisasm.common.Context,
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
@@ -209,6 +214,7 @@ class Segment:
             type,
             name,
             vram_start,
+            context,
             extract,
             given_subalign,
             given_is_overlay,

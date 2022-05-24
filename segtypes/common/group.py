@@ -4,6 +4,8 @@ from segtypes.common.segment import CommonSegment
 from segtypes.segment import RomAddr, Segment
 from util import log
 
+import tools.spimdisasm.spimdisasm as spimdisasm
+
 
 class CommonSegGroup(CommonSegment):
     def __init__(
@@ -13,6 +15,7 @@ class CommonSegGroup(CommonSegment):
         type,
         name,
         vram_start,
+        context: spimdisasm.common.Context,
         extract,
         given_subalign,
         given_is_overlay,
@@ -26,6 +29,7 @@ class CommonSegGroup(CommonSegment):
             type,
             name,
             vram_start,
+            context,
             extract,
             given_subalign,
             given_is_overlay,
@@ -78,7 +82,7 @@ class CommonSegGroup(CommonSegment):
                 vram = self.get_most_parent().rom_to_ram(start)
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsection_yaml, start, end, vram
+                segment_class, subsection_yaml, start, end, self.context, vram
             )
             segment.parent = self
 

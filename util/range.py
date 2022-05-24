@@ -1,7 +1,9 @@
+from typing import Optional
+
 class Range:
-    def __init__(self, start=None, end=None):
-        self.start = start
-        self.end = end
+    def __init__(self, start: Optional[int]=None, end: Optional[int]=None):
+        self.start: Optional[int] = start
+        self.end: Optional[int] = end
 
     def has_start(self):
         return self.start is not None

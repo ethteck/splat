@@ -9,6 +9,8 @@ from util import log, options
 from util.compiler import GCC, SN64
 from util.symbols import Symbol
 
+import tools.spimdisasm.spimdisasm as spimdisasm
+
 
 class CommonSegC(CommonSegCodeSubsegment):
     defined_funcs: Set[str] = set()
@@ -124,23 +126,21 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             is_new_c_file = False
 
-            self.funcs_text = self.split_code(rom_bytes)
-
             c_path = self.out_path()
             if c_path:
                 if not os.path.exists(c_path) and options.get_create_c_files():
-                    self.create_c_file(self.funcs_text, asm_out_dir, c_path)
+                    self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
-            for func_addr in self.funcs_text:
+            for func in self.textSection.symbolList:
                 func_sym = self.parent.get_symbol(
-                    func_addr, type="func", local_only=True
+                    func.vram, type="func", local_only=True
                 )
                 assert func_sym is not None
 
-                if func_sym.name in self.global_asm_funcs or is_new_c_file:
+                if func.name in self.global_asm_funcs or is_new_c_file:
                     self.create_c_asm_file(
-                        self.funcs_text, func_addr, asm_out_dir, func_sym
+                        func, asm_out_dir, func_sym
                     )
 
     def get_c_preamble(self):
@@ -164,7 +164,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if found:
                     break
 
-    def create_c_asm_file(self, funcs_text, func_addr, out_dir, func_sym: Symbol):
+    def create_c_asm_file(self, func: spimdisasm.mips.symbols.SymbolBase, out_dir, func_sym: Symbol):
         outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -179,10 +179,10 @@ class CommonSegC(CommonSegCodeSubsegment):
         if self.parent and isinstance(self.parent, CommonSegGroup):
             if (
                 options.get_migrate_rodata_to_functions()
-                and func_addr in self.parent.rodata_syms
+                and func.vram in self.parent.rodata_syms
             ):
                 func_rodata = list(
-                    {s for s in self.parent.rodata_syms[func_addr] if s.disasm_str}
+                    {s for s in self.parent.rodata_syms[func.vram] if s.disasm_str}
                 )
                 func_rodata.sort(key=lambda s: s.vram_start)
 
@@ -205,7 +205,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         out_lines.append(".section .text")
                         out_lines.append("")
 
-        out_lines.extend(funcs_text[func_addr][0])
+        out_lines.append(func.disassemble())
         out_lines.append("")
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
@@ -215,21 +215,20 @@ class CommonSegC(CommonSegCodeSubsegment):
             f.write(newline_sep.join(out_lines))
         self.log(f"Disassembled {func_sym.name} to {outpath}")
 
-    def create_c_file(self, funcs_text, asm_out_dir, c_path):
+    def create_c_file(self, asm_out_dir, c_path):
         c_lines = self.get_c_preamble()
 
-        for func in funcs_text:
-            func_name = self.parent.get_symbol(func, type="func", local_only=True).name
+        for func in self.textSection.symbolList:
+            assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             # Terrible hack to "auto-decompile" empty functions
             # TODO move disassembly into funcs_text or somewhere we can access it from here
             if (
                 options.get_auto_decompile_empty_functions()
-                and len(funcs_text[func][0]) == 3
-                and funcs_text[func][0][1][-3:] in ["$ra", "$31"]
-                and funcs_text[func][0][2][-3:] == "nop"
+                and func.instructions[0].uniqueId == spimdisasm.mips.instructions.InstructionId.JR
+                and func.instructions[1].uniqueId == spimdisasm.mips.instructions.InstructionId.NOP
             ):
-                c_lines.append("void " + func_name + "(void) {")
+                c_lines.append("void " + func.name + "(void) {")
                 c_lines.append("}")
             else:
                 if options.get_compiler() in [GCC, SN64]:
@@ -238,15 +237,15 @@ class CommonSegC(CommonSegCodeSubsegment):
                             options.get_nonmatchings_path()
                         )
                         c_lines.append(
-                            f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func_name});'
+                            f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func.name});'
                         )
                     else:
                         c_lines.append(
-                            f'INCLUDE_ASM("{asm_out_dir / self.name}", {func_name});'
+                            f'INCLUDE_ASM("{asm_out_dir / self.name}", {func.name});'
                         )
                 else:
                     asm_outpath = Path(
-                        os.path.join(asm_out_dir, self.name, func_name + ".s")
+                        os.path.join(asm_out_dir, self.name, func.name + ".s")
                     )
                     rel_asm_outpath = os.path.relpath(
                         asm_outpath, options.get_base_path()

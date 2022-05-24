@@ -26,15 +26,11 @@ class CommonSegAsm(CommonSegCodeSubsegment):
             if out_path:
                 out_path.parent.mkdir(parents=True, exist_ok=True)
 
-                out_lines = self.get_file_header()
+                with open(out_path, "w", newline="\n") as f:
+                    for line in self.get_file_header():
+                        f.write(line + "\n")
+                    f.write(self.textSection.disassemble())
 
-                self.funcs_text = self.split_code(rom_bytes)
-
-                for func in self.funcs_text:
-                    out_lines.extend(self.funcs_text[func][0])
-                    out_lines.append("")
-
-                self.split_write(out_path, out_lines)
 
     def split_write(self, out_path, out_lines):
         with open(out_path, "w", newline="\n") as f:

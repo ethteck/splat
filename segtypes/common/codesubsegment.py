@@ -22,6 +22,8 @@ from util.compiler import SN64
 from util.symbols import Instruction, Symbol
 from util import log
 
+import tools.spimdisasm.spimdisasm as spimdisasm
+
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
     double_mnemonics = ["ldc1", "sdc1"]
@@ -102,24 +104,11 @@ class CommonSegCodeSubsegment(Segment):
         return op_str
 
     def scan_code(self, rom_bytes, is_asm=False):
-        insns: List[CsInsn] = [
-            insn
-            for insn in CommonSegCodeSubsegment.md.disasm(
-                rom_bytes[self.rom_start : self.rom_end], self.vram_start
-            )
-        ]
+        self.textSection = spimdisasm.mips.sections.SectionText(self.context, self.vram_start, self.name, rom_bytes[self.rom_start : self.rom_end])
+        self.textSection.analyze()
 
-        self.funcs: typing.OrderedDict[int, Symbol] = self.process_insns(
-            insns, self.rom_start, is_asm=is_asm
-        )
-
-        # TODO: set these in creation
-        for func in self.funcs.values():
-            func.define = True
-            func.local_only = True
-            func.size = len(func.insns) * 4
-
-        self.determine_symbols()
+        for func in self.textSection.symbolList:
+            self.parent.create_symbol(func.vram, type="func")
 
     def split_code(self, rom_bytes):
         self.gather_jumptable_labels(rom_bytes)

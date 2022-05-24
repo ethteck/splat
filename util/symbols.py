@@ -4,6 +4,8 @@ from typing import Dict, List, Optional
 from capstone import CsInsn
 from util import options, log
 
+import tools.spimdisasm.spimdisasm as spimdisasm
+
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
@@ -20,7 +22,7 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def initialize(all_segments):
+def initialize(all_segments, context: spimdisasm.common.Context):
     global all_symbols
     global symbol_ranges
 
@@ -129,6 +131,16 @@ def initialize(all_segments):
                                         sym.extract = tf_val
                                         continue
                         all_symbols.append(sym)
+
+                        if sym.type == "func":
+                            context.addFunction(addr, name)
+                        else:
+                            context.addFunction(addr, name) # People may have not typed functions properly, so just assume everything could be a function for now...
+                            contextSym = context.addSymbol(addr, name)
+                            if sym.type != "data":
+                                contextSym.type = sym.type
+                            contextSym.size = sym.size
+                            contextSym.isUserDefined = True
 
                         # Symbol ranges
                         if sym.size > 4:
