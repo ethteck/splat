@@ -190,7 +190,6 @@ def retrieve_from_ranges(vram, rom=None):
 class Instruction:
     instruction: spimdisasm.mips.instructions.InstructionBase
     mnemonic: str
-    # op_str: str
     rom_addr: int
     is_gp: bool = False
     is_hi: bool = False

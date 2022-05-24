@@ -218,7 +218,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Configure spimdisasm
     spimdisasm.common.GlobalConfig.PRODUCE_SYMBOLS_PLUS_OFFSET = True
     spimdisasm.common.GlobalConfig.TRUST_USER_FUNCTIONS = True
-    # spimdisasm.common.GlobalConfig.STRING_GUESSER = True
     spimdisasm.common.GlobalConfig.GLABEL_ASM_COUNT = False
 
     # pyMipsDisasm is not performing any analyzis on non-text sections so enabling this options is pointless
@@ -227,9 +226,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     spimdisasm.mips.instructions.InstructionConfig.USE_FPCCSR = False
     spimdisasm.mips.instructions.InstructionConfig.VR4300_COP0_NAMED_REGISTERS = False
-
-    # splat doesn't seem to like pseudo instructions?
-    spimdisasm.mips.instructions.InstructionConfig.PSEUDO_INSTRUCTIONS = False
 
     spimdisasm.mips.instructions.InstructionConfig.OPCODE_LJUST = (
         options.mnemonic_ljust()

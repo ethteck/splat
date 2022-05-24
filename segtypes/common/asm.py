@@ -26,6 +26,8 @@ class CommonSegAsm(CommonSegCodeSubsegment):
             if out_path:
                 out_path.parent.mkdir(parents=True, exist_ok=True)
 
+                self.printFileBoundaries()
+
                 with open(out_path, "w", newline="\n") as f:
                     for line in self.get_file_header():
                         f.write(line + "\n")

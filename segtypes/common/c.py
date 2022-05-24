@@ -124,6 +124,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
+            self.printFileBoundaries()
+
             is_new_c_file = False
 
             c_path = self.out_path()
