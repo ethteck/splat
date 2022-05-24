@@ -127,8 +127,6 @@ class CommonSegCodeSubsegment(Segment):
                 if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
                     symType = "jtbl"
                     self.parent.jumptables[referencedVram] = (funcSpimDisasm.vram, funcSpimDisasm.vramEnd)
-                elif contextSym.type == spimdisasm.common.SymbolSpecialType.function:
-                    symType = "func"
                 sym = self.parent.create_symbol(referencedVram, type=symType, reference=True)
                 sym.given_name = contextSym.name
 
