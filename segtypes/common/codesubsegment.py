@@ -66,7 +66,9 @@ class CommonSegCodeSubsegment(Segment):
         assert funcSpimDisasm.vramEnd is not None
         self.parent: CommonSegCode = self.parent
 
-        funcSym = self.parent.create_symbol(funcSpimDisasm.vram, type="func", define=True)
+        funcSym = self.parent.create_symbol(
+            funcSpimDisasm.vram, type="func", define=True
+        )
         funcSym.given_name = funcSpimDisasm.name
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side

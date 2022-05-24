@@ -242,10 +242,10 @@ class Symbol:
         self,
         vram: int,
         given_name: str = "",
-        rom: Optional[int]=None,
-        type: Optional[str]="unknown",
-        in_overlay: bool=False,
-        size: int=4,
+        rom: Optional[int] = None,
+        type: Optional[str] = "unknown",
+        in_overlay: bool = False,
+        size: int = 4,
     ):
         self.defined: bool = False
         self.referenced: bool = False
