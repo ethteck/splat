@@ -1,7 +1,8 @@
 from typing import Optional
 
+
 class Range:
-    def __init__(self, start: Optional[int]=None, end: Optional[int]=None):
+    def __init__(self, start: Optional[int] = None, end: Optional[int] = None):
         self.start: Optional[int] = start
         self.end: Optional[int] = end
 

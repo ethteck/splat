@@ -44,7 +44,9 @@ def fmt_size(size):
         return str(size) + " B"
 
 
-def initialize_segments(config_segments: Union[dict, list], context: spimdisasm.common.Context) -> List[Segment]:
+def initialize_segments(
+    config_segments: Union[dict, list], context: spimdisasm.common.Context
+) -> List[Segment]:
     seen_segment_names: Set[str] = set()
     ret = []
 
@@ -229,7 +231,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # splat doesn't seem to like pseudo instructions?
     spimdisasm.mips.instructions.InstructionConfig.PSEUDO_INSTRUCTIONS = False
 
-    spimdisasm.mips.instructions.InstructionConfig.OPCODE_LJUST = options.mnemonic_ljust()
+    spimdisasm.mips.instructions.InstructionConfig.OPCODE_LJUST = (
+        options.mnemonic_ljust()
+    )
 
     if options.get_endianess() == "big":
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG

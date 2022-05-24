@@ -135,7 +135,8 @@ def initialize(all_segments, context: spimdisasm.common.Context):
                             contextSym = context.addFunction(addr, name)
                             contextSym.size = sym.size
                         else:
-                            contextSym = context.addFunction(addr, name) # People may have not typed functions properly, so just assume everything could be a function for now...
+                            # People may have not typed functions properly, so just assume everything could be a function for now...
+                            contextSym = context.addFunction(addr, name)
                             contextSym.size = sym.size
                             contextSym = context.addSymbol(addr, name)
                             if sym.type != "data":

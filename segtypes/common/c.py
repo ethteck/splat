@@ -139,9 +139,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 assert func_sym is not None
 
                 if func.name in self.global_asm_funcs or is_new_c_file:
-                    self.create_c_asm_file(
-                        func, asm_out_dir, func_sym
-                    )
+                    self.create_c_asm_file(func, asm_out_dir, func_sym)
 
     def get_c_preamble(self):
         ret = []
@@ -164,7 +162,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if found:
                     break
 
-    def create_c_asm_file(self, func: spimdisasm.mips.symbols.SymbolBase, out_dir, func_sym: Symbol):
+    def create_c_asm_file(
+        self, func: spimdisasm.mips.symbols.SymbolBase, out_dir, func_sym: Symbol
+    ):
         outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -224,8 +224,10 @@ class CommonSegC(CommonSegCodeSubsegment):
             # TODO move disassembly into funcs_text or somewhere we can access it from here
             if (
                 options.get_auto_decompile_empty_functions()
-                and func.instructions[0].uniqueId == spimdisasm.mips.instructions.InstructionId.JR
-                and func.instructions[1].uniqueId == spimdisasm.mips.instructions.InstructionId.NOP
+                and func.instructions[0].uniqueId
+                == spimdisasm.mips.instructions.InstructionId.JR
+                and func.instructions[1].uniqueId
+                == spimdisasm.mips.instructions.InstructionId.NOP
             ):
                 c_lines.append("void " + func.name + "(void) {")
                 c_lines.append("}")

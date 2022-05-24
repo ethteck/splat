@@ -267,7 +267,17 @@ class CommonSegCode(CommonSegGroup):
                 vram_start = "auto"
 
             ret.insert(
-                idx, (Segment(rom_start, "auto", "all_" + section, "", vram_start, self.context))
+                idx,
+                (
+                    Segment(
+                        rom_start,
+                        "auto",
+                        "all_" + section,
+                        "",
+                        vram_start,
+                        self.context,
+                    )
+                ),
             )
 
         check = True

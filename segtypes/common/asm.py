@@ -31,7 +31,6 @@ class CommonSegAsm(CommonSegCodeSubsegment):
                         f.write(line + "\n")
                     f.write(self.textSection.disassemble())
 
-
     def split_write(self, out_path, out_lines):
         with open(out_path, "w", newline="\n") as f:
             f.write("\n".join(out_lines))
