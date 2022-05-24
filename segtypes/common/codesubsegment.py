@@ -87,6 +87,7 @@ class CommonSegCodeSubsegment(Segment):
     def scan_code(self, rom_bytes, is_asm=False):
         self.textSection = spimdisasm.mips.sections.SectionText(self.context, self.vram_start, self.name, rom_bytes[self.rom_start : self.rom_end])
         self.textSection.analyze()
+        self.textSection.setCommentOffset(self.rom_start)
 
         for func in self.textSection.symbolList:
             assert(isinstance(func, spimdisasm.mips.symbols.SymbolFunction))

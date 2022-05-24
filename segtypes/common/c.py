@@ -206,7 +206,6 @@ class CommonSegC(CommonSegCodeSubsegment):
                         out_lines.append("")
 
         out_lines.append(func.disassemble())
-        out_lines.append("")
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
