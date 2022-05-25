@@ -43,7 +43,7 @@ class CommonSegCodeSubsegment(Segment):
 
             self.process_insns(func, self.rom_start, is_asm=is_asm)
 
-        # Process jumptable labels and pass them to pyMipsDisas
+        # Process jumptable labels and pass them to spimdisasm
         self.gather_jumptable_labels(rom_bytes)
         for jtblLabelVram in self.parent.jtbl_glabels_to_add:
             romAddr = self.ram_to_rom(jtblLabelVram)
