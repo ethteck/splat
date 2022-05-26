@@ -245,11 +245,15 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
         spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
-        spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = True
+        spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = (
+            True
+        )
         spimdisasm.common.GlobalConfig.ASM_COMMENT = False
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
     elif selectedCompiler == compiler.GCC:
-        spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = True
+        spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = (
+            True
+        )
 
     spimdisasm.common.GlobalConfig.GP_VALUE = options.get_gp()
 
