@@ -251,6 +251,8 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.get_asm_data_macro()
     spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.get_asm_end_label()
 
+    spimdisasm.common.GlobalConfig.LINE_ENDS = options.c_newline()
+
     # Initialize a spimdisasm context
     context = spimdisasm.common.Context()
 
