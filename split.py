@@ -153,64 +153,7 @@ def merge_configs(main_config, additional_config):
     return main_config
 
 
-def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
-    global config
-
-    log.write(f"splat {VERSION}")
-
-    # Load config
-    config = {}
-    for entry in config_path:
-        with open(entry) as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        config = merge_configs(config, additional_config)
-
-    options.initialize(config, config_path, base_dir, target_path)
-    options.set("modes", modes)
-
-    if verbose:
-        options.set("verbose", True)
-
-    with options.get_target_path().open("rb") as f2:
-        rom_bytes = f2.read()
-
-    if "sha1" in config:
-        sha1 = hashlib.sha1(rom_bytes).hexdigest()
-        e_sha1 = config["sha1"].lower()
-        if e_sha1 != sha1:
-            log.error(f"sha1 mismatch: expected {e_sha1}, was {sha1}")
-
-    # Create main output dir
-    options.get_base_path().mkdir(parents=True, exist_ok=True)
-
-    processed_segments: List[Segment] = []
-
-    seg_sizes: Dict[str, int] = {}
-    seg_split: Dict[str, int] = {}
-    seg_cached: Dict[str, int] = {}
-
-    # Load cache
-    if use_cache:
-        try:
-            with options.get_cache_path().open("rb") as f3:
-                cache = pickle.load(f3)
-
-            if verbose:
-                log.write(f"Loaded cache ({len(cache.keys())} items)")
-        except Exception:
-            cache = {}
-    else:
-        cache = {}
-
-    # invalidate entire cache if options change
-    if use_cache and cache.get("__options__") != config.get("options"):
-        if verbose:
-            log.write("Options changed, invalidating cache")
-
-        cache = {
-            "__options__": config.get("options"),
-        }
-
+def configure_disassembler():
     # Configure spimdisasm
     spimdisasm.common.GlobalConfig.PRODUCE_SYMBOLS_PLUS_OFFSET = True
     spimdisasm.common.GlobalConfig.TRUST_USER_FUNCTIONS = True
@@ -269,6 +212,67 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     if options.get_platform() == "n64":
         symbols.spim_context.fillDefaultBannedSymbols()
+
+
+def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
+    global config
+
+    log.write(f"splat {VERSION}")
+
+    # Load config
+    config = {}
+    for entry in config_path:
+        with open(entry) as f:
+            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+        config = merge_configs(config, additional_config)
+
+    options.initialize(config, config_path, base_dir, target_path)
+    options.set("modes", modes)
+
+    if verbose:
+        options.set("verbose", True)
+
+    with options.get_target_path().open("rb") as f2:
+        rom_bytes = f2.read()
+
+    if "sha1" in config:
+        sha1 = hashlib.sha1(rom_bytes).hexdigest()
+        e_sha1 = config["sha1"].lower()
+        if e_sha1 != sha1:
+            log.error(f"sha1 mismatch: expected {e_sha1}, was {sha1}")
+
+    # Create main output dir
+    options.get_base_path().mkdir(parents=True, exist_ok=True)
+
+    processed_segments: List[Segment] = []
+
+    seg_sizes: Dict[str, int] = {}
+    seg_split: Dict[str, int] = {}
+    seg_cached: Dict[str, int] = {}
+
+    # Load cache
+    if use_cache:
+        try:
+            with options.get_cache_path().open("rb") as f3:
+                cache = pickle.load(f3)
+
+            if verbose:
+                log.write(f"Loaded cache ({len(cache.keys())} items)")
+        except Exception:
+            cache = {}
+    else:
+        cache = {}
+
+    # invalidate entire cache if options change
+    if use_cache and cache.get("__options__") != config.get("options"):
+        if verbose:
+            log.write("Options changed, invalidating cache")
+
+        cache = {
+            "__options__": config.get("options"),
+        }
+
+    configure_disassembler()
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
