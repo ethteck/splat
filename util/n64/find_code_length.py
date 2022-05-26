@@ -1,13 +1,7 @@
 #! /usr/bin/env python3
 
-from capstone import *
-
-from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
-from capstone.mips import *
-
 import argparse
-
-md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+import spimdisasm
 
 parser = argparse.ArgumentParser(
     description="Given a rom and start offset, find where the code ends"
@@ -24,10 +18,20 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
     rom_addr = start_offset
     last_return = rom_addr
 
-    for insn in md.disasm(rom_bytes[start_offset:], vram):
-        if insn.mnemonic == "jr" and insn.op_str == "$ra":
+    wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[start_offset:])
+
+    for word in wordList:
+        insn = spimdisasm.mips.instructions.wordToInstruction(word)
+        insn.vram = vram
+
+        if not insn.isImplemented():
+            break
+
+        # insn.rs == $ra
+        if insn.uniqueId == spimdisasm.mips.instructions.InstructionId.JR and insn.rs == 31:
             last_return = rom_addr
         rom_addr += 4
+        vram += 4
         if end_offset and rom_addr >= end_offset:
             break
 
