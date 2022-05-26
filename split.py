@@ -244,6 +244,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     if selectedCompiler == compiler.SN64:
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
+        spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
         spimdisasm.common.GlobalConfig.ASM_COMMENT = False
     elif selectedCompiler == compiler.GCC:
         spimdisasm.common.GlobalConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = True
