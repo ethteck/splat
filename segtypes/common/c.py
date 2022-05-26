@@ -4,12 +4,11 @@ from typing import Optional, Set
 import os
 import re
 from pathlib import Path
+import spimdisasm
 
 from util import log, options
 from util.compiler import GCC, SN64
 from util.symbols import Symbol
-
-import spimdisasm
 
 
 class CommonSegC(CommonSegCodeSubsegment):
@@ -124,7 +123,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
-            self.printFileBoundaries()
+            self.print_file_boundaries()
 
             is_new_c_file = False
 
@@ -134,7 +133,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
-            for func in self.textSection.symbolList:
+            for func in self.text_section.symbolList:
                 assert func.vram is not None
                 func_sym = self.parent.get_symbol(
                     func.vram, type="func", local_only=True
@@ -221,7 +220,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def create_c_file(self, asm_out_dir, c_path):
         c_lines = self.get_c_preamble()
 
-        for func in self.textSection.symbolList:
+        for func in self.text_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             # Terrible hack to "auto-decompile" empty functions

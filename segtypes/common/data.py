@@ -3,6 +3,7 @@ from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
 from pathlib import Path
 from typing import List, Optional
+import spimdisasm
 from util.symbols import Symbol
 from util import floats, options
 
@@ -350,6 +351,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
             dis_start = self.get_most_parent().ram_to_rom(syms[i].vram_start)
             dis_end = self.get_most_parent().ram_to_rom(syms[i + 1].vram_start)
+            assert dis_start is not None and dis_end is not None
             sym_len = dis_end - dis_start
 
             if self.type == "bss":
@@ -358,7 +360,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 sym_bytes = rom_bytes[dis_start:dis_end]
 
                 # Checking if the mnemonic is addiu may be too picky - we'll see
-                if self.is_valid_ascii(sym_bytes) and mnemonic == "addiu":
+                if (
+                    self.is_valid_ascii(sym_bytes)
+                    and mnemonic == spimdisasm.mips.instructions.InstructionId.ADDIU
+                ):
                     stype = "ascii"
                 elif sym.type == "jtbl":
                     stype = "jtbl"
@@ -404,7 +409,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)
                 if (
                     not rodata_encountered
-                    and mnemonic == "jtbl"
+                    and stype == "jtbl"
                     and self.get_most_parent().rodata_follows_data
                 ):
                     rodata_encountered = True

@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+import spimdisasm
 
 from util import options, log
-
-import spimdisasm
 
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
@@ -192,19 +191,6 @@ def retrieve_from_ranges(vram, rom=None):
         return None
 
 
-@dataclass
-class Instruction:
-    instruction: spimdisasm.mips.instructions.InstructionBase
-    mnemonic: str
-    rom_addr: int
-    is_gp: bool = False
-    is_hi: bool = False
-    is_lo: bool = False
-    hi_lo_sym: Optional["Symbol"] = None
-    sym_offset_str: str = ""
-    hi_lo_reg: str = ""
-
-
 class Symbol:
     @property
     def default_name(self) -> str:
@@ -257,8 +243,9 @@ class Symbol:
         self.in_overlay: bool = in_overlay
         self.size: int = size
         self.given_name: str = given_name
-        self.insns: List[Instruction] = []
-        self.access_mnemonic: Optional[str] = None
+        self.access_mnemonic: Optional[
+            spimdisasm.mips.instructions.InstructionId
+        ] = None
         self.disasm_str = None
         self.dead = False
         self.extract = True

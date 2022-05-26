@@ -26,12 +26,12 @@ class CommonSegAsm(CommonSegCodeSubsegment):
             if out_path:
                 out_path.parent.mkdir(parents=True, exist_ok=True)
 
-                self.printFileBoundaries()
+                self.print_file_boundaries()
 
                 with open(out_path, "w", newline="\n") as f:
                     for line in self.get_file_header():
                         f.write(line + "\n")
-                    f.write(self.textSection.disassemble())
+                    f.write(self.text_section.disassemble())
 
     def split_write(self, out_path, out_lines):
         with open(out_path, "w", newline="\n") as f:

@@ -1,26 +1,38 @@
-from dataclasses import dataclass
-from typing import List, Optional
-import typing
 from util import options
 from segtypes.common.code import CommonSegCode
-from collections import OrderedDict
-import re
+import spimdisasm
 
 from segtypes.segment import Segment
-from util.compiler import SN64
-from util.symbols import Instruction, Symbol
-from util import log
+from util.symbols import Symbol
 from util import symbols
 
-import spimdisasm
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
-    double_mnemonics = ["ldc1", "sdc1"]
-    word_mnemonics = ["addiu", "sw", "lw", "jtbl"]
-    float_mnemonics = ["lwc1", "swc1"]
-    short_mnemonics = ["addiu", "lh", "sh", "lhu"]
-    byte_mnemonics = ["lb", "sb", "lbu"]
+    double_mnemonics = [
+        spimdisasm.mips.instructions.InstructionId.LDC1,
+        spimdisasm.mips.instructions.InstructionId.SDC1,
+    ]
+    word_mnemonics = [
+        spimdisasm.mips.instructions.InstructionId.ADDIU,
+        spimdisasm.mips.instructions.InstructionId.SW,
+        spimdisasm.mips.instructions.InstructionId.LW,
+    ]
+    float_mnemonics = [
+        spimdisasm.mips.instructions.InstructionId.LWC1,
+        spimdisasm.mips.instructions.InstructionId.SWC1,
+    ]
+    short_mnemonics = [
+        spimdisasm.mips.instructions.InstructionId.ADDIU,
+        spimdisasm.mips.instructions.InstructionId.LH,
+        spimdisasm.mips.instructions.InstructionId.SH,
+        spimdisasm.mips.instructions.InstructionId.LHU,
+    ]
+    byte_mnemonics = [
+        spimdisasm.mips.instructions.InstructionId.LB,
+        spimdisasm.mips.instructions.InstructionId.SB,
+        spimdisasm.mips.instructions.InstructionId.LBU,
+    ]
 
     @property
     def needs_symbols(self) -> bool:
@@ -30,19 +42,19 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     def scan_code(self, rom_bytes, is_asm=False):
-        self.textSection = spimdisasm.mips.sections.SectionText(
+        self.text_section = spimdisasm.mips.sections.SectionText(
             symbols.spim_context,
             self.vram_start,
             self.name,
             rom_bytes[self.rom_start : self.rom_end],
         )
-        self.textSection.analyze()
-        self.textSection.setCommentOffset(self.rom_start)
+        self.text_section.analyze()
+        self.text_section.setCommentOffset(self.rom_start)
 
-        for func in self.textSection.symbolList:
+        for func in self.text_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
-            self.process_insns(func, self.rom_start, is_asm=is_asm)
+            self.process_insns(func, is_asm=is_asm)
 
         # Process jumptable labels and pass them to spimdisasm
         self.gather_jumptable_labels(rom_bytes)
@@ -58,118 +70,114 @@ class CommonSegCodeSubsegment(Segment):
 
     def process_insns(
         self,
-        funcSpimDisasm: spimdisasm.mips.symbols.SymbolFunction,
-        rom_addr: int,
+        func_spim: spimdisasm.mips.symbols.SymbolFunction,
         is_asm=False,
     ):
         assert isinstance(self.parent, CommonSegCode)
-        assert funcSpimDisasm.vram is not None
-        assert funcSpimDisasm.vramEnd is not None
+        assert func_spim.vram is not None
+        assert func_spim.vramEnd is not None
         self.parent: CommonSegCode = self.parent
 
-        funcSym = self.parent.create_symbol(
-            funcSpimDisasm.vram, type="func", define=True
-        )
-        funcSym.given_name = funcSpimDisasm.name
+        func_sym = self.parent.create_symbol(func_spim.vram, type="func", define=True)
+        func_sym.given_name = func_spim.name
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referencedVram in funcSpimDisasm.referencedVRams:
+        for referencedVram in func_spim.referencedVRams:
             contextSym = symbols.spim_context.getAnySymbol(referencedVram)
             if contextSym is not None:
                 if contextSym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
                     continue
-                symType = None
+                sym_type = None
                 if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
-                    symType = "jtbl"
+                    sym_type = "jtbl"
                     self.parent.jumptables[referencedVram] = (
-                        funcSpimDisasm.vram,
-                        funcSpimDisasm.vramEnd,
+                        func_spim.vram,
+                        func_spim.vramEnd,
                     )
                 sym = self.parent.create_symbol(
-                    referencedVram, type=symType, reference=True
+                    referencedVram, type=sym_type, reference=True
                 )
-                sym.given_name = contextSym.name
+                sym.given_name = contextSym.getName()
 
-        for labelOffset in funcSpimDisasm.localLabels:
-            labelVram = funcSpimDisasm.vram + labelOffset
+        for label_offset in func_spim.localLabels:
+            label_vram = func_spim.getVramOffset(label_offset)
             label_sym = self.parent.get_symbol(
-                labelVram, type="label", reference=True, local_only=True
+                label_vram, type="label", reference=True, local_only=True
             )
 
             if label_sym is not None:
-                contextSym = symbols.spim_context.getGenericLabel(labelVram)
+                contextSym = symbols.spim_context.getGenericLabel(label_vram)
                 if contextSym is not None:
                     contextSym.name = label_sym.name
             else:
-                self.parent.labels_to_add.add(labelVram)
+                self.parent.labels_to_add.add(label_vram)
 
         # Main loop
-        for i, insn in enumerate(funcSpimDisasm.instructions):
-            mnemonic = insn.getOpcodeName().lower()
-            instrOffset = i * 4
-            insn_address = funcSym.vram_start + instrOffset
+        for i, insn in enumerate(func_spim.instructions):
+            instr_offset = i * 4
+            insn_address = func_sym.vram_start + instr_offset
 
-            funcSym.insns.append(Instruction(insn, mnemonic, rom_addr))
-            rom_addr += 4
-
-            if mnemonic == "jr":
+            if insn == spimdisasm.mips.instructions.InstructionId.JR:
                 # Record potential jtbl jumps
                 rs = insn.getRegisterName(insn.rs)
                 if rs not in ["$ra", "$31"]:
                     self.parent.jtbl_jumps[insn_address] = rs
 
             # update pointer accesses from this function
-            if instrOffset in funcSpimDisasm.pointersPerInstruction:
-                symAddress = funcSpimDisasm.pointersPerInstruction[instrOffset]
+            if instr_offset in func_spim.pointersPerInstruction:
+                sym_address = func_spim.pointersPerInstruction[instr_offset]
 
                 sym = self.parent.create_symbol(
-                    symAddress, offsets=True, reference=True
+                    sym_address, offsets=True, reference=True
                 )
 
-                contextSym = symbols.spim_context.getAnySymbol(symAddress)
+                contextSym = symbols.spim_context.getAnySymbol(sym_address)
                 if contextSym is not None:
                     sym.given_name = contextSym.name
                     if contextSym.isDefined:
                         sym.defined = True
 
                 if (
-                    mnemonic
+                    insn.uniqueId
                     in self.double_mnemonics
                     + self.word_mnemonics
                     + self.float_mnemonics
                     + self.short_mnemonics
                     + self.byte_mnemonics
                 ):
-                    self.update_access_mnemonic(sym, mnemonic)
+                    self.update_access_mnemonic(sym, insn)
 
                 if self.parent:
-                    self.parent.check_rodata_sym(funcSpimDisasm.vram, sym)
+                    self.parent.check_rodata_sym(func_spim.vram, sym)
 
-    def update_access_mnemonic(self, sym: Symbol, mnemonic: str):
+    def update_access_mnemonic(
+        self, sym: Symbol, insn: spimdisasm.mips.instructions.InstructionBase
+    ):
+        assert isinstance(insn.uniqueId, spimdisasm.mips.instructions.InstructionId)
         if not sym.access_mnemonic:
-            sym.access_mnemonic = mnemonic
-        elif sym.access_mnemonic == "addiu":
-            sym.access_mnemonic = mnemonic
+            sym.access_mnemonic = insn.uniqueId
+        elif sym.access_mnemonic == spimdisasm.mips.instructions.InstructionId.ADDIU:
+            sym.access_mnemonic = insn.uniqueId
         elif sym.access_mnemonic in self.double_mnemonics:
             return
         elif (
             sym.access_mnemonic in self.float_mnemonics
-            and mnemonic in self.double_mnemonics
+            and insn.uniqueId in self.double_mnemonics
         ):
-            sym.access_mnemonic = mnemonic
+            sym.access_mnemonic = insn.uniqueId
         elif sym.access_mnemonic in self.short_mnemonics:
             return
         elif sym.access_mnemonic in self.byte_mnemonics:
             return
         else:
-            sym.access_mnemonic = mnemonic
+            sym.access_mnemonic = insn.uniqueId
 
-    def printFileBoundaries(self):
+    def print_file_boundaries(self):
         if not options.find_file_boundaries():
             return
 
-        for inFileOffset in self.textSection.fileBoundaries:
-            if (inFileOffset % 16) != 0:
+        for in_file_offset in self.text_section.fileBoundaries:
+            if (in_file_offset % 16) != 0:
                 continue
 
             if not self.parent.reported_file_split:
@@ -177,9 +185,9 @@ class CommonSegCodeSubsegment(Segment):
 
                 # Look up for the last function in this boundary
                 func_addr = 0
-                for func in self.textSection.symbolList:
-                    funcOffset = func.inFileOffset - self.textSection.inFileOffset
-                    if inFileOffset == funcOffset:
+                for func in self.text_section.symbolList:
+                    funcOffset = func.inFileOffset - self.text_section.inFileOffset
+                    if in_file_offset == funcOffset:
                         break
                     func_addr = func.vram
 
@@ -189,7 +197,7 @@ class CommonSegCodeSubsegment(Segment):
                 print(
                     "File split suggestions for this segment will follow in config yaml format:"
                 )
-            print(f"      - [0x{self.rom_start+inFileOffset:X}, asm]")
+            print(f"      - [0x{self.rom_start+in_file_offset:X}, asm]")
 
     def gather_jumptable_labels(self, rom_bytes):
         # TODO: use the seg_symbols for this

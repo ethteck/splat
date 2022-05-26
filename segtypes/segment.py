@@ -9,8 +9,6 @@ from util import options
 from util import symbols
 from util.symbols import Symbol
 
-import spimdisasm
-
 # circular import
 if TYPE_CHECKING:
     from segtypes.linker_entry import LinkerEntry

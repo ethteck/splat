@@ -333,10 +333,12 @@ def mnemonic_ljust() -> int:
 def rom_address_padding() -> bool:
     return opts.get("rom_address_padding", False)
 
+
 # Determines which ABI names to use for general purpose registers
 # Valid values: 'numeric', 'o32', 'n32', 'n64'
 def get_mips_abi_gpr() -> str:
     return opts.get("mips_abi_gpr", "o32")
+
 
 # Determines which ABI names to use for floating point registers
 # Valid values: 'numeric', 'o32', 'n32', 'n64'

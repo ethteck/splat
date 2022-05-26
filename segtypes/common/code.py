@@ -8,8 +8,6 @@ from util import log, options
 from util.range import Range
 from util.symbols import Symbol
 
-import spimdisasm
-
 CODE_TYPES = ["c", "asm", "hasm"]
 
 # code group

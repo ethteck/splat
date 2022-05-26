@@ -3,7 +3,7 @@
 import hashlib
 from typing import Dict, List, Union, Set, Any
 import argparse
-import pylibyaml
+import spimdisasm
 import yaml
 import pickle
 from colorama import Style, Fore
@@ -14,8 +14,6 @@ from util import options
 from util import symbols
 from util import palettes
 from util import compiler
-
-import spimdisasm
 
 VERSION = "0.8.2"
 
@@ -44,9 +42,7 @@ def fmt_size(size):
         return str(size) + " B"
 
 
-def initialize_segments(
-    config_segments: Union[dict, list]
-) -> List[Segment]:
+def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     seen_segment_names: Set[str] = set()
     ret = []
 
@@ -232,8 +228,12 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         options.mnemonic_ljust() - 1
     )
 
-    spimdisasm.mips.instructions.InstructionConfig.GPR_ABI_NAMES = spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_gpr())
-    spimdisasm.mips.instructions.InstructionConfig.FPR_ABI_NAMES = spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_float_regs())
+    spimdisasm.mips.instructions.InstructionConfig.GPR_ABI_NAMES = (
+        spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_gpr())
+    )
+    spimdisasm.mips.instructions.InstructionConfig.FPR_ABI_NAMES = (
+        spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_float_regs())
+    )
 
     if options.get_endianess() == "big":
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG

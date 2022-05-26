@@ -28,7 +28,10 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
             break
 
         # insn.rs == $ra
-        if insn.uniqueId == spimdisasm.mips.instructions.InstructionId.JR and insn.rs == 31:
+        if (
+            insn.uniqueId == spimdisasm.mips.instructions.InstructionId.JR
+            and insn.rs == 31
+        ):
             last_return = rom_addr
         rom_addr += 4
         vram += 4
