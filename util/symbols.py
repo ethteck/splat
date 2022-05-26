@@ -8,7 +8,7 @@ all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
 # Initialize a spimdisasm context, used to store symbols and functions
-spim_context: spimdisasm.common.Context = spimdisasm.common.Context()
+spim_context = spimdisasm.common.Context()
 
 TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
