@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from . import InstructionId, InstructionVectorId, InstructionNormal
+from . import InstructionId, InstructionVectorId, InstructionNormal, instructionDescriptorDict
 from .MipsInstructionConfig import InstructionConfig
 
 
@@ -85,16 +85,13 @@ class InstructionNormalRsp(InstructionNormal):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        for opcode in InstructionNormalRsp.RemovedOpcodes:
-            if opcode in self.opcodesDict:
-                del self.opcodesDict[opcode]
-
         self.processUniqueId()
         self._handwrittenCategory = True
 
 
     def processUniqueId(self):
-        super().processUniqueId()
+        if self.opcode not in self.RemovedOpcodes:
+            self.uniqueId = self.NormalOpcodes.get(self.opcode, InstructionId.INVALID)
 
         # SWC2
         if self.opcode == 0b111_010:
@@ -107,6 +104,9 @@ class InstructionNormalRsp(InstructionNormal):
         elif self.opcode == 0b110_010:
             if self.rd in self.Opcodes_ByLWC2:
                 self.uniqueId = self.Opcodes_ByLWC2[self.rd]
+
+        if self.uniqueId in instructionDescriptorDict:
+            self.descriptor = instructionDescriptorDict[self.uniqueId]
 
 
     def getRegisterName(self, register: int) -> str:

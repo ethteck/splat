@@ -68,7 +68,6 @@ class InstructionCoprocessor2Rsp(InstructionCoprocessor2):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        self.opcodesDict = dict(self.Cop2Opcodes)
         self.processUniqueId()
         self._handwrittenCategory = True
 
@@ -76,7 +75,7 @@ class InstructionCoprocessor2Rsp(InstructionCoprocessor2):
     def processUniqueId(self):
         super().processUniqueId()
 
-        self.uniqueId = self.opcodesDict.get(self.function, InstructionVectorId.INVALID)
+        self.uniqueId = self.Cop2Opcodes.get(self.function, InstructionVectorId.INVALID)
         if self[25] == 0:
             self.uniqueId = self.Cop2MoveOpcodes.get(self.elementHigh, InstructionVectorId.INVALID)
 

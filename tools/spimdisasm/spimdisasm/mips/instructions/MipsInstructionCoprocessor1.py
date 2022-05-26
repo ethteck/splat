@@ -69,13 +69,10 @@ class InstructionCoprocessor1(InstructionBase):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        # self.opcodesDict = 
         self.processUniqueId()
 
 
     def processUniqueId(self):
-        super().processUniqueId()
-
         if self.fmt in InstructionCoprocessor1.Cop1Opcodes_ByFormat:
             self.uniqueId = InstructionCoprocessor1.Cop1Opcodes_ByFormat[self.fmt]
 

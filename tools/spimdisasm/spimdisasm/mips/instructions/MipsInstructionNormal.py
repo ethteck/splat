@@ -89,12 +89,11 @@ class InstructionNormal(InstructionBase):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        self.opcodesDict = dict(InstructionNormal.NormalOpcodes)
         self.processUniqueId()
 
 
     def processUniqueId(self):
-        super().processUniqueId()
+        self.uniqueId = self.NormalOpcodes.get(self.opcode, InstructionId.INVALID)
 
         if InstructionConfig.PSEUDO_INSTRUCTIONS:
             if self.rt == 0:

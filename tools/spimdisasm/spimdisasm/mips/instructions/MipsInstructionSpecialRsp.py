@@ -7,6 +7,9 @@ from __future__ import annotations
 
 from . import InstructionId, InstructionSpecial
 
+from .MipsInstructionConfig import InstructionConfig
+from .MipsConstants import InstructionId, instructionDescriptorDict
+
 
 class InstructionSpecialRsp(InstructionSpecial):
     RemovedOpcodes: dict[int, InstructionId] = {
@@ -53,11 +56,36 @@ class InstructionSpecialRsp(InstructionSpecial):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        for opcode in InstructionSpecialRsp.RemovedOpcodes:
-            if opcode in self.opcodesDict:
-                del self.opcodesDict[opcode]
         self.processUniqueId()
         self._handwrittenCategory = True
+
+
+    def processUniqueId(self):
+        if self.function not in self.RemovedOpcodes:
+            self.uniqueId = self.SpecialOpcodes.get(self.function, InstructionId.INVALID)
+
+        if InstructionConfig.PSEUDO_INSTRUCTIONS:
+            if self.instr == 0:
+                self.uniqueId = InstructionId.NOP
+            elif self.rt == 0:
+                if self.uniqueId == InstructionId.OR:
+                    self.uniqueId = InstructionId.MOVE
+                elif self.uniqueId == InstructionId.NOR:
+                    self.uniqueId = InstructionId.NOT
+            elif self.uniqueId == InstructionId.SUBU:
+                if self.rs == 0:
+                    self.uniqueId = InstructionId.NEGU
+
+        self.descriptor = instructionDescriptorDict[self.uniqueId]
+
+        if self.uniqueId == InstructionId.JALR:
+            # $ra
+            if self.rd != 31:
+                self.descriptor = instructionDescriptorDict[InstructionId.JALR_RD]
+
+        if InstructionConfig.SN64_DIV_FIX:
+            if self.uniqueId in (InstructionId.DIV, InstructionId.DIVU):
+                self.descriptor.operands = ["rs", "rt"]
 
 
     def getRegisterName(self, register: int) -> str:

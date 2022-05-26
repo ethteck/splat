@@ -28,12 +28,13 @@ class InstructionRegimmRsp(InstructionRegimm):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        for opcode in self.RemovedOpcodes:
-            if opcode in self.opcodesDict:
-                del self.opcodesDict[opcode]
-
         self.processUniqueId()
         self._handwrittenCategory = True
+
+
+    def processUniqueId(self):
+        if self.rt not in self.RemovedOpcodes:
+            self.uniqueId = self.RegimmOpcodes.get(self.rt, InstructionId.INVALID)
 
 
     def getRegisterName(self, register: int) -> str:

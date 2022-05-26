@@ -374,7 +374,6 @@ class InstructionBase:
         self.sa = (instr >>  6) & 0x1F
         self.function = (instr >> 0) & 0x3F
 
-        self.opcodesDict: dict[int, InstructionId | InstructionVectorId] = dict()
         self.uniqueId: InstructionId|InstructionVectorId = InstructionId.INVALID
         self.descriptor: InstrDescriptor = instructionDescriptorDict[self.uniqueId]
 
@@ -461,7 +460,6 @@ class InstructionBase:
 
 
     def processUniqueId(self):
-        self.uniqueId = self.opcodesDict.get(self.opcode, InstructionId.INVALID)
         if self.uniqueId in instructionDescriptorDict:
             self.descriptor = instructionDescriptorDict[self.uniqueId]
 

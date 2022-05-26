@@ -32,12 +32,11 @@ class InstructionRegimm(InstructionBase):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        self.opcodesDict = dict(InstructionRegimm.RegimmOpcodes)
         self.processUniqueId()
 
 
     def processUniqueId(self):
-        self.uniqueId = self.opcodesDict.get(self.rt, InstructionId.INVALID)
+        self.uniqueId = self.RegimmOpcodes.get(self.rt, InstructionId.INVALID)
 
         self.descriptor = instructionDescriptorDict[self.uniqueId]
 

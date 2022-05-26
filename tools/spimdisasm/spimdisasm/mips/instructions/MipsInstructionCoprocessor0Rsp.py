@@ -18,14 +18,11 @@ class InstructionCoprocessor0Rsp(InstructionCoprocessor0):
     def __init__(self, instr: int):
         super().__init__(instr)
 
-        # self.opcodesDict = 
         self.processUniqueId()
         self._handwrittenCategory = True
 
 
     def processUniqueId(self):
-        super().processUniqueId()
-
         self.uniqueId = self.Cop0Opcodes_ByFormat.get(self.fmt, InstructionId.INVALID)
 
 
