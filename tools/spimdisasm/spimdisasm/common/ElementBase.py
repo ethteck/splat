@@ -76,7 +76,7 @@ class ElementBase:
             if GlobalConfig.GLABEL_ASM_COUNT:
                 if self.index is not None:
                     label += f" # {self.index}"
-            label += "\n"
+            label +=  GlobalConfig.LINE_ENDS
             return label
         return ""
 

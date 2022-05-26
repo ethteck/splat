@@ -123,27 +123,26 @@ def writeSplittedFunctionToFile(f: TextIO, func: symbols.SymbolFunction, rodataF
 
     if len(rdataList) > 0:
         # Write the rdata
-        f.write(".rdata\n")
+        f.write(".rdata" + common.GlobalConfig.LINE_ENDS)
         for sym in rdataList:
             f.write(sym.disassemble())
-            f.write("\n")
+            f.write(common.GlobalConfig.LINE_ENDS)
 
     if len(lateRodataList) > 0:
         # Write the late_rodata
-        f.write(".late_rodata\n")
+        f.write(".late_rodata" + common.GlobalConfig.LINE_ENDS)
         if lateRodataSize / len(func.instructions) > 1/3:
             align = 4
             firstLateRodataVram = lateRodataList[0].vram
             if firstLateRodataVram is not None and firstLateRodataVram % 8 == 0:
                 align = 8
-            f.write(f".late_rodata_alignment {align}\n")
+            f.write(f".late_rodata_alignment {align}" + common.GlobalConfig.LINE_ENDS)
         for sym in lateRodataList:
             f.write(sym.disassemble())
-            f.write("\n")
+            f.write(common.GlobalConfig.LINE_ENDS)
 
     if len(rdataList) > 0 or len(lateRodataList) > 0:
-        f.write("\n")
-        f.write(".text\n")
+        f.write(common.GlobalConfig.LINE_ENDS + ".text" + common.GlobalConfig.LINE_ENDS)
 
     # Write the function
     f.write(func.disassemble())
@@ -165,5 +164,5 @@ def writeOtherRodata(path: str, rodataFileList: list[sections.SectionRodata]):
 
             rodataSymbolPath = os.path.join(rodataPath, rodataSym.name) + ".s"
             with open(rodataSymbolPath, "w") as f:
-                f.write(".rdata\n")
+                f.write(".rdata" + common.GlobalConfig.LINE_ENDS)
                 f.write(rodataSym.disassemble())

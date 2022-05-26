@@ -544,7 +544,7 @@ class InstructionBase:
 
     def getFloatRegisterName(self, register: int) -> str:
         if not InstructionConfig.NAMED_REGISTERS:
-            return f"${register}"
+            return f"$f{register}"
         if InstructionConfig.FPR_ABI_NAMES == AbiNames.numeric:
             if register == 31 and not InstructionConfig.USE_FPCCSR:
                 return "$31"

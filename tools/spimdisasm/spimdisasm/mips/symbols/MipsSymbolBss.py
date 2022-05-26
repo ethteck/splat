@@ -20,7 +20,7 @@ class SymbolBss(SymbolBase):
     def disassembleAsBss(self) -> str:
         output = self.getLabel()
         output += self.generateAsmLineComment(0)
-        output += f" .space 0x{self.spaceSize:02X}\n"
+        output += f" .space 0x{self.spaceSize:02X}" + common.GlobalConfig.LINE_ENDS
         return output
 
     def disassemble(self) -> str:

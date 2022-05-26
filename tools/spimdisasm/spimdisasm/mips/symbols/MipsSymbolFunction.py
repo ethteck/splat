@@ -730,11 +730,11 @@ class SymbolFunction(SymbolText):
                 labelSym.isDefined = True
                 labelSym.sectionType = self.sectionType
                 if labelSym.type == common.SymbolSpecialType.function or labelSym.type == common.SymbolSpecialType.jumptablelabel:
-                    return labelSym.getSymbolLabel() + "\n"
-                return labelSym.name + ":\n"
+                    return labelSym.getSymbolLabel() + common.GlobalConfig.LINE_ENDS
+                return labelSym.getName() + ":" + common.GlobalConfig.LINE_ENDS
 
             if instructionOffset in self.localLabels:
-                return self.localLabels[instructionOffset] + ":\n"
+                return self.localLabels[instructionOffset] + ":" + common.GlobalConfig.LINE_ENDS
         return ""
 
 
@@ -746,7 +746,7 @@ class SymbolFunction(SymbolText):
                 return self.disassembleAsData()
 
         if self.isLikelyHandwritten:
-            output += "/* Handwritten function */\n"
+            output += "/* Handwritten function */" + common.GlobalConfig.LINE_ENDS
 
         output += self.getLabel()
 
@@ -766,13 +766,13 @@ class SymbolFunction(SymbolText):
                 instr.extraLjustWidthOpcode += 1
 
             label = self.getLabelForOffset(instructionOffset)
-            output += f"{label}{comment}  {line}\n"
+            output += f"{label}{comment}  {line}" + common.GlobalConfig.LINE_ENDS
 
             wasLastInstABranch = instr.isBranch() or instr.isJump()
             instructionOffset += 4
 
         if common.GlobalConfig.ASM_TEXT_END_LABEL:
-            output += f"{common.GlobalConfig.ASM_TEXT_END_LABEL} {self.name}\n"
+            output += f"{common.GlobalConfig.ASM_TEXT_END_LABEL} {self.name}" + common.GlobalConfig.LINE_ENDS
 
         return output
 

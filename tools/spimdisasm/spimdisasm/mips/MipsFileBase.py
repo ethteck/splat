@@ -39,16 +39,16 @@ class FileBase(common.ElementBase):
     def getAsmPrelude(self) -> str:
         output = ""
 
-        output += ".include \"macro.inc\"\n"
-        output += "\n"
-        output += "# assembler directives\n"
-        output += ".set noat      # allow manual use of $at\n"
-        output += ".set noreorder # don't insert nops after branches\n"
-        output += ".set gp=64     # allow use of 64-bit general purpose registers\n"
-        output += "\n"
-        output += f".section {self.sectionType.toSectionName()}\n"
-        output += "\n"
-        output += ".balign 16\n"
+        output += ".include \"macro.inc\"" + common.GlobalConfig.LINE_ENDS
+        output += common.GlobalConfig.LINE_ENDS
+        output += "# assembler directives" + common.GlobalConfig.LINE_ENDS
+        output += ".set noat      # allow manual use of $at" + common.GlobalConfig.LINE_ENDS
+        output += ".set noreorder # don't insert nops after branches" + common.GlobalConfig.LINE_ENDS
+        output += ".set gp=64     # allow use of 64-bit general purpose registers" + common.GlobalConfig.LINE_ENDS
+        output += common.GlobalConfig.LINE_ENDS
+        output += f".section {self.sectionType.toSectionName()}" + common.GlobalConfig.LINE_ENDS
+        output += common.GlobalConfig.LINE_ENDS
+        output += ".balign 16" + common.GlobalConfig.LINE_ENDS
 
         return output
 
@@ -126,12 +126,12 @@ class FileBase(common.ElementBase):
         for i, sym in enumerate(self.symbolList):
             output += sym.disassemble()
             if i + 1 < len(self.symbolList):
-                output += "\n"
+                output += common.GlobalConfig.LINE_ENDS
         return output
 
     def disassembleToFile(self, f: TextIO):
         f.write(self.getAsmPrelude())
-        f.write("\n")
+        f.write(common.GlobalConfig.LINE_ENDS)
         f.write(self.disassemble())
 
 

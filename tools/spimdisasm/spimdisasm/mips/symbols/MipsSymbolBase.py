@@ -141,7 +141,7 @@ class SymbolBase(common.ElementBase):
                 contextSym = self.getSymbolAtVramOrOffset(localOffset+j)
                 if contextSym is not None:
                     # Possible symbols in the middle
-                    label = "\n" + contextSym.getSymbolLabel() + "\n"
+                    label = common.GlobalConfig.LINE_ENDS + contextSym.getSymbolLabel()  + common.GlobalConfig.LINE_ENDS
 
             if isByte:
                 shiftValue = 24 - (j * 8)
@@ -173,7 +173,7 @@ class SymbolBase(common.ElementBase):
             output += f"{label}{comment} {dotType} {value}"
             if j == 0 and i < len(self.endOfLineComment):
                 output += self.endOfLineComment[i]
-            output += "\n"
+            output += common.GlobalConfig.LINE_ENDS
 
         return output, 0
 

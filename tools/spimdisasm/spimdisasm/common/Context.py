@@ -176,7 +176,7 @@ class ContextSymbolBase:
     def getSymbolLabel(self) -> str:
         label = ""
         if self.isStatic():
-            label += "/* static variable */\n"
+            label += "/* static variable */" + GlobalConfig.LINE_ENDS
         if self.sectionType == FileSectionType.Text:
             label += GlobalConfig.ASM_TEXT_LABEL
         else:

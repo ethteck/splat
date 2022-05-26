@@ -110,7 +110,7 @@ class SymbolRodata(SymbolBase):
         # try to get the symbol name from the offset of the file (possibly from a .o elf file)
         possibleSymbolName = self.context.getOffsetGenericSymbol(self.inFileOffset + localOffset, self.sectionType)
         if possibleSymbolName is not None:
-            label = possibleSymbolName.getSymbolLabel() + "\n"
+            label = possibleSymbolName.getSymbolLabel() + common.GlobalConfig.LINE_ENDS
 
         if len(self.context.relocSymbols[self.sectionType]) > 0:
             possibleReference = self.context.getRelocSymbol(self.inFileOffset + localOffset, self.sectionType)
@@ -144,7 +144,7 @@ class SymbolRodata(SymbolBase):
                     decodedValue, rawStringSize = common.Utils.decodeString(buffer, 4*i)
                     dotType = ".asciz"
                     value = f'"{decodedValue}"'
-                    value += "\n" + (22 * " ") + ".balign 4"
+                    value += common.GlobalConfig.LINE_ENDS + (22 * " ") + ".balign 4"
                     rodataWord = None
                     skip = rawStringSize // 4
                 except (UnicodeDecodeError, RuntimeError):
@@ -152,4 +152,4 @@ class SymbolRodata(SymbolBase):
                     pass
 
         comment = self.generateAsmLineComment(localOffset, rodataWord)
-        return f"{label}{comment} {dotType} {value}\n", skip
+        return f"{label}{comment} {dotType} {value}" + common.GlobalConfig.LINE_ENDS, skip

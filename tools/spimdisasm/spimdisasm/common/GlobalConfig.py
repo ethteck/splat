@@ -70,6 +70,8 @@ class GlobalConfig:
     USE_DOT_SHORT: bool = True
     """Disassemble symbols marked as shorts with .short instead of .word"""
 
+    LINE_ENDS: str = "\n"
+
 
     QUIET: bool = False
     VERBOSE: bool = False
