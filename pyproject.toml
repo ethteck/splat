@@ -1,7 +1,6 @@
 [tool.black]
 extend-exclude = '''
 /(
-    tools/spimdisasm/*
-  | segtypes/n64/pygfxd/*
+    segtypes/n64/pygfxd/*
 )/
 '''
