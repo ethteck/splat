@@ -83,12 +83,12 @@ class CommonSegCodeSubsegment(Segment):
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referencedVram in func_spim.referencedVRams:
-            contextSym = symbols.spim_context.getAnySymbol(referencedVram)
-            if contextSym is not None:
-                if contextSym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
+            context_sym = symbols.spim_context.getAnySymbol(referencedVram)
+            if context_sym is not None:
+                if context_sym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
                     continue
                 sym_type = None
-                if contextSym.type == spimdisasm.common.SymbolSpecialType.jumptable:
+                if context_sym.type == spimdisasm.common.SymbolSpecialType.jumptable:
                     sym_type = "jtbl"
                     self.parent.jumptables[referencedVram] = (
                         func_spim.vram,
@@ -97,7 +97,7 @@ class CommonSegCodeSubsegment(Segment):
                 sym = self.parent.create_symbol(
                     referencedVram, type=sym_type, reference=True
                 )
-                sym.given_name = contextSym.getName()
+                sym.given_name = context_sym.getName()
 
         for label_offset in func_spim.localLabels:
             label_vram = func_spim.getVramOffset(label_offset)
@@ -106,9 +106,9 @@ class CommonSegCodeSubsegment(Segment):
             )
 
             if label_sym is not None:
-                contextSym = symbols.spim_context.getGenericLabel(label_vram)
-                if contextSym is not None:
-                    contextSym.name = label_sym.name
+                context_sym = symbols.spim_context.getAnySymbol(label_vram)
+                if context_sym is not None:
+                    context_sym.name = label_sym.name
             else:
                 self.parent.labels_to_add.add(label_vram)
 
@@ -131,10 +131,10 @@ class CommonSegCodeSubsegment(Segment):
                     sym_address, offsets=True, reference=True
                 )
 
-                contextSym = symbols.spim_context.getAnySymbol(sym_address)
-                if contextSym is not None:
-                    sym.given_name = contextSym.name
-                    if contextSym.isDefined:
+                context_sym = symbols.spim_context.getAnySymbol(sym_address)
+                if context_sym is not None:
+                    sym.given_name = context_sym.name
+                    if context_sym.isDefined:
                         sym.defined = True
 
                 if (
