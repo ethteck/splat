@@ -15,6 +15,12 @@ def disassemblerMain():
     description = "General purpose N64-mips disassembler"
     parser = argparse.ArgumentParser(description=description)
 
+    if parser.prog == "simpleDisasm.py":
+        spimdisasm.common.Utils.eprint(f"Deprecation warning")
+        spimdisasm.common.Utils.eprint(f"\t The simpleDisasm.py script is deprecated")
+        spimdisasm.common.Utils.eprint(f"\t Use singleFileDisasm.py instead")
+        spimdisasm.common.Utils.eprint()
+
     parser.add_argument("binary", help="Path to input binary")
     parser.add_argument("output", help="Path to output. Use '-' to print to stdout instead")
 
@@ -25,6 +31,8 @@ def disassemblerMain():
     parser_singleFile.add_argument("--start", help="Raw offset of the input binary file to start disassembling. Expects an hex value", default="0")
     parser_singleFile.add_argument("--end", help="Offset end of the input binary file to start disassembling. Expects an hex value",  default="0xFFFFFF")
     parser_singleFile.add_argument("--vram", help="Set the VRAM address. Expects an hex value")
+
+    parser_singleFile.add_argument("--disasm-rsp", help=f"Experimental. Disassemble this file using rsp instructions. Warning: In its current state the generated asm may not be assemblable to a matching binary. Defaults to False", action="store_true")
 
     parser.add_argument("--file-splits", help="Path to a file splits csv")
 
@@ -97,7 +105,7 @@ def disassemblerMain():
         if endVram is not None:
             endVram += end - start
 
-        splitEntry = spimdisasm.common.FileSplitEntry(start, fileVram, "", spimdisasm.common.FileSectionType.Text, end, False, spimdisasm.common.GlobalConfig.DISASSEMBLE_RSP)
+        splitEntry = spimdisasm.common.FileSplitEntry(start, fileVram, "", spimdisasm.common.FileSectionType.Text, end, False, args.disasm_rsp)
         splits.append(splitEntry)
 
         splits.appendEndSection(end, endVram)
@@ -190,8 +198,8 @@ def disassemblerMain():
             file: spimdisasm.mips.sections.SectionText = f
             for func in file.symbolList:
                 assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
-                spimdisasm.mips.FilesHandlers.writeSplitedFunction(os.path.join(args.split_functions, file.name), func, processedFiles[spimdisasm.common.FileSectionType.Rodata], context)
-        spimdisasm.mips.FilesHandlers.writeOtherRodata(args.split_functions, processedFiles[spimdisasm.common.FileSectionType.Rodata], context)
+                spimdisasm.mips.FilesHandlers.writeSplitedFunction(os.path.join(args.split_functions, file.name), func, processedFiles[spimdisasm.common.FileSectionType.Rodata])
+        spimdisasm.mips.FilesHandlers.writeOtherRodata(args.split_functions, processedFiles[spimdisasm.common.FileSectionType.Rodata])
 
     if args.save_context is not None:
         head, tail = os.path.split(args.save_context)

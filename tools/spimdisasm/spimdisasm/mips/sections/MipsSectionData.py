@@ -18,17 +18,10 @@ class SectionData(SectionBase):
 
 
     def analyze(self):
+        self.checkAndCreateFirstSymbol()
+
         symbolList: list[tuple[int, int, str]] = []
-
         localOffset = 0
-        currentVram = self.getVramOffset(localOffset)
-
-        # Make sure the start of the data section is a symbol
-        contextSym = self.context.getSymbol(currentVram, tryPlusOffset=False)
-        symName = ""
-        if contextSym is not None:
-            symName = contextSym.name
-        symbolList.append((localOffset, currentVram, symName))
 
         for w in self.words:
             currentVram = self.getVramOffset(localOffset)
@@ -36,8 +29,7 @@ class SectionData(SectionBase):
             contextSym = self.context.getSymbol(currentVram, tryPlusOffset=False)
             if contextSym is not None:
                 contextSym.isDefined = True
-                if localOffset != 0:
-                    symbolList.append((localOffset, currentVram, contextSym.name))
+                symbolList.append((localOffset, currentVram, contextSym.name))
 
             if self.vram is not None:
                 if w >= self.vram and w < 0x84000000:

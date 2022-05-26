@@ -20,6 +20,7 @@ class InstructionCoprocessor0Rsp(InstructionCoprocessor0):
 
         # self.opcodesDict = 
         self.processUniqueId()
+        self._handwrittenCategory = True
 
 
     def processUniqueId(self):

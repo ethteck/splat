@@ -90,6 +90,7 @@ class InstructionNormalRsp(InstructionNormal):
                 del self.opcodesDict[opcode]
 
         self.processUniqueId()
+        self._handwrittenCategory = True
 
 
     def processUniqueId(self):

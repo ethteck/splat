@@ -80,11 +80,11 @@ def writeSection(path: str, fileSection: sections.SectionBase):
     return path
 
 
-def getRdataAndLateRodataForFunction(func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata], context: common.Context):
-    rdataList: list[str] = []
-    lateRodataList: list[str] = []
-    lateRodataLen = 0
-    firstRodata = None
+def getRdataAndLateRodataForFunction(func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata]):
+    rdataList: list[symbols.SymbolBase] = []
+    lateRodataList: list[symbols.SymbolBase] = []
+    lateRodataSize = 0
+
     for rodataSection in rodataFileList:
         if len(rdataList) > 0 or len(lateRodataList) > 0:
             # We already have the rodata for this function. Stop searching
@@ -101,54 +101,45 @@ def getRdataAndLateRodataForFunction(func: symbols.SymbolFunction, rodataFileLis
             if rodataSym.vram not in intersection:
                 continue
 
-            rodataSymbol = rodataSym.contextSym
-            assert rodataSymbol is not None
+            assert rodataSym.contextSym is not None
             # We only care for rodata that's used once
-            if rodataSymbol.referenceCounter != 1:
+            if rodataSym.contextSym.referenceCounter != 1:
                 break
 
             # A const variable should not be placed with a function
-            if rodataSymbol.isMaybeConstVariable():
+            if rodataSym.contextSym.isMaybeConstVariable():
                 break
 
-            if firstRodata is None:
-                firstRodata = rodataSection.vram
-
-            dis = rodataSym.disassemble()
-            if rodataSymbol.isLateRodata():
-                lateRodataList.append(dis)
-                lateRodataLen += rodataSym.sizew
+            if rodataSym.contextSym.isLateRodata():
+                lateRodataList.append(rodataSym)
+                lateRodataSize += rodataSym.sizew
             else:
-                rdataList.append(dis)
+                rdataList.append(rodataSym)
 
+    return rdataList, lateRodataList, lateRodataSize
 
-            if rodataSymbol.isLateRodata():
-                lateRodataList.append("\n")
-            else:
-                rdataList.append("\n")
-
-    return rdataList, lateRodataList, lateRodataLen, firstRodata
-
-def writeSplittedFunctionToFile(f: TextIO, func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata], context: common.Context):
-    rdataList, lateRodataList, lateRodataLen, firstRodata = getRdataAndLateRodataForFunction(func, rodataFileList, context)
+def writeSplittedFunctionToFile(f: TextIO, func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata]):
+    rdataList, lateRodataList, lateRodataSize = getRdataAndLateRodataForFunction(func, rodataFileList)
 
     if len(rdataList) > 0:
         # Write the rdata
         f.write(".rdata\n")
-        for x in rdataList:
-            f.write(x)
+        for sym in rdataList:
+            f.write(sym.disassemble())
+            f.write("\n")
 
     if len(lateRodataList) > 0:
         # Write the late_rodata
         f.write(".late_rodata\n")
-        if lateRodataLen / len(func.instructions) > 1/3:
+        if lateRodataSize / len(func.instructions) > 1/3:
             align = 4
-            if firstRodata is not None:
-                if firstRodata % 8 == 0:
-                    align = 8
+            firstLateRodataVram = lateRodataList[0].vram
+            if firstLateRodataVram is not None and firstLateRodataVram % 8 == 0:
+                align = 8
             f.write(f".late_rodata_alignment {align}\n")
-        for x in lateRodataList:
-            f.write(x)
+        for sym in lateRodataList:
+            f.write(sym.disassemble())
+            f.write("\n")
 
     if len(rdataList) > 0 or len(lateRodataList) > 0:
         f.write("\n")
@@ -157,56 +148,22 @@ def writeSplittedFunctionToFile(f: TextIO, func: symbols.SymbolFunction, rodataF
     # Write the function
     f.write(func.disassemble())
 
-def writeSplitedFunction(path: str, func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata], context: common.Context):
+def writeSplitedFunction(path: str, func: symbols.SymbolFunction, rodataFileList: list[sections.SectionRodata]):
     os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, func.name) + ".s", "w") as f:
-        writeSplittedFunctionToFile(f, func, rodataFileList, context)
+        writeSplittedFunctionToFile(f, func, rodataFileList)
 
 
-def getOtherRodata(vram: int, nextVram: int, rodataSection: sections.SectionRodata, context: common.Context) -> tuple[str|None, list[str]]:
-    rdataList: list[str] = []
-
-    rodataSymbol = context.getGenericSymbol(vram, False)
-    assert rodataSymbol is not None
-
-    # A const variable should not be placed with a function
-    if not rodataSymbol.isMaybeConstVariable():
-        if rodataSymbol.referenceCounter == 1:
-            #continue
-            return None, []
-
-    # print(rodataSymbol.name, rodataSymbol.referenceCounter)
-
-    for rodataSym in rodataSection.symbolList:
-        # TODO: this can be improved a bit
-        assert rodataSym.vram is not None
-        if rodataSym.vram < vram:
-            continue
-        if rodataSym.vram >= nextVram:
-            break
-
-        dis = rodataSym.disassemble()
-        rdataList.append(dis)
-
-    return rodataSymbol.name, rdataList
-
-def writeOtherRodata(path: str, rodataFileList: list[sections.SectionRodata], context: common.Context):
+def writeOtherRodata(path: str, rodataFileList: list[sections.SectionRodata]):
     for rodataSection in rodataFileList:
         rodataPath = os.path.join(path, rodataSection.name)
         os.makedirs(rodataPath, exist_ok=True)
-        sortedSymbolVRams = sorted(rodataSection.symbolsVRams)
 
-        for vram in sortedSymbolVRams:
-            nextVramIndex = sortedSymbolVRams.index(vram) + 1
-            nextVram = 0xFFFFFFFF if nextVramIndex >= len(sortedSymbolVRams) else sortedSymbolVRams[nextVramIndex]
-
-            rodataSymbolName, rdataList = getOtherRodata(vram, nextVram, rodataSection, context)
-            if rodataSymbolName is None:
+        for rodataSym in rodataSection.symbolList:
+            if not rodataSym.isRdata():
                 continue
 
-            rodataSymbolPath = os.path.join(rodataPath, rodataSymbolName) + ".s"
-
+            rodataSymbolPath = os.path.join(rodataPath, rodataSym.name) + ".s"
             with open(rodataSymbolPath, "w") as f:
                 f.write(".rdata\n")
-                for rdata in rdataList:
-                    f.write(rdata)
+                f.write(rodataSym.disassemble())

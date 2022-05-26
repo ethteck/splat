@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from .MipsInstructionConfig import InstructionConfig
-from .MipsConstants import InstructionId, instructionDescriptorDict
+from .MipsConstants import InstructionId, instructionDescriptorDict, InstrType
 from .MipsInstructionBase import InstructionBase
 
 
@@ -129,11 +129,26 @@ class InstructionSpecial(InstructionBase):
 
 
     def disassembleInstruction(self, immOverride: str|None=None) -> str:
+        patch = False
+
+        if self.descriptor.instrType == InstrType.typeR and "code" not in self.descriptor.operands:
+            if "rs" not in self.descriptor.operands and self.rs != 0:
+                patch = True
+            if "rt" not in self.descriptor.operands and self.rt != 0:
+                patch = True
+            if "rd" not in self.descriptor.operands and self.rd != 0 and self.uniqueId != InstructionId.JALR:
+                patch = True
+            if "sa" not in self.descriptor.operands and self.sa != 0:
+                patch = True
+
         if InstructionConfig.SN64_DIV_FIX:
             if self.uniqueId == InstructionId.BREAK:
-                patchedResult = self.disassembleAsData()
-                patchedResult += " # "
-                patchedResult += super().disassembleInstruction(immOverride)
-                return patchedResult
+                patch = True
+
+        if patch:
+            patchedResult = self.disassembleAsData()
+            patchedResult += " # "
+            patchedResult += super().disassembleInstruction(immOverride)
+            return patchedResult
 
         return super().disassembleInstruction(immOverride)

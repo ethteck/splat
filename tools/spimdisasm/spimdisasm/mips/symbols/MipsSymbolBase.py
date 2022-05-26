@@ -41,7 +41,7 @@ class SymbolBase(common.ElementBase):
 
         wordValueHex = ""
         if wordValue is not None:
-            wordValueHex = f"{wordValue:08X} "
+            wordValueHex = f"{common.Utils.beWordToCurrenEndian(wordValue):08X} "
 
         return f"/* {offsetHex} {vramHex}{wordValueHex}*/"
 
@@ -57,6 +57,11 @@ class SymbolBase(common.ElementBase):
 
         offsetSym = self.context.getOffsetSymbol(self.inFileOffset, self.sectionType)
         return self.getLabelFromSymbol(offsetSym)
+
+
+    def isRdata(self) -> bool:
+        "Checks if the current symbol is .rdata"
+        return False
 
 
     def renameBasedOnSection(self):
@@ -88,6 +93,90 @@ class SymbolBase(common.ElementBase):
         self.renameBasedOnSection()
         self.renameBasedOnType()
 
+        if self.contextSym is not None:
+            byteStep = 4
+            if self.contextSym.isByte():
+                byteStep = 1
+            elif self.contextSym.isShort():
+                byteStep = 2
+
+            for i in range(0, self.sizew):
+                localOffset = 4*i
+                for j in range(0, 4, byteStep):
+                    if i == 0 and j == 0:
+                        continue
+                    contextSym = self.getSymbolAtVramOrOffset(localOffset+j)
+                    if contextSym is not None:
+                        contextSym.isDefined = True
+                        contextSym.sectionType = self.sectionType
+                        if contextSym.hasNoType():
+                            contextSym.type = contextSym.type
+
+
+    def getNthWord(self, i: int, canReferenceSymbolsWithAddends: bool=False, canReferenceConstants: bool=False) -> tuple[str, int]:
+        output = ""
+        localOffset = 4*i
+        w = self.words[i]
+
+        isByte = False
+        isShort = False
+        if self.contextSym is not None:
+            if self.contextSym.isByte():
+                isByte = True
+            elif self.contextSym.isShort():
+                isShort = True
+
+        dotType = ".word"
+        byteStep = 4
+        if isByte:
+            dotType = ".byte"
+            byteStep = 1
+        elif isShort:
+            dotType = ".short"
+            byteStep = 2
+
+        for j in range(0, 4, byteStep):
+            label = ""
+            if j != 0 or i != 0:
+                contextSym = self.getSymbolAtVramOrOffset(localOffset+j)
+                if contextSym is not None:
+                    # Possible symbols in the middle
+                    label = "\n" + contextSym.getSymbolLabel() + "\n"
+
+            if isByte:
+                shiftValue = 24 - (j * 8)
+                subVal = (w & (0xFF << shiftValue)) >> shiftValue
+                value = f"0x{subVal:02X}"
+            elif isShort:
+                shiftValue = 16 - (j * 8)
+                subVal = (w & (0xFFFF << shiftValue)) >> shiftValue
+                value = f"0x{subVal:04X}"
+            else:
+                value = f"0x{w:08X}"
+
+                # .elf relocated symbol
+                if len(self.context.relocSymbols[self.sectionType]) > 0:
+                    possibleReference = self.context.getRelocSymbol(self.inFileOffset + localOffset, self.sectionType)
+                    if possibleReference is not None:
+                        value = possibleReference.getNamePlusOffset(w)
+                else:
+                    # This word could be a reference to a symbol
+                    symbolRef = self.context.getGenericSymbol(w, tryPlusOffset=canReferenceSymbolsWithAddends)
+                    if symbolRef is not None:
+                        value = symbolRef.getSymbolPlusOffset(w)
+                    elif canReferenceConstants:
+                        constant = self.context.getConstant(w)
+                        if constant is not None:
+                            value = constant.getName()
+
+            comment = self.generateAsmLineComment(localOffset+j)
+            output += f"{label}{comment} {dotType} {value}"
+            if j == 0 and i < len(self.endOfLineComment):
+                output += self.endOfLineComment[i]
+            output += "\n"
+
+        return output, 0
+
 
     def disassembleAsData(self) -> str:
         output = self.getLabel()
@@ -95,44 +184,14 @@ class SymbolBase(common.ElementBase):
         canReferenceSymbolsWithAddends = self.vram in self.context.dataSymbolsWithReferencesWithAddends
         canReferenceConstants = self.vram in self.context.dataReferencingConstants
 
-        localOffset = 0
         i = 0
+        while i < self.sizew:
+            data, skip = self.getNthWord(i, canReferenceSymbolsWithAddends, canReferenceConstants)
+            output += data
 
-        for w in self.words:
-            label = ""
-            if localOffset != 0:
-                # Possible symbols in the middle
-                contextSym = self.getSymbolAtVramOrOffset(localOffset)
-                if contextSym is not None:
-                    label = "\n" + contextSym.getSymbolLabel() + "\n"
-
-            value = f"0x{w:08X}"
-
-            # .elf relocated symbol
-            if len(self.context.relocSymbols[self.sectionType]) > 0:
-                possibleReference = self.context.getRelocSymbol(self.inFileOffset + localOffset, self.sectionType)
-                if possibleReference is not None:
-                    value = possibleReference.getNamePlusOffset(w)
-
-            # This word could be a reference to a symbol
-            symbol = self.context.getGenericSymbol(w, tryPlusOffset=canReferenceSymbolsWithAddends)
-            if symbol is not None:
-                value = symbol.getSymbolPlusOffset(w)
-            elif canReferenceConstants:
-                constant = self.context.getConstant(w)
-                if constant is not None:
-                    value = constant.name
-
-            comment = self.generateAsmLineComment(localOffset)
-            output += f"{label}{comment} .word {value}"
-            if i < len(self.endOfLineComment):
-                output += self.endOfLineComment[i]
-            output += "\n"
-            localOffset += 4
+            i += skip
             i += 1
-
         return output
-
 
     def disassemble(self) -> str:
         return self.disassembleAsData()

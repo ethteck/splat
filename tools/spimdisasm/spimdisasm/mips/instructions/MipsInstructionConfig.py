@@ -28,14 +28,22 @@ class AbiNames(enum.Enum):
 
 class InstructionConfig:
     NAMED_REGISTERS: bool = True
+    """Enables using named registers
+
+    This option takes precedence over the other named register options"""
 
     GPR_ABI_NAMES: AbiNames = AbiNames.o32
+    """The ABI names to be used for general purpose registers when disassembling the main processor's instructions"""
     FPR_ABI_NAMES: AbiNames = AbiNames.numeric
+    """The ABI names to be used for floating point registers when disassembling the floating point (coprocessor 1) instructions"""
 
     USE_FPCCSR: bool = True
+    """Use FpcCsr as register $31 for the FP control/status register"""
 
     VR4300_COP0_NAMED_REGISTERS: bool = True
+    """Use named registers for VR4300's coprocessor 0 registers"""
     VR4300_RSP_COP0_NAMED_REGISTERS: bool = True
+    """Use named registers for VR4300's RSP's coprocessor 0 registers"""
 
     PSEUDO_INSTRUCTIONS: bool = True
     """Produce pseudo instructions (like `move`, `nop` or `b`) whenever those should match the desired original instruction"""
@@ -55,12 +63,13 @@ class InstructionConfig:
     """The minimal number of characters to left-align the opcode name"""
 
     UNKNOWN_INSTR_COMMENT: bool = True
+    """Generate a pseudo-disassembly comment when disassembling non implemented instructions"""
 
     @staticmethod
     def addParametersToArgParse(parser: argparse.ArgumentParser):
         registerNames = parser.add_argument_group("MIPS register names options")
 
-        registerNames.add_argument("--named-registers", help=f"Disables named registers for every instruction. This flag takes precedence over similar flags in this category. Defaults to {InstructionConfig.NAMED_REGISTERS}", action=argparse.BooleanOptionalAction)
+        registerNames.add_argument("--named-registers", help=f"(Dis)allows named registers for every instruction. This flag takes precedence over similar flags in this category. Defaults to {InstructionConfig.NAMED_REGISTERS}", action=argparse.BooleanOptionalAction)
 
         abi_choices = ["numeric", "32", "o32", "n32", "n64"]
         registerNames.add_argument("--Mgpr-names", help=f"Use GPR names according to the specified ABI. Defaults to {InstructionConfig.GPR_ABI_NAMES.name}", choices=abi_choices)

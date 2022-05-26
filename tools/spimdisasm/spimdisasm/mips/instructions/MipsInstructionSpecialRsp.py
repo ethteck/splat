@@ -57,6 +57,7 @@ class InstructionSpecialRsp(InstructionSpecial):
             if opcode in self.opcodesDict:
                 del self.opcodesDict[opcode]
         self.processUniqueId()
+        self._handwrittenCategory = True
 
 
     def getRegisterName(self, register: int) -> str:

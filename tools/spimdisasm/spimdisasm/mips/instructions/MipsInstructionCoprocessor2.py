@@ -9,4 +9,9 @@ from . import InstructionId, InstructionBase
 
 
 class InstructionCoprocessor2(InstructionBase):
-    pass
+
+    def __init__(self, instr: int):
+        super().__init__(instr)
+
+        self.processUniqueId()
+        self._handwrittenCategory = True

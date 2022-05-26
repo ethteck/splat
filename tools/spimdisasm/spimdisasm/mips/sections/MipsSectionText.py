@@ -26,25 +26,29 @@ class SectionText(SectionBase):
     def nFuncs(self) -> int:
         return len(self.symbolList)
 
+    @staticmethod
+    def wordListToInstructions(wordList: list[int], currentVram: int|None, isRsp: bool=False) -> list[instructions.InstructionBase]:
+        instrsList: list[instructions.InstructionBase] = list()
+        for word in wordList:
+            if isRsp:
+                instr = instructions.wordToInstructionRsp(word)
+            else:
+                instr = instructions.wordToInstruction(word)
+
+            if currentVram is not None:
+                instr.vram = currentVram
+                currentVram += 4
+
+            instrsList.append(instr)
+        return instrsList
+
     def analyze(self):
         functionEnded = False
         farthestBranch = 0
         funcsStartsList = [0]
         unimplementedInstructionsFuncList = []
 
-        currentVram = self.getVramOffset(0)
-        instrsList: list[instructions.InstructionBase] = list()
-        for word in self.words:
-            if self.isRsp:
-                instr = instructions.wordToInstructionRsp(word)
-            else:
-                instr = instructions.wordToInstruction(word)
-
-            if self.vram is not None:
-                instr.vram = currentVram
-
-            instrsList.append(instr)
-            currentVram += 4
+        instrsList = self.wordListToInstructions(self.words, self.getVramOffset(0) if self.vram is not None else None, self.isRsp)
 
         instructionOffset = 0
         currentInstructionStart = 0
@@ -88,64 +92,71 @@ class SectionText(SectionBase):
                 instr = instrsList[index]
                 isInstrImplemented = instr.isImplemented()
 
-            if not self.isRsp and not isLikelyHandwritten:
-                if isinstance(instr, instructions.InstructionCoprocessor2):
-                    isLikelyHandwritten = True
-                elif isinstance(instr, instructions.InstructionCoprocessor0):
-                    isLikelyHandwritten = True
-                elif instr.isIType() and not instr.isFloatInstruction():
-                    if instr.rs in (26, 27): # "$k0", "$k1"
-                        isLikelyHandwritten = True
-                    elif instr.rt in (26, 27): # "$k0", "$k1"
-                        isLikelyHandwritten = True
+            currentVram = self.getVramOffset(instructionOffset)
 
-            if instr.isBranch():
-                branch = common.Utils.from2Complement(instr.immediate, 16) + 1
+            if not self.isRsp and not isLikelyHandwritten:
+                isLikelyHandwritten = instr.isLikelyHandwritten()
+
+            if instr.isBranch() or (common.GlobalConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH and instr.uniqueId == instructions.InstructionId.J):
+                if instr.uniqueId == instructions.InstructionId.J:
+                    branch = instr.getInstrIndexAsVram() - currentVram
+                else:
+                    branch = instr.getBranchOffset()
                 if branch > farthestBranch:
                     # keep track of the farthest branch target
                     farthestBranch = branch
                 if branch < 0:
-                    if branch + index < 0:
+                    if branch + instructionOffset < 0:
                         # Whatever we are reading is not a valid instruction
                         break
                     # make sure to not branch outside of the current function
                     if not isLikelyHandwritten:
                         j = len(funcsStartsList) - 1
                         while j >= 0:
-                            if index + branch < funcsStartsList[j]:
-                                if common.GlobalConfig.TRUST_USER_FUNCTIONS or (common.GlobalConfig.DISASSEMBLE_RSP and self.isRsp):
-                                    vram = self.getVramOffset(funcsStartsList[j]*4)
-                                    if self.context.getFunction(vram) is not None:
-                                        j -= 1
-                                        continue
+                            if (branch + instructionOffset) < funcsStartsList[j] * 4:
+                                vram = self.getVramOffset(funcsStartsList[j]*4)
+                                funcSymbol = self.context.getFunction(vram)
+                                if funcSymbol is not None and funcSymbol.isTrustableFunction(self.isRsp):
+                                    j -= 1
+                                    continue
                                 del funcsStartsList[j]
                                 del unimplementedInstructionsFuncList[j-1]
                             else:
                                 break
                             j -= 1
 
+            elif instr.isJType():
+                target = instr.getInstrIndexAsVram()
+                if not self.isRsp:
+                    if target >= 0x84000000:
+                        # RSP address space?
+                        isLikelyHandwritten = True
+                funcSym = self.context.getFunction(target)
+                if funcSym is None:
+                    if instr.uniqueId == instructions.InstructionId.J and not self.isRsp:
+                        funcSym = self.context.addFakeFunction(target, f".L{target:08X}", isAutogenerated=True)
+                    else:
+                        funcSym = self.context.addFunction(target, None, isAutogenerated=True)
+
             if not (farthestBranch > 0):
                 if instr.uniqueId == instructions.InstructionId.JR:
                     if instr.rs == 31: # $ra
                         functionEnded = True
-                elif instr.uniqueId == instructions.InstructionId.J and (isLikelyHandwritten or (common.GlobalConfig.DISASSEMBLE_RSP and self.isRsp)):
-                    functionEnded = True
+                elif instr.uniqueId == instructions.InstructionId.J:
+                    if isLikelyHandwritten or self.isRsp:
+                        functionEnded = True
 
-            if self.vram is not None:
-                if common.GlobalConfig.TRUST_USER_FUNCTIONS or (common.GlobalConfig.DISASSEMBLE_RSP and self.isRsp):
-                    vram = self.getVramOffset(instructionOffset) + 8
-                    funcContext = self.context.getFunction(vram)
-                    if funcContext is not None:
-                        if funcContext.isUserDeclared or (common.GlobalConfig.DISASSEMBLE_RSP and self.isRsp):
-                            functionEnded = True
+            vram = currentVram + 8
+            funcSymbol = self.context.getFunction(vram)
+            if funcSymbol is not None and funcSymbol.isTrustableFunction(self.isRsp):
+                functionEnded = True
 
-            if currentFunctionSym is not None:
-                if currentFunctionSym.size > 4:
-                    if instructionOffset + 8 == currentInstructionStart + currentFunctionSym.size:
-                            functionEnded = True
+            if currentFunctionSym is not None and currentFunctionSym.size > 4:
+                if instructionOffset + 8 == currentInstructionStart + currentFunctionSym.size:
+                        functionEnded = True
 
             index += 1
-            farthestBranch -= 1
+            farthestBranch -= 4
             instructionOffset += 4
 
         unimplementedInstructionsFuncList.append(not isInstrImplemented)

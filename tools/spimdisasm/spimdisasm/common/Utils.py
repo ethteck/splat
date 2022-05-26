@@ -92,6 +92,17 @@ def wordToFloat(word: int) -> float:
 def qwordToDouble(qword: int) -> float:
     return struct.unpack('>d', struct.pack('>Q', qword))[0]
 
+def beWordToCurrenEndian(word: int) -> int:
+    if GlobalConfig.ENDIAN == InputEndian.BIG:
+        return word
+
+    if GlobalConfig.ENDIAN == InputEndian.LITTLE:
+        return struct.unpack('<I', struct.pack('>I', word))[0]
+
+    # MIDDLE
+    first, second = struct.unpack('>2H', struct.pack('<2H', word >> 16, word & 0xFFFF))
+    return (first << 16) | second
+
 def runCommandGetOutput(command: str, args: list[str]) -> list[str] | None:
     try:
         output = subprocess.check_output([command, *args]).decode("utf-8")

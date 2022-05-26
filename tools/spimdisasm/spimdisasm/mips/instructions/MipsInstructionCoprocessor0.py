@@ -33,6 +33,7 @@ class InstructionCoprocessor0(InstructionBase):
 
         # self.opcodesDict = 
         self.processUniqueId()
+        self._handwrittenCategory = True
 
 
     def processUniqueId(self):
