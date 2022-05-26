@@ -218,6 +218,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Configure spimdisasm
     spimdisasm.common.GlobalConfig.PRODUCE_SYMBOLS_PLUS_OFFSET = True
     spimdisasm.common.GlobalConfig.TRUST_USER_FUNCTIONS = True
+    spimdisasm.common.GlobalConfig.TRUST_JAL_FUNCTIONS = True
     spimdisasm.common.GlobalConfig.GLABEL_ASM_COUNT = False
 
     # spimdisasm is not performing any analyzis on non-text sections so enabling this options is pointless
@@ -236,10 +237,13 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     else:
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
-    if options.get_compiler() == compiler.SN64:
+    selectedCompiler = options.get_compiler()
+    if selectedCompiler == compiler.SN64:
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
         spimdisasm.common.GlobalConfig.ASM_COMMENT = False
+    elif selectedCompiler == compiler.GCC:
+        spimdisasm.common.GlobalConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = True
 
     spimdisasm.common.GlobalConfig.GP_VALUE = options.get_gp()
 
