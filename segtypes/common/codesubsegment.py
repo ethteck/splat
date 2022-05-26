@@ -156,14 +156,14 @@ class CommonSegCodeSubsegment(Segment):
         assert isinstance(insn.uniqueId, spimdisasm.mips.instructions.InstructionId)
         if not sym.access_mnemonic:
             sym.access_mnemonic = insn.uniqueId
-        elif sym.access_mnemonic == spimdisasm.mips.instructions.InstructionId.ADDIU:
-            sym.access_mnemonic = insn.uniqueId
         elif sym.access_mnemonic in self.double_mnemonics:
             return
         elif (
             sym.access_mnemonic in self.float_mnemonics
             and insn.uniqueId in self.double_mnemonics
         ):
+            sym.access_mnemonic = insn.uniqueId
+        elif sym.access_mnemonic == spimdisasm.mips.instructions.InstructionId.ADDIU:
             sym.access_mnemonic = insn.uniqueId
         elif sym.access_mnemonic in self.short_mnemonics:
             return
