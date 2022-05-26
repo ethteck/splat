@@ -33,6 +33,7 @@ options:
   # build_path: build
   # extensions_path: tools/splat_ext
   # auto_all_sections: True
+  # mips_abi_float_regs: o32
 """.lstrip()
 
     with open(rom_path, "rb") as f:

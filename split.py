@@ -232,6 +232,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         options.mnemonic_ljust() - 1
     )
 
+    spimdisasm.mips.instructions.InstructionConfig.GPR_ABI_NAMES = spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_gpr())
+    spimdisasm.mips.instructions.InstructionConfig.FPR_ABI_NAMES = spimdisasm.mips.instructions.AbiNames.fromStr(options.get_mips_abi_float_regs())
+
     if options.get_endianess() == "big":
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG
     else:
