@@ -3,3 +3,4 @@ pylibyaml
 pypng
 colorama
 capstone
+spimdisasm>=1.0.5

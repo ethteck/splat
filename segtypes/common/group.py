@@ -4,7 +4,7 @@ from segtypes.common.segment import CommonSegment
 from segtypes.segment import RomAddr, Segment
 from util import log
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 
 class CommonSegGroup(CommonSegment):

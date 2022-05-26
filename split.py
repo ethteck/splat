@@ -15,7 +15,7 @@ from util import symbols
 from util import palettes
 from util import compiler
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 VERSION = "0.8.2"
 

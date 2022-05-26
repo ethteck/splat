@@ -20,6 +20,7 @@ SN64 = Compiler(
     "SN64",
     asm_function_macro=".globl",
     asm_data_macro=".globl",
+    asm_end_label=".end",
     c_newline="\r\n",
 )
 

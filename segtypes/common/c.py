@@ -9,7 +9,7 @@ from util import log, options
 from util.compiler import GCC, SN64
 from util.symbols import Symbol
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 
 class CommonSegC(CommonSegCodeSubsegment):

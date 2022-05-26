@@ -9,7 +9,7 @@ from util import options
 from util import symbols
 from util.symbols import Symbol
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 # circular import
 if TYPE_CHECKING:

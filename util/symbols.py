@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from util import options, log
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []

@@ -8,7 +8,7 @@ from util import log, options
 from util.range import Range
 from util.symbols import Symbol
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 CODE_TYPES = ["c", "asm", "hasm"]
 

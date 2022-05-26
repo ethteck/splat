@@ -12,7 +12,7 @@ from util.symbols import Instruction, Symbol
 from util import log
 from util import symbols
 
-import tools.spimdisasm.spimdisasm as spimdisasm
+import spimdisasm
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
