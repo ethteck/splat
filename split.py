@@ -45,7 +45,7 @@ def fmt_size(size):
 
 
 def initialize_segments(
-    config_segments: Union[dict, list], context: spimdisasm.common.Context
+    config_segments: Union[dict, list]
 ) -> List[Segment]:
     seen_segment_names: Set[str] = set()
     ret = []
@@ -63,7 +63,7 @@ def initialize_segments(
         next_start = Segment.parse_segment_start(config_segments[i + 1])
 
         segment: Segment = Segment.from_yaml(
-            segment_class, seg_yaml, this_start, next_start, context
+            segment_class, seg_yaml, this_start, next_start
         )
 
         if segment.require_unique_name:
@@ -253,19 +253,16 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.c_newline()
 
-    # Initialize a spimdisasm context
-    context = spimdisasm.common.Context()
-
     if options.get_platform() == "n64":
-        context.fillDefaultBannedSymbols()
+        symbols.spim_context.fillDefaultBannedSymbols()
 
     # Initialize segments
-    all_segments = initialize_segments(config["segments"], context)
+    all_segments = initialize_segments(config["segments"])
 
     # Load and process symbols
     if options.mode_active("code"):
         log.write("Loading and processing symbols")
-        symbols.initialize(all_segments, context)
+        symbols.initialize(all_segments)
 
     # Resolve raster/palette siblings
     if options.mode_active("img"):
@@ -309,15 +306,15 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Pass any new info found by splat to spimdisasm
     for s in symbols.all_symbols:
         if s.type == "func":
-            if s.vram_start in context.symbols:
-                del context.symbols[s.vram_start]
-            contextSym = context.addFunction(s.vram_start, s.name)
+            if s.vram_start in symbols.spim_context.symbols:
+                del symbols.spim_context.symbols[s.vram_start]
+            contextSym = symbols.spim_context.addFunction(s.vram_start, s.name)
             contextSym.isDefined = s.defined
         else:
-            if s.vram_start in context.symbols:
-                contextSym = context.symbols[s.vram_start]
+            if s.vram_start in symbols.spim_context.symbols:
+                contextSym = symbols.spim_context.symbols[s.vram_start]
             else:
-                contextSym = context.addSymbol(s.vram_start, s.name)
+                contextSym = symbols.spim_context.addSymbol(s.vram_start, s.name)
             contextSym.isDefined = s.defined
 
     # Split

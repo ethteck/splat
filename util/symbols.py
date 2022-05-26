@@ -8,6 +8,8 @@ import tools.spimdisasm.spimdisasm as spimdisasm
 all_symbols: "List[Symbol]" = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
+# Initialize a spimdisasm context, used to store symbols and functions
+spim_context: spimdisasm.common.Context = spimdisasm.common.Context()
 
 TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
@@ -21,7 +23,7 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def initialize(all_segments, context: spimdisasm.common.Context):
+def initialize(all_segments):
     global all_symbols
     global symbol_ranges
 
@@ -132,17 +134,17 @@ def initialize(all_segments, context: spimdisasm.common.Context):
                         all_symbols.append(sym)
 
                         if sym.type == "func":
-                            contextSym = context.addFunction(addr, name)
+                            contextSym = spim_context.addFunction(addr, name)
                             contextSym.size = sym.size
                             contextSym.isUserDeclared = True
                         else:
                             if sym.type == "unknown":
                                 # People may have not typed functions properly, so just assume everything could be a function for now...
-                                contextSym = context.addFunction(addr, name)
+                                contextSym = spim_context.addFunction(addr, name)
                                 contextSym.size = sym.size
                                 contextSym.isUserDeclared = True
 
-                            contextSym = context.addSymbol(addr, name)
+                            contextSym = spim_context.addSymbol(addr, name)
                             if sym.type != "data":
                                 contextSym.type = sym.type
                             contextSym.size = sym.size

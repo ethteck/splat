@@ -21,7 +21,6 @@ class CommonSegCode(CommonSegGroup):
         type,
         name,
         vram_start,
-        context: spimdisasm.common.Context,
         extract,
         given_subalign,
         given_is_overlay,
@@ -35,7 +34,6 @@ class CommonSegCode(CommonSegGroup):
             type,
             name,
             vram_start,
-            context,
             extract,
             given_subalign,
             given_is_overlay,
@@ -87,7 +85,6 @@ class CommonSegCode(CommonSegGroup):
                         rep_type,
                         base[0],
                         vram_start,
-                        self.context,
                         False,
                         self.given_subalign,
                         self.given_is_overlay,
@@ -207,7 +204,7 @@ class CommonSegCode(CommonSegGroup):
 
             # Add dummy segments to be expanded later
             if typ.startswith("all_"):
-                ret.append(Segment(start, "auto", typ, "", "auto", self.context))
+                ret.append(Segment(start, "auto", typ, "", "auto"))
                 continue
 
             segment_class = Segment.get_class_for_type(typ)
@@ -229,7 +226,7 @@ class CommonSegCode(CommonSegGroup):
                 vram = self.get_most_parent().rom_to_ram(start)
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsection_yaml, start, end, self.context, vram
+                segment_class, subsection_yaml, start, end, vram
             )
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
@@ -276,7 +273,6 @@ class CommonSegCode(CommonSegGroup):
                         "all_" + section,
                         "",
                         vram_start,
-                        self.context,
                     )
                 ),
             )
