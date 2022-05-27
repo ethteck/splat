@@ -232,7 +232,9 @@ def get_subalign() -> int:
 def auto_all_sections() -> List[str]:
     val = opts.get("auto_all_sections", [".data", ".rodata", ".bss"])
     if not isinstance(val, list):
-        raise RuntimeError("auto_all_sections must be a list (for example, [\".data\", \".rodata\", \".bss\"])")
+        raise RuntimeError(
+            'auto_all_sections must be a list (for example, [".data", ".rodata", ".bss"])'
+        )
     return val
 
 
