@@ -231,6 +231,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if not jtbl_func:
             return False
 
+        # A label of a jump table shouldn't point to the start of the function
+        if word == jtbl_func.vram_start:
+            return False
+
         for i in range(4, len(bytes), 4):
             word = int.from_bytes(bytes[i : i + 4], options.get_endianess())
 
@@ -239,6 +243,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 # Allow jump tables that are of a minimum length and end in 0s
                 if i < min_jtbl_len or any(b != 0 for b in bytes[i:]):
                     return False
+
+            # A label of a jump table shouldn't point to the start of the function
+            if word == jtbl_func.vram_start:
+                return False
 
         # Mark this symbol as a jump table and record the jump table for later
         sym.type = "jtbl"
