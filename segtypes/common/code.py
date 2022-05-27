@@ -54,12 +54,12 @@ class CommonSegCode(CommonSegGroup):
     # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):
         if self.section_boundaries[".rodata"].is_complete():
-            assert(self.section_boundaries[".rodata"].start is not None)
-            assert(self.section_boundaries[".rodata"].end is not None)
+            assert self.section_boundaries[".rodata"].start is not None
+            assert self.section_boundaries[".rodata"].end is not None
 
-            rodata_start:int = self.section_boundaries[".rodata"].start
-            rodata_end:int = self.section_boundaries[".rodata"].end
-            if (rodata_start <= sym.vram_start < rodata_end):
+            rodata_start: int = self.section_boundaries[".rodata"].start
+            rodata_end: int = self.section_boundaries[".rodata"].end
+            if rodata_start <= sym.vram_start < rodata_end:
                 if func_addr not in self.rodata_syms:
                     self.rodata_syms[func_addr] = []
                 self.rodata_syms[func_addr].append(sym)

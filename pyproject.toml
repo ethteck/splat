@@ -1,6 +1,0 @@
-[tool.black]
-extend-exclude = '''
-/(
-    segtypes/n64/pygfxd/*
-)/
-'''

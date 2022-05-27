@@ -81,8 +81,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                         new_sym_ram_start = self.get_most_parent().rom_to_ram(
                             new_sym_rom_start
                         )
-                        assert(sym.rom is not None)
-                        assert(new_sym_ram_start is not None)
+                        assert sym.rom is not None
+                        assert new_sym_ram_start is not None
                         sym.size = new_sym_rom_start - sym.rom
 
                         # It turns out this isn't a valid jump table, so create a new symbol where it breaks
@@ -132,7 +132,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             )
 
         # Make a dummy symbol here that marks the end of the previous symbol's disasm range
-        assert(self.vram_end is not None)
+        assert self.vram_end is not None
         ret.append(Symbol(self.vram_end))
 
         while True:

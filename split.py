@@ -15,7 +15,7 @@ from util import symbols
 from util import palettes
 from util import compiler
 
-VERSION = "0.8.2"
+VERSION = "0.9.0"
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
