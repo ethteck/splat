@@ -3,3 +3,4 @@ pylibyaml
 pypng
 colorama
 spimdisasm>=1.0.6
+pygfxd

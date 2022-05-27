@@ -226,10 +226,14 @@ def get_subalign() -> int:
     return opts.get("subalign", 16)
 
 
-# Determines whether to automatically configure the linker script to link against common sections for all files
-# when the yaml doesn't have specific configurations for these sections. See release notes for details
-def auto_all_sections() -> bool:
-    return opts.get("auto_all_sections", False)
+# The following option determines whether to automatically configure the linker script to link against
+# specified sections for all "base" (asm/c) files when the yaml doesn't have specific configurations
+# for these sections. See release notes for details
+def auto_all_sections() -> List[str]:
+    val = opts.get("auto_all_sections", [".data", ".rodata", ".bss"])
+    if not isinstance(val, list):
+        raise RuntimeError("auto_all_sections must be a list (for example, [\".data\", \".rodata\", \".bss\"])")
+    return val
 
 
 # Determines the desired path to the linker symbol header, which exposes externed definitions for all segment ram/rom start/end locations

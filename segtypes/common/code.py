@@ -106,10 +106,13 @@ class CommonSegCode(CommonSegGroup):
     ) -> "OrderedDict[str, int]":
         inserts = OrderedDict()
 
-        section_order = self.section_order
+        section_order = self.section_order.copy()
         section_order.remove(".text")
 
         for i, section in enumerate(section_order):
+            if section not in options.auto_all_sections():
+                continue
+
             if not found_sections[section].has_start():
                 search_done = False
                 for j in range(i - 1, -1, -1):
@@ -145,52 +148,51 @@ class CommonSegCode(CommonSegGroup):
             return []
 
         # Mark any manually added dot types
-        if options.auto_all_sections():
-            cur_section = None
+        cur_section = None
 
-            for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
-                # rompos marker
-                if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
-                    if cur_section is not None:
+        for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
+            # rompos marker
+            if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
+                if cur_section is not None:
+                    # End the current section
+                    found_sections[cur_section].end = i
+                    cur_section = None
+                continue
+
+            typ = Segment.parse_segment_type(subsection_yaml)
+            if typ.startswith("all_"):
+                typ = typ[4:]
+            if not typ.startswith("."):
+                typ = f".{typ}"
+
+            if typ in found_sections:
+                if cur_section is None:
+                    # Starting point
+                    found_sections[typ].start = i
+                    cur_section = typ
+                else:
+                    if cur_section != typ:
+                        # We're changing sections
+                        if found_sections[cur_section].has_end():
+                            log.error(
+                                f"Section {cur_section} end encountered but was already ended earlier!"
+                            )
+                        if found_sections[typ].has_start():
+                            log.error(
+                                f"Section {typ} start encounted but has already started earlier!"
+                            )
+
                         # End the current section
                         found_sections[cur_section].end = i
-                        cur_section = None
-                    continue
 
-                typ = Segment.parse_segment_type(subsection_yaml)
-                if typ.startswith("all_"):
-                    typ = typ[4:]
-                if not typ.startswith("."):
-                    typ = f".{typ}"
-
-                if typ in found_sections:
-                    if cur_section is None:
-                        # Starting point
+                        # Start the next section
                         found_sections[typ].start = i
                         cur_section = typ
-                    else:
-                        if cur_section != typ:
-                            # We're changing sections
-                            if found_sections[cur_section].has_end():
-                                log.error(
-                                    f"Section {cur_section} end encountered but was already ended earlier!"
-                                )
-                            if found_sections[typ].has_start():
-                                log.error(
-                                    f"Section {typ} start encounted but has already started earlier!"
-                                )
 
-                            # End the current section
-                            found_sections[cur_section].end = i
+        if cur_section is not None:
+            found_sections[cur_section].end = len(segment_yaml["subsegments"])
 
-                            # Start the next section
-                            found_sections[typ].start = i
-                            cur_section = typ
-
-            if cur_section is not None:
-                found_sections[cur_section].end = len(segment_yaml["subsegments"])
-
-            inserts = self.find_inserts(found_sections)
+        inserts = self.find_inserts(found_sections)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
             # rompos marker

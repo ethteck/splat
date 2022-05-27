@@ -1,5 +1,8 @@
 # splat Release Notes
 
+## 0.9.0: BSS, GFX, Refactoring
+* TODO talk about auto_all_sections removal and replacement options
+
 ## 0.8.0: Arbitrary Section Order
 * You can now use the option `section_order` to define the binary section order for your target binary. By default, this is `[".text", ".data", ".rodata", ".bss"]`. See options.py for more details
 * Documented all options in options.py
