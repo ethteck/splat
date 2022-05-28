@@ -324,16 +324,13 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Pass any new info found by splat to spimdisasm
     for s in symbols.all_symbols:
         if s.type == "func":
-            if s.vram_start in symbols.spim_context.symbols:
-                del symbols.spim_context.symbols[s.vram_start]
-            contextSym = symbols.spim_context.addFunction(s.vram_start, s.name)
-            contextSym.isDefined = s.defined
+            context_sym = symbols.spim_context.addFunction(s.vram_start)
         else:
-            if s.vram_start in symbols.spim_context.symbols:
-                contextSym = symbols.spim_context.symbols[s.vram_start]
-            else:
-                contextSym = symbols.spim_context.addSymbol(s.vram_start, s.name)
-            contextSym.isDefined = s.defined
+            context_sym = symbols.spim_context.addSymbol(s.vram_start)
+        if s.defined:
+            context_sym.isDefined = s.defined
+        if s.given_name:
+            context_sym.name = s.given_name
 
     # Split
     log.write("Starting split")

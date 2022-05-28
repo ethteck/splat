@@ -134,20 +134,10 @@ def initialize(all_segments):
 
                         if sym.type == "func":
                             contextSym = spim_context.addFunction(addr, name)
-                            contextSym.size = sym.size
-                            contextSym.isUserDeclared = True
                         else:
-                            if sym.type == "unknown":
-                                # People may have not typed functions properly, so just assume everything could be a function for now...
-                                contextSym = spim_context.addFunction(addr, name)
-                                contextSym.size = sym.size
-                                contextSym.isUserDeclared = True
-
                             contextSym = spim_context.addSymbol(addr, name)
-                            if sym.type != "data":
-                                contextSym.type = sym.type
-                            contextSym.size = sym.size
-                            contextSym.isUserDeclared = True
+                        contextSym.size = sym.size
+                        contextSym.isUserDeclared = True
 
                         # Symbol ranges
                         if sym.size > 4:
