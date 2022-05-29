@@ -49,12 +49,15 @@ class CommonSegCodeSubsegment(Segment):
             overlay_category = ""
 
         self.text_section = spimdisasm.mips.sections.SectionText(
-            symbols.spim_context, self.rom_start, self.rom_end,
+            symbols.spim_context,
+            self.rom_start,
+            self.rom_end,
             self.vram_start,
             self.name,
-            rom_bytes, self.get_most_parent().rom_start, overlay_category
+            rom_bytes,
+            self.get_most_parent().rom_start,
+            overlay_category,
         )
-
 
         for symbol_list in self.seg_symbols.values():
             for sym in symbol_list:
@@ -101,7 +104,9 @@ class CommonSegCodeSubsegment(Segment):
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referenced_vram in func_spim.referencedVRams:
-            context_sym = self.text_section.getSymbol(referenced_vram, tryPlusOffset=False)
+            context_sym = self.text_section.getSymbol(
+                referenced_vram, tryPlusOffset=False
+            )
             if context_sym is not None:
                 if context_sym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
                     continue
@@ -123,7 +128,9 @@ class CommonSegCodeSubsegment(Segment):
             )
 
             if label_sym is not None:
-                context_sym = self.text_section.getSymbol(label_vram, tryPlusOffset=False)
+                context_sym = self.text_section.getSymbol(
+                    label_vram, tryPlusOffset=False
+                )
                 if context_sym is not None:
                     context_sym.name = label_sym.name
             else:
@@ -142,18 +149,22 @@ class CommonSegCodeSubsegment(Segment):
                     sym_address, offsets=True, reference=True
                 )
 
-                context_sym = self.text_section.getSymbol(sym_address, tryPlusOffset=False)
+                context_sym = self.text_section.getSymbol(
+                    sym_address, tryPlusOffset=False
+                )
                 if context_sym is not None:
                     if context_sym.isDefined:
                         sym.defined = True
 
-                if (
-                    insn.uniqueId
-                    in self.double_mnemonics
-                    + self.word_mnemonics
-                    + self.float_mnemonics
-                    + self.short_mnemonics
-                    + self.byte_mnemonics
+                if any(
+                    insn.uniqueId in mnemonics
+                    for mnemonics in (
+                        self.double_mnemonics,
+                        self.word_mnemonics,
+                        self.float_mnemonics,
+                        self.short_mnemonics,
+                        self.byte_mnemonics,
+                    )
                 ):
                     self.update_access_mnemonic(sym, insn)
 

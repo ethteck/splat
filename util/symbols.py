@@ -147,7 +147,9 @@ def initialize_spim_context(all_segments) -> None:
     for segment in all_segments:
         if segment.type == "code":
             # We only care about the VRAMs of code segments
-            if isinstance(segment.vram_start, int) and isinstance(segment.vram_end, int):
+            if isinstance(segment.vram_start, int) and isinstance(
+                segment.vram_end, int
+            ):
                 if global_vram_start is None:
                     global_vram_start = segment.vram_start
                 else:
@@ -164,13 +166,20 @@ def initialize_spim_context(all_segments) -> None:
                     # TODO: ETHAAAAAAAN if you see this code while working on the overlay stuff, could you udpate it to use the new overlay categories/types? thanksh
                     # overlay_category = segment.overlay_category
                     overlay_category = ""
-                    spim_context.addOverlaySegment(overlay_category, segment.rom_start, segment.vram_start, segment.vram_end)
+                    spim_context.addOverlaySegment(
+                        overlay_category,
+                        segment.rom_start,
+                        segment.vram_start,
+                        segment.vram_end,
+                    )
 
     if global_vram_start is not None and global_vram_end is not None:
         spim_context.globalSegment.changeRange(global_vram_start, global_vram_end)
 
 
-def add_symbol_to_spim_section(section: spimdisasm.common.ElementBase, sym: "Symbol") -> spimdisasm.common.ContextSymbol:
+def add_symbol_to_spim_section(
+    section: spimdisasm.common.ElementBase, sym: "Symbol"
+) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
         context_sym = section.addFunction(sym.vram_start)
     elif sym.type == "jtbl":
