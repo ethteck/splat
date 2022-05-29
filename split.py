@@ -281,6 +281,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     if options.mode_active("code"):
         log.write("Loading and processing symbols")
         symbols.initialize(all_segments)
+        symbols.initialize_spim_context(all_segments)
 
     # Resolve raster/palette siblings
     if options.mode_active("img"):
@@ -322,15 +323,15 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         log.dot(status=segment.status())
 
     # Pass any new info found by splat to spimdisasm
-    for s in symbols.all_symbols:
-        if s.type == "func":
-            context_sym = symbols.spim_context.addFunction(s.vram_start)
-        else:
-            context_sym = symbols.spim_context.addSymbol(s.vram_start)
-        if s.defined:
-            context_sym.isDefined = s.defined
-        if s.given_name:
-            context_sym.name = s.given_name
+    # for s in symbols.all_symbols:
+    #     if s.type == "func":
+    #         context_sym = symbols.spim_context.addFunction(s.vram_start)
+    #     else:
+    #         context_sym = symbols.spim_context.addSymbol(s.vram_start)
+    #     if s.defined:
+    #         context_sym.isDefined = s.defined
+    #     if s.given_name:
+    #         context_sym.name = s.given_name
 
     # Split
     log.write("Starting split")

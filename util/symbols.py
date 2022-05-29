@@ -130,20 +130,67 @@ def initialize(all_segments):
                                     if attr_name == "extract":
                                         sym.extract = tf_val
                                         continue
+                        sym.user_declared = True
                         all_symbols.append(sym)
-
-                        if sym.type == "func":
-                            contextSym = spim_context.addFunction(addr, name)
-                        else:
-                            contextSym = spim_context.addSymbol(addr, name)
-                        contextSym.size = sym.size
-                        contextSym.isUserDeclared = True
 
                         # Symbol ranges
                         if sym.size > 4:
                             symbol_ranges.append(sym)
 
                         is_symbol_isolated(sym, all_segments)
+
+
+def initialize_spim_context(all_segments) -> None:
+    global_vram_start = None
+    global_vram_end = None
+
+    for segment in all_segments:
+        if segment.type == "code":
+            # We only care about the VRAMs of code segments
+            if isinstance(segment.vram_start, int) and isinstance(segment.vram_end, int):
+                if global_vram_start is None:
+                    global_vram_start = segment.vram_start
+                else:
+                    if segment.vram_start < global_vram_start:
+                        global_vram_start = segment.vram_start
+
+                if global_vram_end is None:
+                    global_vram_end = segment.vram_end
+                else:
+                    if global_vram_end < segment.vram_end:
+                        global_vram_end = segment.vram_end
+
+                if segment.is_overlay:
+                    # TODO: ETHAAAAAAAN if you see this code while working on the overlay stuff, could you udpate it to use the new overlay categories/types? thanksh
+                    # overlay_category = segment.overlay_category
+                    overlay_category = ""
+                    spim_context.addOverlaySegment(overlay_category, segment.rom_start, segment.vram_start, segment.vram_end)
+
+    if global_vram_start is not None and global_vram_end is not None:
+        spim_context.globalSegment.changeRange(global_vram_start, global_vram_end)
+
+
+def add_symbol_to_spim_section(section: spimdisasm.common.ElementBase, sym: "Symbol") -> spimdisasm.common.ContextSymbol:
+    if sym.type == "func":
+        context_sym = section.addFunction(sym.vram_start)
+    elif sym.type == "jtbl":
+        context_sym = section.addJumpTable(sym.vram_start)
+    else:
+        context_sym = section.addSymbol(sym.vram_start)
+        if sym.type and sym.type != "unknown":
+            context_sym.type = sym.type
+
+    if sym.user_declared:
+        context_sym.isUserDeclared = True
+    if sym.defined:
+        context_sym.isDefined = True
+    if sym.given_name:
+        context_sym.name = sym.given_name
+    if sym.rom is not None:
+        context_sym.vromAddress = sym.rom
+    context_sym.size = sym.size
+
+    return context_sym
 
 
 def is_symbol_isolated(symbol, all_segments):
@@ -239,3 +286,4 @@ class Symbol:
         self.disasm_str = None
         self.dead = False
         self.extract = True
+        self.user_declared: bool = False
