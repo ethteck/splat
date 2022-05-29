@@ -135,7 +135,7 @@ class Segment:
         vram_start,
         extract=True,
         given_subalign=options.get_subalign(),
-        given_is_overlay: Optional[bool] = False,
+        overlay: Optional[str] = None,
         given_dir: Path = Path(),
         args=[],
         yaml={},
@@ -148,7 +148,7 @@ class Segment:
         self.extract = extract
 
         self.given_subalign = given_subalign
-        self.given_is_overlay = given_is_overlay
+        self.overlay = overlay
         self.given_dir = given_dir
         self.given_seg_symbols: Dict[
             int, List[Symbol]
@@ -197,8 +197,8 @@ class Segment:
         vram_start = vram if vram is not None else parse_segment_vram(yaml)
         extract = bool(yaml.get("extract", True)) if isinstance(yaml, dict) else True
         given_subalign = parse_segment_subalign(yaml)
-        given_is_overlay: Optional[bool] = (
-            yaml.get("overlay", False) if isinstance(yaml, dict) else False
+        overlay: Optional[str] = (
+            yaml.get("overlay") if isinstance(yaml, dict) else None
         )
         given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
         args: List[str] = [] if isinstance(yaml, dict) else yaml[3:]
@@ -211,7 +211,7 @@ class Segment:
             vram_start,
             extract,
             given_subalign,
-            given_is_overlay,
+            overlay,
             given_dir,
             args,
             yaml,
@@ -241,9 +241,12 @@ class Segment:
     def is_overlay(self) -> bool:
         if self.parent:
             return self.parent.is_overlay
-        if self.given_is_overlay is not None:
-            return self.given_is_overlay
-        return False
+        return self.overlay is not None
+
+    def get_overlay(self) -> Optional[str]:
+        if self.parent:
+            return self.parent.get_overlay()
+        return self.overlay
 
     @property
     def seg_symbols(self) -> Dict[int, List[Symbol]]:
@@ -414,6 +417,7 @@ class Segment:
             return None
         return items[0]
 
+    # TODO add logic here / in retrieve_symbol / in symbols.py for handling overlay classes...
     def get_symbol(
         self,
         addr: int,
@@ -451,8 +455,7 @@ class Segment:
             symbols.all_symbols.append(ret)
 
             if in_segment:
-                if self.is_overlay:
-                    ret.in_overlay = True
+                ret.overlay = self.get_overlay()
                 if addr not in self.seg_symbols:
                     self.seg_symbols[addr] = []
                 self.seg_symbols[addr].append(ret)

@@ -42,12 +42,6 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     def scan_code(self, rom_bytes, is_asm=False):
-        # TODO: ETHAAAAAAAN if you see this code while working on the overlay stuff, could you udpate it to use the new overlay categories/types? thanksh
-        overlay_category = None
-        if self.is_overlay:
-            # overlay_category = segment.overlay_category
-            overlay_category = ""
-
         self.text_section = spimdisasm.mips.sections.SectionText(
             symbols.spim_context,
             self.rom_start,
@@ -56,7 +50,7 @@ class CommonSegCodeSubsegment(Segment):
             self.name,
             rom_bytes,
             self.get_most_parent().rom_start,
-            overlay_category,
+            self.get_overlay(),
         )
 
         for symbol_list in self.seg_symbols.values():

@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 import spimdisasm
+from segtypes import segment
 
 from util import options, log
 
@@ -22,7 +22,7 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def initialize(all_segments):
+def initialize(all_segments: List[segment.Segment]):
     global all_symbols
     global symbol_ranges
 
@@ -120,16 +120,16 @@ def initialize(all_segments):
                                         )
                                         log.write([*TRUEY_VALS, *FALSEY_VALS])
                                         log.error("")
-
-                                    if attr_name == "dead":
-                                        sym.dead = tf_val
-                                        continue
-                                    if attr_name == "defined":
-                                        sym.defined = tf_val
-                                        continue
-                                    if attr_name == "extract":
-                                        sym.extract = tf_val
-                                        continue
+                                    else:
+                                        if attr_name == "dead":
+                                            sym.dead = tf_val
+                                            continue
+                                        if attr_name == "defined":
+                                            sym.defined = tf_val
+                                            continue
+                                        if attr_name == "extract":
+                                            sym.extract = tf_val
+                                            continue
                         sym.user_declared = True
                         all_symbols.append(sym)
 
@@ -140,7 +140,7 @@ def initialize(all_segments):
                         is_symbol_isolated(sym, all_segments)
 
 
-def initialize_spim_context(all_segments) -> None:
+def initialize_spim_context(all_segments: List[segment.Segment]) -> None:
     global_vram_start = None
     global_vram_end = None
 
@@ -164,11 +164,8 @@ def initialize_spim_context(all_segments) -> None:
                             global_vram_end = segment.vram_end
 
                 else:
-                    # TODO: ETHAAAAAAAN if you see this code while working on the overlay stuff, could you udpate it to use the new overlay categories/types? thanksh
-                    # overlay_category = segment.overlay_category
-                    overlay_category = ""
                     spim_context.addOverlaySegment(
-                        overlay_category,
+                        segment.get_overlay(),
                         segment.rom_start,
                         segment.vram_start,
                         segment.vram_end,
@@ -243,7 +240,7 @@ class Symbol:
     def default_name(self) -> str:
         suffix = f"_{self.vram_start:X}"
 
-        if self.in_overlay:
+        if self.overlay is not None:
             suffix += f"_{self.rom:X}"
 
         if self.type == "func":
@@ -279,17 +276,17 @@ class Symbol:
         given_name: str = "",
         rom: Optional[int] = None,
         type: Optional[str] = "unknown",
-        in_overlay: bool = False,
+        overlay: Optional[str] = None,
         size: int = 4,
     ):
         self.defined: bool = False
         self.referenced: bool = False
-        self.vram_start: int = vram
-        self.rom: Optional[int] = rom
-        self.type: Optional[str] = type
-        self.in_overlay: bool = in_overlay
-        self.size: int = size
-        self.given_name: str = given_name
+        self.vram_start = vram
+        self.rom = rom
+        self.type = type
+        self.overlay = overlay
+        self.size = size
+        self.given_name = given_name
         self.access_mnemonic: Optional[
             spimdisasm.mips.instructions.InstructionId
         ] = None
