@@ -1,6 +1,9 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 import spimdisasm
-from segtypes import segment
+
+# circular import
+if TYPE_CHECKING:
+    from segtypes import segment
 
 from util import options, log
 
@@ -22,7 +25,7 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def initialize(all_segments: List[segment.Segment]):
+def initialize(all_segments: "List[segment.Segment]"):
     global all_symbols
     global symbol_ranges
 
@@ -140,7 +143,7 @@ def initialize(all_segments: List[segment.Segment]):
                         is_symbol_isolated(sym, all_segments)
 
 
-def initialize_spim_context(all_segments: List[segment.Segment]) -> None:
+def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
     global_vram_start = None
     global_vram_end = None
 
