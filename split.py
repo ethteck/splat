@@ -218,6 +218,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     global config
 
     log.write(f"splat {VERSION}")
+    log.write(f"Powered by spimdisasm {spimdisasm.__version__}")
 
     # Load config
     config = {}
