@@ -140,7 +140,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 )
                 assert func_sym is not None
 
-                if func.name in self.global_asm_funcs or is_new_c_file:
+                if func.getName() in self.global_asm_funcs or is_new_c_file:
                     self.create_c_asm_file(func, asm_out_dir, func_sym)
 
     def get_c_preamble(self):
@@ -232,7 +232,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 and func.instructions[1].uniqueId
                 == spimdisasm.mips.instructions.InstructionId.NOP
             ):
-                c_lines.append("void " + func.name + "(void) {")
+                c_lines.append("void " + func.getName() + "(void) {")
                 c_lines.append("}")
             else:
                 if options.get_compiler() in [GCC, SN64]:
@@ -241,15 +241,15 @@ class CommonSegC(CommonSegCodeSubsegment):
                             options.get_nonmatchings_path()
                         )
                         c_lines.append(
-                            f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func.name});'
+                            f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func.getName()});'
                         )
                     else:
                         c_lines.append(
-                            f'INCLUDE_ASM("{asm_out_dir / self.name}", {func.name});'
+                            f'INCLUDE_ASM("{asm_out_dir / self.name}", {func.getName()});'
                         )
                 else:
                     asm_outpath = Path(
-                        os.path.join(asm_out_dir, self.name, func.name + ".s")
+                        os.path.join(asm_out_dir, self.name, func.getName() + ".s")
                     )
                     rel_asm_outpath = os.path.relpath(
                         asm_outpath, options.get_base_path()
