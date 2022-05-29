@@ -143,6 +143,7 @@ class CommonSegCode(CommonSegGroup):
         found_sections = OrderedDict(
             (s_name, Range()) for s_name in self.section_boundaries
         )  # Stores yaml index where a section was first found
+        found_sections.pop(".text")
 
         if "subsegments" not in segment_yaml:
             return []
@@ -153,10 +154,6 @@ class CommonSegCode(CommonSegGroup):
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
             # rompos marker
             if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
-                if cur_section is not None:
-                    # End the current section
-                    found_sections[cur_section].end = i
-                    cur_section = None
                 continue
 
             typ = Segment.parse_segment_type(subsection_yaml)
