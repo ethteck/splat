@@ -150,19 +150,20 @@ def initialize_spim_context(all_segments) -> None:
             if isinstance(segment.vram_start, int) and isinstance(
                 segment.vram_end, int
             ):
-                if global_vram_start is None:
-                    global_vram_start = segment.vram_start
-                else:
-                    if segment.vram_start < global_vram_start:
+                if not segment.is_overlay:
+                    if global_vram_start is None:
                         global_vram_start = segment.vram_start
+                    else:
+                        if segment.vram_start < global_vram_start:
+                            global_vram_start = segment.vram_start
 
-                if global_vram_end is None:
-                    global_vram_end = segment.vram_end
-                else:
-                    if global_vram_end < segment.vram_end:
+                    if global_vram_end is None:
                         global_vram_end = segment.vram_end
+                    else:
+                        if global_vram_end < segment.vram_end:
+                            global_vram_end = segment.vram_end
 
-                if segment.is_overlay:
+                else:
                     # TODO: ETHAAAAAAAN if you see this code while working on the overlay stuff, could you udpate it to use the new overlay categories/types? thanksh
                     # overlay_category = segment.overlay_category
                     overlay_category = ""
