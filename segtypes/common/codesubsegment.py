@@ -134,12 +134,6 @@ class CommonSegCodeSubsegment(Segment):
             instr_offset = i * 4
             insn_address = func_sym.vram_start + instr_offset
 
-            if insn == spimdisasm.mips.instructions.InstructionId.JR:
-                # Record potential jtbl jumps
-                rs = insn.getRegisterName(insn.rs)
-                if rs not in ["$ra", "$31"]:
-                    self.parent.jtbl_jumps[insn_address] = rs
-
             # update pointer accesses from this function
             if instr_offset in func_spim.pointersPerInstruction:
                 sym_address = func_spim.pointersPerInstruction[instr_offset]
