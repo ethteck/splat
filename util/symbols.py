@@ -153,7 +153,8 @@ def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
             if isinstance(segment.vram_start, int) and isinstance(
                 segment.vram_end, int
             ):
-                if not segment.is_overlay:
+                overlay = segment.get_overlay()
+                if overlay is None:
                     if global_vram_start is None:
                         global_vram_start = segment.vram_start
                     else:
@@ -168,7 +169,7 @@ def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
 
                 else:
                     spim_context.addOverlaySegment(
-                        segment.get_overlay(),
+                        overlay,
                         segment.rom_start,
                         segment.vram_start,
                         segment.vram_end,
@@ -185,6 +186,10 @@ def add_symbol_to_spim_section(
         context_sym = section.addFunction(sym.vram_start)
     elif sym.type == "jtbl":
         context_sym = section.addJumpTable(sym.vram_start)
+    elif sym.type == "jtbl_label":
+        context_sym = section.addJumpTableLabel(sym.vram_start)
+    elif sym.type == "label":
+        context_sym = section.addBranchLabel(sym.vram_start)
     else:
         context_sym = section.addSymbol(sym.vram_start)
         if sym.type and sym.type != "unknown":

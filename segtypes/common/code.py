@@ -41,7 +41,6 @@ class CommonSegCode(CommonSegGroup):
         )
 
         self.reported_file_split = False
-        self.labels_to_add = set()
         self.jtbl_glabels_to_add = set()
         self.jumptables: Dict[int, Tuple[int, int]] = {}
         self.rodata_syms: Dict[int, List[Symbol]] = {}

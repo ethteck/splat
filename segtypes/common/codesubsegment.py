@@ -125,8 +125,6 @@ class CommonSegCodeSubsegment(Segment):
                 )
                 if context_sym is not None:
                     context_sym.name = label_sym.name
-            else:
-                self.parent.labels_to_add.add(label_vram)
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
@@ -137,31 +135,31 @@ class CommonSegCodeSubsegment(Segment):
             if instr_offset in func_spim.pointersPerInstruction:
                 sym_address = func_spim.pointersPerInstruction[instr_offset]
 
-                sym = self.parent.create_symbol(
-                    sym_address, offsets=True, reference=True
-                )
 
                 context_sym = self.text_section.getSymbol(
                     sym_address, tryPlusOffset=False
                 )
                 if context_sym is not None:
+                    sym = self.parent.create_symbol(
+                        sym_address, offsets=True, reference=True
+                    )
                     if context_sym.isDefined:
                         sym.defined = True
 
-                if any(
-                    insn.uniqueId in mnemonics
-                    for mnemonics in (
-                        self.double_mnemonics,
-                        self.word_mnemonics,
-                        self.float_mnemonics,
-                        self.short_mnemonics,
-                        self.byte_mnemonics,
-                    )
-                ):
-                    self.update_access_mnemonic(sym, insn)
+                    if any(
+                        insn.uniqueId in mnemonics
+                        for mnemonics in (
+                            self.double_mnemonics,
+                            self.word_mnemonics,
+                            self.float_mnemonics,
+                            self.short_mnemonics,
+                            self.byte_mnemonics,
+                        )
+                    ):
+                        self.update_access_mnemonic(sym, insn)
 
-                if self.parent:
-                    self.parent.check_rodata_sym(func_spim.vram, sym)
+                    if self.parent:
+                        self.parent.check_rodata_sym(func_spim.vram, sym)
 
     def update_access_mnemonic(
         self, sym: Symbol, insn: spimdisasm.mips.instructions.InstructionBase
