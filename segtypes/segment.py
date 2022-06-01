@@ -432,18 +432,14 @@ class Segment:
         return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
 
     def retrieve_symbol(
-        self, d: Dict[int, List[Symbol]], k: int, t: Optional[str]
+        self, syms: Dict[int, List[Symbol]], addr: int
     ) -> Optional[Symbol]:
-        if k not in d:
+        if addr not in syms:
             return None
 
-        if t:
-            items = [
-                s for s in d[k] if s.type == t or s.type == "unknown" or s.type is None
-            ]
-        else:
-            items = d[k]
+        items = syms[addr]
 
+        # Filter out symbols that are in different top-level segments with the same unique_ram_id
         items = [
             i
             for i in items
@@ -475,9 +471,9 @@ class Segment:
         if in_segment:
             # If the vram address is within this segment, we can calculate the symbol's rom address
             rom = self.ram_to_rom(addr)
-            ret = self.retrieve_symbol(self.seg_symbols, addr, type)
+            ret = self.retrieve_symbol(self.seg_symbols, addr)
         elif not local_only:
-            ret = self.retrieve_symbol(self.ext_symbols, addr, type)
+            ret = self.retrieve_symbol(self.ext_symbols, addr)
 
         # Search for symbol ranges
         if not ret and offsets:
