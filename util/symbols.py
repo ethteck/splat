@@ -266,25 +266,25 @@ class Symbol:
 
         ret = ret.replace("$VRAM", f"{self.vram_start:08X}")
 
-        if self.rom is None:
-            log.error(
-                "Attempting to rom-name a symbol with no ROM address:" + str(self)
-            )
-        ret = ret.replace("$ROM", f"{self.rom:X}")
+        if "$ROM" in ret:
+            if not isinstance(self.rom, int):
+                log.error(
+                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:X} typed {self.type}"
+                )
+            ret = ret.replace("$ROM", f"{self.rom:X}")
 
-        if self.segment is None:
-            log.error(
-                "Attempting to segment-name a symbol with no segment defined:"
-                + str(self)
-            )
-        assert self.segment is not None
-        ret = ret.replace("$SEG", self.segment.name)
+        if "$SEG" in ret:
+            if self.segment is None:
+                # This probably is fine - we can't expect every symbol to have a segment. Fall back to just the ram address
+                return f"{self.vram_start:X}"
+            assert self.segment is not None
+            ret = ret.replace("$SEG", self.segment.name)
 
         return ret
 
     @property
     def default_name(self) -> str:
-        if self.rom is not None:
+        if isinstance(self.rom, int):
             if self.segment is not None:
                 suffix = self.format_name(self.segment.symbol_name_format)
             else:

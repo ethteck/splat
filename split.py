@@ -279,9 +279,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     all_segments = initialize_segments(config["segments"])
 
     # Load and process symbols
+    symbols.initialize(all_segments)
     if options.mode_active("code"):
         log.write("Loading and processing symbols")
-        symbols.initialize(all_segments)
         symbols.initialize_spim_context(all_segments)
 
     # Resolve raster/palette siblings
