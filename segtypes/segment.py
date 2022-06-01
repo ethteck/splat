@@ -134,6 +134,13 @@ class Segment:
             return options.get_symbol_name_format()
 
     @staticmethod
+    def parse_segment_symbol_name_format_shared_vram(segment: Union[dict, list]) -> str:
+        if isinstance(segment, dict) and "symbol_name_format_shared_vram" in segment:
+            return str(segment["symbol_name_format_shared_vram"])
+        else:
+            return options.get_symbol_name_format_shared_vram()
+
+    @staticmethod
     def parse_segment_symbol_name_format_no_rom(segment: Union[dict, list]) -> str:
         if isinstance(segment, dict) and "symbol_name_format_no_rom" in segment:
             return str(segment["symbol_name_format_no_rom"])
@@ -153,6 +160,7 @@ class Segment:
         bss_size: int = 0,
         given_dir: Path = Path(),
         symbol_name_format: str = options.get_symbol_name_format(),
+        symbol_name_format_shared_vram: str = options.get_symbol_name_format_shared_vram(),
         symbol_name_format_no_rom: str = options.get_symbol_name_format_no_rom(),
         args=[],
         yaml={},
@@ -179,6 +187,7 @@ class Segment:
         self.given_section_order: List[str] = options.get_section_order()
 
         self.given_symbol_name_format = symbol_name_format
+        self.given_symbol_name_format_shared_vram = symbol_name_format_shared_vram
         self.given_symbol_name_format_no_rom = symbol_name_format_no_rom
 
         self.parent: Optional[Segment] = None
@@ -224,6 +233,7 @@ class Segment:
         bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
         given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
         given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
+        given_symbol_name_format_shared_vram = Segment.parse_segment_symbol_name_format_shared_vram(yaml)
         given_symbol_name_format_no_rom = (
             Segment.parse_segment_symbol_name_format_no_rom(yaml)
         )
@@ -241,6 +251,7 @@ class Segment:
             bss_size=bss_size,
             given_dir=given_dir,
             symbol_name_format=given_symbol_name_format,
+            symbol_name_format_shared_vram=given_symbol_name_format_shared_vram,
             symbol_name_format_no_rom=given_symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
@@ -262,6 +273,10 @@ class Segment:
     @property
     def symbol_name_format(self) -> str:
         return self.given_symbol_name_format
+
+    @property
+    def symbol_name_format_shared_vram(self) -> str:
+        return self.given_symbol_name_format_shared_vram
 
     @property
     def symbol_name_format_no_rom(self) -> str:

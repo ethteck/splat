@@ -115,7 +115,7 @@ class CommonSegCodeSubsegment(Segment):
 
         for label_offset in func_spim.localLabels:
             label_vram = func_spim.getVramOffset(label_offset)
-            label_sym = self.parent.get_symbol(
+            label_sym = self.parent.create_symbol(
                 label_vram, type="label", reference=True, local_only=True
             )
 
@@ -124,12 +124,13 @@ class CommonSegCodeSubsegment(Segment):
                     label_vram, tryPlusOffset=False
                 )
                 if context_sym is not None:
-                    context_sym.name = label_sym.name
+                    context_sym.nameGetCallback = lambda _: label_sym.name
+                    if label_sym.rom is not None:
+                        context_sym.vromAddress = label_sym.rom
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             instr_offset = i * 4
-            insn_address = func_sym.vram_start + instr_offset
 
             # update pointer accesses from this function
             if instr_offset in func_spim.pointersPerInstruction:
@@ -144,6 +145,7 @@ class CommonSegCodeSubsegment(Segment):
                     )
                     if context_sym.isDefined:
                         sym.defined = True
+                    context_sym.nameGetCallback = lambda _: sym.name
 
                     if any(
                         insn.uniqueId in mnemonics

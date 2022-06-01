@@ -285,12 +285,18 @@ class Symbol:
     def default_name(self) -> str:
         if isinstance(self.rom, int):
             if self.segment is not None:
-                suffix = self.format_name(self.segment.symbol_name_format)
+                if self.segment.exclusive_ram_id:
+                    suffix = self.format_name(self.segment.symbol_name_format_shared_vram)
+                else:
+                    suffix = self.format_name(self.segment.symbol_name_format)
             else:
-                suffix = self.format_name(options.get_symbol_name_format())
+                suffix = self.format_name(options.get_symbol_name_format_shared_vram())
         else:
             if self.segment is not None:
-                suffix = self.format_name(self.segment.symbol_name_format_no_rom)
+                if self.segment.exclusive_ram_id:
+                    suffix = self.format_name(self.segment.symbol_name_format_no_rom)
+                else:
+                    suffix = self.format_name(self.segment.symbol_name_format)
             else:
                 suffix = self.format_name(options.get_symbol_name_format_no_rom())
 
