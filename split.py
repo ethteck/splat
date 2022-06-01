@@ -193,10 +193,14 @@ def configure_disassembler():
         )
         spimdisasm.common.GlobalConfig.ASM_COMMENT = False
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
+        spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.SN64
     elif selectedCompiler == compiler.GCC:
         spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = (
             True
         )
+        spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.GCC
+    elif selectedCompiler == compiler.IDO:
+        spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
 
     spimdisasm.common.GlobalConfig.GP_VALUE = options.get_gp()
 
