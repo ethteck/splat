@@ -92,7 +92,7 @@ class CommonSegCodeSubsegment(Segment):
         self.parent: CommonSegCode = self.parent
 
         func_sym = self.parent.create_symbol(func_spim.vram, type="func", define=True)
-        func_sym.given_name = func_spim.getName()
+        func_spim.contextSym.name = func_sym.name
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referenced_vram in func_spim.referencedVRams:

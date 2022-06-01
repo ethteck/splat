@@ -216,8 +216,9 @@ def add_symbol_to_spim_section(
         context_sym.isUserDeclared = True
     if sym.defined:
         context_sym.isDefined = True
-    if sym.given_name:
-        context_sym.name = sym.given_name
+    # if sym.given_name:
+    #     context_sym.name = sym.given_name
+    context_sym.name = sym.name
     if sym.rom is not None:
         context_sym.vromAddress = sym.rom
     context_sym.size = sym.size
