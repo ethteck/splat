@@ -503,6 +503,9 @@ class Segment:
                 ret.defined = True
             if reference:
                 ret.referenced = True
+            if create:
+                if not ret.user_declared and type is not None and ret.type is None:
+                    ret.type = type
 
         return ret
 
