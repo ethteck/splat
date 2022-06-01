@@ -28,13 +28,7 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
 
     wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[start_offset:])
 
-    for word in wordList:
-        insn = spimdisasm.mips.instructions.wordToInstruction(word)
-        insn.vram = vram
-
-        if not insn.isImplemented():
-            break
-
+    for insn in spimdisasm.mips.instructions.wordsToInstructionsIter(wordList, vram):
         # insn.rs == $ra
         if (
             insn.uniqueId == spimdisasm.mips.instructions.InstructionId.JR
@@ -42,7 +36,6 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
         ):
             last_return = rom_addr
         rom_addr += 4
-        vram += 4
         if end_offset and rom_addr >= end_offset:
             break
 

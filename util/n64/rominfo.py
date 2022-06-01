@@ -200,10 +200,7 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
     vram = entry_point
     wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[0x1000:])
 
-    for word in wordList:
-        insn = spimdisasm.mips.instructions.wordToInstruction(word)
-        insn.vram = vram
-
+    for insn in spimdisasm.mips.instructions.wordsToInstructionsIter(wordList, vram):
         if not insn.isImplemented():
             break
 
@@ -211,7 +208,6 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
             jumps += 1
         elif insn.uniqueId == spimdisasm.mips.instructions.InstructionId.B:
             branches += 1
-        vram += 4
 
     compiler = "IDO" if branches > jumps else "GCC"
     if print_result:
