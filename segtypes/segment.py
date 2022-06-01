@@ -150,6 +150,7 @@ class Segment:
         extract: bool = True,
         given_subalign: int = options.get_subalign(),
         exclusive_ram_id: Optional[str] = None,
+        bss_size: int = 0,
         given_dir: Path = Path(),
         symbol_name_format: str = options.get_symbol_name_format(),
         symbol_name_format_no_rom: str = options.get_symbol_name_format_no_rom(),
@@ -165,6 +166,7 @@ class Segment:
 
         self.given_subalign = given_subalign
         self.exclusive_ram_id = exclusive_ram_id
+        self.bss_size = bss_size
         self.given_dir = given_dir
         self.given_seg_symbols: Dict[
             int, List[Symbol]
@@ -219,6 +221,7 @@ class Segment:
         exclusive_ram_id: Optional[str] = (
             yaml.get("exclusive_ram_id") if isinstance(yaml, dict) else None
         )
+        bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
         given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
         given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
         given_symbol_name_format_no_rom = (
@@ -235,6 +238,7 @@ class Segment:
             extract=extract,
             given_subalign=given_subalign,
             exclusive_ram_id=exclusive_ram_id,
+            bss_size=bss_size,
             given_dir=given_dir,
             symbol_name_format=given_symbol_name_format,
             symbol_name_format_no_rom=given_symbol_name_format_no_rom,
@@ -299,7 +303,7 @@ class Segment:
     @property
     def vram_end(self) -> Optional[int]:
         if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.size
+            return self.vram_start + self.size + self.bss_size
         else:
             return None
 
