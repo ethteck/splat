@@ -105,6 +105,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         endian = options.get_endianess()
 
         # Find inter-data symbols
+        assert isinstance(self.rom_start, int) and isinstance(self.rom_end, int)
         for i in range(self.rom_start, self.rom_end, 4):
             bits = int.from_bytes(rom_bytes[i : i + 4], endian)
             if self.contains_vram(bits):

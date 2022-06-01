@@ -15,8 +15,10 @@ class N64SegImg(N64Segment):
         vram_start,
         extract,
         given_subalign,
-        overlay,
+        exclusive_ram_id,
         given_dir,
+        symbol_name_format,
+        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -28,10 +30,12 @@ class N64SegImg(N64Segment):
             vram_start,
             extract,
             given_subalign,
-            overlay,
+            exclusive_ram_id,
             given_dir,
-            args,
-            yaml,
+            symbol_name_format=symbol_name_format,
+            symbol_name_format_no_rom=symbol_name_format_no_rom,
+            args=args,
+            yaml=yaml,
         )
 
         if isinstance(yaml, dict):

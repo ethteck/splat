@@ -224,7 +224,6 @@ class CommonSegC(CommonSegCodeSubsegment):
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             # Terrible hack to "auto-decompile" empty functions
-            # TODO move disassembly into funcs_text or somewhere we can access it from here
             if (
                 options.get_auto_decompile_empty_functions()
                 and func.instructions[0].uniqueId

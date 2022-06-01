@@ -3,7 +3,7 @@ import spimdisasm
 
 # circular import
 if TYPE_CHECKING:
-    from segtypes import segment
+    from segtypes.segment import Segment
 
 from util import options, log
 
@@ -25,12 +25,18 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def initialize(all_segments: "List[segment.Segment]"):
+def initialize(all_segments: "List[Segment]"):
     global all_symbols
     global symbol_ranges
 
     all_symbols = []
     symbol_ranges = []
+
+    def get_seg_for_name(name: str) -> Optional["Segment"]:
+        for segment in all_segments:
+            if segment.name == name:
+                return segment
+        return None
 
     # Manual list of func name / addrs
     for path in options.get_symbol_addrs_paths():
@@ -100,6 +106,17 @@ def initialize(all_segments: "List[segment.Segment]"):
                                             rom_addr = int(attr_val, 0)
                                             sym.rom = rom_addr
                                             continue
+                                        if attr_name == "segment":
+                                            seg = get_seg_for_name(attr_val)
+                                            if seg is None:
+                                                log.parsing_error_preamble(
+                                                    path, line_num, line
+                                                )
+                                                log.write(
+                                                    f"Cannot find segment '{attr_val}'"
+                                                )
+                                                log.error("")
+                                            sym.segment = seg
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
                                         log.write(
@@ -143,7 +160,7 @@ def initialize(all_segments: "List[segment.Segment]"):
                         is_symbol_isolated(sym, all_segments)
 
 
-def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
+def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vram_start = None
     global_vram_end = None
 
@@ -153,8 +170,8 @@ def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
             if isinstance(segment.vram_start, int) and isinstance(
                 segment.vram_end, int
             ):
-                overlay = segment.get_overlay()
-                if overlay is None:
+                ram_id = segment.get_exclusive_ram_id()
+                if ram_id is None:
                     if global_vram_start is None:
                         global_vram_start = segment.vram_start
                     else:
@@ -169,7 +186,7 @@ def initialize_spim_context(all_segments: "List[segment.Segment]") -> None:
 
                 else:
                     spim_context.addOverlaySegment(
-                        overlay,
+                        ram_id,
                         segment.rom_start,
                         segment.vram_start,
                         segment.vram_end,
@@ -244,12 +261,39 @@ def retrieve_from_ranges(vram, rom=None):
 
 
 class Symbol:
+    def format_name(self, format: str) -> str:
+        ret = format
+
+        ret = ret.replace("$VRAM", f"{self.vram_start:08X}")
+
+        if self.rom is None:
+            log.error(
+                "Attempting to rom-name a symbol with no ROM address:" + str(self)
+            )
+        ret = ret.replace("$ROM", f"{self.rom:X}")
+
+        if self.segment is None:
+            log.error(
+                "Attempting to segment-name a symbol with no segment defined:"
+                + str(self)
+            )
+        assert self.segment is not None
+        ret = ret.replace("$SEG", self.segment.name)
+
+        return ret
+
     @property
     def default_name(self) -> str:
-        suffix = f"_{self.vram_start:X}"
-
-        if self.overlay is not None:
-            suffix += f"_{self.rom:X}"
+        if self.rom is not None:
+            if self.segment is not None:
+                suffix = self.format_name(self.segment.symbol_name_format)
+            else:
+                suffix = self.format_name(options.get_symbol_name_format())
+        else:
+            if self.segment is not None:
+                suffix = self.format_name(self.segment.symbol_name_format_no_rom)
+            else:
+                suffix = self.format_name(options.get_symbol_name_format_no_rom())
 
         if self.type == "func":
             prefix = "func"
@@ -258,7 +302,7 @@ class Symbol:
         else:
             prefix = "D"
 
-        return prefix + suffix
+        return f"{prefix}_{suffix}"
 
     @property
     def rom_end(self):
@@ -281,18 +325,17 @@ class Symbol:
     def __init__(
         self,
         vram: int,
-        given_name: str = "",
+        given_name: Optional[str] = None,
         rom: Optional[int] = None,
         type: Optional[str] = "unknown",
-        overlay: Optional[str] = None,
         size: int = 4,
+        segment: Optional["Segment"] = None,
     ):
         self.defined: bool = False
         self.referenced: bool = False
         self.vram_start = vram
         self.rom = rom
         self.type = type
-        self.overlay = overlay
         self.size = size
         self.given_name = given_name
         self.access_mnemonic: Optional[
@@ -302,3 +345,4 @@ class Symbol:
         self.dead = False
         self.extract = True
         self.user_declared: bool = False
+        self.segment = segment

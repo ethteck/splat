@@ -50,7 +50,7 @@ class CommonSegCodeSubsegment(Segment):
             self.name,
             rom_bytes,
             self.get_most_parent().rom_start,
-            self.get_overlay(),
+            self.get_exclusive_ram_id(),
         )
 
         for symbol_list in self.seg_symbols.values():
@@ -134,7 +134,6 @@ class CommonSegCodeSubsegment(Segment):
             # update pointer accesses from this function
             if instr_offset in func_spim.pointersPerInstruction:
                 sym_address = func_spim.pointersPerInstruction[instr_offset]
-
 
                 context_sym = self.text_section.getSymbol(
                     sym_address, tryPlusOffset=False

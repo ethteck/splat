@@ -1,7 +1,7 @@
 import importlib
 import importlib.util
 
-from typing import Dict, TYPE_CHECKING, Type, Union, Optional, List
+from typing import Any, Dict, TYPE_CHECKING, Type, Union, Optional, List
 from pathlib import Path
 
 from util import log
@@ -41,7 +41,7 @@ class Segment:
     require_unique_name = True
 
     @staticmethod
-    def get_class_for_type(seg_type):
+    def get_class_for_type(seg_type) -> type["Segment"]:
         # so .data loads SegData, for example
         if seg_type.startswith("."):
             seg_type = seg_type[1:]
@@ -126,17 +126,33 @@ class Segment:
         else:
             return str(cls.get_default_name(rom_start))
 
+    @staticmethod
+    def parse_segment_symbol_name_format(segment: Union[dict, list]) -> str:
+        if isinstance(segment, dict) and "symbol_name_format" in segment:
+            return str(segment["symbol_name_format"])
+        else:
+            return options.get_symbol_name_format()
+
+    @staticmethod
+    def parse_segment_symbol_name_format_no_rom(segment: Union[dict, list]) -> str:
+        if isinstance(segment, dict) and "symbol_name_format_no_rom" in segment:
+            return str(segment["symbol_name_format_no_rom"])
+        else:
+            return options.get_symbol_name_format_no_rom()
+
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        extract=True,
-        given_subalign=options.get_subalign(),
-        overlay: Optional[str] = None,
+        rom_start: RomAddr,
+        rom_end: RomAddr,
+        type: str,
+        name: str,
+        vram_start: Any,
+        extract: bool = True,
+        given_subalign: int = options.get_subalign(),
+        exclusive_ram_id: Optional[str] = None,
         given_dir: Path = Path(),
+        symbol_name_format: str = options.get_symbol_name_format(),
+        symbol_name_format_no_rom: str = options.get_symbol_name_format_no_rom(),
         args=[],
         yaml={},
     ):
@@ -148,7 +164,7 @@ class Segment:
         self.extract = extract
 
         self.given_subalign = given_subalign
-        self.overlay = overlay
+        self.exclusive_ram_id = exclusive_ram_id
         self.given_dir = given_dir
         self.given_seg_symbols: Dict[
             int, List[Symbol]
@@ -159,6 +175,9 @@ class Segment:
             {}
         )  # Symbols not in this segment but also not from other overlapping ram address ranges
         self.given_section_order: List[str] = options.get_section_order()
+
+        self.given_symbol_name_format = symbol_name_format
+        self.given_symbol_name_format_no_rom = symbol_name_format_no_rom
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
@@ -197,24 +216,30 @@ class Segment:
         vram_start = vram if vram is not None else parse_segment_vram(yaml)
         extract = bool(yaml.get("extract", True)) if isinstance(yaml, dict) else True
         given_subalign = parse_segment_subalign(yaml)
-        overlay: Optional[str] = (
-            yaml.get("overlay") if isinstance(yaml, dict) else None
+        exclusive_ram_id: Optional[str] = (
+            yaml.get("exclusive_ram_id") if isinstance(yaml, dict) else None
         )
         given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
+        given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
+        given_symbol_name_format_no_rom = (
+            Segment.parse_segment_symbol_name_format_no_rom(yaml)
+        )
         args: List[str] = [] if isinstance(yaml, dict) else yaml[3:]
 
         ret = cls(
-            rom_start,
-            rom_end,
-            type,
-            name,
-            vram_start,
-            extract,
-            given_subalign,
-            overlay,
-            given_dir,
-            args,
-            yaml,
+            rom_start=rom_start,
+            rom_end=rom_end,
+            type=type,
+            name=name,
+            vram_start=vram_start,
+            extract=extract,
+            given_subalign=given_subalign,
+            exclusive_ram_id=exclusive_ram_id,
+            given_dir=given_dir,
+            symbol_name_format=given_symbol_name_format,
+            symbol_name_format_no_rom=given_symbol_name_format_no_rom,
+            args=args,
+            yaml=yaml,
         )
         cls.given_section_order = parse_segment_section_order(yaml)
         return ret
@@ -231,22 +256,24 @@ class Segment:
             return self.given_dir
 
     @property
+    def symbol_name_format(self) -> str:
+        return self.given_symbol_name_format
+
+    @property
+    def symbol_name_format_no_rom(self) -> str:
+        return self.given_symbol_name_format_no_rom
+
+    @property
     def subalign(self) -> int:
         if self.parent:
             return self.parent.subalign
         else:
             return self.given_subalign
 
-    @property
-    def is_overlay(self) -> bool:
+    def get_exclusive_ram_id(self) -> Optional[str]:
         if self.parent:
-            return self.parent.is_overlay
-        return self.overlay is not None
-
-    def get_overlay(self) -> Optional[str]:
-        if self.parent:
-            return self.parent.get_overlay()
-        return self.overlay
+            return self.parent.get_exclusive_ram_id()
+        return self.exclusive_ram_id
 
     @property
     def seg_symbols(self) -> Dict[int, List[Symbol]]:
@@ -398,6 +425,12 @@ class Segment:
     def get_default_name(addr) -> str:
         return f"{addr:X}"
 
+    @staticmethod
+    def visible_ram(seg1: "Segment", seg2: "Segment") -> bool:
+        if seg1.get_most_parent() == seg2.get_most_parent():
+            return True
+        return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
+
     def retrieve_symbol(
         self, d: Dict[int, List[Symbol]], k: int, t: Optional[str]
     ) -> Optional[Symbol]:
@@ -411,13 +444,18 @@ class Segment:
         else:
             items = d[k]
 
+        items = [
+            i
+            for i in items
+            if i.segment is None or Segment.visible_ram(self, i.segment)
+        ]
+
         if len(items) > 1:
             pass  # print(f"Trying to retrieve {k:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
         if len(items) == 0:
             return None
         return items[0]
 
-    # TODO add logic here / in retrieve_symbol / in symbols.py for handling overlay classes...
     def get_symbol(
         self,
         addr: int,
@@ -455,7 +493,7 @@ class Segment:
             symbols.all_symbols.append(ret)
 
             if in_segment:
-                ret.overlay = self.get_overlay()
+                ret.segment = self
                 if addr not in self.seg_symbols:
                     self.seg_symbols[addr] = []
                 self.seg_symbols[addr].append(ret)

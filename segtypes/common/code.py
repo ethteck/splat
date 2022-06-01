@@ -21,8 +21,10 @@ class CommonSegCode(CommonSegGroup):
         vram_start,
         extract,
         given_subalign,
-        overlay,
+        exclusive_ram_id,
         given_dir,
+        symbol_name_format,
+        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -34,10 +36,12 @@ class CommonSegCode(CommonSegGroup):
             vram_start,
             extract,
             given_subalign,
-            overlay,
+            exclusive_ram_id,
             given_dir,
-            args,
-            yaml,
+            symbol_name_format=symbol_name_format,
+            symbol_name_format_no_rom=symbol_name_format_no_rom,
+            args=args,
+            yaml=yaml,
         )
 
         self.reported_file_split = False
@@ -71,23 +75,27 @@ class CommonSegCode(CommonSegGroup):
                 replace_class = Segment.get_class_for_type(rep_type)
 
                 for base in base_segs.items():
-                    if isinstance(elem.rom_start, int):
+                    if isinstance(elem.rom_start, int) and isinstance(
+                        self.rom_start, int
+                    ):
                         # Shoddy rom to ram
                         vram_start = elem.rom_start - self.rom_start + self.vram_start
                     else:
                         vram_start = "auto"
                     rep: Segment = replace_class(
-                        elem.rom_start,
-                        elem.rom_end,
-                        rep_type,
-                        base[0],
-                        vram_start,
-                        False,
-                        self.given_subalign,
-                        self.overlay,
-                        self.given_dir,
-                        [],
-                        {},
+                        rom_start=elem.rom_start,
+                        rom_end=elem.rom_end,
+                        type=rep_type,
+                        name=base[0],
+                        vram_start=vram_start,
+                        extract=False,
+                        given_subalign=self.given_subalign,
+                        exclusive_ram_id=self.exclusive_ram_id,
+                        given_dir=self.given_dir,
+                        symbol_name_format=self.symbol_name_format,
+                        symbol_name_format_no_rom=self.symbol_name_format_no_rom,
+                        args=[],
+                        yaml={},
                     )
                     rep.sibling = base[1]
                     rep.parent = self
@@ -187,7 +195,7 @@ class CommonSegCode(CommonSegGroup):
                         cur_section = typ
 
         if cur_section is not None:
-            found_sections[cur_section].end = len(segment_yaml["subsegments"])
+            found_sections[cur_section].end = -1
 
         inserts = self.find_inserts(found_sections)
 
