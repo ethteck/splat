@@ -100,7 +100,7 @@ def initialize(all_segments: "List[Segment]"):
                                             continue
                                         if attr_name == "size":
                                             size = int(attr_val, 0)
-                                            sym.size = size
+                                            sym.given_size = size
                                             continue
                                         if attr_name == "rom":
                                             rom_addr = int(attr_val, 0)
@@ -161,6 +161,8 @@ def initialize(all_segments: "List[Segment]"):
 
 
 def initialize_spim_context(all_segments: "List[Segment]") -> None:
+    global_vrom_start = None
+    global_vrom_end = None
     global_vram_start = None
     global_vram_end = None
 
@@ -184,31 +186,46 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                         if global_vram_end < segment.vram_end:
                             global_vram_end = segment.vram_end
 
+                    if isinstance(segment.rom_start, int):
+                        if global_vrom_start is None:
+                            global_vrom_start = segment.rom_start
+                        else:
+                            if segment.rom_start < global_vrom_start:
+                                global_vrom_start = segment.rom_start
+
+                    if isinstance(segment.rom_end, int):
+                        if global_vrom_end is None:
+                            global_vrom_end = segment.rom_end
+                        else:
+                            if global_vrom_end < segment.rom_end:
+                                global_vrom_end = segment.rom_end
+
                 else:
                     spim_context.addOverlaySegment(
                         ram_id,
                         segment.rom_start,
+                        segment.rom_end,
                         segment.vram_start,
                         segment.vram_end,
                     )
 
-    if global_vram_start is not None and global_vram_end is not None:
-        spim_context.globalSegment.changeRange(global_vram_start, global_vram_end)
+    if global_vram_start is not None and global_vram_end is not None and global_vrom_start is not None and global_vrom_end is not None:
+        spim_context.globalSegment.changeRanges(global_vrom_start, global_vrom_end, global_vram_start, global_vram_end)
 
 
 def add_symbol_to_spim_section(
     section: spimdisasm.common.ElementBase, sym: "Symbol"
 ) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
-        context_sym = section.addFunction(sym.vram_start)
+        context_sym = section.addFunction(sym.vram_start, symbolVrom=sym.rom)
     elif sym.type == "jtbl":
-        context_sym = section.addJumpTable(sym.vram_start)
+        context_sym = section.addJumpTable(sym.vram_start, symbolVrom=sym.rom)
     elif sym.type == "jtbl_label":
-        context_sym = section.addJumpTableLabel(sym.vram_start)
+        context_sym = section.addJumpTableLabel(sym.vram_start, symbolVrom=sym.rom)
     elif sym.type == "label":
-        context_sym = section.addBranchLabel(sym.vram_start)
+        context_sym = section.addBranchLabel(sym.vram_start, symbolVrom=sym.rom)
     else:
-        context_sym = section.addSymbol(sym.vram_start)
+        context_sym = section.addSymbol(sym.vram_start, symbolVrom=sym.rom)
         if sym.type and sym.type != "unknown":
             context_sym.type = sym.type
 
@@ -219,7 +236,8 @@ def add_symbol_to_spim_section(
     context_sym.nameGetCallback = lambda _: sym.name
     if sym.rom is not None:
         context_sym.vromAddress = sym.rom
-    context_sym.size = sym.size
+    if sym.given_size is not None:
+        context_sym.size = sym.size
 
     return context_sym
 
@@ -285,7 +303,7 @@ class Symbol:
     def default_name(self) -> str:
         if isinstance(self.rom, int):
             if self.segment is not None:
-                if self.segment.exclusive_ram_id:
+                if self.segment.get_exclusive_ram_id():
                     suffix = self.format_name(self.segment.symbol_name_format_shared_vram)
                 else:
                     suffix = self.format_name(self.segment.symbol_name_format)
@@ -293,7 +311,7 @@ class Symbol:
                 suffix = self.format_name(options.get_symbol_name_format_shared_vram())
         else:
             if self.segment is not None:
-                if self.segment.exclusive_ram_id:
+                if self.segment.get_exclusive_ram_id():
                     suffix = self.format_name(self.segment.symbol_name_format_no_rom)
                 else:
                     suffix = self.format_name(self.segment.symbol_name_format)
@@ -304,6 +322,10 @@ class Symbol:
             prefix = "func"
         elif self.type == "jtbl":
             prefix = "jtbl"
+        elif self.type == "jtbl_label":
+            return f"L{suffix}"
+        elif self.type == "label":
+            return f".L{suffix}"
         else:
             prefix = "D"
 
@@ -321,6 +343,12 @@ class Symbol:
     def name(self) -> str:
         return self.given_name if self.given_name else self.default_name
 
+    @property
+    def size(self) -> int:
+        if self.given_size is not None:
+            return self.given_size
+        return 4
+
     def contains_vram(self, offset):
         return offset >= self.vram_start and offset < self.vram_end
 
@@ -333,7 +361,7 @@ class Symbol:
         given_name: Optional[str] = None,
         rom: Optional[int] = None,
         type: Optional[str] = "unknown",
-        size: int = 4,
+        given_size: Optional[int] = None,
         segment: Optional["Segment"] = None,
     ):
         self.defined: bool = False
@@ -341,7 +369,7 @@ class Symbol:
         self.vram_start = vram
         self.rom = rom
         self.type = type
-        self.size = size
+        self.given_size = given_size
         self.given_name = given_name
         self.access_mnemonic: Optional[
             spimdisasm.mips.instructions.InstructionId

@@ -135,8 +135,8 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             for func in self.text_section.symbolList:
                 assert func.vram is not None
-                func_sym = self.parent.get_symbol(
-                    func.vram, type="func", local_only=True
+                func_sym = self.get_most_parent().get_symbol(
+                    func.vram, in_segment=True, type="func", local_only=True
                 )
                 assert func_sym is not None
 

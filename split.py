@@ -79,7 +79,7 @@ def get_segment_symbols(segment, all_segments):
 
     for symbol in symbols.all_symbols:
         if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
-            if segment.contains_vram(symbol.vram_start):
+            if symbol.segment == segment or (not segment.exclusive_ram_id and segment.contains_vram(symbol.vram_start)):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
                 seg_syms[symbol.vram_start].append(symbol)
@@ -183,11 +183,12 @@ def configure_disassembler():
     else:
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
+    spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
+
     selectedCompiler = options.get_compiler()
     if selectedCompiler == compiler.SN64:
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
-        spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
         spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = (
             True
         )
@@ -392,7 +393,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and not s.dead and not s.type == "func"
+            if not s.defined and not s.dead and not s.type == "func"
         ]
         to_write.sort(key=lambda x: x.vram_start)
 

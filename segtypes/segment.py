@@ -474,6 +474,7 @@ class Segment:
     def get_symbol(
         self,
         addr: int,
+        in_segment: bool = False,
         type: Optional[str] = None,
         create: bool = False,
         define: bool = False,
@@ -484,8 +485,6 @@ class Segment:
     ) -> Optional[Symbol]:
         ret = None
         rom = None
-
-        in_segment = self.contains_vram(addr)
 
         if in_segment:
             # If the vram address is within this segment, we can calculate the symbol's rom address
@@ -525,12 +524,16 @@ class Segment:
             if create:
                 if not ret.user_declared and type is not None and ret.type is None:
                     ret.type = type
+            if in_segment:
+                if ret.segment is None:
+                    ret.segment = self
 
         return ret
 
     def create_symbol(
         self,
         addr: int,
+        in_segment: bool,
         type: Optional[str] = None,
         define: bool = False,
         reference: bool = False,
@@ -540,6 +543,7 @@ class Segment:
     ) -> Symbol:
         ret = self.get_symbol(
             addr,
+            in_segment=in_segment,
             type=type,
             create=True,
             define=define,
