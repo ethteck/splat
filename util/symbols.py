@@ -301,20 +301,16 @@ class Symbol:
 
     @property
     def default_name(self) -> str:
-        if isinstance(self.rom, int):
-            if self.segment is not None:
-                if self.segment.get_exclusive_ram_id():
-                    suffix = self.format_name(self.segment.symbol_name_format_shared_vram)
-                else:
-                    suffix = self.format_name(self.segment.symbol_name_format)
+        if self.segment is not None:
+            if isinstance(self.rom, int):
+                suffix = self.format_name(self.segment.symbol_name_format)
             else:
-                suffix = self.format_name(options.get_symbol_name_format_shared_vram())
+                # TODO should be no_rom version
+                # suffix = self.format_name(self.segment.symbol_name_format_no_rom)
+                suffix = self.format_name(self.segment.symbol_name_format)
         else:
-            if self.segment is not None:
-                if self.segment.get_exclusive_ram_id():
-                    suffix = self.format_name(self.segment.symbol_name_format_no_rom)
-                else:
-                    suffix = self.format_name(self.segment.symbol_name_format)
+            if isinstance(self.rom, int):
+                suffix = self.format_name(options.get_symbol_name_format())
             else:
                 suffix = self.format_name(options.get_symbol_name_format_no_rom())
 

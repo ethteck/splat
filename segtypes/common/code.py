@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 import typing
 from segtypes.common.group import CommonSegGroup
 from segtypes.common.linker_section import dotless_type
@@ -22,14 +22,14 @@ class CommonSegCode(CommonSegGroup):
         extract,
         given_subalign,
         exclusive_ram_id,
-        bss_size: int,
         given_dir,
         symbol_name_format,
-        symbol_name_format_shared_vram,
         symbol_name_format_no_rom,
         args,
         yaml,
     ):
+        self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
+
         super().__init__(
             rom_start,
             rom_end,
@@ -39,10 +39,8 @@ class CommonSegCode(CommonSegGroup):
             extract,
             given_subalign,
             exclusive_ram_id=exclusive_ram_id,
-            bss_size=bss_size,
             given_dir=given_dir,
             symbol_name_format=symbol_name_format,
-            symbol_name_format_shared_vram=symbol_name_format_shared_vram,
             symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
@@ -56,6 +54,13 @@ class CommonSegCode(CommonSegGroup):
     @property
     def needs_symbols(self) -> bool:
         return True
+
+    @property
+    def vram_end(self) -> Optional[int]:
+        if self.vram_start is not None and self.size is not None:
+            return self.vram_start + self.size + self.bss_size
+        else:
+            return None
 
     # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):
@@ -95,9 +100,7 @@ class CommonSegCode(CommonSegGroup):
                         extract=False,
                         given_subalign=self.given_subalign,
                         exclusive_ram_id=self.get_exclusive_ram_id(),
-                        bss_size=self.bss_size,
                         given_dir=self.given_dir,
-                        symbol_name_format_shared_vram=self.symbol_name_format_shared_vram,
                         symbol_name_format_no_rom=self.symbol_name_format_no_rom,
                         args=[],
                         yaml={},

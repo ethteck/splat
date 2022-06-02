@@ -300,11 +300,6 @@ def get_symbol_name_format() -> str:
     return opts.get("symbol_name_format", "$VRAM")
 
 
-# Same as above but for symbols on exclusive_ram_id segments
-def get_symbol_name_format_shared_vram() -> str:
-    return opts.get("symbol_name_format_shared_vram", "$VRAM_$ROM")
-
-
 # Same as above but for symbols with no rom address
 def get_symbol_name_format_no_rom() -> str:
     return opts.get("symbol_name_format_no_rom", "$VRAM_$SEG")
