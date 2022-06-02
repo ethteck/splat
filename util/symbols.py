@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 from util import options, log
 
 all_symbols: "List[Symbol]" = []
+ignored_addresses: List[int] = []
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
 # Initialize a spimdisasm context, used to store symbols and functions
@@ -70,6 +71,7 @@ def initialize(all_segments: "List[Segment]"):
 
                         sym = Symbol(addr, given_name=name)
 
+                        ignore_sym = False
                         if line_ext:
                             for info in line_ext.split(" "):
                                 if ":" in info:
@@ -117,6 +119,11 @@ def initialize(all_segments: "List[Segment]"):
                                                 )
                                                 log.error("")
                                             sym.segment = seg
+                                            continue
+                                        if attr_name == "ignore":
+                                            ignored_addresses.append(addr)
+                                            ignore_sym = True
+                                            break
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
                                         log.write(
@@ -150,6 +157,10 @@ def initialize(all_segments: "List[Segment]"):
                                         if attr_name == "extract":
                                             sym.extract = tf_val
                                             continue
+                        if ignore_sym:
+                            ignore_sym = False
+                            continue
+
                         sym.user_declared = True
                         all_symbols.append(sym)
 
@@ -165,6 +176,8 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_end = None
     global_vram_start = None
     global_vram_end = None
+
+    spim_context.bannedSymbols = ignored_addresses
 
     for segment in all_segments:
         if segment.type == "code":
