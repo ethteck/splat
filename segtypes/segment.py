@@ -496,9 +496,10 @@ class Segment:
                 ret.defined = True
             if reference:
                 ret.referenced = True
-            if create:
-                if not ret.user_declared and type is not None and ret.type is None:
-                    ret.type = type
+            if ret.type is None:
+                ret.type = type
+            if ret.rom is None:
+                ret.rom = rom
             if in_segment:
                 if ret.segment is None:
                     ret.segment = most_parent
