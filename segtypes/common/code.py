@@ -116,6 +116,7 @@ class CommonSegCode(CommonSegGroup):
                         given_subalign=self.given_subalign,
                         exclusive_ram_id=self.get_exclusive_ram_id(),
                         given_dir=self.given_dir,
+                        symbol_name_format=self.symbol_name_format,
                         symbol_name_format_no_rom=self.symbol_name_format_no_rom,
                         args=[],
                         yaml={},
