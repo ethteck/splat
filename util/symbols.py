@@ -120,10 +120,6 @@ def initialize(all_segments: "List[Segment]"):
                                                 log.error("")
                                             sym.segment = seg
                                             continue
-                                        if attr_name == "ignore":
-                                            ignored_addresses.append(addr)
-                                            ignore_sym = True
-                                            break
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
                                         log.write(
@@ -157,7 +153,11 @@ def initialize(all_segments: "List[Segment]"):
                                         if attr_name == "extract":
                                             sym.extract = tf_val
                                             continue
+                                        if attr_name == "ignore":
+                                            ignore_sym = tf_val
+                                            continue
                         if ignore_sym:
+                            ignored_addresses.append(sym.vram_start)
                             ignore_sym = False
                             continue
 
