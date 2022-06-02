@@ -80,8 +80,8 @@ def get_segment_symbols(segment, all_segments):
     for symbol in symbols.all_symbols:
         if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
             if symbol.segment == segment or (
-                not segment.exclusive_ram_id
-                and segment.contains_vram(symbol.vram_start)
+                not segment.get_exclusive_ram_id()
+                and segment.get_most_parent().contains_vram(symbol.vram_start)
             ):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
@@ -91,7 +91,7 @@ def get_segment_symbols(segment, all_segments):
                     other_syms[symbol.vram_start] = []
                 other_syms[symbol.vram_start].append(symbol)
         else:
-            if symbol.rom and segment.contains_rom(symbol.rom):
+            if symbol.rom and segment.get_most_parent().contains_rom(symbol.rom):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
                 seg_syms[symbol.vram_start].append(symbol)
@@ -385,7 +385,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         to_write = [
             s
             for s in symbols.all_symbols
-            if not s.defined and not s.dead and not s.type == "func"
+            if s.referenced and not s.defined and not s.dead and s.type not in {"func", "label", "jtbl_label"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
