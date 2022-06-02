@@ -106,10 +106,14 @@ class CommonSegCodeSubsegment(Segment):
                 referenced_vram, tryPlusOffset=False
             )
             if context_sym is not None:
-                in_segment = (
-                    context_sym.overlayCategory
-                    == self.get_most_parent().get_exclusive_ram_id()
-                )
+                in_segment = False
+                if context_sym.overlayCategory is None and self.get_exclusive_ram_id() is None:
+                    in_segment = self.get_most_parent().contains_vram(context_sym.vram)
+                elif context_sym.overlayCategory == self.get_exclusive_ram_id():
+                    if context_sym.vromAddress is not None:
+                        in_segment = self.get_most_parent().contains_rom(context_sym.vromAddress)
+                    else:
+                        in_segment = self.get_most_parent().contains_vram(context_sym.vram)
                 if context_sym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
                     continue
                 sym_type = None
@@ -125,6 +129,8 @@ class CommonSegCodeSubsegment(Segment):
                 sym = self.create_symbol(
                     referenced_vram, in_segment, type=sym_type, reference=True
                 )
+                # Hacky way to avoid using the wrong symbol here (caused by mixing lambdas and loops)
+                context_sym.setNameGetCallback((lambda x: (lambda _: x.name))(sym))
 
         for label_offset in func_spim.localLabels:
             label_vram = func_spim.getVramOffset(label_offset)
@@ -139,8 +145,8 @@ class CommonSegCodeSubsegment(Segment):
                     label_vram, tryPlusOffset=False
                 )
                 if context_sym is not None:
-
                     if context_sym.nameGetCallback is None:
+                        # Hacky way to avoid using the wrong symbol here (caused by mixing lambdas and loops)
                         context_sym.setNameGetCallback(
                             (lambda x: (lambda _: x.name))(label_sym)
                         )
@@ -159,13 +165,14 @@ class CommonSegCodeSubsegment(Segment):
                     sym_address, tryPlusOffset=False
                 )
                 if context_sym is not None:
-                    # TODO: some way to determine if the symbol is in segment
-                    in_segment = (
-                        context_sym.overlayCategory
-                        == self.get_most_parent().get_exclusive_ram_id()
-                    )
-                    # if not self.get_exclusive_ram_id():
-                    #     in_segment = self.contains_vram(sym_address)
+                    in_segment = False
+                    if context_sym.overlayCategory is None and self.get_exclusive_ram_id() is None:
+                        in_segment = self.get_most_parent().contains_vram(context_sym.vram)
+                    elif context_sym.overlayCategory == self.get_exclusive_ram_id():
+                        if context_sym.vromAddress is not None:
+                            in_segment = self.get_most_parent().contains_rom(context_sym.vromAddress)
+                        else:
+                            in_segment = self.get_most_parent().contains_vram(context_sym.vram)
                     sym = self.create_symbol(
                         sym_address, in_segment, offsets=True, reference=True
                     )

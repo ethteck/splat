@@ -312,9 +312,7 @@ class Symbol:
             if isinstance(self.rom, int):
                 suffix = self.format_name(self.segment.symbol_name_format)
             else:
-                # TODO should be no_rom version
-                # suffix = self.format_name(self.segment.symbol_name_format_no_rom)
-                suffix = self.format_name(self.segment.symbol_name_format)
+                suffix = self.format_name(self.segment.symbol_name_format_no_rom)
         else:
             if isinstance(self.rom, int):
                 suffix = self.format_name(options.get_symbol_name_format())
