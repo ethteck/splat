@@ -209,8 +209,15 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                         segment.vram_end,
                     )
 
-    if global_vram_start is not None and global_vram_end is not None and global_vrom_start is not None and global_vrom_end is not None:
-        spim_context.globalSegment.changeRanges(global_vrom_start, global_vrom_end, global_vram_start, global_vram_end)
+    if (
+        global_vram_start is not None
+        and global_vram_end is not None
+        and global_vrom_start is not None
+        and global_vrom_end is not None
+    ):
+        spim_context.globalSegment.changeRanges(
+            global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
+        )
 
 
 def add_symbol_to_spim_section(

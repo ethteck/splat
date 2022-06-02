@@ -24,9 +24,7 @@ SN64 = Compiler(
     c_newline="\r\n",
 )
 
-IDO = Compiler(
-    "IDO"
-)
+IDO = Compiler("IDO")
 
 compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO}
 

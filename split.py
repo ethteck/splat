@@ -79,7 +79,10 @@ def get_segment_symbols(segment, all_segments):
 
     for symbol in symbols.all_symbols:
         if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
-            if symbol.segment == segment or (not segment.exclusive_ram_id and segment.contains_vram(symbol.vram_start)):
+            if symbol.segment == segment or (
+                not segment.exclusive_ram_id
+                and segment.contains_vram(symbol.vram_start)
+            ):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
                 seg_syms[symbol.vram_start].append(symbol)

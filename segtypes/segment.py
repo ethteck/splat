@@ -185,9 +185,6 @@ class Segment:
         self.args: List[str] = args
         self.yaml = yaml
 
-        if "skip" in self.args:
-            self.extract = False
-
         if self.rom_start == "auto":
             self.extract = False
 
@@ -315,14 +312,6 @@ class Segment:
             self.section_order.index(".rodata") - self.section_order.index(".data") == 1
         )
 
-    @property
-    def text_follows_rodata(self) -> bool:
-        if ".text" not in self.section_order or ".rodata" not in self.section_order:
-            return False
-        return (
-            self.section_order.index(".text") - self.section_order.index(".rodata") == 1
-        )
-
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
             return vram >= self.vram_start and vram < self.vram_end
@@ -429,6 +418,8 @@ class Segment:
     def visible_ram(seg1: "Segment", seg2: "Segment") -> bool:
         if seg1.get_most_parent() == seg2.get_most_parent():
             return True
+        if seg1.get_exclusive_ram_id() is None or seg2.get_exclusive_ram_id() is None:
+            return True
         return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
 
     def retrieve_symbol(
@@ -468,12 +459,14 @@ class Segment:
         ret = None
         rom = None
 
+        most_parent = self.get_most_parent()
+
         if in_segment:
             # If the vram address is within this segment, we can calculate the symbol's rom address
-            rom = self.ram_to_rom(addr)
-            ret = self.retrieve_symbol(self.seg_symbols, addr)
+            rom = most_parent.ram_to_rom(addr)
+            ret = most_parent.retrieve_symbol(most_parent.seg_symbols, addr)
         elif not local_only:
-            ret = self.retrieve_symbol(self.ext_symbols, addr)
+            ret = most_parent.retrieve_symbol(most_parent.ext_symbols, addr)
 
         # Search for symbol ranges
         if not ret and offsets:
@@ -489,14 +482,14 @@ class Segment:
             symbols.all_symbols.append(ret)
 
             if in_segment:
-                ret.segment = self
-                if addr not in self.seg_symbols:
-                    self.seg_symbols[addr] = []
-                self.seg_symbols[addr].append(ret)
+                ret.segment = most_parent
+                if addr not in most_parent.seg_symbols:
+                    most_parent.seg_symbols[addr] = []
+                most_parent.seg_symbols[addr].append(ret)
             elif not local_only:
-                if addr not in self.ext_symbols:
-                    self.ext_symbols[addr] = []
-                self.ext_symbols[addr].append(ret)
+                if addr not in most_parent.ext_symbols:
+                    most_parent.ext_symbols[addr] = []
+                most_parent.ext_symbols[addr].append(ret)
 
         if ret:
             if define:
@@ -508,7 +501,7 @@ class Segment:
                     ret.type = type
             if in_segment:
                 if ret.segment is None:
-                    ret.segment = self
+                    ret.segment = most_parent
 
         return ret
 

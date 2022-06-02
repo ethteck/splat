@@ -88,7 +88,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                         # It turns out this isn't a valid jump table, so create a new symbol where it breaks
                         syms.insert(
                             i + 1,
-                            self.get_most_parent().create_symbol(
+                            self.create_symbol(
                                 new_sym_ram_start, True, define=True, local_only=True
                             ),
                         )
@@ -110,7 +110,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             bits = int.from_bytes(rom_bytes[i : i + 4], endian)
             if self.contains_vram(bits):
                 symset.add(
-                    self.get_most_parent().create_symbol(
+                    self.create_symbol(
                         bits, in_segment=True, define=True, local_only=True
                     )
                 )
@@ -127,7 +127,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if len(ret) == 0 or ret[0].vram_start != self.vram_start:
             ret.insert(
                 0,
-                self.get_most_parent().create_symbol(
+                self.create_symbol(
                     self.vram_start, in_segment=True, define=True, local_only=True
                 ),
             )
@@ -300,13 +300,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 if bits == 0:
                     byte_str = "0"
                 else:
-                    sym = self.get_most_parent().get_symbol(bits, True)
+                    sym = self.get_symbol(bits, True)
                     if sym is not None:
                         byte_str = sym.name
                     else:
                         byte_str = f"0x{bits:X}"
             elif slen == 4 and bits >= 0x80000000:
-                sym = self.get_most_parent().get_symbol(bits, reference=True)
+                sym = self.get_symbol(bits, reference=True)
                 if sym:
                     byte_str = sym.name
                 else:
@@ -348,7 +348,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
-            sym = self.get_most_parent().create_symbol(
+            sym = self.create_symbol(
                 syms[i].vram_start, in_segment=True, define=True, local_only=True
             )
 

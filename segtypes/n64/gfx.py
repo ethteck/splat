@@ -70,7 +70,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
         out_str = options.get_generated_c_premble() + "\n\n"
 
-        sym = self.get_most_parent().create_symbol(
+        sym = self.create_symbol(
             addr=self.vram_start, in_segment=True, type="data", define=True
         )
 

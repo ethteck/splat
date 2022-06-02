@@ -71,7 +71,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         lines.append("")
 
         vertex_count = segment_length // 16
-        sym = self.get_most_parent().create_symbol(
+        sym = self.create_symbol(
             addr=self.vram_start, in_segment=True, type="data", define=True
         )
         lines.append(f"Vtx {sym.name}[{vertex_count}] = {{")
