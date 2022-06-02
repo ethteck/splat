@@ -91,7 +91,9 @@ class CommonSegCodeSubsegment(Segment):
         assert func_spim.vramEnd is not None
         self.parent: CommonSegCode = self.parent
 
-        symbols.create_symbol_from_spim_symbol(self.get_most_parent(), func_spim.contextSym)
+        symbols.create_symbol_from_spim_symbol(
+            self.get_most_parent(), func_spim.contextSym
+        )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referenced_vram in func_spim.referencedVRams:
@@ -104,15 +106,17 @@ class CommonSegCodeSubsegment(Segment):
                         func_spim.vram,
                         func_spim.vramEnd,
                     )
-                symbols.create_symbol_from_spim_symbol(self.get_most_parent(), context_sym)
+                symbols.create_symbol_from_spim_symbol(
+                    self.get_most_parent(), context_sym
+                )
 
         for label_offset in func_spim.localLabels:
             label_vram = func_spim.getVramOffset(label_offset)
-            context_sym = self.text_section.getSymbol(
-                label_vram, tryPlusOffset=False
-            )
+            context_sym = self.text_section.getSymbol(label_vram, tryPlusOffset=False)
             if context_sym is not None:
-                symbols.create_symbol_from_spim_symbol(self.get_most_parent(), context_sym)
+                symbols.create_symbol_from_spim_symbol(
+                    self.get_most_parent(), context_sym
+                )
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
@@ -126,7 +130,9 @@ class CommonSegCodeSubsegment(Segment):
                     sym_address, tryPlusOffset=False
                 )
                 if context_sym is not None:
-                    sym = symbols.create_symbol_from_spim_symbol(self.get_most_parent(), context_sym)
+                    sym = symbols.create_symbol_from_spim_symbol(
+                        self.get_most_parent(), context_sym
+                    )
 
                     if any(
                         insn.uniqueId in mnemonics
