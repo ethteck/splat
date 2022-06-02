@@ -466,7 +466,8 @@ class Segment:
         ]
 
         if len(items) > 1:
-            pass  # print(f"Trying to retrieve {k:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
+            # print(f"Trying to retrieve {addr:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
+            pass
         if len(items) == 0:
             return None
         return items[0]

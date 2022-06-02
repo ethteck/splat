@@ -117,6 +117,8 @@ class CommonSegCodeSubsegment(Segment):
                         func_spim.vram,
                         func_spim.vramEnd,
                     )
+                elif context_sym.type == spimdisasm.common.SymbolSpecialType.function:
+                    sym_type = "func"
                 sym = self.get_most_parent().create_symbol(
                     referenced_vram, in_segment, type=sym_type, reference=True
                 )

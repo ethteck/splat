@@ -233,11 +233,11 @@ def add_symbol_to_spim_section(
         context_sym.isUserDeclared = True
     if sym.defined:
         context_sym.isDefined = True
-    context_sym.nameGetCallback = lambda _: sym.name
     if sym.rom is not None:
         context_sym.vromAddress = sym.rom
     if sym.given_size is not None:
         context_sym.size = sym.size
+    context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     return context_sym
 
