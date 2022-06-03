@@ -41,6 +41,7 @@ options:
   # src_path: src
   # build_path: build
   # extensions_path: tools/splat_ext
+  # mips_abi_float_regs: o32
   # section_order: [".text", ".data", ".rodata", ".bss"]
   # auto_all_sections: [".data", ".rodata", ".bss"]
 """.lstrip()

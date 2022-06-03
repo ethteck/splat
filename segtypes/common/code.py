@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 import typing
 from segtypes.common.group import CommonSegGroup
 from segtypes.common.linker_section import dotless_type
@@ -21,11 +21,15 @@ class CommonSegCode(CommonSegGroup):
         vram_start,
         extract,
         given_subalign,
-        given_is_overlay,
+        exclusive_ram_id,
         given_dir,
+        symbol_name_format,
+        symbol_name_format_no_rom,
         args,
         yaml,
     ):
+        self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
+
         super().__init__(
             rom_start,
             rom_end,
@@ -34,16 +38,16 @@ class CommonSegCode(CommonSegGroup):
             vram_start,
             extract,
             given_subalign,
-            given_is_overlay,
-            given_dir,
-            args,
-            yaml,
+            exclusive_ram_id=exclusive_ram_id,
+            given_dir=given_dir,
+            symbol_name_format=symbol_name_format,
+            symbol_name_format_no_rom=symbol_name_format_no_rom,
+            args=args,
+            yaml=yaml,
         )
 
         self.reported_file_split = False
-        self.labels_to_add = set()
         self.jtbl_glabels_to_add = set()
-        self.jtbl_jumps = {}
         self.jumptables: Dict[int, Tuple[int, int]] = {}
         self.rodata_syms: Dict[int, List[Symbol]] = {}
 
@@ -51,14 +55,37 @@ class CommonSegCode(CommonSegGroup):
     def needs_symbols(self) -> bool:
         return True
 
+    @property
+    def vram_end(self) -> Optional[int]:
+        if self.vram_start is not None and self.size is not None:
+            return self.vram_start + self.size + self.bss_size
+        else:
+            return None
+
+    # def ram_to_rom(self, ram_addr: int) -> Optional[int]:
+    #     size_no_bss = self.vram_start + self.size
+
+    #     # Do not return a rom address if this is a BSS symbol
+    #     if ram_addr > size_no_bss:
+    #         return None
+
+    #     if not self.contains_vram(ram_addr) and ram_addr != self.vram_end:
+    #         return None
+
+    #     if self.vram_start is not None and isinstance(self.rom_start, int):
+    #         return self.rom_start + ram_addr - self.vram_start
+    #     else:
+    #         return None
+
     # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):
         if self.section_boundaries[".rodata"].is_complete():
-            if (
-                self.section_boundaries[".rodata"].start
-                <= sym.vram_start
-                < self.section_boundaries[".rodata"].end
-            ):
+            assert self.section_boundaries[".rodata"].start is not None
+            assert self.section_boundaries[".rodata"].end is not None
+
+            rodata_start: int = self.section_boundaries[".rodata"].start
+            rodata_end: int = self.section_boundaries[".rodata"].end
+            if rodata_start <= sym.vram_start < rodata_end:
                 if func_addr not in self.rodata_syms:
                     self.rodata_syms[func_addr] = []
                 self.rodata_syms[func_addr].append(sym)
@@ -72,23 +99,27 @@ class CommonSegCode(CommonSegGroup):
                 replace_class = Segment.get_class_for_type(rep_type)
 
                 for base in base_segs.items():
-                    if isinstance(elem.rom_start, int):
+                    if isinstance(elem.rom_start, int) and isinstance(
+                        self.rom_start, int
+                    ):
                         # Shoddy rom to ram
                         vram_start = elem.rom_start - self.rom_start + self.vram_start
                     else:
                         vram_start = "auto"
                     rep: Segment = replace_class(
-                        elem.rom_start,
-                        elem.rom_end,
-                        rep_type,
-                        base[0],
-                        vram_start,
-                        False,
-                        self.given_subalign,
-                        self.given_is_overlay,
-                        self.given_dir,
-                        [],
-                        {},
+                        rom_start=elem.rom_start,
+                        rom_end=elem.rom_end,
+                        type=rep_type,
+                        name=base[0],
+                        vram_start=vram_start,
+                        extract=False,
+                        given_subalign=self.given_subalign,
+                        exclusive_ram_id=self.get_exclusive_ram_id(),
+                        given_dir=self.given_dir,
+                        symbol_name_format=self.symbol_name_format,
+                        symbol_name_format_no_rom=self.symbol_name_format_no_rom,
+                        args=[],
+                        yaml={},
                     )
                     rep.sibling = base[1]
                     rep.parent = self
@@ -104,7 +135,7 @@ class CommonSegCode(CommonSegGroup):
     def find_inserts(
         self, found_sections: typing.OrderedDict[str, Range]
     ) -> "OrderedDict[str, int]":
-        inserts = OrderedDict()
+        inserts: OrderedDict[str, int] = OrderedDict()
 
         section_order = self.section_order.copy()
         section_order.remove(".text")
@@ -116,8 +147,9 @@ class CommonSegCode(CommonSegGroup):
             if not found_sections[section].has_start():
                 search_done = False
                 for j in range(i - 1, -1, -1):
-                    if found_sections[section_order[j]].has_end():
-                        inserts[section] = found_sections[section_order[j]].end
+                    end = found_sections[section_order[j]].end
+                    if end is not None:
+                        inserts[section] = end
                         search_done = True
                         break
                 if not search_done:
@@ -187,7 +219,7 @@ class CommonSegCode(CommonSegGroup):
                         cur_section = typ
 
         if cur_section is not None:
-            found_sections[cur_section].end = len(segment_yaml["subsegments"])
+            found_sections[cur_section].end = -1
 
         inserts = self.find_inserts(found_sections)
 
@@ -262,7 +294,16 @@ class CommonSegCode(CommonSegGroup):
                 vram_start = "auto"
 
             ret.insert(
-                idx, (Segment(rom_start, "auto", "all_" + section, "", vram_start))
+                idx,
+                (
+                    Segment(
+                        rom_start,
+                        "auto",
+                        "all_" + section,
+                        "",
+                        vram_start,
+                    )
+                ),
             )
 
         check = True

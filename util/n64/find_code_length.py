@@ -1,10 +1,7 @@
 #! /usr/bin/env python3
 
-from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
-
 import argparse
-
-md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+import spimdisasm
 
 
 def int_any_base(x):
@@ -29,8 +26,14 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
     rom_addr = start_offset
     last_return = rom_addr
 
-    for insn in md.disasm(rom_bytes[start_offset:], vram):
-        if insn.mnemonic == "jr" and insn.op_str == "$ra":
+    wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[start_offset:])
+
+    for insn in spimdisasm.mips.instructions.wordsToInstructionsIter(wordList, vram):
+        # insn.rs == $ra
+        if (
+            insn.uniqueId == spimdisasm.mips.instructions.InstructionId.JR
+            and insn.rs == 31
+        ):
             last_return = rom_addr
         rom_addr += 4
         if end_offset and rom_addr >= end_offset:

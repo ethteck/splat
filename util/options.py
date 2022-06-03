@@ -227,8 +227,8 @@ def get_subalign() -> int:
 
 
 # The following option determines whether to automatically configure the linker script to link against
-# specified sections for all "base" (asm/c) files when the yaml doesn't have specific configurations
-# for these sections. See release notes for details
+# specified sections for all "base" (asm/c) files when the yaml doesn't have manual configurations
+# for these sections.
 def auto_all_sections() -> List[str]:
     val = opts.get("auto_all_sections", [".data", ".rodata", ".bss"])
     if not isinstance(val, list):
@@ -295,6 +295,16 @@ def c_newline() -> str:
 # (Dis)assembly-related options
 ################################################################################
 
+# The following options determine the format that symbols should be named by default
+def get_symbol_name_format() -> str:
+    return opts.get("symbol_name_format", "$VRAM")
+
+
+# Same as above but for symbols with no rom address
+def get_symbol_name_format_no_rom() -> str:
+    return opts.get("symbol_name_format_no_rom", "$VRAM_$SEG")
+
+
 # Determines whether to detect and hint to the user about likely file splits when disassembling
 def find_file_boundaries() -> bool:
     return opts.get("find_file_boundaries", True)
@@ -338,6 +348,20 @@ def mnemonic_ljust() -> int:
 # Determines whether to pad the rom address
 def rom_address_padding() -> bool:
     return opts.get("rom_address_padding", False)
+
+
+# Determines which ABI names to use for general purpose registers
+# Valid values: 'numeric', 'o32', 'n32', 'n64'
+def get_mips_abi_gpr() -> str:
+    return opts.get("mips_abi_gpr", "o32")
+
+
+# Determines which ABI names to use for floating point registers
+# Valid values: 'numeric', 'o32', 'n32', 'n64'
+# o32 is highly recommended, as it provides logically named registers for floating point instructions
+# For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
+def get_mips_abi_float_regs() -> str:
+    return opts.get("mips_abi_float_regs", "numeric")
 
 
 ################################################################################
