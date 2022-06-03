@@ -140,12 +140,6 @@ def get_info_bytes(rom_bytes: bytes, header_encoding):
     cic = get_cic(rom_bytes)
     entry_point = get_entry_point(program_counter, cic)
 
-    # TODO: add support for
-    # compression_formats = []
-    #  for format in ["Yay0", "vpk0"]:
-    #     if rom_bytes.find(bytes(format, "ASCII")) != -1:
-    #         compression_formats.append(format)
-
     compiler = get_compiler_info(rom_bytes, entry_point, print_result=False)
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()

@@ -227,8 +227,8 @@ def get_subalign() -> int:
 
 
 # The following option determines whether to automatically configure the linker script to link against
-# specified sections for all "base" (asm/c) files when the yaml doesn't have specific configurations
-# for these sections. See release notes for details
+# specified sections for all "base" (asm/c) files when the yaml doesn't have manual configurations
+# for these sections.
 def auto_all_sections() -> List[str]:
     val = opts.get("auto_all_sections", [".data", ".rodata", ".bss"])
     if not isinstance(val, list):
@@ -294,6 +294,16 @@ def c_newline() -> str:
 ################################################################################
 # (Dis)assembly-related options
 ################################################################################
+
+# The following options determine the format that symbols should be named by default
+def get_symbol_name_format() -> str:
+    return opts.get("symbol_name_format", "$VRAM")
+
+
+# Same as above but for symbols with no rom address
+def get_symbol_name_format_no_rom() -> str:
+    return opts.get("symbol_name_format_no_rom", "$VRAM_$SEG")
+
 
 # Determines whether to detect and hint to the user about likely file splits when disassembling
 def find_file_boundaries() -> bool:

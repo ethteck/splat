@@ -79,7 +79,10 @@ def get_segment_symbols(segment, all_segments):
 
     for symbol in symbols.all_symbols:
         if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
-            if segment.contains_vram(symbol.vram_start):
+            if symbol.segment == segment or (
+                not segment.get_exclusive_ram_id()
+                and segment.get_most_parent().contains_vram(symbol.vram_start)
+            ):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
                 seg_syms[symbol.vram_start].append(symbol)
@@ -88,7 +91,7 @@ def get_segment_symbols(segment, all_segments):
                     other_syms[symbol.vram_start] = []
                 other_syms[symbol.vram_start].append(symbol)
         else:
-            if symbol.rom and segment.contains_rom(symbol.rom):
+            if symbol.rom and segment.get_most_parent().contains_rom(symbol.rom):
                 if symbol.vram_start not in seg_syms:
                     seg_syms[symbol.vram_start] = []
                 seg_syms[symbol.vram_start].append(symbol)
@@ -183,11 +186,12 @@ def configure_disassembler():
     else:
         spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
+    spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
+
     selectedCompiler = options.get_compiler()
     if selectedCompiler == compiler.SN64:
         spimdisasm.mips.instructions.InstructionConfig.NAMED_REGISTERS = False
         spimdisasm.mips.instructions.InstructionConfig.SN64_DIV_FIX = True
-        spimdisasm.mips.instructions.InstructionConfig.PSEUDO_MOVE = False
         spimdisasm.mips.instructions.InstructionConfig.TREAT_J_AS_UNCONDITIONAL_BRANCH = (
             True
         )
@@ -283,9 +287,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     all_segments = initialize_segments(config["segments"])
 
     # Load and process symbols
+    symbols.initialize(all_segments)
     if options.mode_active("code"):
         log.write("Loading and processing symbols")
-        symbols.initialize(all_segments)
         symbols.initialize_spim_context(all_segments)
 
     # Resolve raster/palette siblings
@@ -326,17 +330,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
             seg_split[typ] += 1
 
         log.dot(status=segment.status())
-
-    # Pass any new info found by splat to spimdisasm
-    # for s in symbols.all_symbols:
-    #     if s.type == "func":
-    #         context_sym = symbols.spim_context.addFunction(s.vram_start)
-    #     else:
-    #         context_sym = symbols.spim_context.addSymbol(s.vram_start)
-    #     if s.defined:
-    #         context_sym.isDefined = s.defined
-    #     if s.given_name:
-    #         context_sym.name = s.given_name
 
     # Split
     log.write("Starting split")
@@ -392,7 +385,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and not s.dead and not s.type == "func"
+            if s.referenced
+            and not s.defined
+            and not s.dead
+            and s.type not in {"func", "label", "jtbl_label"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 

@@ -83,13 +83,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                         )
                         assert sym.rom is not None
                         assert new_sym_ram_start is not None
-                        sym.size = new_sym_rom_start - sym.rom
+                        sym.given_size = new_sym_rom_start - sym.rom
 
                         # It turns out this isn't a valid jump table, so create a new symbol where it breaks
                         syms.insert(
                             i + 1,
-                            self.get_most_parent().create_symbol(
-                                new_sym_ram_start, define=True, local_only=True
+                            self.create_symbol(
+                                new_sym_ram_start, True, define=True, local_only=True
                             ),
                         )
                         return False
@@ -105,12 +105,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         endian = options.get_endianess()
 
         # Find inter-data symbols
+        assert isinstance(self.rom_start, int) and isinstance(self.rom_end, int)
         for i in range(self.rom_start, self.rom_end, 4):
             bits = int.from_bytes(rom_bytes[i : i + 4], endian)
             if self.contains_vram(bits):
                 symset.add(
-                    self.get_most_parent().create_symbol(
-                        bits, define=True, local_only=True
+                    self.create_symbol(
+                        bits, in_segment=True, define=True, local_only=True
                     )
                 )
 
@@ -126,8 +127,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if len(ret) == 0 or ret[0].vram_start != self.vram_start:
             ret.insert(
                 0,
-                self.get_most_parent().create_symbol(
-                    self.vram_start, define=True, local_only=True
+                self.create_symbol(
+                    self.vram_start, in_segment=True, define=True, local_only=True
                 ),
             )
 
@@ -299,14 +300,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 if bits == 0:
                     byte_str = "0"
                 else:
-                    rom_addr = self.get_most_parent().ram_to_rom(bits)
-
-                    if rom_addr:
-                        byte_str = f"L{bits:X}_{rom_addr:X}"
+                    sym = self.get_symbol(bits, True)
+                    if sym is not None:
+                        byte_str = sym.name
                     else:
                         byte_str = f"0x{bits:X}"
             elif slen == 4 and bits >= 0x80000000:
-                sym = self.get_most_parent().get_symbol(bits, reference=True)
+                sym = self.get_symbol(bits, reference=True)
                 if sym:
                     byte_str = sym.name
                 else:
@@ -348,8 +348,8 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         for i in range(len(syms) - 1):
             mnemonic = syms[i].access_mnemonic
-            sym = self.get_most_parent().create_symbol(
-                syms[i].vram_start, define=True, local_only=True
+            sym = self.create_symbol(
+                syms[i].vram_start, in_segment=True, define=True, local_only=True
             )
 
             dis_start = self.get_most_parent().ram_to_rom(syms[i].vram_start)

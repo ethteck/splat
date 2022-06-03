@@ -2,5 +2,5 @@ PyYAML
 pylibyaml
 pypng
 colorama
-spimdisasm>=1.1.2
+spimdisasm>=1.1.5
 pygfxd
