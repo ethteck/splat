@@ -96,7 +96,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referenced_vram in func_spim.referencedVRams:
+        for referenced_vram in func_spim.instrAnalyzer.referencedVrams:
             context_sym = self.text_section.getSymbol(
                 referenced_vram, tryPlusOffset=False
             )
@@ -110,21 +110,13 @@ class CommonSegCodeSubsegment(Segment):
                     self.get_most_parent(), context_sym
                 )
 
-        for label_offset in func_spim.localLabels:
-            label_vram = func_spim.getVramOffset(label_offset)
-            context_sym = self.text_section.getSymbol(label_vram, tryPlusOffset=False)
-            if context_sym is not None:
-                symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym
-                )
-
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             instr_offset = i * 4
 
             # update pointer accesses from this function
-            if instr_offset in func_spim.pointersPerInstruction:
-                sym_address = func_spim.pointersPerInstruction[instr_offset]
+            if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
+                sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
 
                 context_sym = self.text_section.getSymbol(
                     sym_address, tryPlusOffset=False

@@ -385,7 +385,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and not s.dead and s.type not in {"func", "label", "jtbl_label"}
+            if s.referenced
+            and not s.defined
+            and not s.dead
+            and s.type not in {"func", "label", "jtbl_label"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
