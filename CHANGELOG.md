@@ -49,7 +49,7 @@ The new `gfx_target` option allows for specifying the target for the graphics ma
 
 ### Segment options changes
 
-The new `exclusive_ram_id` segment option allows specifying an identifer that will prevent the segment from seeing any symbols from other segments with the same identifer. This is useful when multiple segments are mapped to the same vram address at runtime and should never be able to refer to eachother's symbols. Setting all of these segments to have the same value for this option will prevent their symbols from clashing / meshing unexpectedly.
+The new `exclusive_ram_id` segment option allows specifying an identifer that will prevent the segment from seeing any symbols from other segments with the same identifer. This is useful when multiple segments are mapped to the same vram address at runtime and should never be able to refer to each other's symbols. Setting all of these segments to have the same value for this option will prevent their symbols from clashing / meshing unexpectedly.
 
 ----
 
