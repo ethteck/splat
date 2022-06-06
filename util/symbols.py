@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING, Set
 import spimdisasm
 import tqdm
 
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from util import options, log
 
 all_symbols: "List[Symbol]" = []
-ignored_addresses: set[int] = set()
+ignored_addresses: Set[int] = set()
 symbol_ranges: "List[Symbol]" = []
 sym_isolated_map: "Dict[Symbol, bool]" = {}
 # Initialize a spimdisasm context, used to store symbols and functions

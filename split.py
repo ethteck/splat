@@ -338,7 +338,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
     # Split
     for segment in tqdm.tqdm(
-        all_segments, total=len(all_segments), desc=f"Splitting {brief_seg_name(segment, 20)}"
+        all_segments,
+        total=len(all_segments),
+        desc=f"Splitting {brief_seg_name(segment, 20)}",
     ):
         if use_cache:
             cached = segment.cache()
