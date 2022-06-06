@@ -4,6 +4,7 @@ import hashlib
 from typing import Dict, List, Union, Set, Any
 import argparse
 import spimdisasm
+import tqdm
 import yaml
 import pickle
 from colorama import Style, Fore
@@ -222,11 +223,17 @@ def configure_disassembler():
         symbols.spim_context.fillDefaultBannedSymbols()
 
 
+def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
+    s = seg.name.strip()
+    if len(s) > limit:
+        return s[:limit].strip() + ellipsis
+    return s
+
+
 def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     global config
 
-    log.write(f"splat {VERSION}")
-    log.write(f"Powered by spimdisasm {spimdisasm.__version__}")
+    log.write(f"splat {VERSION} (powered by spimdisasm {spimdisasm.__version__})")
 
     # Load config
     config = {}
@@ -287,7 +294,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     all_segments = initialize_segments(config["segments"])
 
     # Load and process symbols
-    log.write("Loading and processing symbols")
     symbols.initialize(all_segments)
     if options.mode_active("code"):
         symbols.initialize_spim_context(all_segments)
@@ -297,8 +303,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         palettes.initialize(all_segments)
 
     # Scan
-    log.write("Starting scan")
-    for segment in all_segments:
+    scan_bar = tqdm.tqdm(all_segments, total=len(all_segments))
+    for segment in scan_bar:
+        scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
         typ = segment.type
         if segment.type == "bin" and segment.is_name_default():
             typ = "unk"
@@ -329,11 +336,10 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
             seg_split[typ] += 1
 
-        log.dot(status=segment.status())
-
     # Split
-    log.write("Starting split")
-    for segment in all_segments:
+    for segment in tqdm.tqdm(
+        all_segments, total=len(all_segments), desc=f"Splitting {brief_seg_name(segment, 20)}"
+    ):
         if use_cache:
             cached = segment.cache()
 
@@ -347,8 +353,6 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
 
         if segment.should_split():
             segment.split(rom_bytes)
-
-        log.dot(status=segment.status())
 
     if options.mode_active("ld"):
         global linker_writer

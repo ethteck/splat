@@ -376,7 +376,7 @@ def get_header_encoding() -> str:
 # Determines the gfx target (used by the gfx segment type)
 # Valid options are ['f3d', 'f3db', 'f3dex', 'f3dexb', 'f3dex2']
 def get_gfx_target() -> str:
-    valid_options =  ['f3d', 'f3db', 'f3dex', 'f3dexb', 'f3dex2']
+    valid_options = ["f3d", "f3db", "f3dex", "f3dexb", "f3dex2"]
     ret = opts.get("gfx_target", "f3dex2")
     if ret not in valid_options:
         log.error(f"Invalid gfx_target: {ret}. Valid options are: {valid_options}")

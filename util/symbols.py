@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, TYPE_CHECKING
 import spimdisasm
+import tqdm
 
 # circular import
 if TYPE_CHECKING:
@@ -44,7 +45,9 @@ def initialize(all_segments: "List[Segment]"):
         if path.exists():
             with open(path) as f:
                 sym_addrs_lines = f.readlines()
-                for line_num, line in enumerate(sym_addrs_lines):
+                for line_num, line in enumerate(
+                    tqdm.tqdm(sym_addrs_lines, desc=f"Loading symbols ({path.stem})")
+                ):
                     line = line.strip()
                     if not line == "" and not line.startswith("//"):
                         comment_loc = line.find("//")
