@@ -43,6 +43,9 @@ The `auto_all_section` option now should be a list of segment types for which li
 ----
 The new `mips_abi_float_regs` option allows for changing the format of float registers for MIPS disassembly. The default value does not change any prior behavior, but `o32` is heavily encouraged and may become the default option in the future. For more information, see this [great writeup](https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d)
 
+----
+The new `gfx_target` option allows for specifying the target for the graphics macro format, which is used in the gfx segment type. The default is `f3dex2`.
+
 
 ### Segment options changes
 
