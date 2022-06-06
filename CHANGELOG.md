@@ -15,7 +15,7 @@ We plan to roll this out in phases. Currently, it only handles actual code disas
 * Some Segment() arguments have changed, which may cause extensions to break. Please see the __init__ function for Segment for more details.
 
 ### symbol_addrs.txt changes
-* symbol_addrs now supports the segment: attribute, which allows specifying the symbol's top-level segment. This can be helpful for symbol resolution when there are overlapping overlays. See `exclusive_ram_id` below for more information.
+* symbol_addrs now supports the `segment:` attribute, which allows specifying the symbol's top-level segment. This can be helpful for symbol resolution when there are overlapping overlays. See `exclusive_ram_id` below for more information.
 
 ### Global options changes
 
