@@ -79,7 +79,7 @@ def get_segment_symbols(segment, all_segments):
     other_syms = {}
 
     for symbol in symbols.all_symbols:
-        if symbols.is_symbol_isolated(symbol, all_segments) and not symbol.rom:
+        if not symbol.rom and symbols.is_symbol_isolated(symbol, all_segments):
             if symbol.segment == segment or (
                 not segment.get_exclusive_ram_id()
                 and segment.get_most_parent().contains_vram(symbol.vram_start)
@@ -305,6 +305,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     # Scan
     scan_bar = tqdm.tqdm(all_segments, total=len(all_segments))
     for segment in scan_bar:
+        assert isinstance(segment, Segment)
         scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
         typ = segment.type
         if segment.type == "bin" and segment.is_name_default():
