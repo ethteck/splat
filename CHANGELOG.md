@@ -12,7 +12,7 @@ We plan to roll this out in phases. Currently, it only handles actual code disas
 * A new `gfx` segment type is available, which creates a c file containing a disassembled display list according to the segment's start and end offsets. Thanks to [Glank](https://github.com/glankk) and [Tharo](https://github.com/thar0/) for their work on [libgfxd](https://github.com/glankk/libgfxd) and [pygfxd](https://github.com/thar0/pygfxd/), respectively, for helping make this a possibility in splat.
 
 ### API breaking changes
-* Some Segment() arguments have changed, which may cause extensions to break. Please see the `__init__` function for Segment for more details.
+* Some `Segment()` arguments have changed, which may cause extensions to break. Please see the `__init__` function for `Segment` for more details.
 
 ### symbol_addrs.txt changes
 * symbol_addrs now supports the `segment:` attribute, which allows specifying the symbol's top-level segment. This can be helpful for symbol resolution when overlays use overlapping vram ranges. See `exclusive_ram_id` below for more information.
