@@ -23,11 +23,11 @@ The new `symbol_name_format` option allows specification of how symbols will be 
 
  The following substitutions are allowed:
 
-`$ROM` - the rom address of the symbol, hex-formatted (omitted for BSS symbols)
+`$ROM` - the rom address of the symbol, hex-formatted and padded to 6 characters (ABCF10, 000030, 123456) (note: only for `symbol_name_format`, usage in `symbol_norom_name_format` will cause an error)
 
 `$VRAM` - the vram address of the symbol, hex-formatted and padded to 8 characters (00030010, 00020015, ABCDEF10)
 
-`$SEG` - the name of the top-level segment in which the symbol resides, hex-formatted and padded to 6 characters (ABCF10, 000030, 123456)
+`$SEG` - the name of the top-level segment in which the symbol resides
 
 The default values for these options are as follows
 
