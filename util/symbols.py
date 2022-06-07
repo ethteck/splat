@@ -171,8 +171,6 @@ def initialize(all_segments: "List[Segment]"):
                         if sym.size > 4:
                             symbol_ranges.append(sym)
 
-                        is_symbol_isolated(sym, all_segments)
-
 
 def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_start = None
@@ -322,22 +320,6 @@ def create_symbol_from_spim_symbol(
         sym.referenced = True
 
     return sym
-
-
-def is_symbol_isolated(symbol, all_segments):
-    if symbol in sym_isolated_map:
-        return sym_isolated_map[symbol]
-
-    relevant_segs = 0
-
-    for segment in all_segments:
-        if segment.contains_vram(symbol.vram_start):
-            relevant_segs += 1
-            if relevant_segs > 1:
-                break
-
-    sym_isolated_map[symbol] = relevant_segs < 2
-    return sym_isolated_map[symbol]
 
 
 def retrieve_from_ranges(vram, rom=None):

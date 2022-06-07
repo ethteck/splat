@@ -15,6 +15,7 @@ from util import options
 from util import symbols
 from util import palettes
 from util import compiler
+from util.symbols import Symbol
 
 VERSION = "0.9.0"
 
@@ -74,34 +75,31 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     return ret
 
 
-def get_segment_symbols(segment, all_segments):
-    seg_syms = {}
-    other_syms = {}
+def get_segment_symbols(segment: Segment):
+    seg_syms: dict[int, list[Symbol]] = {}
+    other_syms: dict[int, list[Symbol]] = {}
 
     for symbol in symbols.all_symbols:
-        if not symbol.rom and symbols.is_symbol_isolated(symbol, all_segments):
+        if not symbol.rom:
             if symbol.segment == segment or (
                 not segment.get_exclusive_ram_id()
                 and segment.get_most_parent().contains_vram(symbol.vram_start)
             ):
-                if symbol.vram_start not in seg_syms:
-                    seg_syms[symbol.vram_start] = []
-                seg_syms[symbol.vram_start].append(symbol)
+                sym_dict = seg_syms
             else:
-                if symbol.vram_start not in other_syms:
-                    other_syms[symbol.vram_start] = []
-                other_syms[symbol.vram_start].append(symbol)
+                sym_dict = other_syms
         else:
-            if symbol.rom and segment.get_most_parent().contains_rom(symbol.rom):
-                if symbol.vram_start not in seg_syms:
-                    seg_syms[symbol.vram_start] = []
-                seg_syms[symbol.vram_start].append(symbol)
+            if segment.get_most_parent().contains_rom(symbol.rom):
+                sym_dict = seg_syms
             else:
-                if symbol.vram_start not in other_syms:
-                    other_syms[symbol.vram_start] = []
-                other_syms[symbol.vram_start].append(symbol)
+                sym_dict = other_syms
 
-    return seg_syms, other_syms
+        if symbol.vram_start not in sym_dict:
+            sym_dict[symbol.vram_start] = []
+        sym_dict[symbol.vram_start].append(symbol)
+
+    segment.given_seg_symbols = seg_syms
+    segment.given_ext_symbols = other_syms
 
 
 def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
@@ -324,11 +322,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
                     continue
 
             if segment.needs_symbols:
-                segment_symbols, other_symbols = get_segment_symbols(
-                    segment, all_segments
-                )
-                segment.given_seg_symbols = segment_symbols
-                segment.given_ext_symbols = other_symbols
+                get_segment_symbols(segment)
 
             segment.did_run = True
             segment.scan(rom_bytes)
