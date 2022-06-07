@@ -38,7 +38,7 @@ The default values for these options are as follows
 The appropriate prefix string will still automatically be applied depending on the type of the symbol: `D_` for data, `jtbl_` for jump tables, and `func_` for functions. This functionality may be customizable in the future.
 
 ----
-The `auto_all_section` option now should be a list of segment types for which linker entries (`file.o(.rodata)`, for example) are automatically added if the segment doesn't otherwise specify these types somewhere. Previously, this option was a bool, and it enabled this feature for all sections specified in `section_order`. Now, the desired sections must be specified manually. The default behavior for this option remains the same with the value `[".data", ".rodata", ".bss"]`.
+The `auto_all_section` option now should be a list of section names (`[".data", ".rodata", ".bss"]` by default) for which linker entries are automatically added if the segment doesn't otherwise specify these types somewhere. Previously, this option was a bool, and it enabled this feature for all sections specified in `section_order`. Now, the desired sections must be specified manually. The default setting for this option retains previous behavior.
 
 ----
 The new `mips_abi_float_regs` option allows for changing the format of float registers for MIPS disassembly. The default value does not change any prior behavior, but `o32` is heavily encouraged and may become the default option in the future. For more information, see this [great writeup](https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d).
