@@ -364,7 +364,11 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     if options.mode_active("ld"):
         global linker_writer
         linker_writer = LinkerWriter()
-        for segment in all_segments:
+        for segment in tqdm.tqdm(
+            all_segments,
+            total=len(all_segments),
+            desc=f"Writing linker script {brief_seg_name(segment, 20)}"
+        ):
             linker_writer.add(segment)
         linker_writer.save_linker_script()
         linker_writer.save_symbol_header()
