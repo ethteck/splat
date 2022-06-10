@@ -443,9 +443,7 @@ class Symbol:
         self.type = type
         self.given_size = given_size
         self.given_name = given_name
-        self.access_mnemonic: Optional[
-            spimdisasm.mips.instructions.InstructionId
-        ] = None
+        self.access_mnemonic = None
         self.disasm_str = None
         self.dead = False
         self.extract = True

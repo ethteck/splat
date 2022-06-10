@@ -5,6 +5,7 @@ import os
 import re
 from pathlib import Path
 import spimdisasm
+import rabbitizer
 
 from util import log, options
 from util.compiler import GCC, SN64
@@ -226,10 +227,8 @@ class CommonSegC(CommonSegCodeSubsegment):
             # Terrible hack to "auto-decompile" empty functions
             if (
                 options.get_auto_decompile_empty_functions()
-                and func.instructions[0].uniqueId
-                == spimdisasm.mips.instructions.InstructionId.JR
-                and func.instructions[1].uniqueId
-                == spimdisasm.mips.instructions.InstructionId.NOP
+                and func.instructions[0].isJrRa()
+                and func.instructions[1].isNop()
             ):
                 c_lines.append("void " + func.getName() + "(void) {")
                 c_lines.append("}")

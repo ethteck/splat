@@ -2,7 +2,7 @@ PyYAML
 pylibyaml
 pypng
 colorama
-spimdisasm>=1.1.7
+spimdisasm>=1.2.1
 pygfxd
 tqdm
 intervaltree
