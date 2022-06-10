@@ -39,6 +39,7 @@ config: Dict[str, Any]
 segment_roms: IntervalTree = IntervalTree()
 segment_rams: IntervalTree = IntervalTree()
 
+
 def fmt_size(size):
     if size > 1000000:
         return str(size // 1000000) + " MB"
@@ -81,9 +82,17 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             seen_segment_names.add(segment.name)
 
         ret.append(segment)
-        if isinstance(segment.rom_start, int) and isinstance(segment.rom_end, int) and segment.rom_start != segment.rom_end:
+        if (
+            isinstance(segment.rom_start, int)
+            and isinstance(segment.rom_end, int)
+            and segment.rom_start != segment.rom_end
+        ):
             segment_roms.addi(segment.rom_start, segment.rom_end, segment)
-        if isinstance(segment.vram_start, int) and isinstance(segment.vram_end, int) and segment.vram_start != segment.vram_end:
+        if (
+            isinstance(segment.vram_start, int)
+            and isinstance(segment.vram_end, int)
+            and segment.vram_start != segment.vram_end
+        ):
             segment_rams.addi(segment.vram_start, segment.vram_end, segment)
 
     return ret
@@ -372,7 +381,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         for segment in tqdm.tqdm(
             all_segments,
             total=len(all_segments),
-            desc=f"Writing linker script {brief_seg_name(segment, 20)}"
+            desc=f"Writing linker script {brief_seg_name(segment, 20)}",
         ):
             linker_writer.add(segment)
         linker_writer.save_linker_script()
