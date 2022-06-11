@@ -112,13 +112,13 @@ def assign_symbols_to_segments():
             else:
                 cand: Interval = cands.pop()
                 seg: Segment = cand.data
-                seg.add_seg_symbol(symbol)
+                seg.add_symbol(symbol)
         else:
             cands: Set[Interval] = segment_rams[symbol.vram_start]
             segs: List[Segment] = [cand.data for cand in cands]
             for seg in segs:
                 if not seg.get_exclusive_ram_id():
-                    seg.add_seg_symbol(symbol)
+                    seg.add_symbol(symbol)
 
 
 def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):

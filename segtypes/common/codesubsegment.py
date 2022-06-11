@@ -69,12 +69,11 @@ class CommonSegCodeSubsegment(Segment):
         for func in self.text_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
-            self.process_insns(func, is_asm=is_asm)
+            self.process_insns(func)
 
         # Process jumptable labels and pass them to spimdisasm
         self.gather_jumptable_labels(rom_bytes)
         for jtbl_label_vram in self.parent.jtbl_glabels_to_add:
-            rom_addr = self.get_most_parent().ram_to_rom(jtbl_label_vram)
             sym = self.create_symbol(
                 jtbl_label_vram, True, type="jtbl_label", define=True
             )
@@ -84,7 +83,6 @@ class CommonSegCodeSubsegment(Segment):
     def process_insns(
         self,
         func_spim: spimdisasm.mips.symbols.SymbolFunction,
-        is_asm=False,
     ):
         assert isinstance(self.parent, CommonSegCode)
         assert func_spim.vram is not None
