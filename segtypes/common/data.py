@@ -254,7 +254,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 return False
 
         # Mark this symbol as a jump table and record the jump table for later
-        sym.type = "jtbl"
+        sym.set_type("jtbl")
         most_parent.jumptables[sym.vram_start] = (
             jtbl_func.vram_start,
             jtbl_func.vram_end,

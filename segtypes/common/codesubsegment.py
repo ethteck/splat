@@ -74,11 +74,10 @@ class CommonSegCodeSubsegment(Segment):
         # Process jumptable labels and pass them to spimdisasm
         self.gather_jumptable_labels(rom_bytes)
         for jtbl_label_vram in self.parent.jtbl_glabels_to_add:
-            rom_addr = self.get_most_parent().ram_to_rom(jtbl_label_vram)
             sym = self.create_symbol(
                 jtbl_label_vram, True, type="jtbl_label", define=True
             )
-            sym.type = "jtbl_label"
+            sym.set_type("jtbl_label")
             symbols.add_symbol_to_spim_section(self.text_section, sym)
 
     def process_insns(

@@ -267,7 +267,7 @@ class Segment:
             return self.parent.get_exclusive_ram_id()
         return self.exclusive_ram_id
 
-    def add_seg_symbol(self, symbol: Symbol):
+    def add_symbol(self, symbol: Symbol):
         if symbol.vram_start not in self.given_seg_symbols:
             self.given_seg_symbols[symbol.vram_start] = []
         self.given_seg_symbols[symbol.vram_start].append(symbol)
@@ -449,8 +449,8 @@ class Segment:
         local_only: bool = False,
         dead: bool = True,
     ) -> Optional[Symbol]:
-        ret = None
-        rom = None
+        ret: Optional[Symbol] = None
+        rom: Optional[int] = None
 
         most_parent = self.get_most_parent()
 
@@ -475,7 +475,7 @@ class Segment:
             symbols.add_symbol(ret)
 
             if in_segment:
-                ret.segment = most_parent
+                ret.set_segment(most_parent)
                 if addr not in most_parent.seg_symbols:
                     most_parent.seg_symbols[addr] = []
                 most_parent.seg_symbols[addr].append(ret)
@@ -486,12 +486,12 @@ class Segment:
             if reference:
                 ret.referenced = True
             if ret.type is None:
-                ret.type = type
+                ret.set_type(type)
             if ret.rom is None:
-                ret.rom = rom
+                ret.set_rom(rom)
             if in_segment:
                 if ret.segment is None:
-                    ret.segment = most_parent
+                    ret.set_segment(most_parent)
 
         return ret
 

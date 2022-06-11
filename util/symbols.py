@@ -135,8 +135,8 @@ def initialize(all_segments: "List[Segment]"):
                                                 log.error("")
                                             else:
                                                 # Add segment to symbol, symbol to segment
-                                                sym.segment = seg
-                                                seg.add_seg_symbol(sym)
+                                                sym.set_segment(seg)
+                                                seg.add_symbol(sym)
                                             continue
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
@@ -328,7 +328,7 @@ def create_symbol_from_spim_symbol(
     if context_sym.size is not None:
         sym.given_size = context_sym.getSize()
     if context_sym.vromAddress is not None:
-        sym.rom = context_sym.getVrom()
+        sym.set_rom(context_sym.getVrom())
     if context_sym.isDefined:
         sym.defined = True
     if context_sym.referenceCounter > 0:
@@ -357,6 +357,48 @@ def retrieve_from_ranges(vram, rom=None):
 
 
 class Symbol:
+    def __init__(
+        self,
+        vram: int,
+        given_name: Optional[str] = None,
+        rom: Optional[int] = None,
+        type: Optional[str] = "unknown",
+        given_size: Optional[int] = None,
+        segment: Optional["Segment"] = None,
+    ):
+        self.defined: bool = False
+        self.referenced: bool = False
+        self.vram_start = vram
+        self.rom = rom
+        self.type = type
+        self.given_size = given_size
+        self.given_name = given_name
+        self.cached_default_name: Optional[str] = None
+        self.access_mnemonic: Optional[rabbitizer.Enum] = None
+        self.disasm_str: Optional[str] = None
+        self.dead: bool = False
+        self.extract: bool = True
+        self.user_declared: bool = False
+        self.segment: Optional["Segment"] = segment
+
+    def __str__(self):
+        return self.name
+
+    def set_rom(self, rom: Optional[int]):
+        if self.rom != rom:
+            self.rom = rom
+            self.cached_default_name = None
+
+    def set_type(self, type: Optional[str]):
+        if self.type != type:
+            self.type = type
+            self.cached_default_name = None
+
+    def set_segment(self, segment: Optional["Segment"]):
+        if self.segment != segment:
+            self.segment = segment
+            self.cached_default_name = None
+
     def format_name(self, format: str) -> str:
         ret = format
 
@@ -380,7 +422,10 @@ class Symbol:
 
     @property
     def default_name(self) -> str:
-        if self.segment is not None:
+        if self.cached_default_name is not None:
+            return self.cached_default_name
+
+        if self.segment:
             if isinstance(self.rom, int):
                 suffix = self.format_name(self.segment.symbol_name_format)
             else:
@@ -402,7 +447,8 @@ class Symbol:
         else:
             prefix = "D"
 
-        return f"{prefix}_{suffix}"
+        self.cached_default_name = f"{prefix}_{suffix}"
+        return self.cached_default_name
 
     @property
     def rom_end(self):
@@ -427,29 +473,3 @@ class Symbol:
 
     def contains_rom(self, offset):
         return offset >= self.rom and offset < self.rom_end
-
-    def __init__(
-        self,
-        vram: int,
-        given_name: Optional[str] = None,
-        rom: Optional[int] = None,
-        type: Optional[str] = "unknown",
-        given_size: Optional[int] = None,
-        segment: Optional["Segment"] = None,
-    ):
-        self.defined: bool = False
-        self.referenced: bool = False
-        self.vram_start = vram
-        self.rom = rom
-        self.type = type
-        self.given_size = given_size
-        self.given_name = given_name
-        self.access_mnemonic: Optional[rabbitizer.Enum] = None
-        self.disasm_str = None
-        self.dead = False
-        self.extract = True
-        self.user_declared: bool = False
-        self.segment = segment
-
-    def __str__(self):
-        return self.name
