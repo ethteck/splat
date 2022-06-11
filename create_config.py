@@ -31,7 +31,9 @@ options:
   find_file_boundaries: True
   header_encoding: {rom.header_encoding}
   # platform: n64
+  # undefined_funcs_auto: True
   # undefined_funcs_auto_path: undefined_funcs_auto.txt
+  # undefined_syms_auto: True
   # undefined_syms_auto_path: undefined_syms_auto.txt
   # symbol_addrs_path: symbol_addrs.txt
   # undefined_syms_path: undefined_syms.txt
@@ -39,7 +41,9 @@ options:
   # src_path: src
   # build_path: build
   # extensions_path: tools/splat_ext
-  # auto_all_sections: True
+  # mips_abi_float_regs: o32
+  # section_order: [".text", ".data", ".rodata", ".bss"]
+  # auto_all_sections: [".data", ".rodata", ".bss"]
 """
 
     first_section_end = find_code_length.run(rom_bytes, 0x1000, rom.entry_point)

@@ -6,13 +6,13 @@ import sys
 import argparse
 import itertools
 import struct
+import spimdisasm
+import rabbitizer
 
 from pathlib import Path
 
 import hashlib
 import zlib
-
-from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
 
 parser = argparse.ArgumentParser(description="Gives information on N64 roms")
 parser.add_argument("rom", help="path to an N64 rom")
@@ -141,12 +141,6 @@ def get_info_bytes(rom_bytes: bytes, header_encoding):
     cic = get_cic(rom_bytes)
     entry_point = get_entry_point(program_counter, cic)
 
-    # TODO: add support for
-    # compression_formats = []
-    #  for format in ["Yay0", "vpk0"]:
-    #     if rom_bytes.find(bytes(format, "ASCII")) != -1:
-    #         compression_formats.append(format)
-
     compiler = get_compiler_info(rom_bytes, entry_point, print_result=False)
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
@@ -194,17 +188,20 @@ class N64Rom:
         return country_codes[self.country_code]
 
 
-def get_compiler_info(rom_bytes: bytes, entry_point: int, print_result=True):
-    md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
-    md.detail = True
-
+def get_compiler_info(rom_bytes, entry_point, print_result=True):
     jumps = 0
     branches = 0
 
-    for insn in md.disasm(rom_bytes[0x1000:], entry_point):
-        if insn.mnemonic == "j":
+    vram = entry_point
+    wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[0x1000:])
+    for word in wordList:
+        insn = rabbitizer.Instruction(word)
+        if not insn.isImplemented():
+            break
+
+        if insn.uniqueId == rabbitizer.InstrId.cpu_j:
             jumps += 1
-        elif insn.mnemonic == "b":
+        elif insn.uniqueId == rabbitizer.InstrId.cpu_b:
             branches += 1
 
     compiler = "IDO" if branches > jumps else "GCC"
@@ -217,6 +214,8 @@ def get_compiler_info(rom_bytes: bytes, entry_point: int, print_result=True):
 
 
 def main():
+    rabbitizer.config.pseudos_pseudoB = True
+
     args = parser.parse_args()
     rom_bytes = read_rom(Path(args.rom))
     rom = get_info(Path(args.rom), rom_bytes, args.header_encoding)

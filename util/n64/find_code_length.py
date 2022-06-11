@@ -1,10 +1,8 @@
 #! /usr/bin/env python3
 
-from capstone import Cs, CS_ARCH_MIPS, CS_MODE_MIPS64, CS_MODE_BIG_ENDIAN
-
 import argparse
-
-md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+import spimdisasm
+import rabbitizer
 
 
 def int_any_base(x):
@@ -29,8 +27,13 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
     rom_addr = start_offset
     last_return = rom_addr
 
-    for insn in md.disasm(rom_bytes[start_offset:], vram):
-        if insn.mnemonic == "jr" and insn.op_str == "$ra":
+    wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[start_offset:])
+    for word in wordList:
+        insn = rabbitizer.Instruction(word)
+        if not insn.isImplemented():
+            break
+
+        if insn.isJrRa():
             last_return = rom_addr
         rom_addr += 4
         if end_offset and rom_addr >= end_offset:
