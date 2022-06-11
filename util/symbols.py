@@ -135,7 +135,7 @@ def initialize(all_segments: "List[Segment]"):
                                                 log.error("")
                                             else:
                                                 # Add segment to symbol, symbol to segment
-                                                sym.set_segment(seg)
+                                                sym.segment = seg
                                                 seg.add_symbol(sym)
                                             continue
                                     except:
@@ -328,7 +328,7 @@ def create_symbol_from_spim_symbol(
     if context_sym.size is not None:
         sym.given_size = context_sym.getSize()
     if context_sym.vromAddress is not None:
-        sym.set_rom(context_sym.getVrom())
+        sym.rom = context_sym.getVrom()
     if context_sym.isDefined:
         sym.defined = True
     if context_sym.referenceCounter > 0:
@@ -373,7 +373,6 @@ class Symbol:
         self.type = type
         self.given_size = given_size
         self.given_name = given_name
-        self.cached_default_name: Optional[str] = None
         self.access_mnemonic: Optional[rabbitizer.Enum] = None
         self.disasm_str: Optional[str] = None
         self.dead: bool = False
@@ -383,21 +382,6 @@ class Symbol:
 
     def __str__(self):
         return self.name
-
-    def set_rom(self, rom: Optional[int]):
-        if self.rom != rom:
-            self.rom = rom
-            self.cached_default_name = None
-
-    def set_type(self, type: Optional[str]):
-        if self.type != type:
-            self.type = type
-            self.cached_default_name = None
-
-    def set_segment(self, segment: Optional["Segment"]):
-        if self.segment != segment:
-            self.segment = segment
-            self.cached_default_name = None
 
     def format_name(self, format: str) -> str:
         ret = format
@@ -422,9 +406,6 @@ class Symbol:
 
     @property
     def default_name(self) -> str:
-        if self.cached_default_name is not None:
-            return self.cached_default_name
-
         if self.segment:
             if isinstance(self.rom, int):
                 suffix = self.format_name(self.segment.symbol_name_format)
@@ -447,8 +428,7 @@ class Symbol:
         else:
             prefix = "D"
 
-        self.cached_default_name = f"{prefix}_{suffix}"
-        return self.cached_default_name
+        return f"{prefix}_{suffix}"
 
     @property
     def rom_end(self):

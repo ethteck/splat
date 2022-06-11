@@ -156,8 +156,8 @@ class CommonSegC(CommonSegCodeSubsegment):
     def mark_c_funcs_as_defined(self, c_funcs):
         for func_name in c_funcs:
             found = False
-            for func_addr in self.seg_symbols:
-                for symbol in self.seg_symbols[func_addr]:
+            for symbols in self.seg_symbols.values():
+                for symbol in symbols:
                     if symbol.name == func_name:
                         symbol.defined = True
                         found = True

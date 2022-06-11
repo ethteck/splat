@@ -475,7 +475,7 @@ class Segment:
             symbols.add_symbol(ret)
 
             if in_segment:
-                ret.set_segment(most_parent)
+                ret.segment = most_parent
                 if addr not in most_parent.seg_symbols:
                     most_parent.seg_symbols[addr] = []
                 most_parent.seg_symbols[addr].append(ret)
@@ -486,12 +486,12 @@ class Segment:
             if reference:
                 ret.referenced = True
             if ret.type is None:
-                ret.set_type(type)
+                ret.type = type
             if ret.rom is None:
-                ret.set_rom(rom)
+                ret.rom = rom
             if in_segment:
                 if ret.segment is None:
-                    ret.set_segment(most_parent)
+                    ret.segment = most_parent
 
         return ret
 
