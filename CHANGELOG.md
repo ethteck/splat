@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.9.2
+* Added "palette" argument to ci4/ci8 segments so that segments' palettes can be manually specified
+
 ### 0.9.1
 * Fixed a bug in which local labels and jump table labels could replace raw words in data blobs during data disassembly
 
