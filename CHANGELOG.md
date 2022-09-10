@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.9.3
+* Added `add_set_gp_64` option (true by default), which allows controlling whether to add ".set gp=64" to asm/hasm files
+
 ### 0.9.2
 * Added "palette" argument to ci4/ci8 segments so that segments' palettes can be manually specified
 
