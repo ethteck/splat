@@ -263,7 +263,7 @@ def enable_ld_alignment_hack() -> bool:
 
 # Determines the list of section labels that are to be added to the linker script
 def ld_section_labels() -> List[str]:
-    return opts.get("ld_section_labels", [".text", ".data", ".bss"])
+    return opts.get("ld_section_labels", [".text", ".data", ".rodata", ".bss"])
 
 
 ################################################################################
