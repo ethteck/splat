@@ -162,7 +162,7 @@ class LinkerWriter:
         for entry in entries:
             entering_bss = False
             leaving_bss = False
-            cur_section = entry.section_type
+            cur_section = entry.section
 
             if cur_section == "linker":
                 self._end_block()
