@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union, List
+from typing import Dict, Optional, OrderedDict, Union, List
 from pathlib import Path
 from segtypes.common.data import CommonSegData
 from segtypes.n64.img import N64SegImg
@@ -128,32 +128,40 @@ class LinkerWriter:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
 
-        self._begin_segment(segment)
-
         seg_name = get_segment_cname(segment)
 
-        section_label_types = options.ld_section_labels()
+        section_labels: OrderedDict[str, LinkerSection] = OrderedDict(
+            {
+                l: LinkerSection(l)
+                for l in options.get_section_order()
+                if l in options.ld_section_labels()
+            }
+        )
 
-        section_labels = [
-            LinkerSection(l)
-            for l in options.get_section_order()
-            if l in section_label_types
-        ]
+        if self.entries[0].section_type == ".bss":
+            self._begin_bss_segment(segment)
+            if ".bss" in section_labels:
+                section_labels[".bss"].started = True
+        else:
+            self._begin_segment(segment)
 
         force_new_section = False
         cur_section = None
 
         last_seen_sections: Dict[LinkerEntry, str] = {}
 
+        # Find where sections are last seen
         for entry in reversed(entries):
             if (
-                entry.section_type in section_label_types
+                entry.section_type in section_labels.keys()
                 and entry.section_type not in last_seen_sections.values()
             ):
                 last_seen_sections[entry] = entry.section_type
 
+        prev_section = None
         for entry in entries:
-            new_section = False
+            entering_bss = False
+            leaving_bss = False
             cur_section = entry.section_type
 
             if cur_section == "linker":
@@ -164,11 +172,19 @@ class LinkerWriter:
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f".")
                 continue
 
-            for i, section in enumerate(section_labels):
+            for i, section in enumerate(section_labels.values()):
+                # If we haven't seen this section yet
                 if not section.started and section.section_type == cur_section:
                     section.started = True
-                    new_section = True
-                    if cur_section != ".bss":  # BSS sections are handled differently
+
+                    if prev_section == ".bss":
+                        leaving_bss = True
+                    elif cur_section == ".bss":
+                        entering_bss = True
+
+                    if not (
+                        entering_bss or leaving_bss
+                    ):  # Don't write a START symbol if we are about to end the section
                         self._write_symbol(
                             f"{seg_name}{cur_section.upper()}_START", "."
                         )
@@ -208,13 +224,20 @@ class LinkerWriter:
                         )
 
             # Create new linker section for BSS
-            if new_section and cur_section == ".bss":
+            if entering_bss or leaving_bss:
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    self._write_symbol(f"{seg_name}{cur_section.upper()}_END", ".")
+                    self._write_symbol(
+                        f"{seg_name}{last_seen_sections[entry].upper()}_END", "."
+                    )
 
                 self._end_block()
-                self._begin_bss_segment(segment)
+
+                if entering_bss:
+                    self._begin_bss_segment(segment)
+                else:
+                    self._begin_segment(segment)
+
                 self._write_symbol(f"{seg_name}{cur_section.upper()}_START", ".")
 
                 # Write THIS linker entry
@@ -227,14 +250,15 @@ class LinkerWriter:
                 if entry in last_seen_sections:
                     self._write_symbol(f"{seg_name}{cur_section.upper()}_END", ".")
 
-        for section in section_labels:
+            prev_section = cur_section
+
+        # End all un-ended sections
+        for section in section_labels.values():
             if (
                 section.started
                 and section.section_type not in last_seen_sections.values()
             ):
-                self._write_symbol(
-                    f"{seg_name}_{section.name.upper()}_END", "."
-                )
+                self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
 
         self._end_segment(segment, next_segment)
 
