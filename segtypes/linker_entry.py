@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Union, List
+from typing import Dict, Optional, Union, List
 from pathlib import Path
 from segtypes.common.data import CommonSegData
 from segtypes.n64.img import N64SegImg
@@ -127,6 +127,7 @@ class LinkerWriter:
         if options.get_gp() is not None:
             self._writeln("_gp = " + f"0x{options.get_gp():X};")
 
+    # Adds all the entries of a segment to the linker script buffer
     def add(self, segment: Segment, next_segment: Optional[Segment]):
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
@@ -146,7 +147,7 @@ class LinkerWriter:
         force_new_section = False
         cur_section = None
 
-        last_seen_sections: dict[LinkerEntry, str] = {}
+        last_seen_sections: Dict[LinkerEntry, str] = {}
 
         for entry in reversed(entries):
             if (
@@ -304,6 +305,7 @@ class LinkerWriter:
                 f"__romPos = (__romPos + {segment.align - 1}) & ~{segment.align - 1}; /* align {segment.align} */"
             )
 
+        # TODO shiftable ram
         vram = segment.vram_start
         vram_str = f"0x{vram:X} " if isinstance(vram, int) else ""
 
