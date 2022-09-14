@@ -251,7 +251,8 @@ class LinkerWriter:
             ):
                 self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
 
-        self._end_segment(segment, next_segment)
+        all_bss = all(e.section == ".bss" for e in entries)
+        self._end_segment(segment, next_segment, all_bss)
 
     def save_linker_script(self):
         if self.linker_discard_section:
@@ -340,12 +341,15 @@ class LinkerWriter:
         self._writeln(f".{name} {addr_str} : SUBALIGN({segment.subalign})")
         self._begin_block()
 
-    def _end_segment(self, segment: Segment, next_segment: Optional[Segment] = None):
+    def _end_segment(
+        self, segment: Segment, next_segment: Optional[Segment] = None, all_bss=False
+    ):
         self._end_block()
 
         name = get_segment_cname(segment)
 
-        self._writeln(f"__romPos += SIZEOF(.{name});")
+        if not all_bss:
+            self._writeln(f"__romPos += SIZEOF(.{name});")
 
         # Align directive
         if segment.align:
