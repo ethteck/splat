@@ -139,8 +139,12 @@ class LinkerWriter:
         )
 
         # Start the first linker section
+
+        self._write_symbol(f"{seg_name}_ROM_START", "__romPos")
+
         if entries[0].section_type == ".bss":
-            self._begin_bss_segment(segment, add_rom_start=True)
+            self._begin_bss_segment(segment, is_first=True)
+            self._write_symbol(f"{seg_name}_BSS_START", ".")
             if ".bss" in section_labels:
                 section_labels[".bss"].started = True
         else:
@@ -173,7 +177,7 @@ class LinkerWriter:
 
             for i, section in enumerate(section_labels.values()):
                 # If we haven't seen this section yet
-                if not section.started and section.section_type == cur_section:
+                if not section.started and section.section_type == entry.section_type:
                     section.started = True
 
                     if prev_section == ".bss":
@@ -305,23 +309,13 @@ class LinkerWriter:
         if symbol not in self.symbols:
             self.symbols.append(symbol)
 
-    def _begin_segment(self, segment: Segment, mid_segment=False):
-        # Align directive
-        if segment.align:
-            self._writeln(
-                f"__romPos = (__romPos + {segment.align - 1}) & ~{segment.align - 1}; /* align {segment.align} */"
-            )
-
+    def _begin_segment(self, segment: Segment):
         # TODO shiftable ram
         vram = segment.vram_start
         vram_str = f"0x{vram:X} " if isinstance(vram, int) else ""
 
         name = get_segment_cname(segment)
 
-        if mid_segment:
-            name += to_cname(segment.type)
-
-        self._write_symbol(f"{name}_ROM_START", "__romPos")
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
 
         self._writeln(
@@ -329,14 +323,21 @@ class LinkerWriter:
         )
         self._begin_block()
 
-    def _begin_bss_segment(self, segment: Segment, add_rom_start=False):
+    def _begin_bss_segment(self, segment: Segment, is_first: bool = False):
+        # TODO shiftable ram
+        vram = segment.vram_start
+        vram_str = f"0x{vram:X} " if isinstance(vram, int) else ""
+
         name = get_segment_cname(segment) + "_bss"
 
-        if add_rom_start:
-            self._write_symbol(f"{name}_ROM_START", "__romPos")
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
 
-        self._writeln(f".{name} (NOLOAD) : SUBALIGN({segment.subalign})")
+        if is_first:
+            addr_str = vram_str + "(NOLOAD)"
+        else:
+            addr_str = "(NOLOAD)"
+
+        self._writeln(f".{name} {addr_str} : SUBALIGN({segment.subalign})")
         self._begin_block()
 
     def _end_segment(self, segment: Segment, next_segment: Optional[Segment] = None):
@@ -346,11 +347,12 @@ class LinkerWriter:
 
         self._writeln(f"__romPos += SIZEOF(.{name});")
 
-        if next_segment:
-            rom_end_val = get_segment_cname(next_segment) + "_ROM_START"
-        else:
-            rom_end_val = "__romPos"
+        # Align directive
+        if segment.align:
+            self._writeln(
+                f"__romPos = (__romPos + {segment.align - 1}) & ~{segment.align - 1}; /* align {segment.align} */"
+            )
 
-        self._write_symbol(f"{name}_ROM_END", rom_end_val)
+        self._write_symbol(f"{name}_ROM_END", "__romPos")
 
         self._writeln("")
