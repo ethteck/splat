@@ -311,9 +311,10 @@ class LinkerWriter:
             self.symbols.append(symbol)
 
     def _begin_segment(self, segment: Segment):
-        # TODO shiftable ram
-        vram = segment.vram_start
-        vram_str = f"0x{vram:X} " if isinstance(vram, int) else ""
+        if segment.follows_vram_segment:
+            vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        else:
+            vram_str = f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
 
         name = get_segment_cname(segment)
 
@@ -325,9 +326,10 @@ class LinkerWriter:
         self._begin_block()
 
     def _begin_bss_segment(self, segment: Segment, is_first: bool = False):
-        # TODO shiftable ram
-        vram = segment.vram_start
-        vram_str = f"0x{vram:X} " if isinstance(vram, int) else ""
+        if segment.follows_vram_segment:
+            vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        else:
+            vram_str = f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
 
         name = get_segment_cname(segment) + "_bss"
 
@@ -358,5 +360,7 @@ class LinkerWriter:
             )
 
         self._write_symbol(f"{name}_ROM_END", "__romPos")
+
+        self._write_symbol(f"{name}_VRAM_END", ".")
 
         self._writeln("")
