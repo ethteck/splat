@@ -178,8 +178,6 @@ class LinkerWriter:
             for i, section in enumerate(section_labels.values()):
                 # If we haven't seen this section yet
                 if not section.started and section.section_type == entry.section_type:
-                    section.started = True
-
                     if prev_section == ".bss":
                         leaving_bss = True
                     elif cur_section == ".bss":
@@ -191,6 +189,7 @@ class LinkerWriter:
                         self._write_symbol(
                             f"{seg_name}{cur_section.upper()}_START", "."
                         )
+                        section_labels[cur_section].started = True
 
             if (
                 entry.object_path
@@ -205,22 +204,14 @@ class LinkerWriter:
                 )
                 self._write_symbol(path_cname, ".")
 
-            # Write out manual entries for images inside .data segments
-            seg = entry.segment
-            if isinstance(seg, CommonSegData):
-                for subseg in seg.subsegments:
-                    if isinstance(subseg, N64SegImg):
-                        self._write_symbol(
-                            get_segment_cname(subseg), f"0x{subseg.rom_start:X}"
-                        )
-
             # Create new linker section for BSS
             if entering_bss or leaving_bss:
                 # If this is the last entry of its type, add the END marker for the section we're ending
-                if entry in last_seen_sections:
+                if entry in last_seen_sections and section_labels[entry.section_type].started:
                     self._write_symbol(
                         f"{seg_name}{last_seen_sections[entry].upper()}_END", "."
                     )
+                    section_labels[last_seen_sections[entry]].ended = True
 
                 self._end_block()
 
@@ -230,6 +221,7 @@ class LinkerWriter:
                     self._begin_segment(segment)
 
                 self._write_symbol(f"{seg_name}{cur_section.upper()}_START", ".")
+                section_labels[cur_section].started = True
 
                 # Write THIS linker entry
                 self._writeln(f"{entry.object_path}({cur_section});")
@@ -240,15 +232,13 @@ class LinkerWriter:
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
                     self._write_symbol(f"{seg_name}{cur_section.upper()}_END", ".")
+                    section_labels[cur_section].ended = True
 
             prev_section = cur_section
 
         # End all un-ended sections
         for section in section_labels.values():
-            if (
-                section.started
-                and section.section_type not in last_seen_sections.values()
-            ):
+            if (section.started and not section.ended):
                 self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
 
         all_bss = all(e.section == ".bss" for e in entries)
