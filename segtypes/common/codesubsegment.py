@@ -1,40 +1,13 @@
 from util import options
 from segtypes.common.code import CommonSegCode
 import spimdisasm
-import rabbitizer
 
 from segtypes.segment import Segment
-from util.symbols import Symbol
 from util import symbols
 
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
-    double_mnemonics = [
-        rabbitizer.InstrId.cpu_ldc1,
-        rabbitizer.InstrId.cpu_sdc1,
-    ]
-    word_mnemonics = [
-        rabbitizer.InstrId.cpu_addiu,
-        rabbitizer.InstrId.cpu_sw,
-        rabbitizer.InstrId.cpu_lw,
-    ]
-    float_mnemonics = [
-        rabbitizer.InstrId.cpu_lwc1,
-        rabbitizer.InstrId.cpu_swc1,
-    ]
-    short_mnemonics = [
-        rabbitizer.InstrId.cpu_addiu,
-        rabbitizer.InstrId.cpu_lh,
-        rabbitizer.InstrId.cpu_sh,
-        rabbitizer.InstrId.cpu_lhu,
-    ]
-    byte_mnemonics = [
-        rabbitizer.InstrId.cpu_lb,
-        rabbitizer.InstrId.cpu_sb,
-        rabbitizer.InstrId.cpu_lbu,
-    ]
-
     @property
     def needs_symbols(self) -> bool:
         return True
@@ -43,6 +16,12 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     def scan_code(self, rom_bytes, is_asm=False):
+        assert isinstance(self.rom_start, int)
+        assert isinstance(self.rom_end, int)
+
+        segment_rom_start = self.get_most_parent().rom_start
+        assert isinstance(segment_rom_start, int)
+
         self.spim_section = spimdisasm.mips.sections.SectionText(
             symbols.spim_context,
             self.rom_start,
@@ -50,7 +29,7 @@ class CommonSegCodeSubsegment(Segment):
             self.vram_start,
             self.name,
             rom_bytes,
-            self.get_most_parent().rom_start,
+            segment_rom_start,
             self.get_exclusive_ram_id(),
         )
 
@@ -124,43 +103,15 @@ class CommonSegCodeSubsegment(Segment):
                         self.get_most_parent(), context_sym
                     )
 
-                    if any(
-                        insn.uniqueId in mnemonics
-                        for mnemonics in (
-                            self.double_mnemonics,
-                            self.word_mnemonics,
-                            self.float_mnemonics,
-                            self.short_mnemonics,
-                            self.byte_mnemonics,
-                        )
-                    ):
-                        self.update_access_mnemonic(sym, insn)
-
                     if self.parent:
                         self.parent.check_rodata_sym(func_spim.vram, sym)
 
-    def update_access_mnemonic(self, sym: Symbol, insn: rabbitizer.Instruction):
-        if not sym.access_mnemonic:
-            sym.access_mnemonic = insn.uniqueId
-        elif sym.access_mnemonic in self.double_mnemonics:
-            return
-        elif (
-            sym.access_mnemonic in self.float_mnemonics
-            and insn.uniqueId in self.double_mnemonics
-        ):
-            sym.access_mnemonic = insn.uniqueId
-        elif sym.access_mnemonic == rabbitizer.InstrId.cpu_addiu:
-            sym.access_mnemonic = insn.uniqueId
-        elif sym.access_mnemonic in self.short_mnemonics:
-            return
-        elif sym.access_mnemonic in self.byte_mnemonics:
-            return
-        else:
-            sym.access_mnemonic = insn.uniqueId
 
     def print_file_boundaries(self):
         if not options.find_file_boundaries():
             return
+
+        assert isinstance(self.rom_start, int)
 
         for in_file_offset in self.spim_section.fileBoundaries:
             if (in_file_offset % 16) != 0:
@@ -186,6 +137,8 @@ class CommonSegCodeSubsegment(Segment):
             print(f"      - [0x{self.rom_start+in_file_offset:X}, {self.type}]")
 
     def gather_jumptable_labels(self, rom_bytes):
+        assert isinstance(self.rom_start, int)
+
         # TODO: use the seg_symbols for this
         # jumptables = [j.type == "jtbl" for j in self.seg_symbols]
         for jumptable in self.parent.jumptables:

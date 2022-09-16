@@ -5,7 +5,6 @@ import os
 import re
 from pathlib import Path
 import spimdisasm
-import rabbitizer
 
 from util import log, options
 from util.compiler import GCC, SN64
