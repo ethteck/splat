@@ -43,7 +43,7 @@ class CommonSegRodata(CommonSegData):
 
         return None
 
-
+    """
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
@@ -60,3 +60,4 @@ class CommonSegRodata(CommonSegData):
                     f.write(f'.section {self.get_linker_section()}\n\n')
 
                     f.write(self.spim_section.disassemble())
+    """
