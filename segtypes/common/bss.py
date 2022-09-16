@@ -46,18 +46,6 @@ class CommonSegBss(CommonSegData):
                 self.get_most_parent(), spim_sym.contextSym
             )
 
-    def split(self, rom_bytes: bytes):
-        if not self.rom_start == self.rom_end:
-            out_path = self.out_path()
-            if out_path:
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-
-                with open(out_path, "w", newline="\n") as f:
-                    f.write('.include "macro.inc"\n\n')
-                    f.write(f'.section {self.get_linker_section()}\n\n')
-
-                    f.write(self.bss_section.disassemble())
-
     def get_linker_entries(self) -> "List[LinkerEntry]":
 
         if self.sibling:

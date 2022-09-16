@@ -42,22 +42,3 @@ class CommonSegRodata(CommonSegData):
             )
 
         return None
-
-    """
-    def split(self, rom_bytes: bytes):
-        super().split(rom_bytes)
-
-        if not self.type.startswith("."):
-            path = self.out_path()
-
-            if path:
-                path.parent.mkdir(parents=True, exist_ok=True)
-
-                self.print_file_boundaries()
-
-                with open(path, "w", newline="\n") as f:
-                    f.write('.include "macro.inc"\n\n')
-                    f.write(f'.section {self.get_linker_section()}\n\n')
-
-                    f.write(self.spim_section.disassemble())
-    """
