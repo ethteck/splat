@@ -134,7 +134,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
-            for func in self.text_section.symbolList:
+            for func in self.spim_section.symbolList:
                 assert func.vram is not None
                 func_sym = self.get_symbol(
                     func.vram, in_segment=True, type="func", local_only=True
@@ -221,7 +221,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def create_c_file(self, asm_out_dir, c_path):
         c_lines = self.get_c_preamble()
 
-        for func in self.text_section.symbolList:
+        for func in self.spim_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             # Terrible hack to "auto-decompile" empty functions

@@ -15,7 +15,7 @@ class CommonSegRodata(CommonSegData):
         segment_rom_start = self.get_most_parent().rom_start
         assert isinstance(segment_rom_start, int)
 
-        self.rodata_section = spimdisasm.mips.sections.SectionRodata(
+        self.spim_section = spimdisasm.mips.sections.SectionRodata(
             symbols.spim_context,
             self.rom_start,
             self.rom_end,
@@ -27,16 +27,16 @@ class CommonSegRodata(CommonSegData):
         )
 
         for symbol_list in self.seg_symbols.values():
-            symbols.add_symbol_to_spim_section(self.rodata_section, symbol_list[0])
+            symbols.add_symbol_to_spim_section(self.spim_section, symbol_list[0])
 
         for sym in symbols.all_symbols:
             if sym.user_declared:
-                symbols.add_symbol_to_spim_section(self.rodata_section, sym)
+                symbols.add_symbol_to_spim_section(self.spim_section, sym)
 
-        self.rodata_section.analyze()
-        self.rodata_section.setCommentOffset(self.rom_start)
+        self.spim_section.analyze()
+        self.spim_section.setCommentOffset(self.rom_start)
 
-        for symbol in self.rodata_section.symbolList:
+        for symbol in self.spim_section.symbolList:
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym
             )
@@ -56,9 +56,4 @@ class CommonSegRodata(CommonSegData):
                 self.print_file_boundaries()
 
                 with open(path, "w", newline="\n") as f:
-                    f.write(self.rodata_section.disassemble())
-
-
-    def print_file_boundaries(self):
-        # TODO
-        pass
+                    f.write(self.spim_section.disassemble())

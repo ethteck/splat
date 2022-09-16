@@ -31,4 +31,4 @@ class CommonSegAsm(CommonSegCodeSubsegment):
                 with open(out_path, "w", newline="\n") as f:
                     for line in self.get_file_header():
                         f.write(line + "\n")
-                    f.write(self.text_section.disassemble())
+                    f.write(self.spim_section.disassemble())

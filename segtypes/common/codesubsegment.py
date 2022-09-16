@@ -43,7 +43,7 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     def scan_code(self, rom_bytes, is_asm=False):
-        self.text_section = spimdisasm.mips.sections.SectionText(
+        self.spim_section = spimdisasm.mips.sections.SectionText(
             symbols.spim_context,
             self.rom_start,
             self.rom_end,
@@ -55,18 +55,18 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         for symbol_list in self.seg_symbols.values():
-            symbols.add_symbol_to_spim_section(self.text_section, symbol_list[0])
+            symbols.add_symbol_to_spim_section(self.spim_section, symbol_list[0])
 
         for sym in symbols.all_symbols:
             if sym.user_declared:
-                symbols.add_symbol_to_spim_section(self.text_section, sym)
+                symbols.add_symbol_to_spim_section(self.spim_section, sym)
 
-        self.text_section.isHandwritten = is_asm
+        self.spim_section.isHandwritten = is_asm
 
-        self.text_section.analyze()
-        self.text_section.setCommentOffset(self.rom_start)
+        self.spim_section.analyze()
+        self.spim_section.setCommentOffset(self.rom_start)
 
-        for func in self.text_section.symbolList:
+        for func in self.spim_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             self.process_insns(func)
@@ -78,7 +78,7 @@ class CommonSegCodeSubsegment(Segment):
                 jtbl_label_vram, True, type="jtbl_label", define=True
             )
             sym.type = "jtbl_label"
-            symbols.add_symbol_to_spim_section(self.text_section, sym)
+            symbols.add_symbol_to_spim_section(self.spim_section, sym)
 
     def process_insns(
         self,
@@ -95,7 +95,7 @@ class CommonSegCodeSubsegment(Segment):
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referenced_vram in func_spim.instrAnalyzer.referencedVrams:
-            context_sym = self.text_section.getSymbol(
+            context_sym = self.spim_section.getSymbol(
                 referenced_vram, tryPlusOffset=False
             )
             if context_sym is not None:
@@ -116,7 +116,7 @@ class CommonSegCodeSubsegment(Segment):
             if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
                 sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
 
-                context_sym = self.text_section.getSymbol(
+                context_sym = self.spim_section.getSymbol(
                     sym_address, tryPlusOffset=False
                 )
                 if context_sym is not None:
@@ -162,28 +162,28 @@ class CommonSegCodeSubsegment(Segment):
         if not options.find_file_boundaries():
             return
 
-        for in_file_offset in self.text_section.fileBoundaries:
+        for in_file_offset in self.spim_section.fileBoundaries:
             if (in_file_offset % 16) != 0:
                 continue
 
             if not self.parent.reported_file_split:
                 self.parent.reported_file_split = True
 
-                # Look up for the last function in this boundary
-                func_addr = 0
-                for func in self.text_section.symbolList:
-                    funcOffset = func.inFileOffset - self.text_section.inFileOffset
-                    if in_file_offset == funcOffset:
+                # Look up for the last symbol in this boundary
+                sym_addr = 0
+                for sym in self.spim_section.symbolList:
+                    symOffset = sym.inFileOffset - self.spim_section.inFileOffset
+                    if in_file_offset == symOffset:
                         break
-                    func_addr = func.vram
+                    sym_addr = sym.vram
 
                 print(
-                    f"Segment {self.name}, function at vram {func_addr:X} ends with extra nops, indicating a likely file split."
+                    f"Segment {self.name}, symbol at vram {sym_addr:X} ends with extra nops, indicating a likely file split."
                 )
                 print(
                     "File split suggestions for this segment will follow in config yaml format:"
                 )
-            print(f"      - [0x{self.rom_start+in_file_offset:X}, asm]")
+            print(f"      - [0x{self.rom_start+in_file_offset:X}, {self.type}]")
 
     def gather_jumptable_labels(self, rom_bytes):
         # TODO: use the seg_symbols for this
