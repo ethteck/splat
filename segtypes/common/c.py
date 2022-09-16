@@ -174,47 +174,31 @@ class CommonSegC(CommonSegCodeSubsegment):
         if outpath.exists() and not func_sym.extract:
             return
 
-        out_lines = []
-
-        if options.asm_inc_header():
-            out_lines.extend(options.asm_inc_header().split("\n"))
-
-        if self.parent and isinstance(self.parent, CommonSegGroup):
-            if (
-                options.get_migrate_rodata_to_functions()
-                and func.vram in self.parent.rodata_syms
-            ):
-                func_rodata = list(
-                    {s for s in self.parent.rodata_syms[func.vram] if s.disasm_str}
-                )
-                func_rodata.sort(key=lambda s: s.vram_start)
-
-                if len(func_rodata) > 0:
-                    rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
-                    if rsub and rsub.type != "rodata":
-                        out_lines.append(".section .rodata")
-
-                        for sym in func_rodata:
-                            if sym.extract and sym.disasm_str:
-                                out_lines.append("")
-                                out_lines.append(
-                                    f"{options.get_asm_data_macro()} {sym.name}"
-                                )
-                                out_lines.extend(
-                                    sym.disasm_str.replace("\n\n", "\n").split("\n")
-                                )
-
-                        out_lines.append("")
-                        out_lines.append(".section .text")
-                        out_lines.append("")
-
-        out_lines.append(func.disassemble())
-
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
         with open(outpath, "w", newline="\n") as f:
-            newline_sep = options.c_newline()
-            f.write(newline_sep.join(out_lines))
+            if options.asm_inc_header():
+                f.write(options.c_newline().join(options.asm_inc_header().split("\n")))
+
+            if self.parent and isinstance(self.parent, CommonSegGroup):
+                if (
+                    options.get_migrate_rodata_to_functions()
+                    and func.vram in self.parent.rodata_syms
+                ):
+                    func_rodata = list(
+                        {s for s in self.parent.rodata_syms[func.vram]}
+                    )
+                    func_rodata.sort(key=lambda s: s.vram_start)
+
+                    if len(func_rodata) > 0:
+                        rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
+
+                        if rsub is not None:
+                            rdataList, lateRodataList, lateRodataSize = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(func, rsub.spim_section)
+                            spimdisasm.mips.FilesHandlers.writeFunctionRodataToFile(f, func, rdataList, lateRodataList, lateRodataSize)
+
+            f.write(func.disassemble())
+
         self.log(f"Disassembled {func_sym.name} to {outpath}")
 
     def create_c_file(self, asm_out_dir, c_path):
