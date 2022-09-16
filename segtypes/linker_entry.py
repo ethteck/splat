@@ -187,9 +187,9 @@ class LinkerWriter:
                         entering_bss or leaving_bss
                     ):  # Don't write a START symbol if we are about to end the section
                         self._write_symbol(
-                            f"{seg_name}{cur_section.upper()}_START", "."
+                            f"{seg_name}{entry.section_type.upper()}_START", "."
                         )
-                        section_labels[cur_section].started = True
+                        section_labels[entry.section_type].started = True
 
             if (
                 entry.object_path
@@ -220,7 +220,7 @@ class LinkerWriter:
                 else:
                     self._begin_segment(segment)
 
-                self._write_symbol(f"{seg_name}{cur_section.upper()}_START", ".")
+                self._write_symbol(f"{seg_name}{entry.section_type.upper()}_START", ".")
                 section_labels[cur_section].started = True
 
                 # Write THIS linker entry
