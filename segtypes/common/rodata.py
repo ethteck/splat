@@ -56,4 +56,7 @@ class CommonSegRodata(CommonSegData):
                 self.print_file_boundaries()
 
                 with open(path, "w", newline="\n") as f:
+                    f.write('.include "macro.inc"\n\n')
+                    f.write(f'.section {self.get_linker_section()}\n\n')
+
                     f.write(self.spim_section.disassemble())
