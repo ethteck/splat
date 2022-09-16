@@ -1,6 +1,5 @@
-from segtypes.common.data import CommonSegData
+from segtypes.common.rodata import CommonSegRodata
 
-
-class CommonSegRdata(CommonSegData):
-    def get_linker_section(self) -> str:
-        return ".rdata"
+#! deprecated
+class CommonSegRdata(CommonSegRodata):
+    pass
