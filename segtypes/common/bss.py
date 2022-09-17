@@ -20,7 +20,7 @@ class CommonSegBss(CommonSegData):
         bss_end = self.get_most_parent().vram_end
         assert isinstance(bss_end, int)
 
-        self.bss_section = spimdisasm.mips.sections.SectionBss(
+        self.spim_section = spimdisasm.mips.sections.SectionBss(
             symbols.spim_context,
             self.rom_start,
             self.rom_end,
@@ -32,22 +32,21 @@ class CommonSegBss(CommonSegData):
         )
 
         for symbol_list in self.seg_symbols.values():
-            symbols.add_symbol_to_spim_section(self.bss_section, symbol_list[0])
+            symbols.add_symbol_to_spim_section(self.spim_section, symbol_list[0])
 
         for sym in symbols.all_symbols:
             if sym.user_declared:
-                symbols.add_symbol_to_spim_section(self.bss_section, sym)
+                symbols.add_symbol_to_spim_section(self.spim_section, sym)
 
-        self.bss_section.analyze()
-        self.bss_section.setCommentOffset(self.rom_start)
+        self.spim_section.analyze()
+        self.spim_section.setCommentOffset(self.rom_start)
 
-        for spim_sym in self.bss_section.symbolList:
+        for spim_sym in self.spim_section.symbolList:
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), spim_sym.contextSym
             )
 
     def get_linker_entries(self) -> "List[LinkerEntry]":
-
         if self.sibling:
             path = self.sibling.out_path()
         else:
