@@ -129,7 +129,7 @@ class CommonSegCodeSubsegment(Segment):
                     sym_addr = sym.vram
 
                 print(
-                    f"Segment {self.name}, symbol at vram {sym_addr:X} ends with extra nops, indicating a likely file split."
+                    f"\nSegment {self.name}, symbol at vram {sym_addr:X} ends with extra nops, indicating a likely file split."
                 )
                 print(
                     "File split suggestions for this segment will follow in config yaml format:"
