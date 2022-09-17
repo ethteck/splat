@@ -1,7 +1,7 @@
 import spimdisasm
 
 from segtypes.common.data import CommonSegData
-from util import symbols
+from util import symbols, options
 
 
 class CommonSegRodata(CommonSegData):
@@ -42,3 +42,20 @@ class CommonSegRodata(CommonSegData):
             )
 
         return None
+
+    def split(self, rom_bytes: bytes):
+        # Disassemble the file itself
+        super().split(rom_bytes)
+
+        if not self.type.startswith(".") and options.get_migrate_rodata_to_functions():
+            path_folder = options.get_data_path() / self.dir
+            path_folder.parent.mkdir(parents=True, exist_ok=True)
+
+            for rodataSym in self.spim_section.symbolList:
+                if not rodataSym.isRdata():
+                    continue
+
+                path = path_folder / f"{rodataSym.getName()}.s"
+                with open(path, "w", newline="\n") as f:
+                    f.write(".rdata\n")
+                    f.write(rodataSym.disassemble())

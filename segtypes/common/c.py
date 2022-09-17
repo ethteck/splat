@@ -135,6 +135,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             for func in self.spim_section.symbolList:
                 assert func.vram is not None
+                assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
                 func_sym = self.get_symbol(
                     func.vram, in_segment=True, type="func", local_only=True
                 )
@@ -165,7 +166,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     break
 
     def create_c_asm_file(
-        self, func: spimdisasm.mips.symbols.SymbolBase, out_dir, func_sym: Symbol
+        self, func: spimdisasm.mips.symbols.SymbolFunction, out_dir, func_sym: Symbol
     ):
         outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
         assert func.vram is not None
