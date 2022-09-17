@@ -457,6 +457,14 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         with open(options.get_cache_path(), "wb") as f4:
             pickle.dump(cache, f4)
 
+    if False:
+        with open("splat_symbols.csv", "w") as f:
+            for s in symbols.all_symbols:
+                f.write(f"{s.vram_start:X},{s.name}\n")
+
+        from pathlib import Path
+        symbols.spim_context.saveContextToFile(Path("spim_context.csv"))
+
 
 if __name__ == "__main__":
     args = parser.parse_args()

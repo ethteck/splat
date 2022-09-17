@@ -195,8 +195,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                         rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
 
                         if rsub is not None:
-                            rdataList, lateRodataList, lateRodataSize = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(func, rsub.spim_section)
-                            spimdisasm.mips.FilesHandlers.writeFunctionRodataToFile(f, func, rdataList, lateRodataList, lateRodataSize)
+                            rdata_list, late_rodata_list, late_rodata_size = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(func, rsub.spim_section)
+                            spimdisasm.mips.FilesHandlers.writeFunctionRodataToFile(f, func, rdata_list, late_rodata_list, late_rodata_size)
 
             f.write(func.disassemble())
 
