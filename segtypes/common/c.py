@@ -1,5 +1,6 @@
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
+from segtypes.common.rodata import CommonSegRodata
 from typing import Optional, Set
 import os
 import re
@@ -191,12 +192,25 @@ class CommonSegC(CommonSegCodeSubsegment):
                     )
                     func_rodata.sort(key=lambda s: s.vram_start)
 
-                    if len(func_rodata) > 0:
-                        rsub = self.parent.get_subsegment_for_ram(func_rodata[0].vram_start)
+                    rdata_list = []
+                    late_rodata_list = []
+                    late_rodata_size = 0
 
-                        if rsub is not None:
-                            rdata_list, late_rodata_list, late_rodata_size = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(func, rsub.spim_section)
-                            spimdisasm.mips.FilesHandlers.writeFunctionRodataToFile(f, func, rdata_list, late_rodata_list, late_rodata_size)
+                    processed_rodata_segments = set()
+                    for func_rodata_symbol in func_rodata:
+                        rsub = self.parent.get_subsegment_for_ram(func_rodata_symbol.vram_start)
+
+                        if rsub is not None and isinstance(rsub, CommonSegRodata):
+                            if rsub in processed_rodata_segments:
+                                continue
+
+                            rdata_list_aux, late_rodata_list_aux, late_rodata_size_aux = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(func, rsub.spim_section)
+                            rdata_list += rdata_list_aux
+                            late_rodata_list += late_rodata_list_aux
+                            late_rodata_size += late_rodata_size_aux
+
+                            processed_rodata_segments.add(rsub)
+                    spimdisasm.mips.FilesHandlers.writeFunctionRodataToFile(f, func, rdata_list, late_rodata_list, late_rodata_size)
 
             f.write(func.disassemble())
 

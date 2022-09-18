@@ -55,5 +55,6 @@ class CommonSegRodata(CommonSegData):
                 for rodataSym in self.spim_section.symbolList:
                     path = path_folder / f"{rodataSym.getName()}.s"
                     with open(path, "w", newline="\n") as f:
-                        f.write(".rdata\n")
+                        f.write('.include "macro.inc"\n\n')
+                        f.write(".rdata\n\n")
                         f.write(rodataSym.disassemble())
