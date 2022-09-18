@@ -3,7 +3,7 @@ pylibyaml
 pypng
 colorama
 spimdisasm>=1.5.0
-rabbitizer
+rabbitizer>=1.2.0
 pygfxd
 tqdm
 intervaltree
