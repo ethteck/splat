@@ -47,15 +47,13 @@ class CommonSegRodata(CommonSegData):
         # Disassemble the file itself
         super().split(rom_bytes)
 
-        if not self.type.startswith(".") and options.get_migrate_rodata_to_functions():
-            path_folder = options.get_data_path() / self.dir
-            path_folder.parent.mkdir(parents=True, exist_ok=True)
+        if options.get_migrate_rodata_to_functions():
+            if not self.type.startswith(".") or self.partial_migration:
+                path_folder = options.get_data_path() / self.dir
+                path_folder.parent.mkdir(parents=True, exist_ok=True)
 
-            for rodataSym in self.spim_section.symbolList:
-                if not rodataSym.isRdata():
-                    continue
-
-                path = path_folder / f"{rodataSym.getName()}.s"
-                with open(path, "w", newline="\n") as f:
-                    f.write(".rdata\n")
-                    f.write(rodataSym.disassemble())
+                for rodataSym in self.spim_section.symbolList:
+                    path = path_folder / f"{rodataSym.getName()}.s"
+                    with open(path, "w", newline="\n") as f:
+                        f.write(".rdata\n")
+                        f.write(rodataSym.disassemble())

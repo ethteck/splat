@@ -8,6 +8,40 @@ from util import symbols
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
+    def __init__(
+        self,
+        rom_start,
+        rom_end,
+        type,
+        name,
+        vram_start,
+        extract,
+        given_subalign,
+        exclusive_ram_id,
+        given_dir,
+        symbol_name_format,
+        symbol_name_format_no_rom,
+        args,
+        yaml,
+    ):
+        self.partial_migration: bool = yaml.get("partial_migration", False) if isinstance(yaml, dict) else False
+
+        super().__init__(
+            rom_start,
+            rom_end,
+            type,
+            name,
+            vram_start,
+            extract,
+            given_subalign,
+            exclusive_ram_id=exclusive_ram_id,
+            given_dir=given_dir,
+            symbol_name_format=symbol_name_format,
+            symbol_name_format_no_rom=symbol_name_format_no_rom,
+            args=args,
+            yaml=yaml,
+        )
+
     @property
     def needs_symbols(self) -> bool:
         return True
@@ -166,4 +200,4 @@ class CommonSegCodeSubsegment(Segment):
         )
 
     def should_split(self) -> bool:
-        return self.extract and options.mode_active("code")
+        return (self.extract and options.mode_active("code")) or self.partial_migration
