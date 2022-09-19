@@ -10,7 +10,7 @@ class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"
 
-    def scan(self, rom_bytes: bytes):
+    def disassemble_data(self, rom_bytes: bytes):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
 
@@ -56,15 +56,3 @@ class CommonSegBss(CommonSegData):
             return [LinkerEntry(self, [path], path, self.get_linker_section())]
         else:
             return []
-
-    def should_scan(self) -> bool:
-        return (
-            options.mode_active("code")
-            and self.rom_start != "auto"
-            and self.rom_end != "auto"
-            and self.vram_start is not None
-            and self.vram_end is not None
-        )
-
-    def should_split(self) -> bool:
-        return self.extract and options.mode_active("code") and self.should_scan()

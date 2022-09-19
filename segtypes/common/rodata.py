@@ -41,8 +41,6 @@ class CommonSegRodata(CommonSegData):
                 self.get_most_parent(), symbol.contextSym
             )
 
-        return None
-
     def split(self, rom_bytes: bytes):
         # Disassemble the file itself
         super().split(rom_bytes)

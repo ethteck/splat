@@ -26,9 +26,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         CommonSegGroup.scan(self, rom_bytes)
 
         if super().should_scan():
-            self.file_text = self.disassemble_data(rom_bytes)
-        else:
-            self.file_text = None
+            self.disassemble_data(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
@@ -109,5 +107,3 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                     )
                     if symbol.contextSym.vromAddress is not None:
                         print(f"      - [0x{symbol.contextSym.vromAddress:X}, rodata]")
-
-        return None
