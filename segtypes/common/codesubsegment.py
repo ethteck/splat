@@ -3,6 +3,7 @@ from segtypes.common.code import CommonSegCode
 import spimdisasm
 
 from segtypes.segment import Segment
+from segtypes import segment
 from util import symbols
 
 
@@ -24,6 +25,9 @@ class CommonSegCodeSubsegment(Segment):
         args,
         yaml,
     ):
+        vram = segment.parse_segment_vram(yaml)
+        if vram is not None:
+            vram_start = vram
         self.partial_migration: bool = (
             yaml.get("partial_migration", False) if isinstance(yaml, dict) else False
         )
