@@ -137,6 +137,9 @@ class CommonSegGroup(CommonSegment):
         """
 
         for sub in self.subsegments:
+            if sub.vram_start == "auto":
+                continue
+            assert isinstance(sub.vram_start, int)
             if sub.vram_start > addr:
                 return sub
         return None

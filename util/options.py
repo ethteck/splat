@@ -305,11 +305,6 @@ def find_file_boundaries() -> bool:
     return opts.get("find_file_boundaries", True)
 
 
-# Determines the maximum number of instructions to attempt to match hi/lo pairs for symbols when disassembling
-def hi_lo_max_distance() -> int:
-    return opts.get("hi_lo_max_distance", 6)
-
-
 # Determines whether to attempt to automatically migrate rodata into functions (only works in certain circumstances)
 def get_migrate_rodata_to_functions() -> bool:
     return opts.get("migrate_rodata_to_functions", True)
