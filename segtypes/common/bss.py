@@ -17,8 +17,12 @@ class CommonSegBss(CommonSegData):
         segment_rom_start = self.get_most_parent().rom_start
         assert isinstance(segment_rom_start, int)
 
-        bss_end = self.get_most_parent().vram_end
-        assert isinstance(bss_end, int)
+        next_subsegment = self.parent.get_next_subsegment_for_ram(self.vram_start)
+        if next_subsegment is None:
+            bss_end = self.get_most_parent().vram_end
+            assert isinstance(bss_end, int)
+        else:
+            bss_end = next_subsegment.vram_start
 
         self.spim_section = spimdisasm.mips.sections.SectionBss(
             symbols.spim_context,
