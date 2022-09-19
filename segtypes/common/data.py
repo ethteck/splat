@@ -43,10 +43,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
                 with open(path, "w", newline="\n") as f:
                     f.write('.include "macro.inc"\n\n')
-                    f.write(f'.section {self.get_linker_section()}\n\n')
+                    f.write(f".section {self.get_linker_section()}\n\n")
 
                     f.write(self.spim_section.disassemble())
-
 
     def should_split(self) -> bool:
         return True
@@ -102,10 +101,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             if not rodata_encountered and self.get_most_parent().rodata_follows_data:
                 if symbol.contextSym.isJumpTable():
                     rodata_encountered = True
-                    print(f"Data segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here.")
-                    print(f"Please note the real start of the rodata section may be way before this point.")
+                    print(
+                        f"Data segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here."
+                    )
+                    print(
+                        f"Please note the real start of the rodata section may be way before this point."
+                    )
                     if symbol.contextSym.vromAddress is not None:
                         print(f"      - [0x{symbol.contextSym.vromAddress:X}, rodata]")
-
 
         return None

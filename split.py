@@ -463,6 +463,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
                 f.write(f"{s.vram_start:X},{s.name}\n")
 
         from pathlib import Path
+
         symbols.spim_context.saveContextToFile(Path("spim_context.csv"))
 
 

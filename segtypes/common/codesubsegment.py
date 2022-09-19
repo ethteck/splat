@@ -24,7 +24,9 @@ class CommonSegCodeSubsegment(Segment):
         args,
         yaml,
     ):
-        self.partial_migration: bool = yaml.get("partial_migration", False) if isinstance(yaml, dict) else False
+        self.partial_migration: bool = (
+            yaml.get("partial_migration", False) if isinstance(yaml, dict) else False
+        )
 
         super().__init__(
             rom_start,
@@ -139,7 +141,6 @@ class CommonSegCodeSubsegment(Segment):
 
                     if self.parent:
                         self.parent.check_rodata_sym(func_spim.vram, sym)
-
 
     def print_file_boundaries(self):
         if not options.find_file_boundaries():

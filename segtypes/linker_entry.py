@@ -207,7 +207,10 @@ class LinkerWriter:
             # Create new linker section for BSS
             if entering_bss or leaving_bss:
                 # If this is the last entry of its type, add the END marker for the section we're ending
-                if entry in last_seen_sections and section_labels[entry.section_type].started:
+                if (
+                    entry in last_seen_sections
+                    and section_labels[entry.section_type].started
+                ):
                     self._write_symbol(
                         f"{seg_name}{last_seen_sections[entry].upper()}_END", "."
                     )
@@ -238,7 +241,7 @@ class LinkerWriter:
 
         # End all un-ended sections
         for section in section_labels.values():
-            if (section.started and not section.ended):
+            if section.started and not section.ended:
                 self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
 
         all_bss = all(e.section == ".bss" for e in entries)
@@ -304,7 +307,11 @@ class LinkerWriter:
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
         else:
-            vram_str = f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
+            vram_str = (
+                f"0x{segment.vram_start:X} "
+                if isinstance(segment.vram_start, int)
+                else ""
+            )
 
         name = get_segment_cname(segment)
 
@@ -319,7 +326,11 @@ class LinkerWriter:
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
         else:
-            vram_str = f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
+            vram_str = (
+                f"0x{segment.vram_start:X} "
+                if isinstance(segment.vram_start, int)
+                else ""
+            )
 
         name = get_segment_cname(segment) + "_bss"
 
