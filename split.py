@@ -460,7 +460,7 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
     if False:
         with open("splat_symbols.csv", "w") as f:
             for s in symbols.all_symbols:
-                f.write(f"{s.vram_start:X},{s.name}\n")
+                f.write(f"{s.vram_start:X},{s.name},0x{s.size:X}\n")
 
         from pathlib import Path
 

@@ -49,14 +49,3 @@ class CommonSegBss(CommonSegData):
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), spim_sym.contextSym
             )
-
-    def get_linker_entries(self) -> "List[LinkerEntry]":
-        if self.sibling:
-            path = self.sibling.out_path()
-        else:
-            path = self.out_path()
-
-        if path:
-            return [LinkerEntry(self, [path], path, self.get_linker_section())]
-        else:
-            return []
