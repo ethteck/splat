@@ -457,14 +457,28 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         with open(options.get_cache_path(), "wb") as f4:
             pickle.dump(cache, f4)
 
-    if False:
-        with open("splat_symbols.csv", "w") as f:
-            for s in symbols.all_symbols:
-                f.write(f"{s.vram_start:X},{s.name},0x{s.size:X}\n")
-
+    if options.dump_symbols():
         from pathlib import Path
 
-        symbols.spim_context.saveContextToFile(Path("spim_context.csv"))
+        splat_hidden_folder = Path(".splat/")
+        splat_hidden_folder.mkdir(exist_ok=True)
+
+        with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
+            f.write("vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,dead,extract\n")
+            for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
+                f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
+                if s.given_size is not None:
+                    f.write(f"0x{s.given_size:X},")
+                else:
+                    f.write(f"None,")
+                f.write(f"{s.size},")
+                if s.rom is not None:
+                    f.write(f"0x{s.rom:X},")
+                else:
+                    f.write(f"None,")
+                f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.dead},{s.extract}\n")
+
+        symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 
 
 if __name__ == "__main__":

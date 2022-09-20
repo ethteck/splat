@@ -372,7 +372,6 @@ class Symbol:
         self.type = type
         self.given_size = given_size
         self.given_name = given_name
-        self.disasm_str: Optional[str] = None
         self.dead: bool = False
         self.extract: bool = True
         self.user_declared: bool = False

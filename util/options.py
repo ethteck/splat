@@ -50,6 +50,9 @@ def mode_active(mode) -> bool:
 def verbose() -> bool:
     return opts.get("verbose", False)
 
+def dump_symbols() -> bool:
+    return opts.get("dump_symbols", False)
+
 
 ################################################################################
 # Global options
