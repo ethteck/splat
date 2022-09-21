@@ -464,7 +464,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
         splat_hidden_folder.mkdir(exist_ok=True)
 
         with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
-            f.write("vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,dead,extract\n")
+            f.write(
+                "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,dead,extract\n"
+            )
             for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
                 f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
                 if s.given_size is not None:
@@ -476,7 +478,9 @@ def main(config_path, base_dir, target_path, modes, verbose, use_cache=True):
                     f.write(f"0x{s.rom:X},")
                 else:
                     f.write(f"None,")
-                f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.dead},{s.extract}\n")
+                f.write(
+                    f"{s.defined},{s.user_declared},{s.referenced},{s.dead},{s.extract}\n"
+                )
 
         symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 
