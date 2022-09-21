@@ -49,7 +49,7 @@ class CommonSegCodeSubsegment(Segment):
             yaml=yaml,
         )
 
-        self.spim_section: spimdisasm.mips.sections.SectionText
+        self.spim_section: Optional[spimdisasm.mips.sections.SectionBase] = None
 
     @property
     def needs_symbols(self) -> bool:
@@ -109,6 +109,7 @@ class CommonSegCodeSubsegment(Segment):
         assert isinstance(self.parent, CommonSegCode)
         assert func_spim.vram is not None
         assert func_spim.vramEnd is not None
+        assert self.spim_section is not None
         self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(

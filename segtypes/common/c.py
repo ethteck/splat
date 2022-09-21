@@ -134,6 +134,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
+            assert self.spim_section is not None
             for func in self.spim_section.symbolList:
                 assert func.vram is not None
                 assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
@@ -201,9 +202,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                         )
 
                         if rsub is not None and isinstance(rsub, CommonSegRodata):
-                            if rsub in processed_rodata_segments:
+                            if rsub in processed_rodata_segments or rsub.spim_section is None:
                                 continue
 
+                            assert isinstance(rsub.spim_section, spimdisasm.mips.sections.SectionRodata)
                             (
                                 rdata_list_aux,
                                 late_rodata_list_aux,
@@ -225,6 +227,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         self.log(f"Disassembled {func_sym.name} to {outpath}")
 
     def create_c_file(self, asm_out_dir, c_path):
+        assert self.spim_section is not None
+
         c_lines = self.get_c_preamble()
 
         for func in self.spim_section.symbolList:

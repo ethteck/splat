@@ -21,7 +21,7 @@ class CommonSegAsm(CommonSegCodeSubsegment):
         return []
 
     def split(self, rom_bytes: bytes):
-        if not self.rom_start == self.rom_end:
+        if not self.rom_start == self.rom_end and self.spim_section is not None:
             out_path = self.out_path()
             if out_path:
                 out_path.parent.mkdir(parents=True, exist_ok=True)
