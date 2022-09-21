@@ -202,10 +202,16 @@ class CommonSegC(CommonSegCodeSubsegment):
                         )
 
                         if rsub is not None and isinstance(rsub, CommonSegRodata):
-                            if rsub in processed_rodata_segments or rsub.spim_section is None:
+                            if (
+                                rsub in processed_rodata_segments
+                                or rsub.spim_section is None
+                            ):
                                 continue
 
-                            assert isinstance(rsub.spim_section, spimdisasm.mips.sections.SectionRodata)
+                            assert isinstance(
+                                rsub.spim_section,
+                                spimdisasm.mips.sections.SectionRodata,
+                            )
                             (
                                 rdata_list_aux,
                                 late_rodata_list_aux,
