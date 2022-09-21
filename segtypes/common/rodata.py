@@ -46,7 +46,9 @@ class CommonSegRodata(CommonSegData):
         super().split(rom_bytes)
 
         if options.get_migrate_rodata_to_functions():
-            if not self.type.startswith(".") or self.partial_migration:
+            if self.spim_section and (
+                not self.type.startswith(".") or self.partial_migration
+            ):
                 path_folder = options.get_data_path() / self.dir
                 path_folder.parent.mkdir(parents=True, exist_ok=True)
 

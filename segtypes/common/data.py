@@ -1,12 +1,10 @@
 import spimdisasm
 
-from segtypes.common.code import CommonSegCode
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
 from pathlib import Path
-from typing import List, Optional
-from util.symbols import Symbol
-from util import floats, options, symbols
+from typing import Optional
+from util import options, symbols
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
@@ -31,7 +29,11 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
-        if not self.type.startswith("."):
+        if (
+            not self.type.startswith(".")
+            and self.spim_section
+            and self.should_self_split()
+        ):
             path = self.out_path()
 
             if path:
@@ -44,6 +46,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                     f.write(f".section {self.get_linker_section()}\n\n")
 
                     f.write(self.spim_section.disassemble())
+
+    def should_self_split(self) -> bool:
+        return options.mode_active("data")
 
     def should_split(self) -> bool:
         return True

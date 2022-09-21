@@ -1,3 +1,4 @@
+from typing import Optional
 from util import options
 from segtypes.common.code import CommonSegCode
 import spimdisasm
@@ -47,6 +48,8 @@ class CommonSegCodeSubsegment(Segment):
             args=args,
             yaml=yaml,
         )
+
+        self.spim_section: spimdisasm.mips.sections.SectionText
 
     @property
     def needs_symbols(self) -> bool:
@@ -147,7 +150,7 @@ class CommonSegCodeSubsegment(Segment):
                         self.parent.check_rodata_sym(func_spim.vram, sym)
 
     def print_file_boundaries(self):
-        if not options.find_file_boundaries():
+        if not options.find_file_boundaries() or not self.spim_section:
             return
 
         assert isinstance(self.rom_start, int)
@@ -205,4 +208,4 @@ class CommonSegCodeSubsegment(Segment):
         )
 
     def should_split(self) -> bool:
-        return (self.extract and options.mode_active("code")) or self.partial_migration
+        return self.extract and (self.partial_migration or options.mode_active("code"))
