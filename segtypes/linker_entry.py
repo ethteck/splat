@@ -244,7 +244,9 @@ class LinkerWriter:
         # End all un-ended sections
         for section in section_labels.values():
             if section.started and not section.ended:
-                self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
+                seg_name_section = f"{seg_name}{section.name.upper()}"
+                self._write_symbol(f"{seg_name_section}_END", ".")
+                self._write_symbol(f"{seg_name_section}_SIZE", f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)")
 
         all_bss = all(e.section == ".bss" for e in entries)
         self._end_segment(segment, next_segment, all_bss)
