@@ -169,7 +169,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                     break
 
     def create_c_asm_file(
-        self, func: spimdisasm.mips.symbols.SymbolFunction, out_dir: Path, func_sym: Symbol
+        self,
+        func: spimdisasm.mips.symbols.SymbolFunction,
+        out_dir: Path,
+        func_sym: Symbol,
     ):
         outpath = out_dir / self.name / (func_sym.name + ".s")
         assert func.vram is not None
@@ -277,7 +280,9 @@ class CommonSegC(CommonSegCodeSubsegment):
             f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
 
-    def create_asm_dependencies_file(self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool):
+    def create_asm_dependencies_file(
+        self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool
+    ):
         if not options.get_create_asm_dependencies():
             return
         if not (len(self.global_asm_funcs) > 0 or is_new_c_file):
