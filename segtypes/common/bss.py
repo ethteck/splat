@@ -1,8 +1,6 @@
 import spimdisasm
-from typing import List
 
 from segtypes.common.data import CommonSegData
-from segtypes.linker_entry import LinkerEntry
 from util import options, symbols
 
 

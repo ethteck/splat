@@ -59,5 +59,8 @@ class CommonSegRodata(CommonSegData):
                     path = path_folder / f"{rodataSym.getName()}.s"
                     with open(path, "w", newline="\n") as f:
                         f.write('.include "macro.inc"\n\n')
+                        preamble = options.get_generated_s_preamble()
+                        if preamble:
+                            f.write(preamble + "\n")
                         f.write(".section .rodata\n\n")
                         f.write(rodataSym.disassemble())
