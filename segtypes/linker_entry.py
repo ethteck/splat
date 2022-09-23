@@ -211,9 +211,9 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
-                    self._write_symbol(
-                        f"{seg_name}{last_seen_sections[entry].upper()}_END", "."
-                    )
+                    seg_name_section = f"{seg_name}{last_seen_sections[entry].upper()}"
+                    self._write_symbol(f"{seg_name_section}_END", ".")
+                    self._write_symbol(f"{seg_name_section}_SIZE", f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)")
                     section_labels[last_seen_sections[entry]].ended = True
 
                 self._end_block()
