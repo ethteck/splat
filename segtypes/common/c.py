@@ -120,13 +120,13 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
-
             asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             self.print_file_boundaries()
 
             is_new_c_file = False
+            assert self.spim_section is not None
 
             c_path = self.out_path()
             if c_path:
@@ -134,7 +134,17 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
-            assert self.spim_section is not None
+                build_path = options.get_build_path()
+
+                dep_path = build_path / c_path.with_suffix(".asmproc.d")
+                with dep_path.open("w") as f:
+                    o_path = build_path / c_path.with_suffix(".o")
+                    f.write(f"{o_path}:")
+                    for func in self.spim_section.symbolList:
+                        outpath = asm_out_dir / self.name / (func.getName() + ".s")
+                        f.write(f" \\\n    {outpath}")
+
+
             for func in self.spim_section.symbolList:
                 assert func.vram is not None
                 assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
@@ -168,9 +178,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                     break
 
     def create_c_asm_file(
-        self, func: spimdisasm.mips.symbols.SymbolFunction, out_dir, func_sym: Symbol
+        self, func: spimdisasm.mips.symbols.SymbolFunction, out_dir: Path, func_sym: Symbol
     ):
-        outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
+        outpath = out_dir / self.name / (func_sym.name + ".s")
         assert func.vram is not None
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
