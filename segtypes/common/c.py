@@ -278,6 +278,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         log.write(f"Wrote {self.name} to {c_path}")
 
     def create_asm_dependencies_file(self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool):
+        if not options.get_create_asm_dependencies():
+            return
         if not (len(self.global_asm_funcs) > 0 or is_new_c_file):
             return
 

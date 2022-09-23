@@ -350,6 +350,11 @@ def get_mips_abi_gpr() -> str:
     return opts.get("mips_abi_gpr", "o32")
 
 
+# Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
+def get_create_asm_dependencies() -> bool:
+    return opts.get("create_asm_dependencies", True)
+
+
 # Determines which ABI names to use for floating point registers
 # Valid values: 'numeric', 'o32', 'n32', 'n64'
 # o32 is highly recommended, as it provides logically named registers for floating point instructions
