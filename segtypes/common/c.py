@@ -302,3 +302,4 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if func_name in self.global_asm_funcs or is_new_c_file:
                     outpath = asm_out_dir / self.name / (func_name + ".s")
                     f.write(f" \\\n    {outpath}")
+            f.write("\n")
