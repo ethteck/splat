@@ -234,7 +234,9 @@ class LinkerWriter:
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    self._write_symbol(f"{seg_name}{cur_section.upper()}_END", ".")
+                    seg_name_section = f"{seg_name}{cur_section.upper()}"
+                    self._write_symbol(f"{seg_name_section}_END", ".")
+                    self._write_symbol(f"{seg_name_section}_SIZE", f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)")
                     section_labels[cur_section].ended = True
 
             prev_section = cur_section
