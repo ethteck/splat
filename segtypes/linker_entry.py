@@ -211,11 +211,13 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
-                    seg_name_section = f"{seg_name}{last_seen_sections[entry].upper()}"
+                    seg_name_section = to_cname(
+                        f"{seg_name}{last_seen_sections[entry].upper()}"
+                    )
                     self._write_symbol(f"{seg_name_section}_END", ".")
                     self._write_symbol(
                         f"{seg_name_section}_SIZE",
-                        f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)",
+                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
                     )
                     section_labels[last_seen_sections[entry]].ended = True
 
@@ -237,11 +239,11 @@ class LinkerWriter:
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    seg_name_section = f"{seg_name}{cur_section.upper()}"
+                    seg_name_section = to_cname(f"{seg_name}{cur_section.upper()}")
                     self._write_symbol(f"{seg_name_section}_END", ".")
                     self._write_symbol(
                         f"{seg_name_section}_SIZE",
-                        f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)",
+                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
                     )
                     section_labels[cur_section].ended = True
 
@@ -250,11 +252,11 @@ class LinkerWriter:
         # End all un-ended sections
         for section in section_labels.values():
             if section.started and not section.ended:
-                seg_name_section = f"{seg_name}{section.name.upper()}"
+                seg_name_section = to_cname(f"{seg_name}{section.name.upper()}")
                 self._write_symbol(f"{seg_name_section}_END", ".")
                 self._write_symbol(
                     f"{seg_name_section}_SIZE",
-                    f"ABSOLUTE({to_cname(seg_name_section)}_END - {to_cname(seg_name_section)}_START)",
+                    f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
                 )
 
         all_bss = all(e.section == ".bss" for e in entries)
