@@ -67,18 +67,28 @@ class CommonSegCode(CommonSegGroup):
         else:
             return None
 
-    # Prepare symbol for migration to the function
-    def check_rodata_sym(self, func_addr: int, sym: Symbol):
-        if self.section_boundaries[".rodata"].is_complete():
-            assert self.section_boundaries[".rodata"].start is not None
-            assert self.section_boundaries[".rodata"].end is not None
+    def check_rodata_sym_impl(self, func_addr: int, sym: Symbol, rodata_section: Range):
+        if rodata_section.is_complete():
+            assert rodata_section.start is not None
+            assert rodata_section.end is not None
 
-            rodata_start: int = self.section_boundaries[".rodata"].start
-            rodata_end: int = self.section_boundaries[".rodata"].end
+            rodata_start: int = rodata_section.start
+            rodata_end: int = rodata_section.end
             if rodata_start <= sym.vram_start < rodata_end:
                 if func_addr not in self.rodata_syms:
                     self.rodata_syms[func_addr] = []
                 self.rodata_syms[func_addr].append(sym)
+
+    # Prepare symbol for migration to the function
+    def check_rodata_sym(self, func_addr: int, sym: Symbol):
+        if func_addr == 0x8009EA40:
+            dog = 5
+        rodata_section = self.section_boundaries.get(".rodata")
+        if rodata_section is not None:
+            self.check_rodata_sym_impl(func_addr, sym, rodata_section)
+        rodata_section = self.section_boundaries.get(".rdata")
+        if rodata_section is not None:
+            self.check_rodata_sym_impl(func_addr, sym, rodata_section)
 
     def handle_alls(self, segs: List[Segment], base_segs) -> bool:
         for i, elem in enumerate(segs):
@@ -301,12 +311,14 @@ class CommonSegCode(CommonSegGroup):
             check = self.handle_alls(ret, base_segments)
 
         # TODO why is this necessary?
+        rodata_section = self.section_boundaries.get(".rodata") or self.section_boundaries.get(".rdata")
         if (
-            self.section_boundaries[".rodata"].has_start()
-            and not self.section_boundaries[".rodata"].has_end()
+            rodata_section is not None
+            and rodata_section.has_start()
+            and not rodata_section.has_end()
         ):
             assert self.vram_end is not None
-            self.section_boundaries[".rodata"].end = self.vram_end
+            rodata_section.end = self.vram_end
 
         return ret
 
