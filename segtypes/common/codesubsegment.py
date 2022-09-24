@@ -58,7 +58,7 @@ class CommonSegCodeSubsegment(Segment):
     def get_linker_section(self) -> str:
         return ".text"
 
-    def scan_code(self, rom_bytes, is_asm=False):
+    def scan_code(self, rom_bytes, is_hasm=False):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
 
@@ -83,7 +83,7 @@ class CommonSegCodeSubsegment(Segment):
             if sym.user_declared:
                 symbols.add_symbol_to_spim_section(self.spim_section, sym)
 
-        self.spim_section.isHandwritten = is_asm
+        self.spim_section.isHandwritten = is_hasm
 
         self.spim_section.analyze()
         self.spim_section.setCommentOffset(self.rom_start)
