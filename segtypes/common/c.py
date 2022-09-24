@@ -120,7 +120,6 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end:
-
             asm_out_dir = options.get_nonmatchings_path() / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -134,16 +133,18 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_file(asm_out_dir, c_path)
                     is_new_c_file = True
 
+                self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file)
+
             assert self.spim_section is not None
             for func in self.spim_section.symbolList:
-                assert func.vram is not None
-                assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
-                func_sym = self.get_symbol(
-                    func.vram, in_segment=True, type="func", local_only=True
-                )
-                assert func_sym is not None
-
                 if func.getName() in self.global_asm_funcs or is_new_c_file:
+                    assert func.vram is not None
+                    assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
+                    func_sym = self.get_symbol(
+                        func.vram, in_segment=True, type="func", local_only=True
+                    )
+                    assert func_sym is not None
+
                     self.create_c_asm_file(func, asm_out_dir, func_sym)
 
     def get_c_preamble(self):
@@ -168,9 +169,12 @@ class CommonSegC(CommonSegCodeSubsegment):
                     break
 
     def create_c_asm_file(
-        self, func: spimdisasm.mips.symbols.SymbolFunction, out_dir, func_sym: Symbol
+        self,
+        func: spimdisasm.mips.symbols.SymbolFunction,
+        out_dir: Path,
+        func_sym: Symbol,
     ):
-        outpath = Path(os.path.join(out_dir, self.name, func_sym.name + ".s"))
+        outpath = out_dir / self.name / (func_sym.name + ".s")
         assert func.vram is not None
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -275,3 +279,27 @@ class CommonSegC(CommonSegCodeSubsegment):
         with open(c_path, "w") as f:
             f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
+
+    def create_asm_dependencies_file(
+        self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool
+    ):
+        if not options.get_create_asm_dependencies():
+            return
+        if not (len(self.global_asm_funcs) > 0 or is_new_c_file):
+            return
+
+        assert self.spim_section is not None
+
+        build_path = options.get_build_path()
+
+        dep_path = build_path / c_path.with_suffix(".asmproc.d")
+        with dep_path.open("w") as f:
+            o_path = build_path / c_path.with_suffix(".o")
+            f.write(f"{o_path}:")
+            for func in self.spim_section.symbolList:
+                func_name = func.getName()
+
+                if func_name in self.global_asm_funcs or is_new_c_file:
+                    outpath = asm_out_dir / self.name / (func_name + ".s")
+                    f.write(f" \\\n    {outpath}")
+            f.write("\n")
