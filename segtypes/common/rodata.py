@@ -63,5 +63,5 @@ class CommonSegRodata(CommonSegData):
                         preamble = options.get_generated_s_preamble()
                         if preamble:
                             f.write(preamble + "\n")
-                        f.write(".section .rodata\n\n")
+                        f.write(f".section {self.get_linker_section()}\n\n")
                         f.write(rodataSym.disassemble())
