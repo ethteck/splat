@@ -352,7 +352,7 @@ def get_mips_abi_gpr() -> str:
 
 # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
 def get_create_asm_dependencies() -> bool:
-    return opts.get("create_asm_dependencies", True)
+    return opts.get("create_asm_dependencies", False)
 
 
 # Determines which ABI names to use for floating point registers
