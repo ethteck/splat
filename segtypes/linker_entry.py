@@ -211,8 +211,13 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
+                    seg_name_section = to_cname(
+                        f"{seg_name}{last_seen_sections[entry].upper()}"
+                    )
+                    self._write_symbol(f"{seg_name_section}_END", ".")
                     self._write_symbol(
-                        f"{seg_name}{last_seen_sections[entry].upper()}_END", "."
+                        f"{seg_name_section}_SIZE",
+                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
                     )
                     section_labels[last_seen_sections[entry]].ended = True
 
@@ -234,7 +239,12 @@ class LinkerWriter:
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    self._write_symbol(f"{seg_name}{cur_section.upper()}_END", ".")
+                    seg_name_section = to_cname(f"{seg_name}{cur_section.upper()}")
+                    self._write_symbol(f"{seg_name_section}_END", ".")
+                    self._write_symbol(
+                        f"{seg_name_section}_SIZE",
+                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
+                    )
                     section_labels[cur_section].ended = True
 
             prev_section = cur_section
@@ -242,7 +252,12 @@ class LinkerWriter:
         # End all un-ended sections
         for section in section_labels.values():
             if section.started and not section.ended:
-                self._write_symbol(f"{seg_name}_{section.name.upper()}_END", ".")
+                seg_name_section = to_cname(f"{seg_name}{section.name.upper()}")
+                self._write_symbol(f"{seg_name_section}_END", ".")
+                self._write_symbol(
+                    f"{seg_name_section}_SIZE",
+                    f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
+                )
 
         all_bss = all(e.section == ".bss" for e in entries)
         self._end_segment(segment, next_segment, all_bss)
