@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.11.1
+* The linker script now includes a `_SIZE` symbol for each segment.
+* The new `create_asm_dependencies`, if enabled, will cause splat to create `.asmproc.d` files that can inform a build system which asm files a c file depends upon. If your build system is configured correctly, this can allow triggering a rebuild of a C file when its included asm files are modified.
+* Splat no longer depends directly on pypng and now instead uses [n64img](https://github.com/decompals/n64img). Currently, all image behavior uses the exact same code. Eventually, n64img will be implemented in C and support rebuilding images as well.
+
 ## 0.11.0: Spimdisasm Returns
 
 Spimdisasm now handles data (data, rodata, bss) disassembly in splat! This includes a few changes in behavior:

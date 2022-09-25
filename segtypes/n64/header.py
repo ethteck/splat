@@ -1,5 +1,4 @@
 from segtypes.common.header import CommonSegHeader
-from pathlib import Path
 from util import options
 
 
