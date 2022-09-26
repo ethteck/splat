@@ -70,10 +70,10 @@ class N64SegPalette(N64Segment):
         return 256 * 2
 
     def out_path(self) -> Path:
-        return options.get_asset_path() / self.dir / f"{self.name}.png"
+        return options.opts.asset_path / self.dir / f"{self.name}.png"
 
     def should_split(self) -> bool:
-        return self.extract and options.mode_active("img")
+        return self.extract and options.opts.is_mode_active("img")
 
     def get_linker_entries(self):
         from segtypes.linker_entry import LinkerEntry
@@ -81,8 +81,8 @@ class N64SegPalette(N64Segment):
         return [
             LinkerEntry(
                 self,
-                [options.get_asset_path() / self.dir / f"{self.name}.png"],
-                options.get_asset_path() / self.dir / f"{self.name}.pal",
+                [options.opts.asset_path / self.dir / f"{self.name}.png"],
+                options.opts.asset_path / self.dir / f"{self.name}.pal",
                 self.get_linker_section(),
             )
         ]
