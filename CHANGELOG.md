@@ -1,5 +1,20 @@
 # splat Release Notes
 
+### 0.11.2
+* The way options are parsed and accessed has been completely refactored. The following option names have changed:
+
+`linker_symbol_header_path` -> `ld_symbol_header_path`
+
+`asm_endlabels` -> `asm_end_label`
+
+Additionally, any custom segments or code that needs to read options will have to accommodate the new API for doing so. Options are now fields of an object named `opts` within the existing `options` namespace. Because the options are fields, `get_` is no longer necessary. To give an example:
+
+Before: `options.get_asm_path()`
+
+After: `options.opts.asm_path`
+
+The clean_up_path function in linker_entry.py now uses a cache, offering a small performance improvement during the linker script writing phase.
+
 ### 0.11.1
 * The linker script now includes a `_SIZE` symbol for each segment.
 * The new `create_asm_dependencies`, if enabled, will cause splat to create `.asmproc.d` files that can inform a build system which asm files a c file depends upon. If your build system is configured correctly, this can allow triggering a rebuild of a C file when its included asm files are modified.
