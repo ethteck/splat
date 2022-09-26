@@ -194,8 +194,11 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
 
     spim_context.bannedSymbols |= ignored_addresses
 
+    # imported this way to avoid recursive import issues
+    from segtypes.common.code import CommonSegCode
+
     for segment in all_segments:
-        if segment.type == "code":
+        if isinstance(segment, CommonSegCode):
             # We only care about the VRAMs of code segments
             if isinstance(segment.vram_start, int) and isinstance(
                 segment.vram_end, int

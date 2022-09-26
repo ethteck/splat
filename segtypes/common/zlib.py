@@ -42,6 +42,13 @@ class CommonSegZlib(CommonSegCode):
             yaml=yaml,
         )
 
+    @property
+    def vram_end(self) -> Optional[int]:
+        if self.vram_start is not None and self.size is not None:
+            return self.vram_start + self.decompressed_size + self.bss_size
+        else:
+            return None
+
     def contains_rom(self, rom: int) -> bool:
         return rom >= 0 and rom < self.decompressed_size
 
