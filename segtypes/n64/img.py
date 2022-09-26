@@ -75,10 +75,10 @@ class N64SegImg(N64Segment):
                 )
 
     def out_path(self) -> Path:
-        return options.get_asset_path() / self.dir / f"{self.name}.png"
+        return options.opts.asset_path / self.dir / f"{self.name}.png"
 
     def should_split(self) -> bool:
-        return self.extract and options.mode_active("img")
+        return self.extract and options.opts.is_mode_active("img")
 
     def split(self, rom_bytes):
         path = self.out_path()
