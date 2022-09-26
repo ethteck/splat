@@ -14,7 +14,7 @@ class CommonSegCodeSubsegment(Segment):
 
         vram = segment.parse_segment_vram(self.yaml)
         if vram is not None:
-            vram_start = vram
+            self.vram_start = vram
         self.partial_migration: bool = (
             self.yaml.get("partial_migration", False)
             if isinstance(self.yaml, dict)
