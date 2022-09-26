@@ -16,15 +16,27 @@ class SplatOpts:
     modes: List[str]
 
     # Project configuration
+
+    # Determines the base path of the project. Everything is relative to this path
     base_path: Path
+    # Determines the path to the target binary
     target_path: Path
+    # Determines the platform of the target binary
     platform: str
+    # Determines the compiler used to compile the target binary
     compiler: Compiler
+    # Determines the endianness of the target binary
     endianness: str
+    # Determines the default section order of the target binary
+    # this can be overridden per-segment
     section_order: List[str]
+    # Determines the code that is inserted by default in generated .c files
     generated_c_preamble: str
+    # Determines the code that is inserted by default in generated .s files
     generated_s_preamble: str
+    # Determines whether to use .o as the suffix for all binary files?... TODO document
     use_o_as_suffix: bool
+    # the value of the $gp register to correctly calculate offset to %gp_rel relocs
     gp: Optional[int]
 
     # Paths
@@ -35,30 +47,55 @@ class SplatOpts:
     #
     # It's possible to use more than one file by supplying a list instead of a string
     symbol_addrs_paths: List[Path]
+    # Determines the path to the project build directory
     build_path: Path
+    # Determines the path to the source code directory
     src_path: Path
+    # Determines the path to the asm code directory
     asm_path: Path
+    # Determines the path to the asm data directory
     data_path: Path
+    # Determines the path to the asm nonmatchings directory
     nonmatchings_path: Path
+    # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
 
+    # Determines whether to create an automatically-generated undefined functions file
+    # this file stores all functions that are referenced in the code but are not defined as seen by splat
     create_undefined_funcs_auto: bool
+    # Determines the path to the undefined_funcs_auto file
     undefined_funcs_auto_path: Path
 
+    # Determines whether to create an automatically-generated undefined symbols file
+    # this file stores all symbols that are referenced in the code but are not defined as seen by splat
     create_undefined_syms_auto: bool
+    # Determines the path to the undefined_symbols_auto file
     undefined_syms_auto_path: Path
 
+    # Determines the path in which to search for custom splat extensions
     extensions_path: Optional[Path]
+
+    # Determines the path to library files that are to be linked into the target binary
     lib_path: Path
 
+    # TODO document
     elf_section_list_path: Optional[Path]
 
     # Linker script
+    # Determines the default subalign value to be specified in the generated linker script
     subalign: int
+    # The following option determines whether to automatically configure the linker script to link against
+    # specified sections for all "base" (asm/c) files when the yaml doesn't have manual configurations
+    # for these sections.
     auto_all_sections: List[str]
+    # Determines the desired path to the linker script that splat will generate
     ld_script_path: Path
+    # Determines the desired path to the linker symbol header,
+    # which exposes externed definitions for all segment ram/rom start/end locations
     ld_symbol_header_path: Optional[Path]
+    # Determines whether to add a discard section to the linker script
     ld_discard_section: bool
+    # Determines the list of section labels that are to be added to the linker script
     ld_section_labels: List[str]
 
     ################################################################################
@@ -83,7 +120,8 @@ class SplatOpts:
     symbol_name_format_no_rom: str
     # Determines whether to detect and hint to the user about likely file splits when disassembling
     find_file_boundaries: bool
-    # Determines whether to attempt to automatically migrate rodata into functions (only works in certain circumstances)
+    # Determines whether to attempt to automatically migrate rodata into functions
+    # (only works in certain circumstances)
     migrate_rodata_to_functions: bool
     # Determines the header to be used in every asm file that's included from c files
     asm_inc_header: str
@@ -196,7 +234,7 @@ def parse_yaml(
         else:
             raise ValueError(f"Expected str or list, got {type(paths)}")
 
-    platform = parse_opt(yaml, "platform", str, "n64")
+    platform = parse_opt_within(yaml, "platform", str, ["n64", "psx"], "n64")
     comp = compiler.for_name(parse_opt(yaml, "compiler", str, "IDO"))
 
     base_path = Path(config_paths[0]).parent / parse_opt(yaml, "base_path", str)

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Dict, Optional, OrderedDict, Union, List
 from pathlib import Path
 from segtypes.n64.palette import N64SegPalette
@@ -8,6 +9,7 @@ import os
 import re
 
 # clean 'foo/../bar' to 'bar'
+@lru_cache(maxsize=None)
 def clean_up_path(path: Path) -> Path:
     path_resolved = path.resolve()
     base_resolved = options.opts.base_path.resolve()
