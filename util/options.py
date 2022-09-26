@@ -261,7 +261,7 @@ def parse_yaml(
             yaml, "generated_c_preamble", str, '#include "common.h"'
         ),
         generated_s_preamble=parse_opt(yaml, "generated_s_preamble", str, ""),
-        use_o_as_suffix=parse_opt(yaml, "use_o_as_suffix", bool, False),
+        use_o_as_suffix=parse_opt(yaml, "o_as_suffix", bool, False),
         gp=parse_opt(yaml, "gp_value", int, 0),
         asset_path=base_path / parse_path(yaml, "asset_path", "assets"),
         symbol_addrs_paths=parse_symbol_addrs_paths(yaml),
@@ -310,7 +310,7 @@ def parse_yaml(
         c_newline=parse_opt(yaml, "c_newline", str, comp.c_newline),
         symbol_name_format=parse_opt(yaml, "symbol_name_format", str, "$VRAM"),
         symbol_name_format_no_rom=parse_opt(
-            yaml, "symbol_name_format", str, "$VRAM_$SEG"
+            yaml, "symbol_name_format_no_rom", str, "$VRAM_$SEG"
         ),
         find_file_boundaries=parse_opt(yaml, "find_file_boundaries", bool, True),
         migrate_rodata_to_functions=parse_opt(
