@@ -354,7 +354,7 @@ def parse_yaml(
 
 def initialize(
     config: Dict,
-    config_paths: list[str],
+    config_paths: List[str],
     modes: Optional[List[str]] = None,
     verbose=False,
 ):
