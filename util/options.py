@@ -275,12 +275,12 @@ def parse_yaml(
         create_undefined_funcs_auto=parse_opt(
             yaml, "create_undefined_funcs_auto", bool, True
         ),
-        undefined_funcs_auto_path=asm_path
+        undefined_funcs_auto_path=base_path
         / parse_path(yaml, "undefined_funcs_auto_path", "undefined_funcs_auto.txt"),
         create_undefined_syms_auto=parse_opt(
             yaml, "create_undefined_syms_auto", bool, True
         ),
-        undefined_syms_auto_path=asm_path
+        undefined_syms_auto_path=base_path
         / parse_path(yaml, "undefined_syms_auto_path", "undefined_syms_auto.txt"),
         extensions_path=parse_optional_path(yaml, "extensions_path", base_path),
         lib_path=base_path / parse_path(yaml, "lib_path", "lib"),
@@ -364,5 +364,5 @@ def initialize(
         modes = ["all"]
 
     opts = parse_yaml(
-        config["options"], config["basename"], config_paths, modes, verbose
+        config["options"], config["options"]["basename"], config_paths, modes, verbose
     )
