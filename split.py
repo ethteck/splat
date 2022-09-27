@@ -355,6 +355,8 @@ def main(config_path, modes, verbose, use_cache=True):
 
             seg_split[typ] += 1
 
+    symbols.mark_c_funcs_as_defined()
+
     # Split
     for segment in tqdm.tqdm(
         all_segments,
