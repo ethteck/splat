@@ -204,6 +204,8 @@ class Segment:
         self.warnings: List[str] = []
         self.did_run = False
 
+        self.vrom_start: Optional[int] = None
+
         # if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
         #     if self.rom_start > self.rom_end:
         #         log.error(
@@ -312,9 +314,19 @@ class Segment:
         return self.size
 
     @property
+    def bss_size(self) -> int:
+        return 0
+
+    @property
+    def vrom_end(self) -> Optional[int]:
+        if self.vrom_start is None or self.decompressed_size is None:
+            return None
+        return self.vrom_start + self.decompressed_size + self.bss_size
+
+    @property
     def vram_end(self) -> Optional[int]:
         if self.vram_start is not None and self.decompressed_size is not None:
-            return self.vram_start + self.decompressed_size
+            return self.vram_start + self.decompressed_size + self.bss_size
         else:
             return None
 

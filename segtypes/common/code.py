@@ -32,7 +32,7 @@ class CommonSegCode(CommonSegGroup):
         args,
         yaml,
     ):
-        self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
+        self._bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
 
         super().__init__(
             rom_start,
@@ -61,11 +61,8 @@ class CommonSegCode(CommonSegGroup):
         return True
 
     @property
-    def vram_end(self) -> Optional[int]:
-        if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.decompressed_size + self.bss_size
-        else:
-            return None
+    def bss_size(self) -> int:
+        return self._bss_size
 
     # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):

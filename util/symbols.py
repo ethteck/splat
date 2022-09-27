@@ -204,38 +204,35 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 segment.vram_end, int
             ):
                 ram_id = segment.get_exclusive_ram_id()
+                assert isinstance(segment.vrom_start, int)
+                assert isinstance(segment.vrom_end, int)
+
                 if ram_id is None:
                     if global_vram_start is None:
                         global_vram_start = segment.vram_start
-                    else:
-                        if segment.vram_start < global_vram_start:
-                            global_vram_start = segment.vram_start
+                    elif segment.vram_start < global_vram_start:
+                        global_vram_start = segment.vram_start
 
                     if global_vram_end is None:
                         global_vram_end = segment.vram_end
-                    else:
-                        if global_vram_end < segment.vram_end:
-                            global_vram_end = segment.vram_end
+                    elif global_vram_end < segment.vram_end:
+                        global_vram_end = segment.vram_end
 
-                    if isinstance(segment.rom_start, int):
-                        if global_vrom_start is None:
-                            global_vrom_start = segment.rom_start
-                        else:
-                            if segment.rom_start < global_vrom_start:
-                                global_vrom_start = segment.rom_start
+                    if global_vrom_start is None:
+                        global_vrom_start = segment.vrom_start
+                    elif segment.vrom_start < global_vrom_start:
+                        global_vrom_start = segment.vrom_start
 
-                    if isinstance(segment.rom_end, int):
-                        if global_vrom_end is None:
-                            global_vrom_end = segment.rom_end
-                        else:
-                            if global_vrom_end < segment.rom_end:
-                                global_vrom_end = segment.rom_end
+                    if global_vrom_end is None:
+                        global_vrom_end = segment.vrom_end
+                    elif global_vrom_end < segment.vrom_end:
+                        global_vrom_end = segment.vrom_end
 
                 else:
                     spim_context.addOverlaySegment(
                         ram_id,
-                        segment.rom_start,
-                        segment.rom_end,
+                        segment.vrom_start,
+                        segment.vrom_end,
                         segment.vram_start,
                         segment.vram_end,
                     )

@@ -58,6 +58,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     segments_by_name: Dict[str, Segment] = {}
     ret = []
 
+    vrom_start = 0
     for i, seg_yaml in enumerate(config_segments):
         # rompos marker
         if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
@@ -93,6 +94,10 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             and segment.vram_start != segment.vram_end
         ):
             segment_rams.addi(segment.vram_start, segment.vram_end, segment)
+
+        segment.vrom_start = vrom_start
+        assert segment.decompressed_size is not None
+        vrom_start += segment.decompressed_size + segment.bss_size
 
     for segment in ret:
         if segment.follows_vram:
