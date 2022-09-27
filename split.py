@@ -106,8 +106,6 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
 
 def assign_symbols_to_segments():
-    seg_syms: dict[int, list[Symbol]] = {}
-
     for symbol in symbols.all_symbols:
         if symbol.rom:
             cands = segment_roms[symbol.rom]
