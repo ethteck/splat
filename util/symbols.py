@@ -437,6 +437,9 @@ class Symbol:
         self.user_declared: bool = False
         self.segment: Optional["Segment"] = segment
 
+        self.generated_default_name: Optional[str] = None
+        self.last_type = type
+
     def __str__(self):
         return self.name
 
@@ -463,6 +466,10 @@ class Symbol:
 
     @property
     def default_name(self) -> str:
+        if self.generated_default_name is not None:
+            if self.type == self.last_type:
+                return self.generated_default_name
+
         if self.segment:
             if isinstance(self.rom, int):
                 suffix = self.format_name(self.segment.symbol_name_format)
@@ -485,7 +492,9 @@ class Symbol:
         else:
             prefix = "D"
 
-        return f"{prefix}_{suffix}"
+        self.last_type = self.type
+        self.generated_default_name = f"{prefix}_{suffix}"
+        return self.generated_default_name
 
     @property
     def rom_end(self):
