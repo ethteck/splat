@@ -308,9 +308,13 @@ class Segment:
             return None
 
     @property
+    def decompressed_size(self) -> Optional[int]:
+        return self.size
+
+    @property
     def vram_end(self) -> Optional[int]:
-        if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.size
+        if self.vram_start is not None and self.decompressed_size is not None:
+            return self.vram_start + self.decompressed_size
         else:
             return None
 

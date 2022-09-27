@@ -63,7 +63,7 @@ class CommonSegCode(CommonSegGroup):
     @property
     def vram_end(self) -> Optional[int]:
         if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.size + self.bss_size
+            return self.vram_start + self.decompressed_size + self.bss_size
         else:
             return None
 

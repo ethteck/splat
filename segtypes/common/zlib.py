@@ -22,7 +22,7 @@ class CommonSegZlib(CommonSegCode):
         args,
         yaml,
     ):
-        self.decompressed_size: int = yaml.get("decompressed_size", 0) if isinstance(yaml, dict) else 0
+        self._decompressed_size: int = yaml.get("decompressed_size", 0) if isinstance(yaml, dict) else 0
         if self.decompressed_size <= 0:
             log.error(f"segment {type} requires an 'decompressed_size' option")
 
@@ -43,11 +43,9 @@ class CommonSegZlib(CommonSegCode):
         )
 
     @property
-    def vram_end(self) -> Optional[int]:
-        if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.decompressed_size + self.bss_size
-        else:
-            return None
+    def decompressed_size(self) -> int:
+        return self._decompressed_size
+
 
     def contains_rom(self, rom: int) -> bool:
         return rom >= 0 and rom < self.decompressed_size
