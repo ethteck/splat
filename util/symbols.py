@@ -194,52 +194,55 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
 
     spim_context.bannedSymbols |= ignored_addresses
 
+    from segtypes.common.code import CommonSegCode
+
     for segment in all_segments:
-        if segment.type == "code":
+        if not isinstance(segment, CommonSegCode):
             # We only care about the VRAMs of code segments
-            if isinstance(segment.vram_start, int) and isinstance(
-                segment.vram_end, int
-            ):
-                ram_id = segment.get_exclusive_ram_id()
-                if ram_id is None:
-                    if global_vram_start is None:
-                        global_vram_start = segment.vram_start
-                    else:
-                        if segment.vram_start < global_vram_start:
-                            global_vram_start = segment.vram_start
+            continue
 
-                    if global_vram_end is None:
-                        global_vram_end = segment.vram_end
-                    else:
-                        if global_vram_end < segment.vram_end:
-                            global_vram_end = segment.vram_end
+        if (
+            not isinstance(segment.vram_start, int)
+            or not isinstance(segment.vram_end, int)
+            or not isinstance(segment.rom_start, int)
+            or not isinstance(segment.rom_end, int)
+        ):
+            continue
 
-                    if isinstance(segment.rom_start, int):
-                        if global_vrom_start is None:
-                            global_vrom_start = segment.rom_start
-                        else:
-                            if segment.rom_start < global_vrom_start:
-                                global_vrom_start = segment.rom_start
+        ram_id = segment.get_exclusive_ram_id()
+        if ram_id is None:
+            if global_vram_start is None:
+                global_vram_start = segment.vram_start
+            elif segment.vram_start < global_vram_start:
+                global_vram_start = segment.vram_start
 
-                    if isinstance(segment.rom_end, int):
-                        if global_vrom_end is None:
-                            global_vrom_end = segment.rom_end
-                        else:
-                            if global_vrom_end < segment.rom_end:
-                                global_vrom_end = segment.rom_end
+            if global_vram_end is None:
+                global_vram_end = segment.vram_end
+            elif global_vram_end < segment.vram_end:
+                global_vram_end = segment.vram_end
 
-                else:
-                    spim_segment = spim_context.addOverlaySegment(
-                        ram_id,
-                        segment.rom_start,
-                        segment.rom_end,
-                        segment.vram_start,
-                        segment.vram_end,
-                    )
-                    # Add the segment-specific symbols first
-                    for symbols_list in segment.seg_symbols.values():
-                        for sym in symbols_list:
-                            add_symbol_to_spim_segment(spim_segment, sym)
+            if global_vrom_start is None:
+                global_vrom_start = segment.rom_start
+            elif segment.rom_start < global_vrom_start:
+                global_vrom_start = segment.rom_start
+
+            if global_vrom_end is None:
+                global_vrom_end = segment.rom_end
+            elif global_vrom_end < segment.rom_end:
+                global_vrom_end = segment.rom_end
+
+        else:
+            spim_segment = spim_context.addOverlaySegment(
+                ram_id,
+                segment.rom_start,
+                segment.rom_end,
+                segment.vram_start,
+                segment.vram_end,
+            )
+            # Add the segment-specific symbols first
+            for symbols_list in segment.seg_symbols.values():
+                for sym in symbols_list:
+                    add_symbol_to_spim_segment(spim_segment, sym)
 
     if (
         global_vram_start is not None
@@ -253,18 +256,17 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
 
     # pass the global symbols to spimdisasm
     for segment in all_segments:
-        if segment.type == "code":
+        if not isinstance(segment, CommonSegCode):
             # We only care about the VRAMs of code segments
-            if isinstance(segment.vram_start, int) and isinstance(
-                segment.vram_end, int
-            ):
-                ram_id = segment.get_exclusive_ram_id()
-                if ram_id is not None:
-                    continue
+            continue
 
-                for symbols_list in segment.seg_symbols.values():
-                    for sym in symbols_list:
-                        add_symbol_to_spim_segment(spim_context.globalSegment, sym)
+        ram_id = segment.get_exclusive_ram_id()
+        if ram_id is not None:
+            continue
+
+        for symbols_list in segment.seg_symbols.values():
+            for sym in symbols_list:
+                add_symbol_to_spim_segment(spim_context.globalSegment, sym)
 
 
 def add_symbol_to_spim_segment(
@@ -304,6 +306,7 @@ def add_symbol_to_spim_segment(
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     return context_sym
+
 
 def add_symbol_to_spim_section(
     section: spimdisasm.mips.sections.SectionBase, sym: "Symbol"
