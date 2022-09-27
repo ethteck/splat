@@ -12,6 +12,7 @@ all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
 ignored_addresses: Set[int] = set()
 symbol_ranges: List["Symbol"] = []
+to_mark_as_defined: Set[str] = set()
 
 # Initialize a spimdisasm context, used to store symbols and functions
 spim_context = spimdisasm.common.Context()
@@ -413,6 +414,18 @@ def retrieve_from_ranges(vram, rom=None):
         return ret[0]
     else:
         return None
+
+
+def mark_c_funcs_as_defined():
+    to_define = set(to_mark_as_defined)
+
+    for symbol in all_symbols:
+        if len(to_define) == 0:
+            return
+        sym_name = symbol.name
+        if sym_name in to_define:
+            symbol.defined = True
+            to_define.remove(sym_name)
 
 
 class Symbol:
