@@ -106,12 +106,15 @@ class LinkerEntry:
 
 
 class LinkerWriter:
-    def __init__(self):
+    def __init__(self, ld_script_path: Path, ld_symbol_header_path: Optional[Path]):
         self.linker_discard_section: bool = options.opts.ld_discard_section
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
         self.symbols: List[str] = []
+
+        self.ld_script_path = ld_script_path
+        self.ld_symbol_header_path = ld_symbol_header_path
 
         self._indent_level = 0
 
@@ -123,7 +126,7 @@ class LinkerWriter:
             self._writeln("_gp = " + f"0x{options.opts.gp:X};")
 
     # Adds all the entries of a segment to the linker script buffer
-    def add(self, segment: Segment, next_segment: Optional[Segment]):
+    def add(self, segment: Segment):
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
 
@@ -259,7 +262,7 @@ class LinkerWriter:
                 )
 
         all_bss = all(e.section == ".bss" for e in entries)
-        self._end_segment(segment, next_segment, all_bss)
+        self._end_segment(segment, all_bss)
 
     def save_linker_script(self):
         if self.linker_discard_section:
@@ -273,11 +276,11 @@ class LinkerWriter:
         assert self._indent_level == 0
 
         write_file_if_different(
-            options.opts.ld_script_path, "\n".join(self.buffer) + "\n"
+            self.ld_script_path, "\n".join(self.buffer) + "\n"
         )
 
     def save_symbol_header(self):
-        path = options.opts.ld_symbol_header_path
+        path = self.ld_symbol_header_path
 
         if path:
             write_file_if_different(
@@ -359,7 +362,7 @@ class LinkerWriter:
         self._begin_block()
 
     def _end_segment(
-        self, segment: Segment, next_segment: Optional[Segment] = None, all_bss=False
+        self, segment: Segment, all_bss=False
     ):
         self._end_block()
 

@@ -17,6 +17,7 @@ from util import symbols
 from util import palettes
 from util import compiler
 from util.symbols import Symbol
+from pathlib import Path
 
 from intervaltree import Interval, IntervalTree
 
@@ -384,7 +385,7 @@ def main(config_path, modes, verbose, use_cache=True):
 
     if options.opts.is_mode_active("ld"):
         global linker_writer
-        linker_writer = LinkerWriter()
+        linker_writer = LinkerWriter(options.opts.ld_script_path, options.opts.ld_symbol_header_path)
         for i, segment in enumerate(
             tqdm.tqdm(
                 all_segments,
@@ -392,10 +393,15 @@ def main(config_path, modes, verbose, use_cache=True):
                 desc=f"Writing linker script {brief_seg_name(segment, 20)}",
             )
         ):
-            next_segment: Optional[Segment] = None
-            if i < len(all_segments) - 1:
-                next_segment = all_segments[i + 1]
-            linker_writer.add(segment, next_segment)
+            linker_writer.add(segment)
+
+            # TODO: don't hardcode paths
+            # TODO: this should be an option instead of always being enabled
+            sub_segment_script = LinkerWriter(Path("build") / "segments" / segment.name / (segment.name + ".ld"), None)
+            sub_segment_script.add(segment)
+            sub_segment_script.save_linker_script()
+            sub_segment_script.save_symbol_header()
+
         linker_writer.save_linker_script()
         linker_writer.save_symbol_header()
 
@@ -460,8 +466,6 @@ def main(config_path, modes, verbose, use_cache=True):
             pickle.dump(cache, f4)
 
     if options.opts.dump_symbols:
-        from pathlib import Path
-
         splat_hidden_folder = Path(".splat/")
         splat_hidden_folder.mkdir(exist_ok=True)
 
