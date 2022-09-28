@@ -198,6 +198,20 @@ def parse_yaml(
             raise ValueError(f"Missing required option {opt}")
         return yaml_as_type(value, t)
 
+    def parse_optional_opt(
+        yaml: Mapping[str, object],
+        opt: str,
+        t: Type[T],
+        default: Optional[T] = None,
+    ) -> Optional[T]:
+        value = yaml.get(opt)
+        if isinstance(value, t):
+            # Fast path
+            return value
+        if value is None and opt not in yaml:
+            return default
+        return yaml_as_type(value, t)
+
     def parse_opt_within(
         yaml: Mapping[str, object],
         opt: str,
@@ -262,7 +276,7 @@ def parse_yaml(
         ),
         generated_s_preamble=parse_opt(yaml, "generated_s_preamble", str, ""),
         use_o_as_suffix=parse_opt(yaml, "o_as_suffix", bool, False),
-        gp=parse_opt(yaml, "gp_value", int, 0),
+        gp=parse_optional_opt(yaml, "gp_value", int, None),
         asset_path=base_path / parse_path(yaml, "asset_path", "assets"),
         symbol_addrs_paths=parse_symbol_addrs_paths(yaml),
         build_path=base_path / parse_path(yaml, "build_path", "build"),

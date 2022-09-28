@@ -385,7 +385,7 @@ def main(config_path, modes, verbose, use_cache=True):
 
     if options.opts.is_mode_active("ld"):
         global linker_writer
-        linker_writer = LinkerWriter(options.opts.ld_script_path, options.opts.ld_symbol_header_path)
+        linker_writer = LinkerWriter(True, options.opts.ld_script_path, options.opts.ld_symbol_header_path)
         for i, segment in enumerate(
             tqdm.tqdm(
                 all_segments,
@@ -397,7 +397,7 @@ def main(config_path, modes, verbose, use_cache=True):
 
             # TODO: don't hardcode paths
             # TODO: this should be an option instead of always being enabled
-            sub_segment_script = LinkerWriter(Path("build") / "segments" / segment.name / (segment.name + ".ld"), None)
+            sub_segment_script = LinkerWriter(False, Path("build") / "segments" / segment.name / (segment.name + ".ld"), None)
             sub_segment_script.add(segment)
             sub_segment_script.save_linker_script()
             sub_segment_script.save_symbol_header()

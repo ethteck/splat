@@ -106,21 +106,26 @@ class LinkerEntry:
 
 
 class LinkerWriter:
-    def __init__(self, ld_script_path: Path, ld_symbol_header_path: Optional[Path]):
+    def __init__(self, is_main_script: bool, ld_script_path: Path, ld_symbol_header_path: Optional[Path]):
         self.linker_discard_section: bool = options.opts.ld_discard_section
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
         self.symbols: List[str] = []
 
+        self.is_main_script = is_main_script
         self.ld_script_path = ld_script_path
         self.ld_symbol_header_path = ld_symbol_header_path
 
         self._indent_level = 0
 
+        self._writeln("OUTPUT_ARCH (mips)")
+        self._writeln("")
+
         self._writeln("SECTIONS")
         self._begin_block()
-        self._writeln(f"__romPos = 0;")
+        if self.is_main_script:
+            self._writeln(f"__romPos = 0;")
 
         if options.opts.gp is not None:
             self._writeln("_gp = " + f"0x{options.opts.gp:X};")
@@ -141,8 +146,8 @@ class LinkerWriter:
         )
 
         # Start the first linker section
-
-        self._write_symbol(f"{seg_name}_ROM_START", "__romPos")
+        if self.is_main_script:
+            self._write_symbol(f"{seg_name}_ROM_START", "__romPos")
 
         if entries[0].section_type == ".bss":
             self._begin_bss_segment(segment, is_first=True)
@@ -334,9 +339,13 @@ class LinkerWriter:
 
         self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
 
-        self._writeln(
-            f".{name} {vram_str}: AT({name}_ROM_START) SUBALIGN({segment.subalign})"
-        )
+        segment_start = f".{name} "
+        if self.is_main_script:
+            segment_start += f"{vram_str}: AT({name}_ROM_START)"
+        else:
+            segment_start += ":"
+        segment_start += f" SUBALIGN({segment.subalign})"
+        self._writeln(segment_start)
         self._begin_block()
 
     def _begin_bss_segment(self, segment: Segment, is_first: bool = False):
@@ -368,16 +377,17 @@ class LinkerWriter:
 
         name = get_segment_cname(segment)
 
-        if not all_bss:
-            self._writeln(f"__romPos += SIZEOF(.{name});")
+        if self.is_main_script:
+            if not all_bss:
+                self._writeln(f"__romPos += SIZEOF(.{name});")
 
-        # Align directive
-        if segment.align:
-            self._writeln(
-                f"__romPos = (__romPos + {segment.align - 1}) & ~{segment.align - 1}; /* align {segment.align} */"
-            )
+            # Align directive
+            if segment.align:
+                self._writeln(
+                    f"__romPos = (__romPos + {segment.align - 1}) & ~{segment.align - 1}; /* align {segment.align} */"
+                )
 
-        self._write_symbol(f"{name}_ROM_END", "__romPos")
+            self._write_symbol(f"{name}_ROM_END", "__romPos")
 
         self._write_symbol(f"{name}_VRAM_END", ".")
 
