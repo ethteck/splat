@@ -417,15 +417,13 @@ def retrieve_from_ranges(vram, rom=None):
 
 
 def mark_c_funcs_as_defined():
-    to_define = set(to_mark_as_defined)
-
     for symbol in all_symbols:
-        if len(to_define) == 0:
+        if len(to_mark_as_defined) == 0:
             return
         sym_name = symbol.name
-        if sym_name in to_define:
+        if sym_name in to_mark_as_defined:
             symbol.defined = True
-            to_define.remove(sym_name)
+            to_mark_as_defined.remove(sym_name)
 
 
 class Symbol:
