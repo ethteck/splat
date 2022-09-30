@@ -5,8 +5,6 @@ from typing import Dict, List, Mapping, Optional, Type, TypeVar
 from util import compiler
 from util.compiler import Compiler
 
-opts: "SplatOpts"
-
 
 @dataclass
 class SplatOpts:
@@ -146,6 +144,8 @@ class SplatOpts:
     add_set_gp_64: bool
     # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
     create_asm_dependencies: bool
+    # Global option for rodata string encoding. This can be overriden per segment
+    string_encoding: Optional[str]
 
     ################################################################################
     # N64-specific options
@@ -166,6 +166,9 @@ class SplatOpts:
     # Returns whether the given mode is currently enabled
     def is_mode_active(self, mode: str) -> bool:
         return mode in self.modes or "all" in self.modes
+
+
+opts: SplatOpts
 
 
 def parse_yaml(
@@ -354,6 +357,7 @@ def parse_yaml(
         ),
         add_set_gp_64=parse_opt(yaml, "add_set_gp_64", bool, True),
         create_asm_dependencies=parse_opt(yaml, "create_asm_dependencies", bool, False),
+        string_encoding=parse_optional_opt(yaml, "string_encoding", str, None),
         header_encoding=parse_opt(yaml, "header_encoding", str, "ASCII"),
         gfx_ucode=parse_opt_within(
             yaml,
