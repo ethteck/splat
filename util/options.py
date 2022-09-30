@@ -144,7 +144,7 @@ class SplatOpts:
     add_set_gp_64: bool
     # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
     create_asm_dependencies: bool
-    # 
+    # Global option for rodata string encoding. This can be overriden per segment
     string_encoding: Optional[str]
 
     ################################################################################
