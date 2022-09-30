@@ -167,6 +167,7 @@ class SplatOpts:
     def is_mode_active(self, mode: str) -> bool:
         return mode in self.modes or "all" in self.modes
 
+
 opts: SplatOpts
 
 
