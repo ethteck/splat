@@ -26,6 +26,9 @@ class CommonSegRodata(CommonSegData):
             self.get_exclusive_ram_id(),
         )
 
+        if self.str_encoding is not None:
+            self.spim_section.stringEncoding = self.str_encoding
+
         self.spim_section.analyze()
         self.spim_section.setCommentOffset(self.rom_start)
 
