@@ -26,6 +26,12 @@ class CommonSegRodata(CommonSegData):
             self.get_exclusive_ram_id(),
         )
 
+        # Set rodata string encoding
+        # First check the global configuration
+        if options.opts.string_encoding is not None:
+            self.spim_section.stringEncoding = options.opts.string_encoding
+
+        # Then check the per-segment configuration in case we want to override the global one
         if self.str_encoding is not None:
             self.spim_section.stringEncoding = self.str_encoding
 
