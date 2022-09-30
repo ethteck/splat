@@ -320,6 +320,8 @@ class LinkerWriter:
     def _begin_segment(self, segment: Segment):
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        elif segment.follows_vram_symbol:
+            vram_str = segment.follows_vram_symbol + " "
         else:
             vram_str = (
                 f"0x{segment.vram_start:X} "
@@ -339,6 +341,8 @@ class LinkerWriter:
     def _begin_bss_segment(self, segment: Segment, is_first: bool = False):
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        elif segment.follows_vram_symbol:
+            vram_str = segment.follows_vram_symbol + " "
         else:
             vram_str = (
                 f"0x{segment.vram_start:X} "
