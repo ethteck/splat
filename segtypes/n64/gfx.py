@@ -20,7 +20,6 @@ class N64SegGfx(CommonSegCodeSubsegment):
         type,
         name,
         vram_start,
-        extract,
         args,
         yaml,
     ):
@@ -30,7 +29,6 @@ class N64SegGfx(CommonSegCodeSubsegment):
             type,
             name,
             vram_start,
-            extract,
             args=args,
             yaml=yaml,
         )

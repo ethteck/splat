@@ -13,7 +13,6 @@ class CommonSegLib(N64Segment):
         type,
         name,
         vram_start,
-        extract,
         args,
         yaml,
     ):
@@ -23,7 +22,6 @@ class CommonSegLib(N64Segment):
             type,
             name,
             vram_start,
-            extract,
             args=args,
             yaml=yaml,
         )

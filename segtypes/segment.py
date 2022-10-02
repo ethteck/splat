@@ -167,7 +167,6 @@ class Segment:
         type: str,
         name: str,
         vram_start: Any,
-        extract: bool,
         args=[],
         yaml={},
     ):
@@ -176,7 +175,6 @@ class Segment:
         self.type = type
         self.name = name
         self.vram_start = vram_start
-        self.extract = extract
 
         self.align: Optional[int] = None
         self.given_subalign: int = options.opts.subalign
@@ -200,10 +198,10 @@ class Segment:
         self.args: List[str] = args
         self.yaml = yaml
 
+        self.extract: bool = True
         if self.rom_start == "auto":
             self.extract = False
-
-        if self.type.startswith("."):
+        elif self.type.startswith("."):
             self.extract = False
 
         self.warnings: List[str] = []
@@ -226,7 +224,6 @@ class Segment:
         type = Segment.parse_segment_type(yaml)
         name = Segment.parse_segment_name(cls, rom_start, yaml)
         vram_start = vram if vram is not None else parse_segment_vram(yaml)
-        extract = bool(yaml.get("extract", True)) if isinstance(yaml, dict) else True
         given_subalign = parse_segment_subalign(yaml)
         exclusive_ram_id: Optional[str] = (
             yaml.get("exclusive_ram_id") if isinstance(yaml, dict) else None
@@ -244,10 +241,11 @@ class Segment:
             type=type,
             name=name,
             vram_start=vram_start,
-            extract=extract,
             args=args,
             yaml=yaml,
         )
+        if isinstance(yaml, dict):
+            ret.extract = bool(yaml.get("extract", ret.extract))
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = given_subalign
         ret.exclusive_ram_id = exclusive_ram_id

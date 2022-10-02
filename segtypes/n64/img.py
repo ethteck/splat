@@ -14,7 +14,6 @@ class N64SegImg(N64Segment):
         type,
         name,
         vram_start,
-        extract,
         args,
         yaml,
         img_cls: Type[Image],
@@ -25,7 +24,6 @@ class N64SegImg(N64Segment):
             type,
             name,
             vram_start,
-            extract,
             args=args,
             yaml=yaml,
         )

@@ -23,7 +23,6 @@ class CommonSegCode(CommonSegGroup):
         type,
         name,
         vram_start,
-        extract,
         args,
         yaml,
     ):
@@ -35,7 +34,6 @@ class CommonSegCode(CommonSegGroup):
             type,
             name,
             vram_start,
-            extract,
             args=args,
             yaml=yaml,
         )
@@ -92,10 +90,10 @@ class CommonSegCode(CommonSegGroup):
                         type=rep_type,
                         name=base[0],
                         vram_start=vram_start,
-                        extract=False,
                         args=[],
                         yaml={},
                     )
+                    rep.extract = False
                     rep.given_subalign = self.given_subalign
                     rep.exclusive_ram_id = self.get_exclusive_ram_id()
                     rep.given_dir = self.given_dir

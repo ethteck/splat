@@ -12,7 +12,6 @@ class CommonSegGroup(CommonSegment):
         type,
         name,
         vram_start,
-        extract,
         args,
         yaml,
     ):
@@ -22,7 +21,6 @@ class CommonSegGroup(CommonSegment):
             type,
             name,
             vram_start,
-            extract,
             args=args,
             yaml=yaml,
         )
