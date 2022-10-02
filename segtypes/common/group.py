@@ -16,8 +16,6 @@ class CommonSegGroup(CommonSegment):
         given_subalign,
         exclusive_ram_id,
         given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -31,8 +29,6 @@ class CommonSegGroup(CommonSegment):
             given_subalign,
             exclusive_ram_id=exclusive_ram_id,
             given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )

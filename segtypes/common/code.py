@@ -27,8 +27,6 @@ class CommonSegCode(CommonSegGroup):
         given_subalign,
         exclusive_ram_id,
         given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -44,8 +42,6 @@ class CommonSegCode(CommonSegGroup):
             given_subalign,
             exclusive_ram_id=exclusive_ram_id,
             given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )
@@ -106,11 +102,11 @@ class CommonSegCode(CommonSegGroup):
                         given_subalign=self.given_subalign,
                         exclusive_ram_id=self.get_exclusive_ram_id(),
                         given_dir=self.given_dir,
-                        symbol_name_format=self.symbol_name_format,
-                        symbol_name_format_no_rom=self.symbol_name_format_no_rom,
                         args=[],
                         yaml={},
                     )
+                    rep.given_symbol_name_format = self.symbol_name_format
+                    rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
                     rep.sibling = base[1]
                     rep.parent = self
                     alls.append(rep)
@@ -297,10 +293,7 @@ class CommonSegCode(CommonSegGroup):
                 rom_start = "auto"
                 vram_start = "auto"
 
-            ret.insert(
-                idx,
-                (
-                    Segment(
+            new_seg = Segment(
                         rom_start,
                         "auto",
                         "all_" + section,
@@ -310,11 +303,10 @@ class CommonSegCode(CommonSegGroup):
                         self.given_subalign,
                         self.exclusive_ram_id,
                         self.given_dir,
-                        self.symbol_name_format,
-                        self.symbol_name_format_no_rom,
                     )
-                ),
-            )
+            new_seg.given_symbol_name_format = self.symbol_name_format
+            new_seg.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
+            ret.insert(idx, new_seg)
 
         check = True
         while check:

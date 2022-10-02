@@ -102,7 +102,9 @@ class Segment:
             ext_spec = importlib.util.spec_from_file_location(
                 f"{platform}.segtypes.{seg_type}", ext_path / f"{seg_type}.py"
             )
+            assert ext_spec is not None
             ext_mod = importlib.util.module_from_spec(ext_spec)
+            assert ext_spec.loader is not None
             ext_spec.loader.exec_module(ext_mod)
         except Exception as err:
             log.write(err, status="error")
@@ -169,8 +171,6 @@ class Segment:
         given_subalign: Optional[int],
         exclusive_ram_id: Optional[str],
         given_dir: Path,
-        symbol_name_format: str,
-        symbol_name_format_no_rom: str,
         args=[],
         yaml={},
     ):
@@ -185,15 +185,16 @@ class Segment:
         self.given_subalign = given_subalign or options.opts.subalign
         self.exclusive_ram_id: Optional[str] = exclusive_ram_id
         self.given_dir: Path = given_dir
-        self.given_seg_symbols: Dict[
-            int, List[Symbol]
-        ] = {}  # Symbols known to be in this segment
+
+        # Symbols known to be in this segment
+        self.given_seg_symbols: Dict[int, List[Symbol]] = {}
+
         self.given_section_order: List[str] = options.opts.section_order
         self.follows_vram: Optional[str] = None
         self.follows_vram_symbol: Optional[str] = None
 
-        self.given_symbol_name_format = symbol_name_format
-        self.given_symbol_name_format_no_rom = symbol_name_format_no_rom
+        self.given_symbol_name_format: str = options.opts.symbol_name_format
+        self.given_symbol_name_format_no_rom: str = options.opts.symbol_name_format_no_rom
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
@@ -250,12 +251,12 @@ class Segment:
             given_subalign=given_subalign,
             exclusive_ram_id=exclusive_ram_id,
             given_dir=given_dir,
-            symbol_name_format=given_symbol_name_format,
-            symbol_name_format_no_rom=given_symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )
         ret.given_section_order = parse_segment_section_order(yaml)
+        ret.given_symbol_name_format = given_symbol_name_format
+        ret.given_symbol_name_format_no_rom = given_symbol_name_format_no_rom
 
         if not ret.follows_vram:
             ret.follows_vram = parse_segment_follows_vram(yaml)

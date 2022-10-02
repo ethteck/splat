@@ -18,8 +18,6 @@ class N64SegImg(N64Segment):
         given_subalign,
         exclusive_ram_id,
         given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
         img_cls: Type[Image],
@@ -34,8 +32,6 @@ class N64SegImg(N64Segment):
             given_subalign,
             exclusive_ram_id=exclusive_ram_id,
             given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )

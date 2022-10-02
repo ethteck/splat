@@ -1,3 +1,4 @@
+from pathlib import Path
 from segtypes.n64.segment import N64Segment
 from segtypes.linker_entry import LinkerEntry
 
@@ -16,8 +17,6 @@ class CommonSegLib(N64Segment):
         given_subalign,
         exclusive_ram_id,
         given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -31,8 +30,6 @@ class CommonSegLib(N64Segment):
             given_subalign,
             exclusive_ram_id=exclusive_ram_id,
             given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )
@@ -57,6 +54,6 @@ class CommonSegLib(N64Segment):
     def get_linker_entries(self):
         path = options.opts.lib_path / self.name
 
-        object_path = f"{path}.a:{self.object}.o"
+        object_path = Path(f"{path}.a:{self.object}.o")
 
         return [LinkerEntry(self, [path], object_path, self.get_linker_section())]
