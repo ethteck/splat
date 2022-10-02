@@ -167,8 +167,8 @@ class Segment:
         type: str,
         name: str,
         vram_start: Any,
-        args=[],
-        yaml={},
+        args: list,
+        yaml,
     ):
         self.rom_start = rom_start
         self.rom_end = rom_end
@@ -224,15 +224,7 @@ class Segment:
         type = Segment.parse_segment_type(yaml)
         name = Segment.parse_segment_name(cls, rom_start, yaml)
         vram_start = vram if vram is not None else parse_segment_vram(yaml)
-        given_subalign = parse_segment_subalign(yaml)
-        exclusive_ram_id: Optional[str] = (
-            yaml.get("exclusive_ram_id") if isinstance(yaml, dict) else None
-        )
-        given_dir = Path(yaml.get("dir", "")) if isinstance(yaml, dict) else Path()
-        given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
-        given_symbol_name_format_no_rom = (
-            Segment.parse_segment_symbol_name_format_no_rom(yaml)
-        )
+
         args: List[str] = [] if isinstance(yaml, dict) else yaml[3:]
 
         ret = cls(
@@ -244,14 +236,14 @@ class Segment:
             args=args,
             yaml=yaml,
         )
+        ret.given_section_order = parse_segment_section_order(yaml)
+        ret.given_subalign = parse_segment_subalign(yaml)
         if isinstance(yaml, dict):
             ret.extract = bool(yaml.get("extract", ret.extract))
-        ret.given_section_order = parse_segment_section_order(yaml)
-        ret.given_subalign = given_subalign
-        ret.exclusive_ram_id = exclusive_ram_id
-        ret.given_dir = given_dir
-        ret.given_symbol_name_format = given_symbol_name_format
-        ret.given_symbol_name_format_no_rom = given_symbol_name_format_no_rom
+            ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
+            ret.given_dir = yaml.get("dir", "")
+        ret.given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
+        ret.given_symbol_name_format_no_rom = Segment.parse_segment_symbol_name_format_no_rom(yaml)
 
         if not ret.follows_vram:
             ret.follows_vram = parse_segment_follows_vram(yaml)

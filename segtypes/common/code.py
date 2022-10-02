@@ -212,12 +212,13 @@ class CommonSegCode(CommonSegGroup):
             # Add dummy segments to be expanded later
             if typ.startswith("all_"):
                 dummy_seg = Segment(
-                        start,
-                        "auto",
-                        typ,
-                        "",
-                        "auto",
-                        False,
+                        rom_start=start,
+                        rom_end="auto",
+                        type=typ,
+                        name="",
+                        vram_start="auto",
+                        args=[],
+                        yaml={},
                     )
                 dummy_seg.given_subalign = self.given_subalign
                 dummy_seg.exclusive_ram_id = self.exclusive_ram_id
@@ -285,12 +286,13 @@ class CommonSegCode(CommonSegGroup):
                 vram_start = "auto"
 
             new_seg = Segment(
-                        rom_start,
-                        "auto",
-                        "all_" + section,
-                        "",
-                        vram_start,
-                        False,
+                        rom_start=rom_start,
+                        rom_end="auto",
+                        type="all_" + section,
+                        name="",
+                        vram_start=vram_start,
+                        args=[],
+                        yaml={},
                     )
             new_seg.given_subalign = self.given_subalign
             new_seg.exclusive_ram_id = self.exclusive_ram_id
