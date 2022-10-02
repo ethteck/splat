@@ -13,9 +13,6 @@ class CommonSegGroup(CommonSegment):
         name,
         vram_start,
         extract,
-        given_subalign,
-        exclusive_ram_id,
-        given_dir,
         args,
         yaml,
     ):
@@ -26,9 +23,6 @@ class CommonSegGroup(CommonSegment):
             name,
             vram_start,
             extract,
-            given_subalign,
-            exclusive_ram_id=exclusive_ram_id,
-            given_dir=given_dir,
             args=args,
             yaml=yaml,
         )

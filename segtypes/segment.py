@@ -168,9 +168,6 @@ class Segment:
         name: str,
         vram_start: Any,
         extract: bool,
-        given_subalign: Optional[int],
-        exclusive_ram_id: Optional[str],
-        given_dir: Path,
         args=[],
         yaml={},
     ):
@@ -182,9 +179,9 @@ class Segment:
         self.extract = extract
 
         self.align: Optional[int] = None
-        self.given_subalign = given_subalign or options.opts.subalign
-        self.exclusive_ram_id: Optional[str] = exclusive_ram_id
-        self.given_dir: Path = given_dir
+        self.given_subalign: int = options.opts.subalign
+        self.exclusive_ram_id: Optional[str] = None
+        self.given_dir: Path = Path()
 
         # Symbols known to be in this segment
         self.given_seg_symbols: Dict[int, List[Symbol]] = {}
@@ -248,13 +245,13 @@ class Segment:
             name=name,
             vram_start=vram_start,
             extract=extract,
-            given_subalign=given_subalign,
-            exclusive_ram_id=exclusive_ram_id,
-            given_dir=given_dir,
             args=args,
             yaml=yaml,
         )
         ret.given_section_order = parse_segment_section_order(yaml)
+        ret.given_subalign = given_subalign
+        ret.exclusive_ram_id = exclusive_ram_id
+        ret.given_dir = given_dir
         ret.given_symbol_name_format = given_symbol_name_format
         ret.given_symbol_name_format_no_rom = given_symbol_name_format_no_rom
 
