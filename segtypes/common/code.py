@@ -212,19 +212,21 @@ class CommonSegCode(CommonSegGroup):
             # Add dummy segments to be expanded later
             if typ.startswith("all_"):
                 dummy_seg = Segment(
-                        rom_start=start,
-                        rom_end="auto",
-                        type=typ,
-                        name="",
-                        vram_start="auto",
-                        args=[],
-                        yaml={},
-                    )
+                    rom_start=start,
+                    rom_end="auto",
+                    type=typ,
+                    name="",
+                    vram_start="auto",
+                    args=[],
+                    yaml={},
+                )
                 dummy_seg.given_subalign = self.given_subalign
                 dummy_seg.exclusive_ram_id = self.exclusive_ram_id
                 dummy_seg.given_dir = self.given_dir
                 dummy_seg.given_symbol_name_format = self.symbol_name_format
-                dummy_seg.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
+                dummy_seg.given_symbol_name_format_no_rom = (
+                    self.symbol_name_format_no_rom
+                )
                 ret.append(dummy_seg)
                 continue
 
@@ -286,14 +288,14 @@ class CommonSegCode(CommonSegGroup):
                 vram_start = "auto"
 
             new_seg = Segment(
-                        rom_start=rom_start,
-                        rom_end="auto",
-                        type="all_" + section,
-                        name="",
-                        vram_start=vram_start,
-                        args=[],
-                        yaml={},
-                    )
+                rom_start=rom_start,
+                rom_end="auto",
+                type="all_" + section,
+                name="",
+                vram_start=vram_start,
+                args=[],
+                yaml={},
+            )
             new_seg.given_subalign = self.given_subalign
             new_seg.exclusive_ram_id = self.exclusive_ram_id
             new_seg.given_dir = self.given_dir

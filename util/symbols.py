@@ -446,7 +446,6 @@ class Symbol:
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
 
-
     def __str__(self):
         return self.name
 

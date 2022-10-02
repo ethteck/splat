@@ -189,7 +189,9 @@ class Segment:
         self.follows_vram_symbol: Optional[str] = None
 
         self.given_symbol_name_format: str = options.opts.symbol_name_format
-        self.given_symbol_name_format_no_rom: str = options.opts.symbol_name_format_no_rom
+        self.given_symbol_name_format_no_rom: str = (
+            options.opts.symbol_name_format_no_rom
+        )
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
@@ -243,7 +245,9 @@ class Segment:
             ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
             ret.given_dir = yaml.get("dir", "")
         ret.given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
-        ret.given_symbol_name_format_no_rom = Segment.parse_segment_symbol_name_format_no_rom(yaml)
+        ret.given_symbol_name_format_no_rom = (
+            Segment.parse_segment_symbol_name_format_no_rom(yaml)
+        )
 
         if not ret.follows_vram:
             ret.follows_vram = parse_segment_follows_vram(yaml)
