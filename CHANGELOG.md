@@ -1,5 +1,38 @@
 # splat Release Notes
 
+### 0.12.1
+* The constructor for `Segment` takes far fewer arguments now, which will affect (and hopefully simplify) any custom segments that are implemented.
+
+* The new option `string_encoding` can be set at the global or segment level and will influence the encoding for strings in rodata during disassembly. The default encoding used is EUC-JP, as it was previously.
+
+## 0.12.0: Performance Boost
+
+In this release, we bring many performance improvements, making splat dramatically faster. We have observed speedups of 10-20x, though your results may vary.
+
+* Linker script `_romPos` alignment statements now take a form that is friendlier to different assemblers.
+
+* Fixed the default value of `use_legacy_include_asm` to be what it was before 0.11.2
+
+### 0.11.2
+* The way options are parsed and accessed has been completely refactored. The following option names have changed:
+
+`linker_symbol_header_path` -> `ld_symbol_header_path`
+
+`asm_endlabels` -> `asm_end_label`
+
+Additionally, any custom segments or code that needs to read options will have to accommodate the new API for doing so. Options are now fields of an object named `opts` within the existing `options` namespace. Because the options are fields, `get_` is no longer necessary. To give an example:
+
+Before: `options.get_asm_path()`
+
+After: `options.opts.asm_path`
+
+The clean_up_path function in linker_entry.py now uses a cache, offering a small performance improvement during the linker script writing phase.
+
+### 0.11.1
+* The linker script now includes a `_SIZE` symbol for each segment.
+* The new `create_asm_dependencies`, if enabled, will cause splat to create `.asmproc.d` files that can inform a build system which asm files a c file depends upon. If your build system is configured correctly, this can allow triggering a rebuild of a C file when its included asm files are modified.
+* Splat no longer depends directly on pypng and now instead uses [n64img](https://github.com/decompals/n64img). Currently, all image behavior uses the exact same code. Eventually, n64img will be implemented in C and support rebuilding images as well.
+
 ## 0.11.0: Spimdisasm Returns
 
 Spimdisasm now handles data (data, rodata, bss) disassembly in splat! This includes a few changes in behavior:

@@ -5,7 +5,6 @@ Dumps out Vtx as a .inc.c file.
 Originally written by Mark Street (https://github.com/mkst)
 """
 
-import re
 import struct
 from pathlib import Path
 from util.log import error
@@ -22,12 +21,6 @@ class N64SegVtx(CommonSegCodeSubsegment):
         type,
         name,
         vram_start,
-        extract,
-        given_subalign,
-        exclusive_ram_id,
-        given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -37,12 +30,6 @@ class N64SegVtx(CommonSegCodeSubsegment):
             type,
             name,
             vram_start,
-            extract,
-            given_subalign,
-            exclusive_ram_id=exclusive_ram_id,
-            given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )
@@ -52,7 +39,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         return ".data"
 
     def out_path(self) -> Path:
-        return options.get_asset_path() / self.dir / f"{self.name}.vtx.inc.c"
+        return options.opts.asset_path / self.dir / f"{self.name}.vtx.inc.c"
 
     def scan(self, rom_bytes: bytes):
         self.file_text = self.disassemble_data(rom_bytes)
@@ -66,7 +53,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
             )
 
         lines = []
-        preamble = options.get_generated_c_premble()
+        preamble = options.opts.generated_c_preamble
         lines.append(preamble)
         lines.append("")
 
@@ -98,10 +85,10 @@ class N64SegVtx(CommonSegCodeSubsegment):
 
     def should_scan(self) -> bool:
         return (
-            options.mode_active("vtx")
+            options.opts.is_mode_active("vtx")
             and self.rom_start != "auto"
             and self.rom_end != "auto"
         )
 
     def should_split(self) -> bool:
-        return self.extract and options.mode_active("vtx")
+        return self.extract and options.opts.is_mode_active("vtx")

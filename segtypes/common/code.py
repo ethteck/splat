@@ -23,12 +23,6 @@ class CommonSegCode(CommonSegGroup):
         type,
         name,
         vram_start,
-        extract,
-        given_subalign,
-        exclusive_ram_id,
-        given_dir,
-        symbol_name_format,
-        symbol_name_format_no_rom,
         args,
         yaml,
     ):
@@ -40,12 +34,6 @@ class CommonSegCode(CommonSegGroup):
             type,
             name,
             vram_start,
-            extract,
-            given_subalign,
-            exclusive_ram_id=exclusive_ram_id,
-            given_dir=given_dir,
-            symbol_name_format=symbol_name_format,
-            symbol_name_format_no_rom=symbol_name_format_no_rom,
             args=args,
             yaml=yaml,
         )
@@ -112,15 +100,15 @@ class CommonSegCode(CommonSegGroup):
                         type=rep_type,
                         name=base[0],
                         vram_start=vram_start,
-                        extract=False,
-                        given_subalign=self.given_subalign,
-                        exclusive_ram_id=self.get_exclusive_ram_id(),
-                        given_dir=self.given_dir,
-                        symbol_name_format=self.symbol_name_format,
-                        symbol_name_format_no_rom=self.symbol_name_format_no_rom,
                         args=[],
                         yaml={},
                     )
+                    rep.extract = False
+                    rep.given_subalign = self.given_subalign
+                    rep.exclusive_ram_id = self.get_exclusive_ram_id()
+                    rep.given_dir = self.given_dir
+                    rep.given_symbol_name_format = self.symbol_name_format
+                    rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
                     rep.sibling = base[1]
                     rep.parent = self
                     alls.append(rep)
@@ -141,7 +129,7 @@ class CommonSegCode(CommonSegGroup):
         section_order.remove(".text")
 
         for i, section in enumerate(section_order):
-            if section not in options.auto_all_sections():
+            if section not in options.opts.auto_all_sections:
                 continue
 
             if not found_sections[section].has_start():
@@ -169,7 +157,7 @@ class CommonSegCode(CommonSegGroup):
         )  # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
         self.section_boundaries = OrderedDict(
-            (s_name, Range()) for s_name in options.get_section_order()
+            (s_name, Range()) for s_name in options.opts.section_order
         )
 
         found_sections = OrderedDict(
@@ -233,7 +221,23 @@ class CommonSegCode(CommonSegGroup):
 
             # Add dummy segments to be expanded later
             if typ.startswith("all_"):
-                ret.append(Segment(start, "auto", typ, "", "auto"))
+                dummy_seg = Segment(
+                    rom_start=start,
+                    rom_end="auto",
+                    type=typ,
+                    name="",
+                    vram_start="auto",
+                    args=[],
+                    yaml={},
+                )
+                dummy_seg.given_subalign = self.given_subalign
+                dummy_seg.exclusive_ram_id = self.exclusive_ram_id
+                dummy_seg.given_dir = self.given_dir
+                dummy_seg.given_symbol_name_format = self.symbol_name_format
+                dummy_seg.given_symbol_name_format_no_rom = (
+                    self.symbol_name_format_no_rom
+                )
+                ret.append(dummy_seg)
                 continue
 
             segment_class = Segment.get_class_for_type(typ)
@@ -293,18 +297,21 @@ class CommonSegCode(CommonSegGroup):
                 rom_start = "auto"
                 vram_start = "auto"
 
-            ret.insert(
-                idx,
-                (
-                    Segment(
-                        rom_start,
-                        "auto",
-                        "all_" + section,
-                        "",
-                        vram_start,
-                    )
-                ),
+            new_seg = Segment(
+                rom_start=rom_start,
+                rom_end="auto",
+                type="all_" + section,
+                name="",
+                vram_start=vram_start,
+                args=[],
+                yaml={},
             )
+            new_seg.given_subalign = self.given_subalign
+            new_seg.exclusive_ram_id = self.exclusive_ram_id
+            new_seg.given_dir = self.given_dir
+            new_seg.given_symbol_name_format = self.symbol_name_format
+            new_seg.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
+            ret.insert(idx, new_seg)
 
         check = True
         while check:
