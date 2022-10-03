@@ -318,7 +318,9 @@ class CommonSegCode(CommonSegGroup):
             check = self.handle_alls(ret, base_segments)
 
         # TODO why is this necessary?
-        rodata_section = self.section_boundaries.get(".rodata") or self.section_boundaries.get(".rdata")
+        rodata_section = self.section_boundaries.get(
+            ".rodata"
+        ) or self.section_boundaries.get(".rdata")
         if (
             rodata_section is not None
             and rodata_section.has_start()
