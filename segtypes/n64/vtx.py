@@ -5,7 +5,6 @@ Dumps out Vtx as a .inc.c file.
 Originally written by Mark Street (https://github.com/mkst)
 """
 
-import re
 import struct
 from pathlib import Path
 from util.log import error

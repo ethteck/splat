@@ -465,12 +465,12 @@ def main(config_path, modes, verbose, use_cache=True):
                 if s.given_size is not None:
                     f.write(f"0x{s.given_size:X},")
                 else:
-                    f.write(f"None,")
+                    f.write("None,")
                 f.write(f"{s.size},")
                 if s.rom is not None:
                     f.write(f"0x{s.rom:X},")
                 else:
-                    f.write(f"None,")
+                    f.write("None,")
                 f.write(
                     f"{s.defined},{s.user_declared},{s.referenced},{s.dead},{s.extract}\n"
                 )

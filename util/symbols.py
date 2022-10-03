@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, TYPE_CHECKING, Set
 import spimdisasm
 import tqdm
-import dataclasses
+from dataclasses import dataclass
 
 # circular import
 if TYPE_CHECKING:
@@ -427,7 +427,7 @@ def mark_c_funcs_as_defined():
             to_mark_as_defined.remove(sym_name)
 
 
-@dataclasses.dataclass
+@dataclass
 class Symbol:
     vram_start: int
 
