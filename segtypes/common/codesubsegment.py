@@ -54,13 +54,6 @@ class CommonSegCodeSubsegment(Segment):
             self.get_exclusive_ram_id(),
         )
 
-        for symbol_list in self.seg_symbols.values():
-            symbols.add_symbol_to_spim_section(self.spim_section, symbol_list[0])
-
-        for sym in symbols.all_symbols:
-            if sym.user_declared:
-                symbols.add_symbol_to_spim_section(self.spim_section, sym)
-
         self.spim_section.isHandwritten = is_hasm
 
         self.spim_section.analyze()

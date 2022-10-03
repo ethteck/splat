@@ -69,8 +69,6 @@ class CommonSegCode(CommonSegGroup):
 
     # Prepare symbol for migration to the function
     def check_rodata_sym(self, func_addr: int, sym: Symbol):
-        if func_addr == 0x8009EA40:
-            dog = 5
         rodata_section = self.section_boundaries.get(".rodata")
         if rodata_section is not None:
             self.check_rodata_sym_impl(func_addr, sym, rodata_section)
