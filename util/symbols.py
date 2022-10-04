@@ -449,6 +449,15 @@ class Symbol:
     def __str__(self):
         return self.name
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Symbol):
+            return False
+        return self.vram_start == other.vram_start and self.segment == other.segment
+
+    # https://stackoverflow.com/a/56915493/6292472
+    def __hash__(self):
+        return hash((self.vram_start, self.segment))
+
     def format_name(self, format: str) -> str:
         ret = format
 
