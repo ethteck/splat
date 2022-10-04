@@ -125,7 +125,7 @@ class LinkerWriter:
         self._writeln("SECTIONS")
         self._begin_block()
         if self.is_main_script:
-            self._writeln(f"__romPos = 0;")
+            self._writeln("__romPos = 0;")
 
         if options.opts.gp is not None:
             self._writeln("_gp = " + f"0x{options.opts.gp:X};")
@@ -179,7 +179,7 @@ class LinkerWriter:
                 self._begin_segment(entry.segment)
                 continue
             elif cur_section == "linker_offset":
-                self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", f".")
+                self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", ".")
                 continue
 
             for i, section in enumerate(section_labels.values()):
@@ -328,6 +328,8 @@ class LinkerWriter:
     def _begin_segment(self, segment: Segment):
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        elif segment.follows_vram_symbol:
+            vram_str = segment.follows_vram_symbol + " "
         else:
             vram_str = (
                 f"0x{segment.vram_start:X} "
@@ -351,6 +353,8 @@ class LinkerWriter:
     def _begin_bss_segment(self, segment: Segment, is_first: bool = False):
         if segment.follows_vram_segment:
             vram_str = get_segment_cname(segment.follows_vram_segment) + "_VRAM_END "
+        elif segment.follows_vram_symbol:
+            vram_str = segment.follows_vram_symbol + " "
         else:
             vram_str = (
                 f"0x{segment.vram_start:X} "
