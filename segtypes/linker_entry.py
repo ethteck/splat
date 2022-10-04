@@ -106,7 +106,12 @@ class LinkerEntry:
 
 
 class LinkerWriter:
-    def __init__(self, is_main_script: bool, ld_script_path: Path, ld_symbol_header_path: Optional[Path]):
+    def __init__(
+        self,
+        is_main_script: bool,
+        ld_script_path: Path,
+        ld_symbol_header_path: Optional[Path],
+    ):
         self.linker_discard_section: bool = options.opts.ld_discard_section
         self.entries: List[LinkerEntry] = []
 
@@ -280,9 +285,7 @@ class LinkerWriter:
 
         assert self._indent_level == 0
 
-        write_file_if_different(
-            self.ld_script_path, "\n".join(self.buffer) + "\n"
-        )
+        write_file_if_different(self.ld_script_path, "\n".join(self.buffer) + "\n")
 
     def save_symbol_header(self):
         path = self.ld_symbol_header_path
@@ -374,9 +377,7 @@ class LinkerWriter:
         self._writeln(f".{name} {addr_str} : SUBALIGN({segment.subalign})")
         self._begin_block()
 
-    def _end_segment(
-        self, segment: Segment, all_bss=False
-    ):
+    def _end_segment(self, segment: Segment, all_bss=False):
         self._end_block()
 
         name = get_segment_cname(segment)

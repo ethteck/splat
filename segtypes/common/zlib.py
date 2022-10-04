@@ -2,6 +2,7 @@ import zlib
 
 from segtypes.common.compressedsegment import CommonSegCompressedSegment
 
+
 class CommonSegZlib(CommonSegCompressedSegment):
     @staticmethod
     def decompressZlib(data: bytes) -> bytearray:
@@ -17,4 +18,4 @@ class CommonSegZlib(CommonSegCompressedSegment):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
 
-        return CommonSegZlib.decompressZlib(rom_bytes[self.rom_start:self.rom_end])
+        return CommonSegZlib.decompressZlib(rom_bytes[self.rom_start : self.rom_end])

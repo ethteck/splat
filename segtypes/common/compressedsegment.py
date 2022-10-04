@@ -16,7 +16,10 @@ class CommonSegCompressedSegment(CommonSegCode):
         args,
         yaml,
     ):
-        self._decompressed_size: int = yaml.get("decompressed_size", 0) if isinstance(yaml, dict) else 0
+        self._decompressed_size: int = 0
+        if isinstance(yaml, dict):
+            self._decompressed_size = yaml.get("decompressed_size", 0)
+
         if self.decompressed_size <= 0:
             log.error(f"segment {type} requires an 'decompressed_size' option")
 
@@ -33,7 +36,6 @@ class CommonSegCompressedSegment(CommonSegCode):
     @property
     def decompressed_size(self) -> int:
         return self._decompressed_size
-
 
     def contains_rom(self, rom: int) -> bool:
         return rom >= 0 and rom < self.decompressed_size
@@ -58,5 +60,7 @@ class CommonSegCompressedSegment(CommonSegCode):
         ):
             decompressed_bytes = self.decompress_bytes(rom_bytes)
             if len(decompressed_bytes) != self.decompressed_size:
-                log.error(f"Specified 'decompressed_size' option does not match the size of the actual decompressed buffer. Option was '0x{self.decompressed_size:X}', but actual size is 0x{len(decompressed_bytes):X}")
+                log.error(
+                    f"Specified 'decompressed_size' option does not match the size of the actual decompressed buffer. Option was '0x{self.decompressed_size:X}', but actual size is 0x{len(decompressed_bytes):X}"
+                )
             super().scan(decompressed_bytes)
