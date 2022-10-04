@@ -14,4 +14,7 @@ class CommonSegZlib(CommonSegCompressedSegment):
         return output
 
     def decompress_bytes(self, rom_bytes: bytes) -> bytearray:
+        assert isinstance(self.rom_start, int)
+        assert isinstance(self.rom_end, int)
+
         return CommonSegZlib.decompressZlib(rom_bytes[self.rom_start:self.rom_end])
