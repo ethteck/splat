@@ -1,4 +1,4 @@
-import zlib
+import abc
 from typing import Optional
 from util import log
 
@@ -49,8 +49,9 @@ class CommonSegCompressedSegment(CommonSegCode):
         else:
             return None
 
+    @abc.abstractmethod
     def decompress_bytes(self, rom_bytes: bytes) -> bytearray:
-        log.error("decompress_bytes member should be overriden by subclass")
+        ...
 
     def scan(self, rom_bytes: bytes):
         if (
