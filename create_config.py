@@ -6,15 +6,29 @@ from pathlib import Path
 
 from util.n64 import rominfo, find_code_length
 
-parser = argparse.ArgumentParser(description="Create a splat config from an N64 ROM.")
-parser.add_argument("rom", help="Path to a .z64/.n64 ROM")
+parser = argparse.ArgumentParser(description="Create a splat config from an N64 ROM or a GameCube disc image.")
+parser.add_argument("file", help="Path to a .z64/.n64 ROM or .iso/.gcm GameCube image")
 
 
-def main(rom_path: Path):
-    if not rom_path.exists():
-        sys.exit(f"ROM file {rom_path} does not exist ({rom_path.absolute()})")
-    if rom_path.is_dir():
-        sys.exit(f"Path {rom_path} is a directory ({rom_path.absolute()})")
+def main(file_path: Path):
+    if not file_path.exists():
+        sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
+    if file_path.is_dir():
+        sys.exit(f"Path {file_path} is a directory ({file_path.absolute()})")
+    
+    # Check for N64 ROM    
+    if file_path.suffix.lower() == ".n64" or file_path.suffix.lower() == ".z64":
+        create_n64_config(file_path)
+        return
+        
+    file_bytes = file_path.read_bytes()
+    
+    # Check for GC disc image
+    if int.from_bytes(file_bytes[0x1C:0x20], byteorder='big') == 0xC2339F3D:
+        create_gc_config(file_bytes)
+
+
+def create_n64_config(rom_path: Path):
     rom_bytes = rominfo.read_rom(rom_path)
 
     rom = rominfo.get_info(rom_path, rom_bytes)
@@ -73,6 +87,10 @@ segments:
         f.write(segments)
 
 
+def create_gc_config(iso_path: bytes):
+    print("GC!")
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(Path(args.rom))
+    main(Path(args.file))
