@@ -4,8 +4,6 @@ from util import options
 
 class DolSegHeader(CommonSegHeader):
     def parse_header(self, dol_bytes):
-        encoding = options.opts.header_encoding
-        
         header_lines = []
         header_lines.append(".section .data\n")
         
@@ -51,6 +49,7 @@ class DolSegHeader(CommonSegHeader):
             self.get_line("word", dol_bytes[0xDC:0xE0], "BSS Size")
         )
         
+        # Entry point
         header_lines.append(
             self.get_line("word", dol_bytes[0xE0:0xE4], "Entry Point")
         )
