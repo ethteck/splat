@@ -3,7 +3,10 @@ from util import options
 
 
 class RelSegHeader(CommonSegHeader):
-    def parse_header(self, rel_bytes, version):
+    def __init__(self, version):
+        self.version = version
+    
+    def parse_header(self, rel_bytes):
         header_lines = []
         header_lines.append(".section .data\n")
         
@@ -93,7 +96,7 @@ class RelSegHeader(CommonSegHeader):
         )
         
         # Version 1 is only 0x40 bytes long
-        if version <= 1:
+        if self.version <= 1:
             return
             
         # Alignment constraint
@@ -106,7 +109,7 @@ class RelSegHeader(CommonSegHeader):
         )
         
         # Version 2 is only 0x48 bytes long
-        if version <= 2:
+        if self.version <= 2:
             return
         
         # Fix size
