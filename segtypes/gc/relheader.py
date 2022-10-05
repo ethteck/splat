@@ -3,8 +3,10 @@ from util import options
 
 
 class RelSegHeader(CommonSegHeader):
-    def __init__(self, version):
-        self.version = version
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.version: int = self.yaml.get("version", 0)
     
     def parse_header(self, rel_bytes):
         header_lines = []
