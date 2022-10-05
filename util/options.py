@@ -251,7 +251,7 @@ def parse_yaml(
         else:
             raise ValueError(f"Expected str or list, got {type(paths)}")
 
-    platform = parse_opt_within(yaml, "platform", str, ["n64", "psx", "gc"], "n64")
+    platform = parse_opt_within(yaml, "platform", str, ["n64", "psx", "gc"])
     comp = compiler.for_name(parse_opt(yaml, "compiler", str, "IDO"))
 
     base_path = Path(config_paths[0]).parent / parse_opt(yaml, "base_path", str)
