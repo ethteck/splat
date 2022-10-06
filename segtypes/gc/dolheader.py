@@ -54,3 +54,5 @@ class DolSegHeader(CommonSegHeader):
             self.get_line("word", dol_bytes[0xE0:0xE4], "Entry Point")
         )
         
+        return header_lines
+        

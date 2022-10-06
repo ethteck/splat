@@ -99,7 +99,7 @@ class RelSegHeader(CommonSegHeader):
         
         # Version 1 is only 0x40 bytes long
         if self.version <= 1:
-            return
+            return header_lines
             
         # Alignment constraint
         header_lines.append(
@@ -112,10 +112,12 @@ class RelSegHeader(CommonSegHeader):
         
         # Version 2 is only 0x48 bytes long
         if self.version <= 2:
-            return
+            return header_lines
         
         # Fix size
         header_lines.append(
             self.get_line("word", rel_bytes[0x48:0x4C], "Fix Size")
         )
+        
+        return header_lines
         

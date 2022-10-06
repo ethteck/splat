@@ -51,7 +51,7 @@ def get_info_bytes(iso_bytes: bytes):
     region_code = chr(iso_bytes[0x03])
     publisher_code = iso_bytes[0x04:0x06].decode("utf-8")
     
-    name = str(iso_bytes[0x20:0x200], 'utf-8').strip('\x00')
+    name = str(iso_bytes[0x20:0x400], 'utf-8').strip('\x00')
     root = os.getcwd() + "/" + iso_bytes[0x00:0x06].decode("utf-8")
     
     compiler = "mwcc"

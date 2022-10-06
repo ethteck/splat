@@ -16,6 +16,8 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols
 
+from util.gc import gcsplit
+
 VERSION = "0.12.2"
 
 parser = argparse.ArgumentParser(
