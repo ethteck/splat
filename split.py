@@ -266,6 +266,7 @@ def main(config_path, modes, verbose, use_cache=True):
         config = merge_configs(config, additional_config)
 
     options.initialize(config, config_path, modes, verbose)
+    
 
     with options.opts.target_path.open("rb") as f2:
         rom_bytes = f2.read()
@@ -375,7 +376,7 @@ def main(config_path, modes, verbose, use_cache=True):
         if segment.should_split():
             segment.split(rom_bytes)
 
-    if options.opts.is_mode_active("ld"):
+    if options.opts.is_mode_active("ld") and options.opts.platform != "gc": # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = LinkerWriter()
         for i, segment in enumerate(

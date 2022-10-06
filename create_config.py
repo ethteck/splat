@@ -100,7 +100,7 @@ region_code: {gc.region_code}
 publisher_code: {gc.publisher_code}
 sha1: {gc.sha1}
 options:
-  filesystem_path: {gc.root}
+  filesystem_path: filesystem
   basename: {basename}
   target_path: {iso_path.with_suffix(".iso")}
   base_path: .
@@ -121,6 +121,9 @@ options:
 
     segments = f"""\
 segments:
+  - name: filesystem
+    type: fst
+    path: sys/fst.bin
   - name: bootinfo
     type: bootinfo
     path: sys/bootinfo.bin
@@ -133,10 +136,8 @@ segments:
   - name: main
     type: dol
     path: sys/main.dol
-  - name: filesystem
-    type: fst
-    path: sys/fst.bin
-"""
+  - [0]
+""" # TODO remove the last line in the generated yaml, as it only exists as a temporary workaround
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
