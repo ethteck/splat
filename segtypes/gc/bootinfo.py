@@ -2,14 +2,14 @@ import struct
 
 from segtypes.gc.segment import GCSegment
 from pathlib import Path
+from util import options
 
-
-class GCBootInfoSeg(GCSegment):
+class GcSegBootinfo(GCSegment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         
-    def split(iso_bytes):
+    def split(self, iso_bytes):
         lines = []
         
         # Gathering variables
@@ -92,11 +92,17 @@ class GCBootInfoSeg(GCSegment):
         
         # Final padding
         lines.append(f".word 0\n")
+        out_path = self.out_path()
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         
-        with open(self.out_path(), 'w', encoding="utf-8") as f:
+        with open(out_path, 'w', encoding="utf-8") as f:
             f.writelines(lines)
         
         return
+
+    def should_split(self) -> bool:
+        return True
         
     def out_path(self) -> Path:
-        return options.opts.sys_path / "boot.s"
+        return options.opts.asm_path / "sys/boot.s"

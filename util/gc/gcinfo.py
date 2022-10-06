@@ -52,7 +52,7 @@ def get_info_bytes(iso_bytes: bytes):
     publisher_code = iso_bytes[0x04:0x06].decode("utf-8")
     
     name = str(iso_bytes[0x20:0x400], 'utf-8').strip('\x00')
-    root = os.getcwd() + "/" + iso_bytes[0x00:0x06].decode("utf-8")
+    root = "filesystem"
     
     compiler = "mwcc"
     sha1 = hashlib.sha1(iso_bytes).hexdigest()
