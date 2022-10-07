@@ -123,19 +123,19 @@ options:
 segments:
   - name: filesystem
     type: fst
-    path: sys/fst.bin
+    path: filesystem/sys/fst.bin
   - name: bootinfo
     type: bootinfo
-    path: sys/bootinfo.bin
+    path: filesystem/sys/bootinfo.bin
   - name: bi2
     type: bi2
-    path: sys/bi2.bin
+    path: filesystem/sys/bi2.bin
   - name: apploader
     type: apploader
-    path: sys/apploader.img
+    path: filesystem/sys/apploader.img
   - name: main
     type: dol
-    path: sys/main.dol
+    path: filesystem/sys/main.dol
   - [0]
 """ # TODO remove the last line in the generated yaml, as it only exists as a temporary workaround
 
