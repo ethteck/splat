@@ -24,31 +24,34 @@ class GCFSTEntry:
         self.children = []
         
 
-    def populate_children_recursive(self, root_dir: "GCFSTEntry", offset, fst_bytes, string_table_bytes):
-        # Root has no name, so only grab the name if we're not the root directory.
-        if root_dir != self:
-            self.parent = root_dir
-            self.read_name(string_table_bytes)
-            print(self.name)
-        print(f'0x{self.length:X}')
+    def populate_children_recursive(self, root_dir: "GCFSTEntry", current_node_offset, fst_bytes, string_table_bytes):
+        self.parent = root_dir
+        self.read_name(string_table_bytes)
         
-        # Entry is a file, nothing more necessary right now.
+        # This node is a file, so we don't do anything but return that we read 1 node.
         if self.flags == False:
-            return
-            
-        for i in range(self.length - 1):
-            current_offset = offset + ((i + 1) * 0x0C)
-            print(f"{i}: 0x{current_offset:X}")
-            
+            return 1
+        
+        nodes_read = 1
+        next_child_offset = current_node_offset + 0x0C
+        
+        # Directory nodes contain the index of the next node that is NOT its child, meaning the index of their next sibling node.
+        # We can figure out when we're done reading child nodes by comparing the offset of the next node to read to the
+        # offset of the next sibling node. We stop reading when the next node offset is >= the offset of the next sibling node.
+        while (next_child_offset < self.length * 0x0C):
             new_entry = GCFSTEntry(
-                bool(fst_bytes[current_offset + 0x0000]),
-                struct.unpack('>I', fst_bytes[current_offset : current_offset + 0x0004])[0] & 0x00FFFFFF,
-                struct.unpack('>I', fst_bytes[current_offset + 0x0004 : current_offset + 0x0008])[0],
-                struct.unpack('>I', fst_bytes[current_offset + 0x0008 : current_offset + 0x000C])[0]
+                bool(fst_bytes[next_child_offset + 0x0000]),
+                struct.unpack('>I', fst_bytes[next_child_offset : next_child_offset + 0x0004])[0] & 0x00FFFFFF,
+                struct.unpack('>I', fst_bytes[next_child_offset + 0x0004 : next_child_offset + 0x0008])[0],
+                struct.unpack('>I', fst_bytes[next_child_offset + 0x0008 : next_child_offset + 0x000C])[0]
             )
             
             self.children.append(new_entry)
-            new_entry.populate_children_recursive(self, current_offset, fst_bytes, string_table_bytes)
+            nodes_read += new_entry.populate_children_recursive(self, next_child_offset, fst_bytes, string_table_bytes)
+            
+            next_child_offset = current_node_offset + nodes_read * 0x0C
+        
+        return nodes_read
 
     
     # Reads the name of this FST entry from the given bytes array.
@@ -75,7 +78,7 @@ class GCFSTEntry:
             path_components.insert(0, entry.name)
             entry = entry.parent
             
-        return Path("".join(path_components, "/"))
+        return Path("/".join(path_components))
 
 
     # Emits this entry to the filesystem.
@@ -95,7 +98,7 @@ class GCFSTEntry:
     def emit_recursive(self, filesystem_dir: Path, iso_bytes):
         # Don't emit if this is the root directory.
         if self.parent != None:
-            self.emit()
+            self.emit(filesystem_dir, iso_bytes)
         
         for e in self.children:
             e.emit_recursive(filesystem_dir, iso_bytes)
@@ -147,20 +150,39 @@ def split_content(iso_bytes):
     fst_bytes = fst_path.read_bytes()
     fst_root_entry = populate_filesystem(fst_bytes)
     
-    fst_root_entry.emit_recursive(options.opts.filesystem_path / "files", iso_bytes)
+    files_path = options.opts.filesystem_path / "files"
+    files_path.mkdir(parents=True, exist_ok=True)
+    fst_root_entry.emit_recursive(files_path, iso_bytes)
 
 
 # Loads the FST data needed to split the filesystem.
 def populate_filesystem(fst_bytes):
     root_dir = GCFSTEntry(
         bool(fst_bytes[0x0000]),
-        struct.unpack('>I', bytes([0, *fst_bytes[0x0001:0x0004]]))[0],
+        struct.unpack('>I', fst_bytes[0x0000:0x0004])[0] & 0x00FFFFFF,
         struct.unpack('>I', fst_bytes[0x0004:0x0008])[0],
         struct.unpack('>I', fst_bytes[0x0008:0x000C])[0]
     )
     
     string_table_bytes = fst_bytes[root_dir.length * 0x0C : len(fst_bytes)]
     
-    root_dir.populate_children_recursive(root_dir, 0, fst_bytes, string_table_bytes)
+    # Parsing the filesystem is a bit tricky. The root directory's length property is the total number of nodes in the FST.
+    # So, we initialize nodes_read to 1, since the root is included in the number of nodes.
+    # We will rely on each directory and file on the root directory to tell us how many nodes were read while parsing them.
+    # We can stop reading the FST when our total number of nodes read is >= the number of nodes in the FST.
+    nodes_read = 1
+    while (nodes_read < root_dir.length):
+        current_offset = nodes_read * 0x0C
+      
+        new_entry = GCFSTEntry(
+            bool(fst_bytes[current_offset + 0x0000]),
+            struct.unpack('>I', fst_bytes[current_offset : current_offset + 0x0004])[0] & 0x00FFFFFF,
+            struct.unpack('>I', fst_bytes[current_offset + 0x0004 : current_offset + 0x0008])[0],
+            struct.unpack('>I', fst_bytes[current_offset + 0x0008 : current_offset + 0x000C])[0]
+        )
+        
+        root_dir.children.append(new_entry)
+        nodes_read += new_entry.populate_children_recursive(root_dir, current_offset, fst_bytes, string_table_bytes)
+    
     return root_dir
 
