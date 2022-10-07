@@ -57,16 +57,16 @@ class GCFSTEntry:
     # Reads the name of this FST entry from the given bytes array.
     def read_name(self, string_table_bytes):
         offset = 0
-        chars = []
+        bytes = []
         
         for offset in range(len(string_table_bytes) - self.name_offset):
-            cur_char = chr(string_table_bytes[self.name_offset + offset])
-            if cur_char == '\0':
+            cur_byte = string_table_bytes[self.name_offset + offset]
+            if cur_byte == 0x00:
                 break
             
-            chars.append(cur_char)
-            
-        self.name = "".join(chars)
+            bytes.append(cur_byte)
+        
+        self.name = bytearray(bytes).decode("shift-jis")
         
     
     # Builds this entry's full path within the filesystem from its parents' names.
