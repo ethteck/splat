@@ -235,7 +235,7 @@ def configure_disassembler():
         spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
         spimdisasm.common.GlobalConfig.ASM_TEXT_FUNC_AS_LABEL = True
 
-    if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
+    if spimdisasm.common.GlobalConfig.ASM_DATA_LABEL == ".globl":
         spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
