@@ -160,6 +160,12 @@ class Segment:
         else:
             return options.opts.symbol_name_format_no_rom
 
+    @staticmethod
+    def parse_segment_file_path(segment: Union[dict, list]) -> Optional[Path]:
+        if isinstance(segment, dict) and "path" in segment:
+            return Path(segment["path"])
+        return None
+
     def __init__(
         self,
         rom_start: RomAddr,
@@ -196,6 +202,7 @@ class Segment:
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
         self.follows_vram_segment: Optional[Segment] = None
+        self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
         self.yaml = yaml
@@ -248,6 +255,7 @@ class Segment:
         ret.given_symbol_name_format_no_rom = (
             Segment.parse_segment_symbol_name_format_no_rom(yaml)
         )
+        ret.file_path = Segment.parse_segment_file_path(yaml)
 
         if not ret.follows_vram:
             ret.follows_vram = parse_segment_follows_vram(yaml)

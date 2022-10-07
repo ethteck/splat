@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Union
+import importlib
 
 import rabbitizer
 import spimdisasm
@@ -237,13 +238,10 @@ def configure_disassembler():
         spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
         spimdisasm.common.GlobalConfig.ASM_TEXT_FUNC_AS_LABEL = True
 
-    if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
+    if spimdisasm.common.GlobalConfig.ASM_DATA_LABEL == ".globl":
         spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
-
-    if options.opts.platform == "n64":
-        symbols.spim_context.fillDefaultBannedSymbols()
 
 
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
@@ -313,6 +311,10 @@ def main(config_path, modes, verbose, use_cache=True):
 
     configure_disassembler()
 
+    platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
+    platform_init = getattr(platform_module, "init")
+    platform_init(rom_bytes)
+
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
 
@@ -377,7 +379,11 @@ def main(config_path, modes, verbose, use_cache=True):
                 cache[segment.unique_id()] = cached
 
         if segment.should_split():
-            segment.split(rom_bytes)
+            segment_bytes = rom_bytes
+            if segment.file_path:
+                with open(segment.file_path, "rb") as segment_input_file:
+                    segment_bytes = segment_input_file.read()
+            segment.split(segment_bytes)
 
     if options.opts.is_mode_active("ld") and options.opts.platform != "gc": # TODO move this to platform initialization when it gets implemented
         global linker_writer
