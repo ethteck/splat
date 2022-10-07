@@ -241,6 +241,7 @@ def configure_disassembler():
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
 
+
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -303,8 +304,8 @@ def main(config_path, modes, verbose, use_cache=True):
         }
 
     configure_disassembler()
-    
-    platform_module = importlib.import_module(f"util.{options.opts.platform}")
+
+    platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
     platform_init = getattr(platform_module, "init")
     platform_init(rom_bytes)
 
