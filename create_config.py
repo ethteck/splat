@@ -93,7 +93,7 @@ def create_gc_config(iso_path: Path, iso_bytes: bytes):
     basename = gc.system_code + gc.game_code + gc.region_code + gc.publisher_code
 
     header = f"""\
-name: {gc.name.title()} ({gc.get_region_name()})
+name: \"{gc.name.title()} ({gc.get_region_name()})\"
 system_code: {gc.system_code}
 game_code: {gc.game_code}
 region_code: {gc.region_code}
