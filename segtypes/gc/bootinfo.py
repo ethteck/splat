@@ -28,7 +28,7 @@ class GcSegBootinfo(GCSegment):
         
         # The following is from YAGCD, don't know what they were for:
         # https://web.archive.org/web/20220528011846/http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.1
-        debug_monitor_offset = struct.unpack('>I', iso_bytes[0x400:0x404])
+        apploader_size = struct.unpack('>I', iso_bytes[0x400:0x404])
         debug_monitor_address = struct.unpack('>I', iso_bytes[0x404:0x408])
         
         # These on the other hand are easy to understand
@@ -68,8 +68,9 @@ class GcSegBootinfo(GCSegment):
         lines.append(f"game_name: .ascii \"{name}\"\n")
         lines.append(f".org 0x400\n\n")
         
+        lines.append(f"apploader_size: .long 0x{apploader_size[0]:08X}\n\n")
+        
         # Unknown stuff gleaned from YAGCD
-        lines.append(f"debug_monitor_offset: .long 0x{debug_monitor_offset[0]:08X}\n")
         lines.append(f"debug_monitor_address: .long 0x{debug_monitor_address[0]:08X}\n\n")
         
         # More padding
