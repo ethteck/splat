@@ -371,7 +371,11 @@ def main(config_path, modes, verbose, use_cache=True):
                 cache[segment.unique_id()] = cached
 
         if segment.should_split():
-            segment.split(rom_bytes)
+            segment_bytes = rom_bytes
+            if segment.file_path:
+                with open(segment.file_path, "rb") as segment_input_file:
+                    segment_bytes = segment_input_file.read()
+            segment.split(segment_bytes)
 
     if options.opts.is_mode_active("ld"):
         global linker_writer
