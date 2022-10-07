@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Union
+import importlib
 
 import rabbitizer
 import spimdisasm
@@ -240,9 +241,6 @@ def configure_disassembler():
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
 
-    if options.opts.platform == "n64":
-        symbols.spim_context.fillDefaultBannedSymbols()
-
 
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
@@ -306,6 +304,10 @@ def main(config_path, modes, verbose, use_cache=True):
         }
 
     configure_disassembler()
+
+    platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
+    platform_init = getattr(platform_module, "init")
+    platform_init(rom_bytes)
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])

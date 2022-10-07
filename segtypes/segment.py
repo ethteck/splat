@@ -161,9 +161,9 @@ class Segment:
             return options.opts.symbol_name_format_no_rom
 
     @staticmethod
-    def parse_segment_file_path(segment: Union[dict, list]) -> Optional[str]:
+    def parse_segment_file_path(segment: Union[dict, list]) -> Optional[Path]:
         if isinstance(segment, dict) and "path" in segment:
-            return str(segment["path"])
+            return Path(segment["path"])
         return None
 
     def __init__(
@@ -202,7 +202,7 @@ class Segment:
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
         self.follows_vram_segment: Optional[Segment] = None
-        self.file_path: Optional[str] = None
+        self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
         self.yaml = yaml
