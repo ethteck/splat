@@ -16,7 +16,7 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols
 
-from util.gc import gcsplit
+from util.gc import gcsplit, gcfst
 
 VERSION = "0.12.2"
 
@@ -270,6 +270,9 @@ def main(config_path, modes, verbose, use_cache=True):
 
     with options.opts.target_path.open("rb") as f2:
         rom_bytes = f2.read()
+
+    if options.opts.platform == "gc": # TODO move this into platform initialization
+        gcfst.split_iso(rom_bytes)
 
     if "sha1" in config:
         sha1 = hashlib.sha1(rom_bytes).hexdigest()

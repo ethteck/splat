@@ -24,24 +24,27 @@ class GCFSTEntry:
         self.children = []
         
 
-    def populate_children_recursive(self, root_dir: GCFSTEntry, offset, fst_bytes, string_table_bytes):
+    def populate_children_recursive(self, root_dir: "GCFSTEntry", offset, fst_bytes, string_table_bytes):
         # Root has no name, so only grab the name if we're not the root directory.
         if root_dir != self:
             self.parent = root_dir
-            read_name(string_table_bytes)      
+            self.read_name(string_table_bytes)
+            print(self.name)
+        print(f'0x{self.length:X}')
         
         # Entry is a file, nothing more necessary right now.
         if self.flags == False:
             return
             
-        for i in range(self.length):
-            current_offset = offset + (i + 1) * 0x0C
+        for i in range(self.length - 1):
+            current_offset = offset + ((i + 1) * 0x0C)
+            print(f"{i}: 0x{current_offset:X}")
             
             new_entry = GCFSTEntry(
                 bool(fst_bytes[current_offset + 0x0000]),
-                struct.unpack('>I', [0, *fst_bytes[current_offset + 0x0001 : current_offset + 0x0004]]),
-                struct.unpack('>I', fst_bytes[current_offset + 0x0004 : current_offset + 0x0008]),
-                struct.unpack('>I', fst_bytes[current_offset + 0x0008 : current_offset + 0x000C])
+                struct.unpack('>I', fst_bytes[current_offset : current_offset + 0x0004])[0] & 0x00FFFFFF,
+                struct.unpack('>I', fst_bytes[current_offset + 0x0004 : current_offset + 0x0008])[0],
+                struct.unpack('>I', fst_bytes[current_offset + 0x0008 : current_offset + 0x000C])[0]
             )
             
             self.children.append(new_entry)
@@ -53,12 +56,12 @@ class GCFSTEntry:
         offset = 0
         chars = []
         
-        while True:
-            chars.append(string_table_bytes[self.name_offset + offset])
-            
-            offset += 1
-            if string_table_bytes[self.name_offset + offset] == 0:
+        for offset in range(len(string_table_bytes) - self.name_offset):
+            cur_char = chr(string_table_bytes[self.name_offset + offset])
+            if cur_char == '\0':
                 break
+            
+            chars.append(cur_char)
             
         self.name = "".join(chars)
         
@@ -91,7 +94,7 @@ class GCFSTEntry:
             
     def emit_recursive(self, filesystem_dir: Path, iso_bytes):
         # Don't emit if this is the root directory.
-        if (self.parent != None)
+        if self.parent != None:
             self.emit()
         
         for e in self.children:
@@ -118,20 +121,20 @@ def split_sys_info(iso_bytes):
         f.write(iso_bytes[0x0440:0x2440])
     
     # Split apploader.img. Always at 0x2440 and size is listed at 0x0400.
-    apploader_size = struct.unpack('>I', iso_bytes[0x0400:0x0404])
+    apploader_size = struct.unpack('>I', iso_bytes[0x0400:0x0404])[0]
     with open(sys_path / "apploader.img", "wb") as f:
         f.write(iso_bytes[0x2440:0x2440 + apploader_size])
     
     # Split main.dol. Offset specified explicitly at 0x0420, but size must be calculated.
-    dol_offset = struct.unpack('>I', iso_bytes[0x0420:0x0424])
-    fst_offset = struct.unpack('>I', iso_bytes[0x0424:0x0428])
+    dol_offset = struct.unpack('>I', iso_bytes[0x0420:0x0424])[0]
+    fst_offset = struct.unpack('>I', iso_bytes[0x0424:0x0428])[0]
     
     dol_size = fst_offset - dol_offset
     with open(sys_path / "main.dol", "wb") as f:
         f.write(iso_bytes[dol_offset:dol_offset + dol_size])
     
     # Split fst.bin. Offset specified at 0x0424 and size specified at 0x402C.
-    fst_size = struct.unpack('>I', iso_bytes[0x0428:0x042C])
+    fst_size = struct.unpack('>I', iso_bytes[0x0428:0x042C])[0]
     with open(sys_path / "fst.bin", "wb") as f:
         f.write(iso_bytes[fst_offset:fst_offset + fst_size])
 
@@ -151,13 +154,13 @@ def split_content(iso_bytes):
 def populate_filesystem(fst_bytes):
     root_dir = GCFSTEntry(
         bool(fst_bytes[0x0000]),
-        struct.unpack('>I', [0, *fst_bytes[0x0001:0x0004]]),
-        struct.unpack('>I', fst_bytes[0x0004:0x0008]),
-        struct.unpack('>I', fst_bytes[0x0008:0x000C])
+        struct.unpack('>I', bytes([0, *fst_bytes[0x0001:0x0004]]))[0],
+        struct.unpack('>I', fst_bytes[0x0004:0x0008])[0],
+        struct.unpack('>I', fst_bytes[0x0008:0x000C])[0]
     )
     
     string_table_bytes = fst_bytes[root_dir.length * 0x0C : len(fst_bytes)]
     
-    root_dir.populate_filesystem_recursive(root_dir, 0, fst_bytes, string_table_bytes)
+    root_dir.populate_children_recursive(root_dir, 0, fst_bytes, string_table_bytes)
     return root_dir
 
