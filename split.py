@@ -255,7 +255,9 @@ def main(config_path, modes, verbose, use_cache=True):
     global config
 
     if spimdisasm.__version_info__ < SPIMDISASM_MIN:
-        log.error(f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}")
+        log.error(
+            f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
+        )
 
     log.write(f"splat {VERSION} (powered by spimdisasm {spimdisasm.__version__})")
 
