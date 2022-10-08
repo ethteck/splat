@@ -18,6 +18,8 @@ from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols
 
 VERSION = "0.12.2"
+# This value should be keep in sync with the version listed on requirements.txt
+SPIMDISASM_MIN = (1, 5, 6)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -251,6 +253,11 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 
 def main(config_path, modes, verbose, use_cache=True):
     global config
+
+    if spimdisasm.__version_info__ < SPIMDISASM_MIN:
+        log.error(
+            f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
+        )
 
     log.write(f"splat {VERSION} (powered by spimdisasm {spimdisasm.__version__})")
 

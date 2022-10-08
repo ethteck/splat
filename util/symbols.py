@@ -383,6 +383,9 @@ def create_symbol_from_spim_symbol(
         context_sym.vram, in_segment, type=sym_type, reference=True
     )
 
+    if sym.given_name is None and context_sym.name is not None:
+        sym.given_name = context_sym.name
+
     # To keep the symbol name in sync between splat and spimdisasm
     context_sym.setNameGetCallback(lambda _: sym.name)
 
