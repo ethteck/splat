@@ -26,6 +26,7 @@ class GCRARCArchive:
         self,
         file_bytes
     ):
+        self.compression = "none"
         file_bytes = decompress_archive(file_bytes)
         
         self.magic = struct.unpack('>I', file_bytes[0x0000:0x0004])[0]
@@ -41,14 +42,16 @@ class GCRARCArchive:
         self.nodes = []
     
     
-    def decompress_archive(file_bytes):
+    def decompress_archive(self, file_bytes):
         compression_scheme = struct.unpack('>I', file_bytes[0x0000:0x0004])[0]
         
         # Yaz0
         if compression_scheme == 0x59617A30:
+            self.compression = "yaz0"
             return file_bytes
         # Yay0
         elif compression_scheme == 0x59617930:
+            self.compression = "yay0"
             return decompress_yay0(file_bytes)
         # Neither
         else:
@@ -93,6 +96,42 @@ class GCRARCArchive:
         arc_root_path = options.opts.bin_path / rel_path.with_suffix('')
         
         self.nodes[0].emit_to_filesystem_recursive(arc_root_path, self.file_data_offset, file_bytes)
+        emit_config(arc_root_path)
+        
+        
+    def emit_config(self, config_path: Path):
+        lines = []
+        
+        lines.append(f"name: \"{self.file_path.name}\"\n")
+        
+        if self.compression != "none":
+            lines.append(f"compression: {self.compression}\n")
+            
+        lines.append(f"next_file_id: 0x{self.data_header.next_free_file_id:04X}\n")
+        lines.append(f"sync_file_ids_to_indices: {str(self.data_header.sync_file_ids_to_indices)}\n")
+        
+        root_node = self.nodes[0]
+        
+        lines.append("root_dir:\n")
+        lines.append(f"  res_type: \"\{root_node.resource_type}"\n")
+        lines.append(f"  name: \"\{root_node.name}"\n")
+        
+        if len(root_node.entries) != 0:
+            lines.append("  entries:\n")
+            for e in root_node.entries:
+                entry_config = e.emit_config(2)
+                if len(entry_config) != 0:
+                    lines.append(*entry_config)
+                
+        if len(root_node.children) != 0:
+            lines.append("  subdirs:\n")
+            for n in root_node.children:
+                node_config = n.emit_config(2)
+                if len(node_config) != 0:
+                    lines.append(*node_config)
+        
+        with open(config_path / "arcinfo.yaml", "w", newline="\n") as f:
+            f.writelines(lines)
         
 
 class GCRARCDataHeader:
@@ -153,6 +192,29 @@ class GCRARCNode:
          
       for e in self.entries:
          e.emit_to_filesystem(root_path, file_data_offset, file_bytes)
+         
+         
+    def emit_config(self, level):
+        lines = []
+        
+        lines.append("  " * level + f"- res_type: \"{self.resource_type}\"\n")
+        lines.append("  " * level + f"  name: \"{self.name}\"\n")
+        
+        if len(self.entries) != 0:
+            lines.append("  entries:\n")
+            for e in self.entries:
+                entry_config = e.emit_config(level + 1)
+                if len(entry_config) != 0:
+                    lines.append(*entry_config)
+                
+        if len(self.children) != 0:
+            lines.append("  subdirs:\n")
+            for n in self.children:
+                node_config = n.emit_config(level + 1)
+                if len(node_config) != 0:
+                    lines.append(*node_config)
+        
+        return lines
 
     
     def print_recursive(self, level):
@@ -205,8 +267,28 @@ class GCRARCFileEntry:
             f.write(file_data)
         
         
-    def emit_config(self):
-        pass
+    def emit_config(self, level):
+        if self.flags & int(GCRARCFlags.IS_DIR) != 0x00:
+            return
+            
+        lines = []
+        
+        lines.append("  " * level + f"- name: \"{self.name}\"\n")
+        lines.append("  " * level + f"  file_id: \"{self.file_id}\"\n")
+        
+        if self.flags & int(GCRARCFlags.IS_COMPRESSED) != 0x00:
+            if self.flags & int(GCRARCFlags.IS_YAZ0_COMPRESSED) != 0x00:
+                lines.append("  " * level + f"  compression: yaz0\n")
+            else:
+                lines.append("  " * level + f"  compression: yay0\n")
+                
+        if self.flags & int(GCRARCFlags.PRELOAD_TO_MRAM) == 0x00:
+            if self.flags & int(GCRARCFlags.PRELOAD_TO_ARAM) != 0x00:
+                lines.append("  " * level + f"  preload_type: aram\n")
+            else:
+                lines.append("  " * level + f"  preload_type: dvd\n")
+        
+        return lines
         
         
     def get_full_file_path(self):
