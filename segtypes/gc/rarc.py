@@ -3,6 +3,7 @@ import struct
 from segtypes.gc.segment import GCSegment
 from pathlib import Path
 from util import options
+from util.n64.Yay0decompress import decompress_yay0
 
 from enum import IntEnum
 
@@ -25,6 +26,8 @@ class GCRARCArchive:
         self,
         file_bytes
     ):
+        file_bytes = decompress_archive(file_bytes)
+        
         self.magic = struct.unpack('>I', file_bytes[0x0000:0x0004])[0]
         self.file_size = struct.unpack('>I', file_bytes[0x0004:0x0008])[0]
         self.data_header_offset = struct.unpack('>I', file_bytes[0x0008:0x000C])[0]
@@ -36,8 +39,22 @@ class GCRARCArchive:
         
         self.data_header = GCRARCDataHeader(self.data_header_offset, file_bytes)
         self.nodes = []
+    
+    
+    def decompress_archive(file_bytes):
+        compression_scheme = struct.unpack('>I', file_bytes[0x0000:0x0004])[0]
         
-        
+        # Yaz0
+        if compression_scheme == 0x59617A30:
+            return file_bytes
+        # Yay0
+        elif compression_scheme == 0x59617930:
+            return decompress_yay0(file_bytes)
+        # Neither
+        else:
+            return file_bytes
+    
+    
     def build_hierarchy(self, file_bytes):
         string_table_offset = self.data_header.string_table_offset
         string_table_size = self.data_header.string_table_size
@@ -72,7 +89,10 @@ class GCRARCArchive:
         
     
     def emit(self, file_bytes):
-        self.nodes[0].emit_to_filesystem_recursive(self.file_data_offset, file_bytes)
+        rel_path = self.file_path.relative_to(options.opts.filesystem_path / "files")
+        arc_root_path = options.opts.bin_path / rel_path.with_suffix('')
+        
+        self.nodes[0].emit_to_filesystem_recursive(arc_root_path, self.file_data_offset, file_bytes)
         
 
 class GCRARCDataHeader:
@@ -124,15 +144,15 @@ class GCRARCNode:
             self.entries.append(new_entry)
             
 
-    def emit_to_filesystem_recursive(self, file_data_offset, file_bytes):
-      #test_path = Path("E:/Github/splat/arctest") / self.get_full_directory_path()
-      test_path.mkdir(parents=True, exist_ok=True)
+    def emit_to_filesystem_recursive(self, root_path: Path, file_data_offset, file_bytes):
+      dir_path = root_path / self.get_full_directory_path()
+      dir_path.mkdir(parents=True, exist_ok=True)
       
       for n in self.children:
-         n.emit_to_filesystem_recursive(file_data_offset, file_bytes)
+         n.emit_to_filesystem_recursive(root_path, file_data_offset, file_bytes)
          
       for e in self.entries:
-         e.emit_to_filesystem(file_data_offset, file_bytes)
+         e.emit_to_filesystem(root_path, file_data_offset, file_bytes)
 
     
     def print_recursive(self, level):
@@ -174,14 +194,14 @@ class GCRARCFileEntry:
         self.parent_node = None
         
         
-    def emit_to_filesystem(self, file_data_offset, file_bytes):
+    def emit_to_filesystem(self, dir_path: Path, file_data_offset, file_bytes):
         if self.flags & int(GCRARCFlags.IS_DIR) != 0x00:
             return
         
-        #test_path = Path("E:/Github/splat/arctest") / self.get_full_file_path()
+        file_path = dir_path / self.get_full_file_path()
         
         file_data = file_bytes[file_data_offset + self.data_offset : file_data_offset + self.data_offset + self.data_size]
-        with open(test_path, "wb") as f:
+        with open(file_path, "wb") as f:
             f.write(file_data)
         
         
