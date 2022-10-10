@@ -44,7 +44,7 @@ class GCRARCArchive:
         self.aram_preload_size = struct.unpack('>I', file_bytes[0x0018:0x001C])[0]
         
         self.data_header = GCRARCDataHeader(self.data_header_offset, file_bytes)
-        self.nodes = []
+        self.nodes: List[GCRARCNode] = []
     
     
     def decompress_archive(self, file_bytes):

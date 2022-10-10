@@ -40,7 +40,7 @@ publisher_codes = {
 
 def get_info(iso_path: Path, iso_bytes: bytes = None):
     if iso_bytes is None:
-        iso_bytes = Path.read_bytes()
+        iso_bytes = iso_path.read_bytes()
 
     return get_info_bytes(iso_bytes)
 

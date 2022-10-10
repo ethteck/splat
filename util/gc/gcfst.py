@@ -20,8 +20,8 @@ class GCFSTEntry:
         self.length = length
         
         self.name = ""
-        self.parent = None
-        self.children = []
+        self.parent: GCFSTEntry = None
+        self.children: List[GCFSTEntry] = []
         
 
     def populate_children_recursive(self, root_dir: "GCFSTEntry", current_node_offset, fst_bytes, string_table_bytes):
