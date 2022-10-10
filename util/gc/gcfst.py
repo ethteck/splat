@@ -3,6 +3,7 @@ import struct
 from segtypes.gc.segment import GCSegment
 from pathlib import Path
 from util import options
+from typing import List, Optional
 
 
 # Represents the info for either a directory or a file within a GameCube disc image's file system.
@@ -20,7 +21,7 @@ class GCFSTEntry:
         self.length = length
         
         self.name = ""
-        self.parent: GCFSTEntry = None
+        self.parent: Optional[GCFSTEntry] = None
         self.children: List[GCFSTEntry] = []
         
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from util import options
 from util.n64.Yay0decompress import decompress_yay0
 
+from typing import List
 from enum import IntEnum
 
 
