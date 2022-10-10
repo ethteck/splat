@@ -373,7 +373,7 @@ def parse_yaml(
             "f3dex2",
         ),
         use_legacy_include_asm=parse_opt(yaml, "use_legacy_include_asm", bool, True),
-        filesystem_path=parse_optional_path(yaml, "filesystem_path", base_path)
+        filesystem_path=parse_optional_path(yaml, "filesystem_path", base_path),
     )
 
 

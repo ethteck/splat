@@ -7,7 +7,11 @@ from pathlib import Path
 from util.n64 import rominfo, find_code_length
 from util.gc import gcinfo
 
-parser = argparse.ArgumentParser(description="Create a splat config from an N64 ROM or a GameCube disc image.")
+from segtypes.gc.rarc import GcSegRarc
+
+parser = argparse.ArgumentParser(
+    description="Create a splat config from an N64 ROM or a GameCube disc image."
+)
 parser.add_argument("file", help="Path to a .z64/.n64 ROM or .iso/.gcm GameCube image")
 
 
@@ -16,16 +20,16 @@ def main(file_path: Path):
         sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
     if file_path.is_dir():
         sys.exit(f"Path {file_path} is a directory ({file_path.absolute()})")
-    
-    # Check for N64 ROM    
+
+    # Check for N64 ROM
     if file_path.suffix.lower() == ".n64" or file_path.suffix.lower() == ".z64":
         create_n64_config(file_path)
         return
-        
+
     file_bytes = file_path.read_bytes()
-    
+
     # Check for GC disc image
-    if int.from_bytes(file_bytes[0x1C:0x20], byteorder='big') == 0xC2339F3D:
+    if int.from_bytes(file_bytes[0x1C:0x20], byteorder="big") == 0xC2339F3D:
         create_gc_config(file_path, file_bytes)
 
 
@@ -137,7 +141,7 @@ segments:
     type: dol
     path: filesystem/sys/main.dol
   - [0]
-""" # TODO remove the last line in the generated yaml, as it only exists as a temporary workaround
+"""  # TODO remove the last line in the generated yaml, as it only exists as a temporary workaround
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:

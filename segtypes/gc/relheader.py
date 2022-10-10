@@ -5,27 +5,21 @@ from util import options
 class RelSegHeader(CommonSegHeader):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.version: int = self.yaml.get("version", 0)
-    
+
     def parse_header(self, rel_bytes):
         header_lines = []
         header_lines.append(".section .data\n")
-        
+
         # Module ID
-        header_lines.append(
-            self.get_line("word", rel_bytes[0x00:0x04], "Module ID")
-        )
-        
+        header_lines.append(self.get_line("word", rel_bytes[0x00:0x04], "Module ID"))
+
         # Next module (filled at runtime)
-        header_lines.append(
-            self.get_line("word", rel_bytes[0x04:0x08], "Next Module")
-        )
+        header_lines.append(self.get_line("word", rel_bytes[0x04:0x08], "Next Module"))
         # Last module (filled at runtime)
-        header_lines.append(
-            self.get_line("word", rel_bytes[0x08:0x0C], "Last Module")
-        )
-        
+        header_lines.append(self.get_line("word", rel_bytes[0x08:0x0C], "Last Module"))
+
         # Section count
         header_lines.append(
             self.get_line("word", rel_bytes[0x0C:0x10], "Section Count")
@@ -34,7 +28,7 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("word", rel_bytes[0x10:0x14], "Section Table Offset")
         )
-        
+
         # Module name offset (might be null)
         header_lines.append(
             self.get_line("word", rel_bytes[0x14:0x18], "Module Name Offset")
@@ -43,17 +37,15 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("word", rel_bytes[0x18:0x1C], "Module Name Length")
         )
-        
+
         # REL format version
         header_lines.append(
             self.get_line("word", rel_bytes[0x1C:0x20], "REL Format Version")
         )
-        
+
         # BSS size
-        header_lines.append(
-            self.get_line("word", rel_bytes[0x20:0x24], "BSS Size")
-        )
-        
+        header_lines.append(self.get_line("word", rel_bytes[0x20:0x24], "BSS Size"))
+
         # Relocation table offset
         header_lines.append(
             self.get_line("word", rel_bytes[0x24:0x28], "Relocation Table Offset")
@@ -66,7 +58,7 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("word", rel_bytes[0x2C:0x30], "Import Table Size")
         )
-        
+
         # Prolog section index
         header_lines.append(
             self.get_line("byte", rel_bytes[0x30:0x31], "Prolog Section Index")
@@ -83,7 +75,7 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("byte", rel_bytes[0x33:0x34], "BSS Section Index")
         )
-        
+
         # Prolog function offset
         header_lines.append(
             self.get_line("word", rel_bytes[0x34:0x38], "Prolog Function Offset")
@@ -96,11 +88,11 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("word", rel_bytes[0x3C:0x40], "Unresolved Function Offset")
         )
-        
+
         # Version 1 is only 0x40 bytes long
         if self.version <= 1:
             return header_lines
-            
+
         # Alignment constraint
         header_lines.append(
             self.get_line("word", rel_bytes[0x40:0x44], "Alignment Constraint")
@@ -109,14 +101,12 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("word", rel_bytes[0x44:0x48], "BSS Alignment Constraint")
         )
-        
+
         # Version 2 is only 0x48 bytes long
         if self.version <= 2:
             return header_lines
-        
+
         # Fix size
-        header_lines.append(
-            self.get_line("word", rel_bytes[0x48:0x4C], "Fix Size")
-        )
-        
+        header_lines.append(self.get_line("word", rel_bytes[0x48:0x4C], "Fix Size"))
+
         return header_lines

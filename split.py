@@ -264,12 +264,11 @@ def main(config_path, modes, verbose, use_cache=True):
         config = merge_configs(config, additional_config)
 
     options.initialize(config, config_path, modes, verbose)
-    
 
     with options.opts.target_path.open("rb") as f2:
         rom_bytes = f2.read()
 
-    if options.opts.platform == "gc": # TODO move this into platform initialization
+    if options.opts.platform == "gc":  # TODO move this into platform initialization
         gcfst.split_iso(rom_bytes)
 
     if "sha1" in config:
@@ -385,7 +384,9 @@ def main(config_path, modes, verbose, use_cache=True):
                     segment_bytes = segment_input_file.read()
             segment.split(segment_bytes)
 
-    if options.opts.is_mode_active("ld") and options.opts.platform != "gc": # TODO move this to platform initialization when it gets implemented
+    if (
+        options.opts.is_mode_active("ld") and options.opts.platform != "gc"
+    ):  # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = LinkerWriter()
         for i, segment in enumerate(
