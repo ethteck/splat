@@ -8,5 +8,3 @@ util/n64/Yay0decompress
 *.n64
 *.yaml
 *.z64
-filesystem/
-asm/
