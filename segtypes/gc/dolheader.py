@@ -56,4 +56,3 @@ class DolSegHeader(CommonSegHeader):
         
         return header_lines
        
-       
