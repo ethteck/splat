@@ -71,7 +71,7 @@ class RelSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("byte", rel_bytes[0x32:0x33], "Unresolved Section Index")
         )
-        # BSS section index
+        # BSS section index (filled at runtime)
         header_lines.append(
             self.get_line("byte", rel_bytes[0x33:0x34], "BSS Section Index")
         )
