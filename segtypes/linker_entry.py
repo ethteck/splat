@@ -108,7 +108,6 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self):
         self.linker_discard_section: bool = options.opts.ld_discard_section
-        self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
         self.symbols: List[str] = []
@@ -125,7 +124,6 @@ class LinkerWriter:
     # Adds all the entries of a segment to the linker script buffer
     def add(self, segment: Segment, next_segment: Optional[Segment]):
         entries = segment.get_linker_entries()
-        self.entries.extend(entries)
 
         seg_name = get_segment_cname(segment)
 

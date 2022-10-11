@@ -145,6 +145,13 @@ class CommonSegCode(CommonSegGroup):
         return inserts
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
+        if "subsegments" not in segment_yaml:
+            if not self.parent:
+                raise Exception(
+                    f"No subsegments provided in top-level code segment {self.name}"
+                )
+            return []
+
         base_segments: OrderedDict[str, Segment] = OrderedDict()
         ret = []
         prev_start: RomAddr = -1
@@ -163,14 +170,11 @@ class CommonSegCode(CommonSegGroup):
         )  # Stores yaml index where a section was first found
         found_sections.pop(".text")
 
-        if "subsegments" not in segment_yaml:
-            return []
-
         # Mark any manually added dot types
         cur_section = None
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
-            # rompos marker
+            # endpos marker
             if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
                 continue
 
@@ -210,7 +214,7 @@ class CommonSegCode(CommonSegGroup):
         inserts = self.find_inserts(found_sections)
 
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
-            # rompos marker
+            # endpos marker
             if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
                 continue
 
