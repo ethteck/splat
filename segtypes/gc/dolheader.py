@@ -10,16 +10,12 @@ class DolSegHeader(CommonSegHeader):
         # Text file offsets
         for i in range(0x00, 0x1C, 4):
             header_lines.append(
-                self.get_line(
-                    "word", dol_bytes[i : i + 4], "Text " + str(i / 4) + " Offset"
-                )
+                self.get_line("word", dol_bytes[i : i + 4], f"Text {i / 4} Offset")
             )
         # Data file offsets
         for i in range(0x1C, 0x48, 4):
             header_lines.append(
-                self.get_line(
-                    "word", dol_bytes[i : i + 4], "Data " + str(i / 4) + " Offset"
-                )
+                self.get_line("word", dol_bytes[i : i + 4], f"Data {i / 4} Offset")
             )
 
         # Text RAM addresses
@@ -28,7 +24,7 @@ class DolSegHeader(CommonSegHeader):
                 self.get_line(
                     "word",
                     dol_bytes[i : i + 4],
-                    "Text " + str((i - 0x48) / 4) + " Address",
+                    f"Text {(i - 0x48) / 4} Address",
                 )
             )
         # Data RAM addresses
@@ -37,7 +33,7 @@ class DolSegHeader(CommonSegHeader):
                 self.get_line(
                     "word",
                     dol_bytes[i : i + 4],
-                    "Data " + str((i - 0x64) / 4) + " Address",
+                    f"Data {(i - 0x64) / 4} Address",
                 )
             )
 
@@ -47,7 +43,7 @@ class DolSegHeader(CommonSegHeader):
                 self.get_line(
                     "word",
                     dol_bytes[i : i + 4],
-                    "Text " + str((i - 0x90) / 4) + " Size",
+                    f"Text {(i - 0x90) / 4} Size",
                 )
             )
         # Data file sizes
@@ -56,7 +52,7 @@ class DolSegHeader(CommonSegHeader):
                 self.get_line(
                     "word",
                     dol_bytes[i : i + 4],
-                    "Data " + str((i - 0xAC) / 4) + " Size",
+                    f"Data {(i - 0xAC) / 4} Size",
                 )
             )
 

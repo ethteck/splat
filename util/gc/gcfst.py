@@ -3,6 +3,7 @@ import struct
 from segtypes.gc.segment import GCSegment
 from pathlib import Path
 from util import options
+from util.gc.gcutil import read_string_from_bytes
 from typing import List, Optional
 
 
@@ -22,7 +23,7 @@ class GCFSTEntry:
         self, root_dir: "GCFSTEntry", current_node_offset, fst_bytes, string_table_bytes
     ):
         self.parent = root_dir
-        self.read_name(string_table_bytes)
+        self.name = read_string_from_bytes(self.name_offset, string_table_bytes)
 
         # This node is a file, so we don't do anything but return that we read 1 node.
         if self.flags == False:
@@ -37,18 +38,12 @@ class GCFSTEntry:
         while next_child_offset < self.length * 0x0C:
             new_entry = GCFSTEntry(
                 bool(fst_bytes[next_child_offset + 0x0000]),
-                struct.unpack(
+                struct.unpack_from(
                     ">I", fst_bytes[next_child_offset : next_child_offset + 0x0004]
                 )[0]
                 & 0x00FFFFFF,
-                struct.unpack(
-                    ">I",
-                    fst_bytes[next_child_offset + 0x0004 : next_child_offset + 0x0008],
-                )[0],
-                struct.unpack(
-                    ">I",
-                    fst_bytes[next_child_offset + 0x0008 : next_child_offset + 0x000C],
-                )[0],
+                struct.unpack_from(">I", fst_bytes, next_child_offset + 0x0004)[0],
+                struct.unpack_from(">I", fst_bytes, next_child_offset + 0x0008)[0],
             )
 
             self.children.append(new_entry)
@@ -60,20 +55,6 @@ class GCFSTEntry:
 
         return nodes_read
 
-    # Reads the name of this FST entry from the given bytes array.
-    def read_name(self, string_table_bytes):
-        offset = 0
-        bytes = []
-
-        for offset in range(len(string_table_bytes) - self.name_offset):
-            cur_byte = string_table_bytes[self.name_offset + offset]
-            if cur_byte == 0x00:
-                break
-
-            bytes.append(cur_byte)
-
-        self.name = bytearray(bytes).decode("shift-jis")
-
     # Builds this entry's full path within the filesystem from its parents' names.
     def get_full_name(self):
         path_components = []
@@ -83,7 +64,7 @@ class GCFSTEntry:
             path_components.insert(0, entry.name)
             entry = entry.parent
 
-        return Path("/".join(path_components))
+        return Path(*path_components)
 
     # Emits this entry to the filesystem.
     def emit(self, filesystem_dir: Path, iso_bytes):
@@ -127,20 +108,20 @@ def split_sys_info(iso_bytes):
         f.write(iso_bytes[0x0440:0x2440])
 
     # Split apploader.img. Always at 0x2440 and size is listed at 0x0400.
-    apploader_size = struct.unpack(">I", iso_bytes[0x0400:0x0404])[0]
+    apploader_size = struct.unpack_from(">I", iso_bytes, 0x0400)[0]
     with open(sys_path / "apploader.img", "wb") as f:
         f.write(iso_bytes[0x2440 : 0x2440 + apploader_size])
 
     # Split main.dol. Offset specified explicitly at 0x0420, but size must be calculated.
-    dol_offset = struct.unpack(">I", iso_bytes[0x0420:0x0424])[0]
-    fst_offset = struct.unpack(">I", iso_bytes[0x0424:0x0428])[0]
+    dol_offset = struct.unpack_from(">I", iso_bytes, 0x0420)[0]
+    fst_offset = struct.unpack_from(">I", iso_bytes, 0x0424)[0]
 
     dol_size = fst_offset - dol_offset
     with open(sys_path / "main.dol", "wb") as f:
         f.write(iso_bytes[dol_offset : dol_offset + dol_size])
 
     # Split fst.bin. Offset specified at 0x0424 and size specified at 0x402C.
-    fst_size = struct.unpack(">I", iso_bytes[0x0428:0x042C])[0]
+    fst_size = struct.unpack_from(">I", iso_bytes, 0x0428)[0]
     with open(sys_path / "fst.bin", "wb") as f:
         f.write(iso_bytes[fst_offset : fst_offset + fst_size])
 
@@ -162,9 +143,9 @@ def split_content(iso_bytes):
 def populate_filesystem(fst_bytes):
     root_dir = GCFSTEntry(
         bool(fst_bytes[0x0000]),
-        struct.unpack(">I", fst_bytes[0x0000:0x0004])[0] & 0x00FFFFFF,
-        struct.unpack(">I", fst_bytes[0x0004:0x0008])[0],
-        struct.unpack(">I", fst_bytes[0x0008:0x000C])[0],
+        struct.unpack_from(">I", fst_bytes, 0x0000)[0] & 0x00FFFFFF,
+        struct.unpack_from(">I", fst_bytes, 0x0004)[0],
+        struct.unpack_from(">I", fst_bytes, 0x0008)[0],
     )
 
     string_table_bytes = fst_bytes[root_dir.length * 0x0C : len(fst_bytes)]
@@ -179,14 +160,9 @@ def populate_filesystem(fst_bytes):
 
         new_entry = GCFSTEntry(
             bool(fst_bytes[current_offset + 0x0000]),
-            struct.unpack(">I", fst_bytes[current_offset : current_offset + 0x0004])[0]
-            & 0x00FFFFFF,
-            struct.unpack(
-                ">I", fst_bytes[current_offset + 0x0004 : current_offset + 0x0008]
-            )[0],
-            struct.unpack(
-                ">I", fst_bytes[current_offset + 0x0008 : current_offset + 0x000C]
-            )[0],
+            struct.unpack_from(">I", fst_bytes, current_offset)[0] & 0x00FFFFFF,
+            struct.unpack_from(">I", fst_bytes, current_offset + 0x0004)[0],
+            struct.unpack_from(">I", fst_bytes, current_offset + 0x0008)[0],
         )
 
         root_dir.children.append(new_entry)

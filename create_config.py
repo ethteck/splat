@@ -130,7 +130,7 @@ segments:
     path: filesystem/sys/fst.bin
   - name: bootinfo
     type: bootinfo
-    path: filesystem/sys/bootinfo.bin
+    path: filesystem/sys/boot.bin
   - name: bi2
     type: bi2
     path: filesystem/sys/bi2.bin

@@ -160,7 +160,7 @@ class SplatOpts:
     # Gamecube-specific options
     ################################################################################
     # Path where the iso's filesystem will be extracted to
-    filesystem_path: str
+    filesystem_path: Path
 
     ################################################################################
     # Compiler-specific options

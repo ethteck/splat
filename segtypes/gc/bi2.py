@@ -13,20 +13,20 @@ class GcSegBi2(GCSegment):
         lines = []
 
         # Gathering variables
-        debug_monitor_size = struct.unpack(">I", bi2_bytes[0x00:0x04])
-        simulated_memory_size = struct.unpack(">I", bi2_bytes[0x04:0x08])
+        debug_monitor_size = struct.unpack_from(">I", bi2_bytes, 0x00)[0]
+        simulated_memory_size = struct.unpack_from(">I", bi2_bytes, 0x04)[0]
 
-        argument_offset = struct.unpack(">I", bi2_bytes[0x08:0x0C])
+        argument_offset = struct.unpack_from(">I", bi2_bytes, 0x08)[0]
 
-        debug_flag = struct.unpack(">I", bi2_bytes[0x0C:0x10])
+        debug_flag = struct.unpack_from(">I", bi2_bytes, 0x0C)[0]
 
-        track_offset = struct.unpack(">I", bi2_bytes[0x10:0x14])
-        track_size = struct.unpack(">I", bi2_bytes[0x14:0x18])
+        track_offset = struct.unpack_from(">I", bi2_bytes, 0x10)[0]
+        track_size = struct.unpack_from(">I", bi2_bytes, 0x14)[0]
 
-        country_code_bi2 = struct.unpack(">I", bi2_bytes[0x18:0x1C])
+        country_code_bi2 = struct.unpack_from(">I", bi2_bytes, 0x18)[0]
 
-        unk_int = struct.unpack(">I", bi2_bytes[0x1C:0x20])
-        unk_int_2 = struct.unpack(">I", bi2_bytes[0x20:0x24])
+        unk_int = struct.unpack_from(">I", bi2_bytes, 0x1C)[0]
+        unk_int_2 = struct.unpack_from(">I", bi2_bytes, 0x20)[0]
 
         # Outputting .s file
         lines.append(f"# GameCube disc image bi2 data, located at 0x440 in the disc.\n")
@@ -34,22 +34,20 @@ class GcSegBi2(GCSegment):
 
         lines.append(f".section .data\n\n")
 
-        lines.append(f"debug_monitor_size: .long 0x{debug_monitor_size[0]:08X}\n")
-        lines.append(
-            f"simulated_memory_size: .long 0x{simulated_memory_size[0]:08X}\n\n"
-        )
+        lines.append(f"debug_monitor_size: .long 0x{debug_monitor_size:08X}\n")
+        lines.append(f"simulated_memory_size: .long 0x{simulated_memory_size:08X}\n\n")
 
-        lines.append(f"argument_offset: .long 0x{argument_offset[0]:08X}\n\n")
+        lines.append(f"argument_offset: .long 0x{argument_offset:08X}\n\n")
 
-        lines.append(f"debug_flag: .long 0x{debug_flag[0]:08X}\n\n")
+        lines.append(f"debug_flag: .long 0x{debug_flag:08X}\n\n")
 
-        lines.append(f"track_offset: .long 0x{track_offset[0]:08X}\n")
-        lines.append(f"track_size: .long 0x{track_size[0]:08X}\n\n")
+        lines.append(f"track_offset: .long 0x{track_offset:08X}\n")
+        lines.append(f"track_size: .long 0x{track_size:08X}\n\n")
 
-        lines.append(f"country_code_bi2: .long 0x{country_code_bi2[0]:08X}\n\n")
+        lines.append(f"country_code_bi2: .long 0x{country_code_bi2:08X}\n\n")
 
-        lines.append(f"ukn_int_bi2: .long 0x{unk_int[0]:08X}\n")
-        lines.append(f"ukn_int_bi2_2: .long 0x{unk_int_2[0]:08X}\n\n")
+        lines.append(f"ukn_int_bi2: .long 0x{unk_int:08X}\n")
+        lines.append(f"ukn_int_bi2_2: .long 0x{unk_int_2:08X}\n\n")
 
         lines.append(f".fill 0x00001FDC\n\n")
 
@@ -65,4 +63,4 @@ class GcSegBi2(GCSegment):
         return True
 
     def out_path(self) -> Path:
-        return options.opts.asm_path / "sys/bi2.s"
+        return options.opts.asm_path / "sys" / "bi2.s"

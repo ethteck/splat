@@ -12,6 +12,9 @@ class GcSegBootinfo(GCSegment):
     def split(self, iso_bytes):
         lines = []
 
+        gc_dvd_magic = struct.unpack_from(">I", iso_bytes, 0x1C)[0]
+        assert gc_dvd_magic == 0xC2339F3D
+
         # Gathering variables
         system_code = chr(iso_bytes[0x00])
         game_code = iso_bytes[0x01:0x03].decode("utf-8")
@@ -23,23 +26,23 @@ class GcSegBootinfo(GCSegment):
         audio_streaming = iso_bytes[0x08]
         stream_buffer_size = iso_bytes[0x09]
 
-        name = str(iso_bytes[0x20:0x400], "utf-8").strip("\x00")
+        name = iso_bytes[0x20:0x400].decode("utf-8").strip("\x00")
         name_padding_len = 0x3E0 - len(name)
 
         # The following is from YAGCD, don't know what they were for:
         # https://web.archive.org/web/20220528011846/http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.1
-        apploader_size = struct.unpack(">I", iso_bytes[0x400:0x404])
-        debug_monitor_address = struct.unpack(">I", iso_bytes[0x404:0x408])
+        apploader_size = struct.unpack_from(">I", iso_bytes, 0x400)[0]
+        debug_monitor_address = struct.unpack_from(">I", iso_bytes, 0x404)[0]
 
         # These on the other hand are easy to understand
-        dol_offset = struct.unpack(">I", iso_bytes[0x420:0x424])
-        fst_offset = struct.unpack(">I", iso_bytes[0x424:0x428])
-        fst_size = struct.unpack(">I", iso_bytes[0x428:0x42C])
-        fst_max_size = struct.unpack(">I", iso_bytes[0x42C:0x430])
+        dol_offset = struct.unpack_from(">I", iso_bytes, 0x420)[0]
+        fst_offset = struct.unpack_from(">I", iso_bytes, 0x424)[0]
+        fst_size = struct.unpack_from(">I", iso_bytes, 0x428)[0]
+        fst_max_size = struct.unpack_from(">I", iso_bytes, 0x42C)[0]
 
-        user_position = struct.unpack(">I", iso_bytes[0x430:0x434])
-        user_length = struct.unpack(">I", iso_bytes[0x434:0x438])
-        unk_int = struct.unpack(">I", iso_bytes[0x438:0x43C])
+        user_position = struct.unpack_from(">I", iso_bytes, 0x430)[0]
+        user_length = struct.unpack_from(">I", iso_bytes, 0x434)[0]
+        unk_int = struct.unpack_from(">I", iso_bytes, 0x438)[0]
 
         # Outputting .s file
         lines.append(f"# GameCube disc image boot data, located at 0x00 in the disc.\n")
@@ -68,19 +71,17 @@ class GcSegBootinfo(GCSegment):
         lines.append(f'game_name: .ascii "{name}"\n')
         lines.append(f".org 0x400\n\n")
 
-        lines.append(f"apploader_size: .long 0x{apploader_size[0]:08X}\n\n")
+        lines.append(f"apploader_size: .long 0x{apploader_size:08X}\n\n")
 
         # Unknown stuff gleaned from YAGCD
-        lines.append(
-            f"debug_monitor_address: .long 0x{debug_monitor_address[0]:08X}\n\n"
-        )
+        lines.append(f"debug_monitor_address: .long 0x{debug_monitor_address:08X}\n\n")
 
         # More padding
         lines.append(f".fill 0x18\n\n")
 
         # DOL and FST data
-        lines.append(f"dol_offset: .long 0x{dol_offset[0]:08X}\n")
-        lines.append(f"fst_offset: .long 0x{fst_offset[0]:08X}\n\n")
+        lines.append(f"dol_offset: .long 0x{dol_offset:08X}\n")
+        lines.append(f"fst_offset: .long 0x{fst_offset:08X}\n\n")
 
         lines.append(
             f"# The FST is only allocated once per game boot, even in games with multiple disks. fst_max_size is used to ensure that\n"
@@ -88,14 +89,14 @@ class GcSegBootinfo(GCSegment):
         lines.append(
             f"# there is enough space allocated for the FST in the event that a game spans multiple disks, and one disk has a larger FST than another.\n"
         )
-        lines.append(f"fst_size: .long 0x{fst_size[0]:08X}\n")
-        lines.append(f"fst_max_size: .long 0x{fst_max_size[0]:08X}\n\n")
+        lines.append(f"fst_size: .long 0x{fst_size:08X}\n")
+        lines.append(f"fst_max_size: .long 0x{fst_max_size:08X}\n\n")
 
         # Honestly not sure what this data is for
         lines.append(f"# Not even YAGCD knows what these are for.\n")
-        lines.append(f"user_position: .long 0x{user_position[0]:08X}\n")
-        lines.append(f"user_length: .long 0x{user_length[0]:08X}\n")
-        lines.append(f"unk_int: .long 0x{unk_int[0]:08X}\n\n")
+        lines.append(f"user_position: .long 0x{user_position:08X}\n")
+        lines.append(f"user_length: .long 0x{user_length:08X}\n")
+        lines.append(f"unk_int: .long 0x{unk_int:08X}\n\n")
 
         # Final padding
         lines.append(f".word 0\n")
@@ -112,4 +113,4 @@ class GcSegBootinfo(GCSegment):
         return True
 
     def out_path(self) -> Path:
-        return options.opts.asm_path / "sys/boot.s"
+        return options.opts.asm_path / "sys" / "boot.s"
