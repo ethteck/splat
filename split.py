@@ -58,7 +58,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     ret = []
 
     for i, seg_yaml in enumerate(config_segments):
-        # rompos marker
+        # end marker
         if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
             continue
 
@@ -363,17 +363,19 @@ def main(config_path, modes, verbose, use_cache=True):
     symbols.mark_c_funcs_as_defined()
 
     # Split
-    for segment in tqdm.tqdm(
+    split_bar = tqdm.tqdm(
         all_segments,
         total=len(all_segments),
-        desc=f"Splitting {brief_seg_name(segment, 20)}",
-    ):
+    )
+    for segment in split_bar:
+        split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
+
         if use_cache:
             cached = segment.cache()
 
             if cached == cache.get(segment.unique_id()):
                 # Cache hit
-                seg_cached[typ] += 1
+                seg_cached[segment.type] += 1
                 continue
             else:
                 # Cache miss; split
@@ -389,13 +391,12 @@ def main(config_path, modes, verbose, use_cache=True):
     if options.opts.is_mode_active("ld"):
         global linker_writer
         linker_writer = LinkerWriter()
-        for i, segment in enumerate(
-            tqdm.tqdm(
-                all_segments,
-                total=len(all_segments),
-                desc=f"Writing linker script {brief_seg_name(segment, 20)}",
-            )
-        ):
+        linker_bar = tqdm.tqdm(
+            all_segments,
+            total=len(all_segments),
+        )
+        for i, segment in enumerate(linker_bar):
+            linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             next_segment: Optional[Segment] = None
             if i < len(all_segments) - 1:
                 next_segment = all_segments[i + 1]
