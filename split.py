@@ -65,7 +65,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         segment_class = Segment.get_class_for_type(seg_type)
 
         this_start = Segment.parse_segment_start(seg_yaml)
-        
+
         if i == len(config_segments) - 1 and Segment.parse_segment_file_path:
             next_start = 0
         else:
