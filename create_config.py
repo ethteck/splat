@@ -140,8 +140,7 @@ segments:
   - name: main
     type: dol
     path: filesystem/sys/main.dol
-  - [0]
-"""  # TODO remove the last line in the generated yaml, as it only exists as a temporary workaround
+"""
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
