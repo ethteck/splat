@@ -14,10 +14,10 @@ from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
 
 from segtypes.linker_entry import LinkerWriter, to_cname
-from segtypes.segment import Segment
+from segtypes.segment import RomAddr, Segment
 from util import compiler, log, options, palettes, symbols
 
-VERSION = "0.12.2"
+VERSION = "0.12.3"
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
