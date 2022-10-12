@@ -106,6 +106,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
 def assign_symbols_to_segments():
     for symbol in symbols.all_symbols:
+        if symbol.segment:
+            continue
+
         if symbol.rom:
             cands = segment_roms[symbol.rom]
             if len(cands) > 1:
@@ -375,6 +378,8 @@ def main(config_path, modes, verbose, use_cache=True):
 
             if cached == cache.get(segment.unique_id()):
                 # Cache hit
+                if segment.type not in seg_cached:
+                    seg_cached[segment.type] = 0
                 seg_cached[segment.type] += 1
                 continue
             else:
