@@ -108,6 +108,7 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self):
         self.linker_discard_section: bool = options.opts.ld_discard_section
+        # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []

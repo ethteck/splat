@@ -18,6 +18,8 @@ from segtypes.segment import RomAddr, Segment
 from util import compiler, log, options, palettes, symbols
 
 VERSION = "0.12.3"
+# This value should be keep in sync with the version listed on requirements.txt
+SPIMDISASM_MIN = (1, 5, 6)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -56,7 +58,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     ret = []
 
     for i, seg_yaml in enumerate(config_segments):
-        # rompos marker
+        # end marker
         if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
             continue
 
@@ -108,6 +110,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
 def assign_symbols_to_segments():
     for symbol in symbols.all_symbols:
+        if symbol.segment:
+            continue
+
         if symbol.rom:
             cands = segment_roms[symbol.rom]
             if len(cands) > 1:
@@ -256,6 +261,11 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 def main(config_path, modes, verbose, use_cache=True):
     global config
 
+    if spimdisasm.__version_info__ < SPIMDISASM_MIN:
+        log.error(
+            f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
+        )
+
     log.write(f"splat {VERSION} (powered by spimdisasm {spimdisasm.__version__})")
 
     # Load config
@@ -360,17 +370,21 @@ def main(config_path, modes, verbose, use_cache=True):
     symbols.mark_c_funcs_as_defined()
 
     # Split
-    for segment in tqdm.tqdm(
+    split_bar = tqdm.tqdm(
         all_segments,
         total=len(all_segments),
-        desc=f"Splitting {brief_seg_name(segment, 20)}",
-    ):
+    )
+    for segment in split_bar:
+        split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
+
         if use_cache:
             cached = segment.cache()
 
             if cached == cache.get(segment.unique_id()):
                 # Cache hit
-                seg_cached[typ] += 1
+                if segment.type not in seg_cached:
+                    seg_cached[segment.type] = 0
+                seg_cached[segment.type] += 1
                 continue
             else:
                 # Cache miss; split
@@ -388,13 +402,12 @@ def main(config_path, modes, verbose, use_cache=True):
     ):  # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = LinkerWriter()
-        for i, segment in enumerate(
-            tqdm.tqdm(
-                all_segments,
-                total=len(all_segments),
-                desc=f"Writing linker script {brief_seg_name(segment, 20)}",
-            )
-        ):
+        linker_bar = tqdm.tqdm(
+            all_segments,
+            total=len(all_segments),
+        )
+        for i, segment in enumerate(linker_bar):
+            linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             next_segment: Optional[Segment] = None
             if i < len(all_segments) - 1:
                 next_segment = all_segments[i + 1]

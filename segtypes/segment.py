@@ -1,13 +1,14 @@
 import importlib
 import importlib.util
 
-from typing import Any, Dict, TYPE_CHECKING, Type, Union, Optional, List
+from typing import Any, Dict, TYPE_CHECKING, Set, Type, Union, Optional, List
 from pathlib import Path
 
 from util import log
 from util import options
 from util import symbols
 from util.symbols import Symbol
+from intervaltree import Interval, IntervalTree
 
 # circular import
 if TYPE_CHECKING:
@@ -190,6 +191,10 @@ class Segment:
         # Symbols known to be in this segment
         self.given_seg_symbols: Dict[int, List[Symbol]] = {}
 
+        # Ranges for faster symbol lookup
+        self.symbol_ranges_ram: IntervalTree = IntervalTree()
+        self.symbol_ranges_rom: IntervalTree = IntervalTree()
+
         self.given_section_order: List[str] = options.opts.section_order
         self.follows_vram: Optional[str] = None
         self.follows_vram_symbol: Optional[str] = None
@@ -302,6 +307,12 @@ class Segment:
         if symbol.vram_start not in self.given_seg_symbols:
             self.given_seg_symbols[symbol.vram_start] = []
         self.given_seg_symbols[symbol.vram_start].append(symbol)
+
+        # For larger symbols, add their ranges to interval trees for faster lookup
+        if symbol.size > 4:
+            self.symbol_ranges_ram.addi(symbol.vram_start, symbol.vram_end, symbol)
+            if symbol.rom and isinstance(symbol.rom, int):
+                self.symbol_ranges_rom.addi(symbol.rom, symbol.rom_end, symbol)
 
     @property
     def seg_symbols(self) -> Dict[int, List[Symbol]]:
@@ -476,7 +487,7 @@ class Segment:
         create: bool = False,
         define: bool = False,
         reference: bool = False,
-        offsets: bool = False,
+        search_ranges: bool = False,
         local_only: bool = False,
         dead: bool = True,
     ) -> Optional[Symbol]:
@@ -489,12 +500,25 @@ class Segment:
             # If the vram address is within this segment, we can calculate the symbol's rom address
             rom = most_parent.ram_to_rom(addr)
             ret = most_parent.retrieve_symbol(most_parent.seg_symbols, addr)
+
+            if not ret and search_ranges:
+                # Search ranges first, starting with rom
+                if rom is not None:
+                    cands: Set[Interval] = most_parent.symbol_ranges_rom[rom]
+                    if cands:
+                        ret = cands.pop().data
+                # and then vram if we can't find a rom match
+                if not ret:
+                    cands = most_parent.symbol_ranges_ram[addr]
+                    if cands:
+                        ret = cands.pop().data
         elif not local_only:
             ret = most_parent.retrieve_symbol(symbols.all_symbols_dict, addr)
 
-        # Search for symbol ranges
-        if not ret and offsets:
-            ret = symbols.retrieve_from_ranges(addr, rom)
+            if not ret and search_ranges:
+                cands = symbols.all_symbols_ranges[addr]
+                if cands:
+                    ret = cands.pop().data
 
         # Reject dead symbols unless we allow them
         if not dead and ret and ret.dead:
@@ -533,7 +557,7 @@ class Segment:
         type: Optional[str] = None,
         define: bool = False,
         reference: bool = False,
-        offsets: bool = False,
+        search_ranges: bool = False,
         local_only: bool = False,
         dead: bool = True,
     ) -> Symbol:
@@ -544,7 +568,7 @@ class Segment:
             create=True,
             define=define,
             reference=reference,
-            offsets=offsets,
+            search_ranges=search_ranges,
             local_only=local_only,
             dead=dead,
         )
