@@ -17,7 +17,7 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import RomAddr, Segment
 from util import compiler, log, options, palettes, symbols
 
-VERSION = "0.12.3"
+VERSION = "0.12.4"
 # This value should be keep in sync with the version listed on requirements.txt
 SPIMDISASM_MIN = (1, 5, 6)
 

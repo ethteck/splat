@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.12.4
+* Fixed a bug involving the order of attributes in symbol_addrs preventing proper range searching during calls to `get_symbol`
+
 ### 0.12.3: Initial Gamecube Support
 Initial support for Gamecube disk images has been set up! Disassembly is not currently supported, and a more comprehensive explanation of Gamecube support will come once that is finished.
 
