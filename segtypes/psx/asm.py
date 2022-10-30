@@ -10,9 +10,8 @@ class PsxSegAsm(CommonSegAsm):
 
         ret.append('.include "macro.inc"')
         ret.append("")
-        ret.append("/* assembler directives */")
-        ret.append(".set noat      /* allow manual use of $at */")
-        ret.append(".set noreorder /* don't insert nops after branches */")
+        ret.append(".set noat")
+        ret.append(".set noreorder")
         ret.append("")
         preamble = options.opts.generated_s_preamble
         if preamble:
