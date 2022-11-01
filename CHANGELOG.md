@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.12.5
+
+* Update minimal spimdisasm version to 1.7.1.
+* Fix spimdisasm>=1.7.0 non being able to see symbols which only are referenced by other data symbols.
+* An check was added to prevent segments marked with `exclusive_ram_id` have a vram address range which overlaps with segments not marked with said tag. If this happens it will be warned to the user.
+
 ### 0.12.4
 * Fixed a bug involving the order of attributes in symbol_addrs preventing proper range searching during calls to `get_symbol`
 
