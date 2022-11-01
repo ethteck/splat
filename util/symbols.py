@@ -265,11 +265,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         # Check the vram range of the global segment does not overlap with any overlay segment
         for ovl_segment in overlay_segments:
             assert ovl_segment.vramStart <= ovl_segment.vramEnd, f"{ovl_segment.vramStart:X} {ovl_segment.vramEnd:X}"
-            if ovl_segment.vramStart >= global_vram_end and ovl_segment.vramEnd >= global_vram_end:
-                pass
-            elif ovl_segment.vramStart < global_vram_start and ovl_segment.vramEnd < global_vram_start:
-                pass
-            else:
+            if ovl_segment.vramEnd > global_vram_start and global_vram_end > ovl_segment.vramStart:
                 log.write(f"Warning: the vram range ([0x{ovl_segment.vramStart:X}, 0x{ovl_segment.vramEnd:X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:X}, 0x{global_vram_end:X}])", status="warn")
 
     # pass the global symbols to spimdisasm
