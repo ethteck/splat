@@ -255,7 +255,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         and global_vrom_start is not None
         and global_vrom_end is not None
     ):
-        spim_context.globalSegment.changeRanges(
+        spim_context.changeGlobalSegmentRanges(
             global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
         )
 
