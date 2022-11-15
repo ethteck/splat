@@ -4,4 +4,5 @@ import n64img.image
 
 class N64SegIa8(N64SegImg):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, img_cls=n64img.image.IA8)
+        kwargs["img_cls"] = n64img.image.IA8
+        super().__init__(*args, **kwargs)

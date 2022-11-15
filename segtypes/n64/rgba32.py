@@ -4,4 +4,5 @@ import n64img.image
 
 class N64SegRgba32(N64SegImg):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, img_cls=n64img.image.RGBA32)
+        kwargs["img_cls"] = n64img.image.RGBA32
+        super().__init__(*args, **kwargs)

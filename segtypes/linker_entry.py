@@ -167,11 +167,7 @@ class LinkerWriter:
             leaving_bss = False
             cur_section = entry.section_type
 
-            if cur_section == "linker":
-                self._end_block()
-                self._begin_segment(entry.segment)
-                continue
-            elif cur_section == "linker_offset":
+            if cur_section == "linker_offset":
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", ".")
                 continue
 

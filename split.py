@@ -68,7 +68,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         this_start = Segment.parse_segment_start(seg_yaml)
 
-        if i == len(config_segments) - 1 and Segment.parse_segment_file_path:
+        if i == len(config_segments) - 1 and Segment.parse_segment_file_path(seg_yaml):
             next_start: RomAddr = 0
         else:
             next_start = Segment.parse_segment_start(config_segments[i + 1])
@@ -114,7 +114,7 @@ def assign_symbols_to_segments():
             continue
 
         if symbol.rom:
-            cands = segment_roms[symbol.rom]
+            cands: Set[Interval] = segment_roms[symbol.rom]
             if len(cands) > 1:
                 log.error("multiple segments rom overlap symbol", symbol)
             elif len(cands) == 0:
@@ -124,7 +124,7 @@ def assign_symbols_to_segments():
                 seg: Segment = cand.data
                 seg.add_symbol(symbol)
         else:
-            cands: Set[Interval] = segment_rams[symbol.vram_start]
+            cands = segment_rams[symbol.vram_start]
             segs: List[Segment] = [cand.data for cand in cands]
             for seg in segs:
                 if not seg.get_exclusive_ram_id():

@@ -98,6 +98,7 @@ class Segment:
             log.error(
                 f"could not load presumed extended segment type '{seg_type}' because no extensions path is configured"
             )
+        assert ext_path is not None
 
         try:
             ext_spec = importlib.util.spec_from_file_location(

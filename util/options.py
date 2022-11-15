@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Set, Type, TypeVar, cast
+from typing import Dict, List, Literal, Mapping, Optional, Set, Type, TypeVar, cast
 
 from util import compiler
 from util.compiler import Compiler
@@ -24,7 +24,7 @@ class SplatOpts:
     # Determines the compiler used to compile the target binary
     compiler: Compiler
     # Determines the endianness of the target binary
-    endianness: str
+    endianness: Literal["big", "little"]
     # Determines the default section order of the target binary
     # this can be overridden per-segment
     section_order: List[str]
@@ -260,6 +260,17 @@ def _parse_yaml(
     base_path = Path(config_paths[0]).parent / p.parse_opt("base_path", str)
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
+    endianness = (
+        p.parse_opt_within(
+            "endianness",
+            str,
+            ["big", "little"],
+            "little" if platform.lower() == "psx" else "big",
+        ),
+    )
+    assert endianness in ["big", "little"]
+    assert isinstance(endianness, str)
+
     ret = SplatOpts(
         verbose=verbose,
         dump_symbols=p.parse_opt("dump_symbols", bool, False),
@@ -268,11 +279,7 @@ def _parse_yaml(
         target_path=p.parse_path(base_path, "target_path"),
         platform=platform,
         compiler=comp,
-        endianness=p.parse_opt(
-            "endianness",
-            str,
-            "little" if platform.lower() == "psx" else "big",
-        ),
+        endianness=endianness,
         section_order=p.parse_opt(
             "section_order", list, [".text", ".data", ".rodata", ".bss"]
         ),
