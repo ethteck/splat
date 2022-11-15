@@ -32,6 +32,8 @@ class CommonSegCodeSubsegment(Segment):
 
         self.spim_section: Optional[spimdisasm.mips.sections.SectionBase] = None
         self.instr_category = rabbitizer.InstrCategory.CPU
+        if options.opts.platform == "ps2":
+            self.instr_category = rabbitizer.InstrCategory.R5900
 
     @property
     def needs_symbols(self) -> bool:
