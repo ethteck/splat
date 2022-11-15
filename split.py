@@ -2,9 +2,9 @@
 
 import argparse
 import hashlib
+import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Union
-import importlib
 
 import rabbitizer
 import spimdisasm

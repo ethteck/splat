@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import Type
 
 from n64img.image import Image
-from segtypes.n64.segment import N64Segment
 from util import log, options
+
+from segtypes.n64.segment import N64Segment
 
 
 class N64SegImg(N64Segment):

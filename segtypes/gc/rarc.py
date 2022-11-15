@@ -1,13 +1,14 @@
 import struct
-
-from segtypes.gc.segment import GCSegment
+from enum import IntEnum
 from pathlib import Path
-from util import options
-from util.n64.Yay0decompress import decompress_yay0
-from util.gc.gcutil import read_string_from_bytes
 
 from typing import List, Optional
-from enum import IntEnum
+
+from util import options
+from util.gc.gcutil import read_string_from_bytes
+from util.n64.Yay0decompress import decompress_yay0
+
+from segtypes.gc.segment import GCSegment
 
 
 # Represents the RARC archive format used by first-party Nintendo games.

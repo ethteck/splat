@@ -7,9 +7,10 @@ Originally written by Mark Street (https://github.com/mkst)
 
 import struct
 from pathlib import Path
-from util.log import error
 
 from util import options
+from util.log import error
+
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
 

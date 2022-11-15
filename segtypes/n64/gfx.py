@@ -4,33 +4,34 @@ Dumps out Gfx[] as a .inc.c file.
 """
 
 from pathlib import Path
+
 from pygfxd import (
-    GfxdEndian,
+    gfxd_buffer_to_string,
+    gfxd_cimg_callback,
+    gfxd_dl_callback,
+    gfxd_endian,
+    gfxd_execute,
+    gfxd_input_buffer,
+    gfxd_light_callback,
+    gfxd_lookat_callback,
+    gfxd_macro_dflt,
+    gfxd_macro_fn,
+    gfxd_mtx_callback,
+    gfxd_output_buffer,
     gfxd_printf,
     gfxd_puts,
-    gfxd_macro_dflt,
-    gfxd_input_buffer,
-    gfxd_output_buffer,
     gfxd_target,
-    gfxd_endian,
-    gfxd_macro_fn,
-    gfxd_tlut_callback,
     gfxd_timg_callback,
-    gfxd_cimg_callback,
-    gfxd_zimg_callback,
-    gfxd_dl_callback,
-    gfxd_mtx_callback,
-    gfxd_lookat_callback,
-    gfxd_light_callback,
-    gfxd_vtx_callback,
+    gfxd_tlut_callback,
     gfxd_vp_callback,
-    gfxd_execute,
-    gfxd_buffer_to_string,
+    gfxd_vtx_callback,
+    gfxd_zimg_callback,
+    GfxdEndian,
 )
-from util import log
+
+from util import log, options
 from util.log import error
 
-from util import options
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
 
@@ -161,7 +162,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
     def disassemble_data(self, rom_bytes):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
-        
+
         gfx_data = rom_bytes[self.rom_start : self.rom_end]
         segment_length = len(gfx_data)
         if (segment_length) % 8 != 0:

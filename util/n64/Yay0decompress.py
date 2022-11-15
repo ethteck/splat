@@ -1,9 +1,10 @@
 import argparse
-import sys
 import os
+import sys
 from ctypes import *
 from struct import pack, unpack_from
 from typing import Optional
+
 from util import log
 
 tried_loading = False

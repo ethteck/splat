@@ -1,11 +1,12 @@
 from typing import Optional
-from util import options
-from segtypes.common.code import CommonSegCode
+
 import spimdisasm
+from util import options, symbols
+
+from segtypes import segment
+from segtypes.common.code import CommonSegCode
 
 from segtypes.segment import Segment
-from segtypes import segment
-from util import symbols
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):

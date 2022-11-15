@@ -1,5 +1,6 @@
-from segtypes.n64.img import N64SegImg
 import n64img.image
+
+from segtypes.n64.img import N64SegImg
 
 
 class N64SegI8(N64SegImg):

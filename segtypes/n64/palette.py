@@ -1,10 +1,11 @@
 from itertools import zip_longest
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
-from segtypes.n64.segment import N64Segment
 from util import log, options
 from util.color import unpack_color
+
+from segtypes.n64.segment import N64Segment
 
 if TYPE_CHECKING:
     from segtypes.n64.ci import N64SegCi as Raster

@@ -1,6 +1,8 @@
-from typing import TYPE_CHECKING, Optional
-from segtypes.n64.img import N64SegImg
+from typing import Optional, TYPE_CHECKING
+
 from util import log
+
+from segtypes.n64.img import N64SegImg
 
 if TYPE_CHECKING:
     from segtypes.n64.palette import N64SegPalette

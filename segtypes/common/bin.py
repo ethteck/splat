@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import Optional
+
+from util import log, options
+
 from segtypes.common.segment import CommonSegment
-from util import options
-from util import log
 
 
 class CommonSegBin(CommonSegment):

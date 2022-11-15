@@ -1,14 +1,15 @@
-from typing import Dict, List, Optional, TYPE_CHECKING, Set
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Set, TYPE_CHECKING
+
 import spimdisasm
 import tqdm
-from dataclasses import dataclass
-from intervaltree import IntervalTree, Interval
+from intervaltree import Interval, IntervalTree
 
 # circular import
 if TYPE_CHECKING:
     from segtypes.segment import Segment
 
-from util import options, log
+from util import log, options
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}

@@ -1,19 +1,20 @@
 #! /usr/bin/env python3
 
-from dataclasses import dataclass
-
-import sys
 import argparse
-import itertools
-import struct
-from typing import Optional
-import spimdisasm
-import rabbitizer
-
-from pathlib import Path
 
 import hashlib
+import itertools
+import struct
+
+import sys
 import zlib
+from dataclasses import dataclass
+
+from pathlib import Path
+from typing import Optional
+
+import rabbitizer
+import spimdisasm
 
 parser = argparse.ArgumentParser(description="Gives information on N64 roms")
 parser.add_argument("rom", help="path to an N64 rom")

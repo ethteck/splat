@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Literal, Mapping, Optional, Set, Type, TypeVar, cast
+from typing import cast, Dict, List, Literal, Mapping, Optional, Set, Type, TypeVar
 
 from util import compiler
 from util.compiler import Compiler

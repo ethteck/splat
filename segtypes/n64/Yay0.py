@@ -1,7 +1,7 @@
-from segtypes.n64.segment import N64Segment
+from util import log, options
 from util.n64 import Yay0decompress
-from util import options
-from util import log
+
+from segtypes.n64.segment import N64Segment
 
 
 class N64SegYay0(N64Segment):

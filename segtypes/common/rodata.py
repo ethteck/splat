@@ -1,7 +1,7 @@
 import spimdisasm
+from util import compiler, options, symbols
 
 from segtypes.common.data import CommonSegData
-from util import symbols, options, compiler
 
 
 class CommonSegRodata(CommonSegData):
