@@ -260,16 +260,12 @@ def _parse_yaml(
     base_path = Path(config_paths[0]).parent / p.parse_opt("base_path", str)
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
-    endianness = (
-        p.parse_opt_within(
-            "endianness",
-            str,
-            ["big", "little"],
-            "little" if platform.lower() == "psx" else "big",
-        ),
+    endianness = p.parse_opt_within(
+        "endianness",
+        str,
+        ["big", "little"],
+        "little" if platform.lower() == "psx" else "big",
     )
-    assert endianness in ["big", "little"]
-    assert isinstance(endianness, str)
 
     ret = SplatOpts(
         verbose=verbose,
@@ -279,7 +275,7 @@ def _parse_yaml(
         target_path=p.parse_path(base_path, "target_path"),
         platform=platform,
         compiler=comp,
-        endianness=endianness,
+        endianness=endianness,  # type: ignore
         section_order=p.parse_opt(
             "section_order", list, [".text", ".data", ".rodata", ".bss"]
         ),
