@@ -196,6 +196,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_end = None
     global_vram_start = None
     global_vram_end = None
+    overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
 
     spim_context.bannedSymbols |= ignored_addresses
 
@@ -249,15 +250,31 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 for sym in symbols_list:
                     add_symbol_to_spim_segment(spim_segment, sym)
 
+            overlay_segments.add(spim_segment)
+
     if (
         global_vram_start is not None
         and global_vram_end is not None
         and global_vrom_start is not None
         and global_vrom_end is not None
     ):
-        spim_context.globalSegment.changeRanges(
+        spim_context.changeGlobalSegmentRanges(
             global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
         )
+
+        # Check the vram range of the global segment does not overlap with any overlay segment
+        for ovl_segment in overlay_segments:
+            assert (
+                ovl_segment.vramStart <= ovl_segment.vramEnd
+            ), f"{ovl_segment.vramStart:X} {ovl_segment.vramEnd:X}"
+            if (
+                ovl_segment.vramEnd > global_vram_start
+                and global_vram_end > ovl_segment.vramStart
+            ):
+                log.write(
+                    f"Warning: the vram range ([0x{ovl_segment.vramStart:X}, 0x{ovl_segment.vramEnd:X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:X}, 0x{global_vram_end:X}])",
+                    status="warn",
+                )
 
     # pass the global symbols to spimdisasm
     for segment in all_segments:
