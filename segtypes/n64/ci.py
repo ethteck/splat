@@ -29,6 +29,7 @@ class N64SegCi(N64SegImg):
             log.error(
                 f"no palette sibling segment exists\n(hint: add a segment with type 'palette' and name '{self.name}')"
             )
+        assert self.palette is not None
         self.palette.extract = False
         self.n64img.palette = self.palette.parse_palette(rom_bytes)
 

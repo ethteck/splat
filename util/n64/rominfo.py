@@ -6,6 +6,7 @@ import sys
 import argparse
 import itertools
 import struct
+from typing import Optional
 import spimdisasm
 import rabbitizer
 
@@ -112,7 +113,7 @@ def guess_header_encoding(rom_bytes: bytes):
     sys.exit("Unknown header encoding, please raise an Issue with us")
 
 
-def get_info(rom_path: Path, rom_bytes: bytes = None, header_encoding=None):
+def get_info(rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None):
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
 

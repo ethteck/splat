@@ -57,11 +57,14 @@ class GCFSTEntry:
 
     # Builds this entry's full path within the filesystem from its parents' names.
     def get_full_name(self):
-        path_components = []
+        path_components: List[str] = []
 
         entry = self
         while entry.parent != None:
             path_components.insert(0, entry.name)
+
+            if entry.parent is None:
+                break
             entry = entry.parent
 
         return Path(*path_components)
@@ -96,6 +99,8 @@ def split_iso(iso_bytes):
 
 # Splits the header info, apploader, DOL, and FST metadata from the ISO.
 def split_sys_info(iso_bytes):
+    assert options.opts.filesystem_path is not None
+
     sys_path = options.opts.filesystem_path / "sys"
     sys_path.mkdir(parents=True, exist_ok=True)
 
@@ -128,6 +133,8 @@ def split_sys_info(iso_bytes):
 
 # Splits the ISO's filesystem into individual files.
 def split_content(iso_bytes):
+    assert options.opts.filesystem_path is not None
+
     fst_path = options.opts.filesystem_path / "sys" / "fst.bin"
     assert fst_path.is_file()
 

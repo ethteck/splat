@@ -6,7 +6,7 @@ from util import options
 from util.n64.Yay0decompress import decompress_yay0
 from util.gc.gcutil import read_string_from_bytes
 
-from typing import List
+from typing import List, Optional
 from enum import IntEnum
 
 
@@ -16,6 +16,8 @@ class GcSegRarc(GCSegment):
         super().__init__(*args, **kwargs)
 
     def split(self, file_bytes):
+        assert self.file_path is not None
+
         archive = GCRARCArchive(self.file_path, file_bytes)
         archive.build_hierarchy(file_bytes)
 
@@ -95,6 +97,8 @@ class GCRARCArchive:
                 n.children.append(dir_node)
 
     def emit(self, file_bytes):
+        assert options.opts.filesystem_path is not None
+
         rel_path = self.file_path.relative_to(options.opts.filesystem_path / "files")
         arc_root_path = options.opts.asset_path / rel_path.with_suffix("")
 
@@ -180,7 +184,7 @@ class GCRARCNode:
         self.name = read_string_from_bytes(self.name_offset, string_table_bytes)
         self.entries = []
 
-        self.parent = None
+        self.parent: Optional[GCRARCNode] = None
         self.children = []
 
     def get_entries(self, file_entry_offset, file_bytes, string_table_bytes):
@@ -233,15 +237,12 @@ class GCRARCNode:
             n.print_recursive(level + 1)
 
     def get_full_directory_path(self):
-        path_components = []
+        path_components: List[str] = []
 
-        node = self
-        while True:
+        node: Optional[GCRARCNode] = self
+        while node is not None:
             path_components.insert(0, node.name)
             node = node.parent
-
-            if node == None:
-                break
 
         return Path(*path_components)
 
@@ -258,7 +259,7 @@ class GCRARCFileEntry:
         self.data_size = struct.unpack_from(">I", file_bytes, offset + 0x000C)[0]
 
         self.name = read_string_from_bytes(self.name_offset, string_table_bytes)
-        self.parent_node = None
+        self.parent_node: Optional[GCRARCNode] = None
 
     def emit_to_filesystem(self, dir_path: Path, file_data_offset, file_bytes):
         if self.flags & int(GCRARCFlags.IS_DIR) != 0x00:
@@ -302,12 +303,9 @@ class GCRARCFileEntry:
         path_components = [self.name]
 
         node = self.parent_node
-        while True:
+        while node is not None:
             path_components.insert(0, node.name)
             node = node.parent
-
-            if node == None:
-                break
 
         return Path("/".join(path_components))
 
