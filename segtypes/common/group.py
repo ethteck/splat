@@ -74,6 +74,8 @@ class CommonSegGroup(CommonSegment):
                 segment_class, subsection_yaml, start, end, vram
             )
             segment.parent = self
+            if segment.special_vram_segment:
+                self.special_vram_segment = True
 
             ret.append(segment)
             prev_start = start

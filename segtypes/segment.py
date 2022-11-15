@@ -221,6 +221,9 @@ class Segment:
         self.warnings: List[str] = []
         self.did_run = False
 
+        # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
+        self.special_vram_segment: bool = False
+
         if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
             if self.rom_start > self.rom_end:
                 log.error(

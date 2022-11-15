@@ -111,6 +111,8 @@ class CommonSegCode(CommonSegGroup):
                     rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
                     rep.sibling = base[1]
                     rep.parent = self
+                    if rep.special_vram_segment:
+                        self.special_vram_segment = True
                     alls.append(rep)
 
                 # Insert alls into segs at i
@@ -267,6 +269,8 @@ class CommonSegCode(CommonSegGroup):
             )
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
+            if segment.special_vram_segment:
+                self.special_vram_segment = True
 
             for i, section in enumerate(self.section_order):
                 if not self.section_boundaries[section].has_start() and dotless_type(
