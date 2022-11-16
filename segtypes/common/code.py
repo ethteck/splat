@@ -1,11 +1,13 @@
+import typing
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple
-import typing
-from segtypes.common.group import CommonSegGroup
-from segtypes.segment import RomAddr, Segment
+
 from util import log, options
 from util.range import Range
 from util.symbols import Symbol
+
+from segtypes.common.group import CommonSegGroup
+from segtypes.segment import RomAddr, Segment
 
 CODE_TYPES = ["c", "asm", "hasm"]
 

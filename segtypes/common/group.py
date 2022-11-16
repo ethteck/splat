@@ -1,7 +1,9 @@
 from typing import List, Optional
+
+from util import log
+
 from segtypes.common.segment import CommonSegment
 from segtypes.segment import RomAddr, Segment
-from util import log
 
 
 class CommonSegGroup(CommonSegment):

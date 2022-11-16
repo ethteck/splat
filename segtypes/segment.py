@@ -1,14 +1,13 @@
 import importlib
 import importlib.util
-
-from typing import Any, Dict, TYPE_CHECKING, Set, Type, Union, Optional, List
 from pathlib import Path
 
-from util import log
-from util import options
-from util import symbols
-from util.symbols import Symbol
+from typing import Any, Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
+
 from intervaltree import Interval, IntervalTree
+
+from util import log, options, symbols
+from util.symbols import Symbol
 
 # circular import
 if TYPE_CHECKING:
@@ -98,6 +97,7 @@ class Segment:
             log.error(
                 f"could not load presumed extended segment type '{seg_type}' because no extensions path is configured"
             )
+        assert ext_path is not None
 
         try:
             ext_spec = importlib.util.spec_from_file_location(
