@@ -1,5 +1,13 @@
 # splat Release Notes
 
+### 0.12.6
+
+* Adds two new N64-specific segments:
+  * IPL3: Allows setting its correct VRAM address without messing the global segment detection
+  * RSP: Allows disassembling using the RSP instruction set instead of the default one
+* PS2 was added as a new platform option.
+  * When this is selected the R5900 instruction set will be used when disassembling instead of the default one.
+
 ### 0.12.5
 
 * Update minimal spimdisasm version to 1.7.1.
@@ -7,6 +15,7 @@
 * An check was added to prevent segments marked with `exclusive_ram_id` have a vram address range which overlaps with segments not marked with said tag. If this happens it will be warned to the user.
 
 ### 0.12.4
+
 * Fixed a bug involving the order of attributes in symbol_addrs preventing proper range searching during calls to `get_symbol`
 
 ### 0.12.3: Initial Gamecube Support
