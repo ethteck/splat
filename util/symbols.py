@@ -208,6 +208,10 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
             # We only care about the VRAMs of code segments
             continue
 
+        if segment.special_vram_segment:
+            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
+            continue
+
         if (
             not isinstance(segment.vram_start, int)
             or not isinstance(segment.vram_end, int)

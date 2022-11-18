@@ -254,7 +254,7 @@ def _parse_yaml(
             )
 
     basename = p.parse_opt("basename", str)
-    platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc"])
+    platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2"])
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(config_paths[0]).parent / p.parse_opt("base_path", str)
@@ -265,7 +265,7 @@ def _parse_yaml(
             "endianness",
             str,
             ["big", "little"],
-            "little" if platform.lower() == "psx" else "big",
+            "little" if platform in ["psx", "ps2"] else "big",
         )
 
         if endianness == "big":

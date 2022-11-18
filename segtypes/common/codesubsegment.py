@@ -1,6 +1,8 @@
 from typing import Optional
 
 import spimdisasm
+import rabbitizer
+
 from util import options, symbols
 
 from segtypes import segment
@@ -29,6 +31,9 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         self.spim_section: Optional[spimdisasm.mips.sections.SectionBase] = None
+        self.instr_category = rabbitizer.InstrCategory.CPU
+        if options.opts.platform == "ps2":
+            self.instr_category = rabbitizer.InstrCategory.R5900
 
     @property
     def needs_symbols(self) -> bool:
@@ -56,6 +61,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         self.spim_section.isHandwritten = is_hasm
+        self.spim_section.instrCat = self.instr_category
 
         self.spim_section.analyze()
         self.spim_section.setCommentOffset(self.rom_start)
