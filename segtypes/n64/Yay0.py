@@ -1,7 +1,7 @@
-from segtypes.n64.segment import N64Segment
+from util import log, options
 from util.n64 import Yay0decompress
-from util import options
-from util import log
+
+from segtypes.n64.segment import N64Segment
 
 
 class N64SegYay0(N64Segment):
@@ -16,7 +16,10 @@ class N64SegYay0(N64Segment):
 
         out_path = out_dir / f"{self.name}.bin"
         with open(out_path, "wb") as f:
-            self.log(f"Decompressing {self.name}...")
+            assert isinstance(self.rom_start, int)
+            assert isinstance(self.rom_end, int)
+
+            self.log(f"Decompressing {self.name}")
             compressed_bytes = rom_bytes[self.rom_start : self.rom_end]
             decompressed_bytes = Yay0decompress.decompress_yay0(compressed_bytes)
             f.write(decompressed_bytes)

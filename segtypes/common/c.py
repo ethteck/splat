@@ -1,16 +1,17 @@
-from segtypes.common.codesubsegment import CommonSegCodeSubsegment
-from segtypes.common.group import CommonSegGroup
-from segtypes.common.rodata import CommonSegRodata
-from typing import Optional, Set
 import os
 import re
 from pathlib import Path
+from typing import Optional, Set
+
 import spimdisasm
 
-from util import log, options
-from util import symbols
+from util import log, options, symbols
 from util.compiler import GCC, SN64
 from util.symbols import Symbol
+
+from segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from segtypes.common.group import CommonSegGroup
+from segtypes.common.rodata import CommonSegRodata
 
 
 class CommonSegC(CommonSegCodeSubsegment):

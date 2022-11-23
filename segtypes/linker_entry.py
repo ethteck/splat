@@ -1,12 +1,14 @@
-from dataclasses import dataclass
-from functools import lru_cache
-from typing import Dict, Optional, OrderedDict, Union, List
-from pathlib import Path
-from segtypes.n64.palette import N64SegPalette
-from util import options
-from segtypes.segment import Segment
 import os
 import re
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+from typing import Dict, List, Optional, OrderedDict, Union
+
+from util import options
+
+from segtypes.n64.palette import N64SegPalette
+from segtypes.segment import Segment
 
 # clean 'foo/../bar' to 'bar'
 @lru_cache(maxsize=None)
@@ -113,6 +115,7 @@ class LinkerWriter:
         ld_symbol_header_path: Optional[Path],
     ):
         self.linker_discard_section: bool = options.opts.ld_discard_section
+        # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
@@ -177,13 +180,9 @@ class LinkerWriter:
         for entry in entries:
             entering_bss = False
             leaving_bss = False
-            cur_section = entry.section
+            cur_section = entry.section_type
 
-            if cur_section == "linker":
-                self._end_block()
-                self._begin_segment(entry.segment)
-                continue
-            elif cur_section == "linker_offset":
+            if cur_section == "linker_offset":
                 self._write_symbol(f"{get_segment_cname(entry.segment)}_OFFSET", ".")
                 continue
 
@@ -244,10 +243,10 @@ class LinkerWriter:
                 section_labels[cur_section].started = True
 
                 # Write THIS linker entry
-                self._writeln(f"{entry.object_path}({cur_section});")
+                self._writeln(f"{entry.object_path}({entry.section});")
             else:
                 # Write THIS linker entry
-                self._writeln(f"{entry.object_path}({cur_section});")
+                self._writeln(f"{entry.object_path}({entry.section});")
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:

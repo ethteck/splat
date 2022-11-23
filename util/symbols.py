@@ -1,18 +1,20 @@
-from typing import Dict, List, Optional, TYPE_CHECKING, Set
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Set, TYPE_CHECKING
+
 import spimdisasm
 import tqdm
-from dataclasses import dataclass
+from intervaltree import Interval, IntervalTree
 
 # circular import
 if TYPE_CHECKING:
     from segtypes.segment import Segment
 
-from util import options, log
+from util import log, options
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
+all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
-symbol_ranges: List["Symbol"] = []
 to_mark_as_defined: Set[str] = set()
 
 # Initialize a spimdisasm context, used to store symbols and functions
@@ -37,15 +39,19 @@ def add_symbol(sym: "Symbol"):
             all_symbols_dict[sym.vram_start] = []
         all_symbols_dict[sym.vram_start].append(sym)
 
+    # For larger symbols, add their ranges to interval trees for faster lookup
+    if sym.size > 4:
+        all_symbols_ranges.addi(sym.vram_start, sym.vram_end, sym)
+
 
 def initialize(all_segments: "List[Segment]"):
     global all_symbols
     global all_symbols_dict
-    global symbol_ranges
+    global all_symbols_ranges
 
     all_symbols = []
     all_symbols_dict = {}
-    symbol_ranges = []
+    all_symbols_ranges = IntervalTree()
 
     def get_seg_for_name(name: str) -> Optional["Segment"]:
         for segment in all_segments:
@@ -135,9 +141,8 @@ def initialize(all_segments: "List[Segment]"):
                                                 )
                                                 log.error("")
                                             else:
-                                                # Add segment to symbol, symbol to segment
+                                                # Add segment to symbol
                                                 sym.segment = seg
-                                                seg.add_symbol(sym)
                                             continue
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
@@ -180,12 +185,11 @@ def initialize(all_segments: "List[Segment]"):
                             ignore_sym = False
                             continue
 
+                        if sym.segment:
+                            sym.segment.add_symbol(sym)
+
                         sym.user_declared = True
                         add_symbol(sym)
-
-                        # Symbol ranges
-                        if sym.size > 4:
-                            symbol_ranges.append(sym)
 
 
 def initialize_spim_context(all_segments: "List[Segment]") -> None:
@@ -193,6 +197,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_end = None
     global_vram_start = None
     global_vram_end = None
+    overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
 
     spim_context.bannedSymbols |= ignored_addresses
 
@@ -201,6 +206,10 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
     for segment in all_segments:
         if not isinstance(segment, CommonSegCode):
             # We only care about the VRAMs of code segments
+            continue
+
+        if segment.special_vram_segment:
+            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
             continue
 
         if (
@@ -247,15 +256,31 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 for sym in symbols_list:
                     add_symbol_to_spim_segment(spim_segment, sym)
 
+            overlay_segments.add(spim_segment)
+
     if (
         global_vram_start is not None
         and global_vram_end is not None
         and global_vrom_start is not None
         and global_vrom_end is not None
     ):
-        spim_context.globalSegment.changeRanges(
+        spim_context.changeGlobalSegmentRanges(
             global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
         )
+
+        # Check the vram range of the global segment does not overlap with any overlay segment
+        for ovl_segment in overlay_segments:
+            assert (
+                ovl_segment.vramStart <= ovl_segment.vramEnd
+            ), f"{ovl_segment.vramStart:X} {ovl_segment.vramEnd:X}"
+            if (
+                ovl_segment.vramEnd > global_vram_start
+                and global_vram_end > ovl_segment.vramStart
+            ):
+                log.write(
+                    f"Warning: the vram range ([0x{ovl_segment.vramStart:X}, 0x{ovl_segment.vramEnd:X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:X}, 0x{global_vram_end:X}])",
+                    status="warn",
+                )
 
     # pass the global symbols to spimdisasm
     for segment in all_segments:
@@ -384,6 +409,9 @@ def create_symbol_from_spim_symbol(
         context_sym.vram, in_segment, type=sym_type, reference=True
     )
 
+    if sym.given_name is None and context_sym.name is not None:
+        sym.given_name = context_sym.name
+
     # To keep the symbol name in sync between splat and spimdisasm
     context_sym.setNameGetCallback(lambda _: sym.name)
 
@@ -397,25 +425,6 @@ def create_symbol_from_spim_symbol(
         sym.referenced = True
 
     return sym
-
-
-def retrieve_from_ranges(vram, rom=None):
-    rom_matches = []
-    ram_matches = []
-
-    for symbol in symbol_ranges:
-        if symbol.contains_vram(vram):
-            if symbol.rom and rom and symbol.contains_rom(rom):
-                rom_matches.append(symbol)
-            else:
-                ram_matches.append(symbol)
-
-    ret = rom_matches + ram_matches
-
-    if len(ret) > 0:
-        return ret[0]
-    else:
-        return None
 
 
 def mark_c_funcs_as_defined():

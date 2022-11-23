@@ -1,12 +1,14 @@
 import argparse
-import sys
 import os
+import sys
 from ctypes import *
 from struct import pack, unpack_from
+from typing import Optional
+
 from util import log
 
 tried_loading = False
-lib = None
+lib: Optional[CDLL] = None
 
 
 def setup_lib():
@@ -33,6 +35,7 @@ def decompress_yay0(in_bytes, byte_order="big"):
     global lib
     if not setup_lib():
         return decompress_yay0_python(in_bytes, byte_order)
+    assert lib is not None
 
     class Yay0(Structure):
         _fields_ = [

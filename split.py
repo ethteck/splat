@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Union
 
@@ -14,10 +15,12 @@ from intervaltree import Interval, IntervalTree
 from pathlib import Path
 
 from segtypes.linker_entry import LinkerWriter, to_cname
-from segtypes.segment import Segment
+from segtypes.segment import RomAddr, Segment
 from util import compiler, log, options, palettes, symbols
 
-VERSION = "0.12.2"
+VERSION = "0.12.6"
+# This value should be keep in sync with the version listed on requirements.txt
+SPIMDISASM_MIN = (1, 7, 1)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -57,7 +60,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
     vrom_start = 0
     for i, seg_yaml in enumerate(config_segments):
-        # rompos marker
+        # end marker
         if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
             continue
 
@@ -66,7 +69,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         segment_class = Segment.get_class_for_type(seg_type)
 
         this_start = Segment.parse_segment_start(seg_yaml)
-        next_start = Segment.parse_segment_start(config_segments[i + 1])
+
+        if i == len(config_segments) - 1 and Segment.parse_segment_file_path(seg_yaml):
+            next_start: RomAddr = 0
+        else:
+            next_start = Segment.parse_segment_start(config_segments[i + 1])
 
         segment: Segment = Segment.from_yaml(
             segment_class, seg_yaml, this_start, next_start
@@ -109,8 +116,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
 def assign_symbols_to_segments():
     for symbol in symbols.all_symbols:
+        if symbol.segment:
+            continue
+
         if symbol.rom:
-            cands = segment_roms[symbol.rom]
+            cands: Set[Interval] = segment_roms[symbol.rom]
             if len(cands) > 1:
                 log.error("multiple segments rom overlap symbol", symbol)
             elif len(cands) == 0:
@@ -120,7 +130,7 @@ def assign_symbols_to_segments():
                 seg: Segment = cand.data
                 seg.add_symbol(symbol)
         else:
-            cands: Set[Interval] = segment_rams[symbol.vram_start]
+            cands = segment_rams[symbol.vram_start]
             segs: List[Segment] = [cand.data for cand in cands]
             for seg in segs:
                 if not seg.get_exclusive_ram_id():
@@ -241,13 +251,10 @@ def configure_disassembler():
         spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
         spimdisasm.common.GlobalConfig.ASM_TEXT_FUNC_AS_LABEL = True
 
-    if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
+    if spimdisasm.common.GlobalConfig.ASM_DATA_LABEL == ".globl":
         spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
-
-    if options.opts.platform == "n64":
-        symbols.spim_context.fillDefaultBannedSymbols()
 
 
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
@@ -259,6 +266,11 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 
 def main(config_path, modes, verbose, use_cache=True):
     global config
+
+    if spimdisasm.__version_info__ < SPIMDISASM_MIN:
+        log.error(
+            f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
+        )
 
     log.write(f"splat {VERSION} (powered by spimdisasm {spimdisasm.__version__})")
 
@@ -313,6 +325,10 @@ def main(config_path, modes, verbose, use_cache=True):
 
     configure_disassembler()
 
+    platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
+    platform_init = getattr(platform_module, "init")
+    platform_init(rom_bytes)
+
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
 
@@ -360,37 +376,47 @@ def main(config_path, modes, verbose, use_cache=True):
     symbols.mark_c_funcs_as_defined()
 
     # Split
-    for segment in tqdm.tqdm(
+    split_bar = tqdm.tqdm(
         all_segments,
         total=len(all_segments),
-        desc=f"Splitting {brief_seg_name(segment, 20)}",
-    ):
+    )
+    for segment in split_bar:
+        split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
+
         if use_cache:
             cached = segment.cache()
 
             if cached == cache.get(segment.unique_id()):
                 # Cache hit
-                seg_cached[typ] += 1
+                if segment.type not in seg_cached:
+                    seg_cached[segment.type] = 0
+                seg_cached[segment.type] += 1
                 continue
             else:
                 # Cache miss; split
                 cache[segment.unique_id()] = cached
 
         if segment.should_split():
-            segment.split(rom_bytes)
+            segment_bytes = rom_bytes
+            if segment.file_path:
+                with open(segment.file_path, "rb") as segment_input_file:
+                    segment_bytes = segment_input_file.read()
+            segment.split(segment_bytes)
 
-    if options.opts.is_mode_active("ld"):
+    if (
+        options.opts.is_mode_active("ld") and options.opts.platform != "gc"
+    ):  # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = LinkerWriter(
             True, options.opts.ld_script_path, options.opts.ld_symbol_header_path
         )
-        for i, segment in enumerate(
-            tqdm.tqdm(
-                all_segments,
-                total=len(all_segments),
-                desc=f"Writing linker script {brief_seg_name(segment, 20)}",
-            )
-        ):
+
+        linker_bar = tqdm.tqdm(
+            all_segments,
+            total=len(all_segments),
+        )
+        for i, segment in enumerate(linker_bar):
+            linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             linker_writer.add(segment)
 
             # TODO: don't hardcode paths
