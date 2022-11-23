@@ -1,6 +1,6 @@
 import abc
 from typing import Optional
-from util import log
+from util import log, options
 
 from segtypes.common.code import CommonSegCode
 
@@ -65,3 +65,22 @@ class CommonSegCompressedSegment(CommonSegCode):
                     f"Specified 'decompressed_size' option does not match the size of the actual decompressed buffer. Option was '0x{self.decompressed_size:X}', but actual size is 0x{len(decompressed_bytes):X}"
                 )
             super().scan(decompressed_bytes)
+
+    def split(self, rom_bytes):
+        super().split(rom_bytes)
+
+        path = options.opts.asset_path / self.dir / f"{self.name}.bin"
+        assert path is not None
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        if self.rom_end == "auto":
+            log.error(
+                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
+            )
+
+        with open(path, "wb") as f:
+            assert isinstance(self.rom_start, int)
+            assert isinstance(self.rom_end, int)
+
+            f.write(rom_bytes[self.rom_start : self.rom_end])
+        self.log(f"Wrote {self.name} to {path}")
