@@ -13,6 +13,7 @@ class CommonSegGroup(CommonSegment):
         rom_end,
         type,
         name,
+        vrom_start,
         vram_start,
         args,
         yaml,
@@ -22,6 +23,7 @@ class CommonSegGroup(CommonSegment):
             rom_end,
             type,
             name,
+            vrom_start,
             vram_start,
             args=args,
             yaml=yaml,
@@ -43,6 +45,8 @@ class CommonSegGroup(CommonSegment):
             return ret
 
         prev_start: RomAddr = -1
+
+        vrom_start = self.vrom_start
 
         for i, subsection_yaml in enumerate(yaml["subsegments"]):
             # endpos marker
@@ -71,11 +75,14 @@ class CommonSegGroup(CommonSegment):
                 vram = self.get_most_parent().rom_to_ram(start)
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsection_yaml, start, end, vram
+                segment_class, subsection_yaml, start, end, vrom_start, vram
             )
             segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
+
+            assert segment.decompressed_size is not None
+            vrom_start += segment.decompressed_size + segment.bss_size
 
             ret.append(segment)
             prev_start = start

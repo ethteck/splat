@@ -9,20 +9,19 @@ class CommonSegRodata(CommonSegData):
         return ".rodata"
 
     def disassemble_data(self, rom_bytes):
-        assert isinstance(self.rom_start, int)
-        assert isinstance(self.rom_end, int)
+        assert isinstance(self.vram_start, int), f"{self.vram_start} {self.name}"
+        assert isinstance(self.vrom_end, int)
 
-        segment_rom_start = self.get_most_parent().rom_start
-        assert isinstance(segment_rom_start, int)
+        segment_vrom_start = self.get_most_parent().vrom_start
 
         self.spim_section = spimdisasm.mips.sections.SectionRodata(
             symbols.spim_context,
-            self.rom_start,
-            self.rom_end,
+            self.vrom_start,
+            self.vrom_end,
             self.vram_start,
             self.name,
             rom_bytes,
-            segment_rom_start,
+            segment_vrom_start,
             self.get_exclusive_ram_id(),
         )
 
@@ -36,7 +35,7 @@ class CommonSegRodata(CommonSegData):
             self.spim_section.stringEncoding = self.str_encoding
 
         self.spim_section.analyze()
-        self.spim_section.setCommentOffset(self.rom_start)
+        self.spim_section.setCommentOffset(self.vrom_start)
 
         for symbol in self.spim_section.symbolList:
             symbols.create_symbol_from_spim_symbol(

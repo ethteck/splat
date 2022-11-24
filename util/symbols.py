@@ -215,7 +215,6 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         if (
             not isinstance(segment.vram_start, int)
             or not isinstance(segment.vram_end, int)
-            or not isinstance(segment.vrom_start, int)
             or not isinstance(segment.vrom_end, int)
         ):
             continue

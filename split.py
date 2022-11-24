@@ -76,7 +76,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             next_start = Segment.parse_segment_start(config_segments[i + 1])
 
         segment: Segment = Segment.from_yaml(
-            segment_class, seg_yaml, this_start, next_start
+            segment_class, seg_yaml, this_start, next_start, vrom_start
         )
 
         if segment.require_unique_name:
@@ -99,7 +99,6 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         ):
             segment_rams.addi(segment.vram_start, segment.vram_end, segment)
 
-        segment.vrom_start = vrom_start
         assert segment.decompressed_size is not None
         vrom_start += segment.decompressed_size + segment.bss_size
 

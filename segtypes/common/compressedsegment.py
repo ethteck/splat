@@ -12,6 +12,7 @@ class CommonSegCompressedSegment(CommonSegCode):
         rom_end,
         type,
         name,
+        vrom_start,
         vram_start,
         args,
         yaml,
@@ -28,6 +29,7 @@ class CommonSegCompressedSegment(CommonSegCode):
             rom_end,
             type,
             name,
+            vrom_start,
             vram_start,
             args=args,
             yaml=yaml,
@@ -64,7 +66,9 @@ class CommonSegCompressedSegment(CommonSegCode):
                 log.error(
                     f"Specified 'decompressed_size' option does not match the size of the actual decompressed buffer. Option was '0x{self.decompressed_size:X}', but actual size is 0x{len(decompressed_bytes):X}"
                 )
-            super().scan(decompressed_bytes)
+            new_rom_bytes = bytearray([0] * self.vrom_start)
+            new_rom_bytes.extend(decompressed_bytes)
+            super().scan(new_rom_bytes)
 
     def split(self, rom_bytes):
         super().split(rom_bytes)

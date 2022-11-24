@@ -173,6 +173,7 @@ class Segment:
         rom_end: RomAddr,
         type: str,
         name: str,
+        vrom_start: int,
         vram_start: Any,
         args: list,
         yaml,
@@ -224,7 +225,7 @@ class Segment:
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
         self.special_vram_segment: bool = False
 
-        self.vrom_start: Optional[int] = None
+        self.vrom_start: int = vrom_start
 
         # if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
         #     if self.rom_start > self.rom_end:
@@ -238,6 +239,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: RomAddr,
         rom_end: RomAddr,
+        vrom_start:int,
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
@@ -251,6 +253,7 @@ class Segment:
             rom_end=rom_end,
             type=type,
             name=name,
+            vrom_start=vrom_start,
             vram_start=vram_start,
             args=args,
             yaml=yaml,
@@ -343,7 +346,7 @@ class Segment:
 
     @property
     def vrom_end(self) -> Optional[int]:
-        if self.vrom_start is None or self.decompressed_size is None:
+        if self.decompressed_size is None:
             return None
         return self.vrom_start + self.decompressed_size + self.bss_size
 

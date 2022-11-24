@@ -24,6 +24,7 @@ class CommonSegCode(CommonSegGroup):
         rom_end,
         type,
         name,
+        vrom_start,
         vram_start,
         args,
         yaml,
@@ -35,6 +36,7 @@ class CommonSegCode(CommonSegGroup):
             rom_end,
             type,
             name,
+            vrom_start,
             vram_start,
             args=args,
             yaml=yaml,
@@ -96,6 +98,7 @@ class CommonSegCode(CommonSegGroup):
                         rom_end=elem.rom_end,
                         type=rep_type,
                         name=base[0],
+                        vrom_start=0,
                         vram_start=vram_start,
                         args=[],
                         yaml={},
@@ -214,6 +217,8 @@ class CommonSegCode(CommonSegGroup):
 
         inserts = self.find_inserts(found_sections)
 
+        vrom_start = self.vrom_start
+
         for i, subsection_yaml in enumerate(segment_yaml["subsegments"]):
             # endpos marker
             if isinstance(subsection_yaml, list) and len(subsection_yaml) == 1:
@@ -229,6 +234,7 @@ class CommonSegCode(CommonSegGroup):
                     rom_end="auto",
                     type=typ,
                     name="",
+                    vrom_start=vrom_start,
                     vram_start="auto",
                     args=[],
                     yaml={},
@@ -262,12 +268,15 @@ class CommonSegCode(CommonSegGroup):
                 vram = self.get_most_parent().rom_to_ram(start)
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsection_yaml, start, end, vram
+                segment_class, subsection_yaml, start, end, vrom_start, vram
             )
             segment.sibling = base_segments.get(segment.name, None)
             segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
+
+            assert segment.decompressed_size is not None
+            vrom_start += segment.decompressed_size + segment.bss_size
 
             for i, section in enumerate(self.section_order):
                 if not self.section_boundaries[section].has_start() and dotless_type(
@@ -307,6 +316,7 @@ class CommonSegCode(CommonSegGroup):
                 rom_end="auto",
                 type="all_" + section,
                 name="",
+                vrom_start=0,
                 vram_start=vram_start,
                 args=[],
                 yaml={},
