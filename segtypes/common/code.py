@@ -276,7 +276,7 @@ class CommonSegCode(CommonSegGroup):
                 self.special_vram_segment = True
 
             assert segment.decompressed_size is not None
-            vrom_start += segment.decompressed_size + segment.bss_size
+            vrom_start += segment.decompressed_size
 
             for i, section in enumerate(self.section_order):
                 if not self.section_boundaries[section].has_start() and dotless_type(

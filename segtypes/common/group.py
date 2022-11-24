@@ -82,7 +82,7 @@ class CommonSegGroup(CommonSegment):
                 self.special_vram_segment = True
 
             assert segment.decompressed_size is not None
-            vrom_start += segment.decompressed_size + segment.bss_size
+            vrom_start += segment.decompressed_size
 
             ret.append(segment)
             prev_start = start

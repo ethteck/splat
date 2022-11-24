@@ -100,7 +100,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             segment_rams.addi(segment.vram_start, segment.vram_end, segment)
 
         assert segment.decompressed_size is not None
-        vrom_start += segment.decompressed_size + segment.bss_size
+        vrom_start += segment.decompressed_size
 
     for segment in ret:
         if segment.follows_vram:

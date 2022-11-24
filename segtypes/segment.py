@@ -348,7 +348,7 @@ class Segment:
     def vrom_end(self) -> Optional[int]:
         if self.decompressed_size is None:
             return None
-        return self.vrom_start + self.decompressed_size + self.bss_size
+        return self.vrom_start + self.decompressed_size
 
     @property
     def vram_end(self) -> Optional[int]:
