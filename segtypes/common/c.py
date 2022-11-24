@@ -299,4 +299,4 @@ class CommonSegC(CommonSegCodeSubsegment):
             f.write("\n")
 
             for dependFile in dependList:
-                f.write(f"{dependFile:}\n")
+                f.write(f"{dependFile}:\n")
