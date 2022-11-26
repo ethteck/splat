@@ -180,6 +180,12 @@ def initialize(all_segments: "List[Segment]"):
                                         if attr_name == "ignore":
                                             ignore_sym = tf_val
                                             continue
+                                        if attr_name == "force_migration":
+                                            sym.force_migration = tf_val
+                                            continue
+                                        if attr_name == "force_not_migration":
+                                            sym.force_not_migration = tf_val
+                                            continue
                         if ignore_sym:
                             ignored_addresses.add(sym.vram_start)
                             ignore_sym = False
@@ -330,6 +336,10 @@ def add_symbol_to_spim_segment(
         context_sym.vromAddress = sym.rom
     if sym.given_size is not None:
         context_sym.size = sym.size
+    if sym.force_migration:
+        context_sym.forceMigration = True
+    if sym.force_not_migration:
+        context_sym.forceNotMigration = True
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     return context_sym
@@ -369,6 +379,10 @@ def add_symbol_to_spim_section(
         context_sym.vromAddress = sym.rom
     if sym.given_size is not None:
         context_sym.size = sym.size
+    if sym.force_migration:
+        context_sym.forceMigration = True
+    if sym.force_not_migration:
+        context_sym.forceNotMigration = True
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     return context_sym
@@ -451,6 +465,9 @@ class Symbol:
     dead: bool = False
     extract: bool = True
     user_declared: bool = False
+
+    force_migration: bool = False
+    force_not_migration: bool = False
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
