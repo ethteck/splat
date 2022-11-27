@@ -49,8 +49,8 @@ class CommonSegRodata(CommonSegData):
 
         if options.opts.migrate_rodata_to_functions:
             if self.spim_section is not None and self.partial_migration:
-                path_folder = options.opts.data_path / self.dir
-                path_folder.parent.mkdir(parents=True, exist_ok=True)
+                path_folder = options.opts.nonmatchings_path / self.dir / self.name
+                path_folder.mkdir(parents=True, exist_ok=True)
 
                 for rodataSym in self.spim_section.symbolList:
                     if not rodataSym.isRdata():
