@@ -47,9 +47,7 @@ class CommonSegRodata(CommonSegData):
         super().split(rom_bytes)
 
         if options.opts.migrate_rodata_to_functions:
-            if self.spim_section and (
-                not self.type.startswith(".") or self.partial_migration
-            ):
+            if self.spim_section is not None and self.partial_migration:
                 path_folder = options.opts.nonmatchings_path / self.dir / self.name
                 path_folder.mkdir(parents=True, exist_ok=True)
 
