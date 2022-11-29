@@ -239,7 +239,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: RomAddr,
         rom_end: RomAddr,
-        vrom_start:int,
+        vrom_start: int,
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
