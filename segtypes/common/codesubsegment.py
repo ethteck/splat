@@ -25,7 +25,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         self.str_encoding: Optional[str] = (
-            self.yaml.get("str_encoding", False)
+            self.yaml.get("str_encoding", None)
             if isinstance(self.yaml, dict)
             else None
         )
