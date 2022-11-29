@@ -31,7 +31,9 @@ parser.add_argument(
     "--use-cache", action="store_true", help="Only split changed segments in config"
 )
 parser.add_argument(
-    "--skip-version-check", action="store_true", help="Skips the disassembler's version check"
+    "--skip-version-check",
+    action="store_true",
+    help="Skips the disassembler's version check",
 )
 
 linker_writer: LinkerWriter

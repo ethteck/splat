@@ -350,10 +350,14 @@ def _parse_yaml(
         asm_function_macro=p.parse_opt(
             "asm_function_macro", str, comp.asm_function_macro
         ),
-        asm_jtbl_label_macro=p.parse_opt("asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro),
+        asm_jtbl_label_macro=p.parse_opt(
+            "asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro
+        ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
-        include_macro_inc=p.parse_opt("include_macro_inc", bool, comp.include_macro_inc),
+        include_macro_inc=p.parse_opt(
+            "include_macro_inc", bool, comp.include_macro_inc
+        ),
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
         rom_address_padding=p.parse_opt("rom_address_padding", bool, False),
         mips_abi_gpr=p.parse_opt_within(
