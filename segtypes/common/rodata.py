@@ -53,12 +53,12 @@ class CommonSegRodata(CommonSegData):
                 path_folder.mkdir(parents=True, exist_ok=True)
 
                 for rodataSym in self.spim_section.symbolList:
-                    if not rodataSym.isRdata():
+                    if rodataSym.shouldMigrate():
                         continue
 
                     path = path_folder / f"{rodataSym.getName()}.s"
                     with open(path, "w", newline="\n") as f:
-                        if options.opts.compiler.include_macro_inc:
+                        if options.opts.include_macro_inc:
                             f.write('.include "macro.inc"\n\n')
                         preamble = options.opts.generated_s_preamble
                         if preamble:

@@ -17,9 +17,9 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import RomAddr, Segment
 from util import compiler, log, options, palettes, symbols
 
-VERSION = "0.12.6"
+VERSION = "0.12.7"
 # This value should be keep in sync with the version listed on requirements.txt
-SPIMDISASM_MIN = (1, 7, 1)
+SPIMDISASM_MIN = (1, 7, 11)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -29,6 +29,11 @@ parser.add_argument("--modes", nargs="+", default="all")
 parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
 parser.add_argument(
     "--use-cache", action="store_true", help="Only split changed segments in config"
+)
+parser.add_argument(
+    "--skip-version-check",
+    action="store_true",
+    help="Skips the disassembler's version check",
 )
 
 linker_writer: LinkerWriter
@@ -238,6 +243,7 @@ def configure_disassembler():
     spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
 
     spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = options.opts.asm_function_macro
+    spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = options.opts.asm_jtbl_label_macro
     spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
     spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
 
@@ -258,10 +264,10 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     return s
 
 
-def main(config_path, modes, verbose, use_cache=True):
+def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     global config
 
-    if spimdisasm.__version_info__ < SPIMDISASM_MIN:
+    if not skip_version_check and spimdisasm.__version_info__ < SPIMDISASM_MIN:
         log.error(
             f"splat {VERSION} requires as minimum spimdisasm {SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
         )
@@ -505,4 +511,4 @@ def main(config_path, modes, verbose, use_cache=True):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.config, args.modes, args.verbose, args.use_cache)
+    main(args.config, args.modes, args.verbose, args.use_cache, args.skip_version_check)

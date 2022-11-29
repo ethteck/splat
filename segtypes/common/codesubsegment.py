@@ -25,9 +25,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         self.str_encoding: Optional[str] = (
-            self.yaml.get("str_encoding", False)
-            if isinstance(self.yaml, dict)
-            else None
+            self.yaml.get("str_encoding", None) if isinstance(self.yaml, dict) else None
         )
 
         self.spim_section: Optional[spimdisasm.mips.sections.SectionBase] = None
