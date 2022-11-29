@@ -241,6 +241,7 @@ def configure_disassembler():
     spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
 
     spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = options.opts.asm_function_macro
+    spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = options.opts.asm_jtbl_label_macro
     spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
     spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
 
