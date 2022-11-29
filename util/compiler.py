@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class Compiler:
     name: str
     asm_function_macro: str = "glabel"
+    asm_jtbl_label_macro: str = "glabel"
     asm_data_macro: str = "glabel"
     asm_end_label: str = ""
     c_newline: str = "\n"
@@ -21,6 +22,7 @@ GCC = Compiler(
 SN64 = Compiler(
     "SN64",
     asm_function_macro=".globl",
+    asm_jtbl_label_macro=".globl",
     asm_data_macro=".globl",
     asm_end_label=".end",
     c_newline="\r\n",

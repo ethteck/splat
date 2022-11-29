@@ -1,5 +1,15 @@
 # splat Release Notes
 
+### 0.12.7
+
+* Allow setting a different macro for jumptable labels with `asm_jtbl_label_macro`
+  * The currently recommended one is `jlabel` instead of `glabel`
+* Two new options for symbols: `force_migration` and `force_not_migration`
+  * Useful for weird cases where the disassembler decided a rodata symbol must (or must not) be migrated when it really shouldn't (or should)
+* Fix `str_encoding` defaulting to `False` instead of `None`
+* Output empty rules in generated dependency files to avoid issues when the function file does not exist anymore (i.e. when it gets matched)
+* Allow changing the `include_macro_inc` option in the yaml
+
 ### 0.12.6
 
 * Adds two new N64-specific segments:
