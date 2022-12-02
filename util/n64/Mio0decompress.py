@@ -1,15 +1,12 @@
 import argparse
 import struct
+import sys
 
 try:
-    from util import log
-except ModuleNotFoundError:
-    # allow script to run standalone
-    import sys
-    from pathlib import Path
-
-    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-    from util import log
+    from .. import log
+except ImportError:
+    print(f"Run as python3 -m util.n64.Miodecompress")
+    sys.exit(1)
 
 
 class GenericMio0Decompressor:
@@ -82,14 +79,19 @@ class GenericMio0Decompressor:
 class Mio0Decompressor(GenericMio0Decompressor):
     def __init__(self):
         super().__init__(
-            4,  # unpacked size ofset
-            8,  # compresed data offset
-            12,  # uncompressed data offset
-            16,  # header length
+            unpacked_offset=4,
+            compressed_offset=8,
+            uncompressed_offset=12,
+            header_length=16,
         )
 
 
-def main(args):
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("infile")
+    parser.add_argument("outfile")
+    args = parser.parse_args()
+
     with open(args.infile, "rb") as f:
         raw_bytes = f.read()
 
@@ -101,9 +103,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("infile")
-    parser.add_argument("outfile")
-
-    args = parser.parse_args()
-    main(args)
+    main()
