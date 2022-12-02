@@ -7,6 +7,7 @@ from typing import Optional
 
 try:
     from .. import log
+    from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Yay0decompress")
     sys.exit(1)
@@ -37,8 +38,8 @@ def setup_lib():
         return False
 
 
-class Yay0Decompressor:
-    def decompress(self, in_bytes, byte_order="big"):
+class Yay0Decompressor(Decompressor):
+    def decompress(self, in_bytes, byte_order="big") -> bytearray:
         # attempt to load the library only once per execution
         global lib
         if not setup_lib():

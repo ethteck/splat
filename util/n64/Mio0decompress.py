@@ -4,12 +4,13 @@ import sys
 
 try:
     from .. import log
+    from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Miodecompress")
     sys.exit(1)
 
 
-class GenericMio0Decompressor:
+class GenericMio0Decompressor(Decompressor):
     def __init__(
         self, unpacked_offset, compressed_offset, uncompressed_offset, header_length
     ):
@@ -28,7 +29,7 @@ class GenericMio0Decompressor:
         (res,) = struct.unpack(">H", data[offset : offset + 2])
         return res
 
-    def decompress(self, in_bytes):
+    def decompress(self, in_bytes, byte_order="big") -> bytearray:
         magic = in_bytes[0:4]
         if magic != b"MIO0":
             log.error(f"MIO0 magic is incorrect: {magic}")

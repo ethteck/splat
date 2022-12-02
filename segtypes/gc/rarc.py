@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from util import options
 from util.gc.gcutil import read_string_from_bytes
-from util.n64.Yay0decompress import decompress_yay0
+from util.n64.Yay0decompress import Yay0Decompressor
 
 from segtypes.gc.segment import GCSegment
 
@@ -56,7 +56,7 @@ class GCRARCArchive:
         # Yay0
         elif compression_scheme == 0x59617930:
             self.compression = "yay0"
-            return decompress_yay0(file_bytes)
+            return Yay0Decompressor().decompress(file_bytes)
         # Not compressed!
         else:
             return file_bytes
