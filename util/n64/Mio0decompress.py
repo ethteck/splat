@@ -59,6 +59,7 @@ class GenericMio0Decompressor:
 
                 length = (length_offset >> 12) + 3
                 index = (length_offset & 0xFFF) + 1
+                offset = idx - index
 
                 if not (3 <= length <= 18):
                     log.error(f"Invalid length: {length}, corrupt data?")
@@ -67,7 +68,7 @@ class GenericMio0Decompressor:
                     log.error(f"Invalid index: {index}, corrupt data?")
 
                 for i in range(length):
-                    ret[idx] = ret[idx - index]
+                    ret[idx] = ret[offset + i]
                     idx += 1
 
             current_mask <<= 1
