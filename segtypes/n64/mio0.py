@@ -3,9 +3,8 @@ from util.n64.Mio0decompress import Mio0Decompressor
 
 from segtypes.n64.segment import N64Segment
 
-print("hello!")
-class N64SegMio0(N64Segment):
 
+class N64SegMio0(N64Segment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # allow extensions to override this
