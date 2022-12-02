@@ -6,9 +6,8 @@ from util.n64.decompress import Decompressor
 from segtypes.n64.segment import N64Segment
 
 
-
 class CommonSegDecompressor(N64Segment):
-    decompressor : Decompressor
+    decompressor: Decompressor
     compression_type = ""  # "Mio0" -> filename.Mio0.o
 
     def split(self, rom_bytes):
