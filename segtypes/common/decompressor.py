@@ -1,7 +1,7 @@
 from typing import Optional, Any
 
 from util import log, options
-from util.n64.decompress import Decompressor
+from util.n64.decompressor import Decompressor
 
 from segtypes.n64.segment import N64Segment
 
