@@ -526,9 +526,7 @@ class Symbol:
             prefix = "func"
         elif self.type == "jtbl":
             prefix = "jtbl"
-        elif self.type == "jtbl_label":
-            return f"L{suffix}"
-        elif self.type == "label":
+        elif self.type in {"jtbl_label", "label"}:
             return f".L{suffix}"
         else:
             prefix = "D"
