@@ -281,6 +281,7 @@ class CommonSegCode(CommonSegGroup):
                         self.section_boundaries[prev_section].end = segment.vram_start
                     self.section_boundaries[section].start = segment.vram_start
 
+            segment.bss_contains_common = self.bss_contains_common
             ret.append(segment)
 
             # todo change

@@ -167,6 +167,13 @@ class Segment:
             return Path(segment["path"])
         return None
 
+    @staticmethod
+    def parse_segment_bss_contains_common(segment: Union[dict, list]) -> bool:
+        if isinstance(segment, dict) and "bss_contains_common" in segment:
+            return bool(segment["bss_contains_common"])
+        else:
+            return False
+        
     def __init__(
         self,
         rom_start: RomAddr,
@@ -220,6 +227,7 @@ class Segment:
 
         self.warnings: List[str] = []
         self.did_run = False
+        self.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
 
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
         self.special_vram_segment: bool = False
@@ -265,6 +273,7 @@ class Segment:
         )
         ret.file_path = Segment.parse_segment_file_path(yaml)
 
+        ret.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
         if not ret.follows_vram:
             ret.follows_vram = parse_segment_follows_vram(yaml)
 
@@ -349,6 +358,9 @@ class Segment:
         return (
             self.section_order.index(".rodata") - self.section_order.index(".data") == 1
         )
+
+    def bss_contains_common(self) -> bool:
+        return self.bss_contains_common
 
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
