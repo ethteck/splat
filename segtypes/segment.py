@@ -359,9 +359,6 @@ class Segment:
             self.section_order.index(".rodata") - self.section_order.index(".data") == 1
         )
 
-    def bss_contains_common(self) -> bool:
-        return self.bss_contains_common
-
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
             return vram >= self.vram_start and vram < self.vram_end
