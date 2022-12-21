@@ -173,7 +173,7 @@ class Segment:
             return bool(segment["bss_contains_common"])
         else:
             return False
-        
+
     def __init__(
         self,
         rom_start: RomAddr,
