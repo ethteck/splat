@@ -187,7 +187,7 @@ def initialize(all_segments: "List[Segment]"):
                                             sym.force_not_migration = tf_val
                                             continue
                         if ignore_sym:
-                            if sym.given_size == 0:
+                            if sym.given_size == None or sym.given_size == 0:
                                 ignored_addresses.add(sym.vram_start)
                             else:
                                 spim_context.addBannedSymbolRangeBySize(
