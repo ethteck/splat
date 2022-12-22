@@ -233,7 +233,10 @@ class LinkerWriter:
                 self._writeln(f"{entry.object_path}({entry.section});")
             else:
                 # Write THIS linker entry
-                self._writeln(f"{entry.object_path}({entry.section});")
+                if entry.section == ".bss" and entry.segment.bss_contains_common:
+                    self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
+                else:
+                    self._writeln(f"{entry.object_path}({entry.section});")
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
