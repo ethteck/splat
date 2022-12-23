@@ -10,7 +10,9 @@ class CommonSegBss(CommonSegData):
 
     def disassemble_data(self, rom_bytes: bytes):
         if not isinstance(self.rom_start, int):
-            log.error(f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'")
+            log.error(
+                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
+            )
 
         # Supposedly logic error, not user error
         assert isinstance(self.rom_end, int), self.rom_end
@@ -20,7 +22,9 @@ class CommonSegBss(CommonSegData):
         assert isinstance(segment_rom_start, int), segment_rom_start
 
         if not isinstance(self.vram_start, int):
-            log.error(f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'")
+            log.error(
+                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
+            )
 
         next_subsegment = self.parent.get_next_subsegment_for_ram(self.vram_start)
         if next_subsegment is None:
