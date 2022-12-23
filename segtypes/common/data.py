@@ -71,7 +71,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
     def disassemble_data(self, rom_bytes):
         if not isinstance(self.rom_start, int):
-            log.error(f"Segment '{self.type}' requires a rom_start. Got '{self.rom_start}'")
+            log.error(f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'")
 
         # Supposedly logic error, not user error
         assert isinstance(self.rom_end, int), self.rom_end
@@ -81,7 +81,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         assert isinstance(segment_rom_start, int), segment_rom_start
 
         if not isinstance(self.vram_start, int):
-            log.error(f"Segment '{self.type}' requires a vram address. Got '{self.vram_start}'")
+            log.error(f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'")
 
         self.spim_section = spimdisasm.mips.sections.SectionData(
             symbols.spim_context,
