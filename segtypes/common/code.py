@@ -300,7 +300,12 @@ class CommonSegCode(CommonSegGroup):
                 idx = orig_len
 
             # bss hack TODO maybe rethink
-            if section == "bss" and self.vram_start is not None and self.rom_end is not None and self.rom_start is not None:
+            if (
+                section == "bss"
+                and self.vram_start is not None
+                and self.rom_end is not None
+                and self.rom_start is not None
+            ):
                 rom_start = self.rom_end
                 vram_start = self.vram_start + self.rom_end - self.rom_start
             else:
