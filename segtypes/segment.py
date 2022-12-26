@@ -2,7 +2,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import Any, Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
+from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
 
 from intervaltree import Interval, IntervalTree
 
@@ -180,7 +180,7 @@ class Segment:
         rom_end: RomAddr,
         type: str,
         name: str,
-        vram_start: Any,
+        vram_start: Optional[int],
         args: list,
         yaml,
     ):
@@ -188,7 +188,7 @@ class Segment:
         self.rom_end = rom_end
         self.type = type
         self.name = name
-        self.vram_start: Any = vram_start
+        self.vram_start: Optional[int] = vram_start
 
         self.align: Optional[int] = None
         self.given_subalign: int = options.opts.subalign

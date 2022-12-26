@@ -7,9 +7,11 @@ Originally written by Mark Street (https://github.com/mkst)
 
 import struct
 from pathlib import Path
+from typing import Optional
 
 from util import options
 from util.log import error
+from segtypes.segment import RomAddr
 
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
@@ -17,12 +19,12 @@ from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 class N64SegVtx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        args,
+        rom_start: RomAddr,
+        rom_end: RomAddr,
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
         yaml,
     ):
         super().__init__(
@@ -52,6 +54,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
     def disassemble_data(self, rom_bytes):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
+        assert isinstance(self.vram_start, int)
 
         vertex_data = rom_bytes[self.rom_start : self.rom_end]
         segment_length = len(vertex_data)

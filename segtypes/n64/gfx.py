@@ -4,6 +4,9 @@ Dumps out Gfx[] as a .inc.c file.
 """
 
 import re
+from typing import Optional
+
+from segtypes.segment import RomAddr
 
 from pathlib import Path
 
@@ -47,12 +50,12 @@ LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 class N64SegGfx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        args,
+        rom_start: RomAddr,
+        rom_end: RomAddr,
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
         yaml,
     ):
         super().__init__(
@@ -175,6 +178,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
     def disassemble_data(self, rom_bytes):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
+        assert isinstance(self.vram_start, int)
 
         gfx_data = rom_bytes[self.rom_start : self.rom_end]
         segment_length = len(gfx_data)

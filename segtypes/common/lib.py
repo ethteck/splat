@@ -1,7 +1,9 @@
 from pathlib import Path
+from typing import Optional
 
 from util import log, options
 
+from segtypes.segment import RomAddr
 from segtypes.linker_entry import LinkerEntry
 from segtypes.n64.segment import N64Segment
 
@@ -9,12 +11,12 @@ from segtypes.n64.segment import N64Segment
 class CommonSegLib(N64Segment):
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        args,
+        rom_start: RomAddr,
+        rom_end: RomAddr,
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
         yaml,
     ):
         super().__init__(

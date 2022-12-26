@@ -20,12 +20,12 @@ def dotless_type(type: str) -> str:
 class CommonSegCode(CommonSegGroup):
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        args,
+        rom_start: RomAddr,
+        rom_end: RomAddr,
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
         yaml,
     ):
         self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
@@ -91,9 +91,10 @@ class CommonSegCode(CommonSegGroup):
                         self.rom_start, int
                     ):
                         # Shoddy rom to ram
+                        assert self.vram_start is not None, self.vram_start
                         vram_start = elem.rom_start - self.rom_start + self.vram_start
                     else:
-                        vram_start = "auto"
+                        vram_start = None
                     rep: Segment = replace_class(
                         rom_start=elem.rom_start,
                         rom_end=elem.rom_end,
@@ -232,7 +233,7 @@ class CommonSegCode(CommonSegGroup):
                     rom_end="auto",
                     type=typ,
                     name="",
-                    vram_start="auto",
+                    vram_start=None,
                     args=[],
                     yaml={},
                 )
@@ -304,7 +305,7 @@ class CommonSegCode(CommonSegGroup):
                 vram_start = self.vram_start + self.rom_end - self.rom_start
             else:
                 rom_start = "auto"
-                vram_start = "auto"
+                vram_start = None
 
             new_seg = Segment(
                 rom_start=rom_start,
