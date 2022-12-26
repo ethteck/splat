@@ -13,8 +13,6 @@ from util.symbols import Symbol
 if TYPE_CHECKING:
     from segtypes.linker_entry import LinkerEntry
 
-RomAddr = Union[int, str]
-
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
     if isinstance(segment, dict) and "vram" in segment:
@@ -118,14 +116,16 @@ class Segment:
         )
 
     @staticmethod
-    def parse_segment_start(segment: Union[dict, list]) -> RomAddr:
+    def parse_segment_start(segment: Union[dict, list]) -> Optional[int]:
         if isinstance(segment, dict):
             s = segment.get("start", "auto")
         else:
             s = segment[0]
 
         if s == "auto":
-            return "auto"
+            return None
+        elif s == "...":
+            return None
         else:
             return int(s)
 
@@ -176,8 +176,8 @@ class Segment:
 
     def __init__(
         self,
-        rom_start: RomAddr,
-        rom_end: RomAddr,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
         type: str,
         name: str,
         vram_start: Optional[int],
@@ -242,8 +242,8 @@ class Segment:
     def from_yaml(
         cls: Type["Segment"],
         yaml: Union[dict, list],
-        rom_start: RomAddr,
-        rom_end: RomAddr,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)

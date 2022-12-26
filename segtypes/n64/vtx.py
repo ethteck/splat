@@ -9,9 +9,7 @@ import struct
 from pathlib import Path
 from typing import Optional
 
-from util import options
-from util.log import error
-from segtypes.segment import RomAddr
+from util import options, log
 
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
@@ -19,8 +17,8 @@ from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 class N64SegVtx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: RomAddr,
-        rom_end: RomAddr,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
         type: str,
         name: str,
         vram_start: Optional[int],
@@ -59,7 +57,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         vertex_data = rom_bytes[self.rom_start : self.rom_end]
         segment_length = len(vertex_data)
         if (segment_length) % 16 != 0:
-            error(
+            log.error(
                 f"Error: Vtx segment {self.name} length ({segment_length}) is not a multiple of 16!"
             )
 

@@ -6,8 +6,6 @@ Dumps out Gfx[] as a .inc.c file.
 import re
 from typing import Optional
 
-from segtypes.segment import RomAddr
-
 from pathlib import Path
 
 from pygfxd import (
@@ -50,8 +48,8 @@ LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 class N64SegGfx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: RomAddr,
-        rom_end: RomAddr,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
         type: str,
         name: str,
         vram_start: Optional[int],

@@ -14,7 +14,7 @@ from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
 
 from segtypes.linker_entry import LinkerWriter, to_cname
-from segtypes.segment import RomAddr, Segment
+from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols
 
 VERSION = "0.12.9"
@@ -74,7 +74,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         this_start = Segment.parse_segment_start(seg_yaml)
 
         if i == len(config_segments) - 1 and Segment.parse_segment_file_path(seg_yaml):
-            next_start: RomAddr = 0
+            next_start: Optional[int] = 0
         else:
             next_start = Segment.parse_segment_start(config_segments[i + 1])
 

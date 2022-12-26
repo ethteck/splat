@@ -168,6 +168,7 @@ class CommonSegCodeSubsegment(Segment):
 
     def gather_jumptable_labels(self, rom_bytes):
         assert isinstance(self.rom_start, int)
+        assert isinstance(self.vram_start, int)
 
         # TODO: use the seg_symbols for this
         # jumptables = [j.type == "jtbl" for j in self.seg_symbols]

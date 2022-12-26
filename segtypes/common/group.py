@@ -3,14 +3,14 @@ from typing import List, Optional
 from util import log
 
 from segtypes.common.segment import CommonSegment
-from segtypes.segment import RomAddr, Segment
+from segtypes.segment import Segment
 
 
 class CommonSegGroup(CommonSegment):
     def __init__(
         self,
-        rom_start: RomAddr,
-        rom_end: RomAddr,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
         type: str,
         name: str,
         vram_start: Optional[int],
@@ -42,7 +42,7 @@ class CommonSegGroup(CommonSegment):
         if not yaml or "subsegments" not in yaml:
             return ret
 
-        prev_start: RomAddr = -1
+        prev_start: Optional[int] = -1
 
         for i, subsection_yaml in enumerate(yaml["subsegments"]):
             # endpos marker
