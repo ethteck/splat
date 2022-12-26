@@ -188,7 +188,7 @@ class Segment:
         self.rom_end = rom_end
         self.type = type
         self.name = name
-        self.vram_start = vram_start
+        self.vram_start: Any = vram_start
 
         self.align: Optional[int] = None
         self.given_subalign: int = options.opts.subalign
