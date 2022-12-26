@@ -481,7 +481,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
         with open(options.opts.cache_path, "wb") as f4:
             pickle.dump(cache, f4)
 
-    if options.opts.dump_symbols:
+    if options.opts.dump_symbols and options.opts.is_mode_active("code"):
         from pathlib import Path
 
         splat_hidden_folder = Path(".splat/")
