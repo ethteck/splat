@@ -220,7 +220,7 @@ class Segment:
         self.yaml = yaml
 
         self.extract: bool = True
-        if self.rom_start == "auto":
+        if self.rom_start is None:
             self.extract = False
         elif self.type.startswith("."):
             self.extract = False

@@ -261,7 +261,7 @@ class CommonSegCode(CommonSegGroup):
                 )
 
             vram = None
-            if start != "auto":
+            if start is not None:
                 assert isinstance(start, int)
                 vram = self.get_most_parent().rom_to_ram(start)
 

@@ -98,8 +98,8 @@ class N64SegVtx(CommonSegCodeSubsegment):
     def should_scan(self) -> bool:
         return (
             options.opts.is_mode_active("vtx")
-            and self.rom_start != "auto"
-            and self.rom_end != "auto"
+            and self.rom_start is not None
+            and self.rom_end is not None
         )
 
     def should_split(self) -> bool:

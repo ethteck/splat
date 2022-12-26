@@ -66,7 +66,7 @@ class CommonSegGroup(CommonSegment):
                 )
 
             vram = None
-            if start != "auto":
+            if start is not None:
                 assert isinstance(start, int)
                 vram = self.get_most_parent().rom_to_ram(start)
 
@@ -129,7 +129,7 @@ class CommonSegGroup(CommonSegment):
         """
 
         for sub in self.subsegments:
-            if sub.vram_start == "auto":
+            if sub.vram_start is None:
                 continue
             assert isinstance(sub.vram_start, int)
             if sub.vram_start > addr:

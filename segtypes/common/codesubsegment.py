@@ -78,6 +78,8 @@ class CommonSegCodeSubsegment(Segment):
         for func in self.spim_section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
+            if self.vram_start == 0x8007EA20:
+                print(func)
             self.process_insns(func)
 
         # Process jumptable labels and pass them to spimdisasm
@@ -192,8 +194,8 @@ class CommonSegCodeSubsegment(Segment):
     def should_scan(self) -> bool:
         return (
             options.opts.is_mode_active("code")
-            and self.rom_start != "auto"
-            and self.rom_end != "auto"
+            and self.rom_start is not None
+            and self.rom_end is not None
         )
 
     def should_split(self) -> bool:
