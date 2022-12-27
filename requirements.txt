@@ -7,4 +7,4 @@ colorama
 spimdisasm>=1.8.2
 rabbitizer>=1.4.0
 pygfxd
-n64img>=0.1.2
+n64img>=0.1.4
