@@ -168,6 +168,7 @@ class CommonSegCodeSubsegment(Segment):
 
     def gather_jumptable_labels(self, rom_bytes):
         assert isinstance(self.rom_start, int)
+        assert isinstance(self.vram_start, int)
 
         # TODO: use the seg_symbols for this
         # jumptables = [j.type == "jtbl" for j in self.seg_symbols]
@@ -191,8 +192,8 @@ class CommonSegCodeSubsegment(Segment):
     def should_scan(self) -> bool:
         return (
             options.opts.is_mode_active("code")
-            and self.rom_start != "auto"
-            and self.rom_end != "auto"
+            and self.rom_start is not None
+            and self.rom_end is not None
         )
 
     def should_split(self) -> bool:

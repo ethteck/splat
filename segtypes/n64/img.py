@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Type
+from typing import Type, Optional
 
 from n64img.image import Image
 from util import log, options
@@ -10,12 +10,12 @@ from segtypes.n64.segment import N64Segment
 class N64SegImg(N64Segment):
     def __init__(
         self,
-        rom_start,
-        rom_end,
-        type,
-        name,
-        vram_start,
-        args,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
         yaml,
         img_cls: Type[Image],
     ):
