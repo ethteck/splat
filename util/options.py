@@ -240,9 +240,7 @@ class OptParser:
         elif isinstance(paths, list):
             return [base_path / path for path in paths]
         else:
-            raise ValueError(
-                f"Expected str or list for '{opt}', got {type(paths)}"
-            )
+            raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
 
     def check_no_unread_opts(self) -> None:
         opts = [opt for opt in self._yaml if opt not in self._read_opts]
@@ -299,8 +297,12 @@ def _parse_yaml(
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_opt("gp_value", int, 0),
         asset_path=p.parse_path(base_path, "asset_path", "assets"),
-        symbol_addrs_paths=p.parse_path_list(base_path, "symbol_addrs_path", "symbol_addrs.txt"),
-        reloc_addrs_paths=p.parse_path_list(base_path, "reloc_addrs_path", "reloc_addrs.txt"),
+        symbol_addrs_paths=p.parse_path_list(
+            base_path, "symbol_addrs_path", "symbol_addrs.txt"
+        ),
+        reloc_addrs_paths=p.parse_path_list(
+            base_path, "reloc_addrs_path", "reloc_addrs.txt"
+        ),
         build_path=p.parse_path(base_path, "build_path", "build"),
         src_path=p.parse_path(base_path, "src_path", "src"),
         asm_path=asm_path,

@@ -7,6 +7,7 @@ from intervaltree import Interval, IntervalTree
 
 from util import log, options, symbols
 
+
 @dataclass
 class Reloc:
     rom_address: int
@@ -15,10 +16,13 @@ class Reloc:
 
     addend: int = 0
 
+
 all_relocs: Dict[int, Reloc] = {}
+
 
 def add_reloc(reloc: Reloc):
     all_relocs[reloc.rom_address] = reloc
+
 
 def initialize():
     global all_relocs
@@ -86,15 +90,19 @@ def initialize():
                         continue
                 except:
                     log.parsing_error_preamble(path, line_num, line)
-                    log.write(
-                        f"value of attribute '{attr_name}' could not be read:"
-                    )
+                    log.write(f"value of attribute '{attr_name}' could not be read:")
                     log.write("")
                     raise
 
-            if rom_addr is None or reloc_type is None or symbol_name is None:
+            if rom_addr is None:
                 log.parsing_error_preamble(path, line_num, line)
-                log.error("")
+                log.error(f"Missing required 'rom' attribute for reloc")
+            if reloc_type is None:
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(f"Missing required 'reloc' attribute for reloc")
+            if symbol_name is None:
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(f"Missing required 'symbol' attribute for reloc")
 
             reloc = Reloc(rom_addr, reloc_type, symbol_name)
             if addend is not None:
@@ -102,11 +110,16 @@ def initialize():
 
             add_reloc(reloc)
 
+
 def initialize_spim_context():
     for rom_address, reloc in all_relocs.items():
         reloc_type = spimdisasm.common.RelocType.fromStr(reloc.reloc_type)
 
         if reloc_type is None:
-            log.error(f"Reloc type '{reloc.reloc_type}' is not valid. Rom address: 0x{rom_address:X}")
+            log.error(
+                f"Reloc type '{reloc.reloc_type}' is not valid. Rom address: 0x{rom_address:X}"
+            )
 
-        symbols.spim_context.addGlobalReloc(rom_address, reloc_type, reloc.symbol_name, addend=reloc.addend)
+        symbols.spim_context.addGlobalReloc(
+            rom_address, reloc_type, reloc.symbol_name, addend=reloc.addend
+        )
