@@ -15,7 +15,7 @@ from intervaltree import Interval, IntervalTree
 
 from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import Segment
-from util import compiler, log, options, palettes, symbols
+from util import compiler, log, options, palettes, symbols, relocs
 
 VERSION = "0.12.9"
 # This value should be keep in sync with the version listed on requirements.txt
@@ -226,18 +226,18 @@ def configure_disassembler():
 
     rabbitizer.config.pseudos_pseudoMove = False
 
-    selectedCompiler = options.opts.compiler
-    if selectedCompiler == compiler.SN64:
+    selected_compiler = options.opts.compiler
+    if selected_compiler == compiler.SN64:
         rabbitizer.config.regNames_namedRegisters = False
         rabbitizer.config.toolchainTweaks_sn64DivFix = True
         rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = True
         spimdisasm.common.GlobalConfig.ASM_COMMENT = False
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.SN64
-    elif selectedCompiler == compiler.GCC:
+    elif selected_compiler == compiler.GCC:
         rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = True
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.GCC
-    elif selectedCompiler == compiler.IDO:
+    elif selected_compiler == compiler.IDO:
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
 
     spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
@@ -334,12 +334,14 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
 
     # Load and process symbols
     symbols.initialize(all_segments)
+    relocs.initialize()
 
     # Assign symbols to segments
     assign_symbols_to_segments()
 
     if options.opts.is_mode_active("code"):
         symbols.initialize_spim_context(all_segments)
+        relocs.initialize_spim_context()
 
     # Resolve raster/palette siblings
     if options.opts.is_mode_active("img"):

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import spimdisasm
 import tqdm
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 
 # circular import
 if TYPE_CHECKING:

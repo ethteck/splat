@@ -45,6 +45,7 @@ class SplatOpts:
     #
     # It's possible to use more than one file by supplying a list instead of a string
     symbol_addrs_paths: List[Path]
+    reloc_addrs_paths: List[Path]
     # Determines the path to the project build directory
     build_path: Path
     # Determines the path to the source code directory
@@ -257,6 +258,18 @@ def _parse_yaml(
                 f"Expected str or list for 'symbol_addrs_paths', got {type(paths)}"
             )
 
+    def parse_reloc_addrs_paths(base_path: Path) -> List[Path]:
+        paths = p.parse_opt("reloc_addrs_path", object, "reloc_addrs.txt")
+
+        if isinstance(paths, str):
+            return [base_path / paths]
+        elif isinstance(paths, list):
+            return [base_path / path for path in paths]
+        else:
+            raise ValueError(
+                f"Expected str or list for 'reloc_addrs_path', got {type(paths)}"
+            )
+
     basename = p.parse_opt("basename", str)
     platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2"])
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
@@ -299,6 +312,7 @@ def _parse_yaml(
         gp=p.parse_opt("gp_value", int, 0),
         asset_path=p.parse_path(base_path, "asset_path", "assets"),
         symbol_addrs_paths=parse_symbol_addrs_paths(base_path),
+        reloc_addrs_paths=parse_reloc_addrs_paths(base_path),
         build_path=p.parse_path(base_path, "build_path", "build"),
         src_path=p.parse_path(base_path, "src_path", "src"),
         asm_path=asm_path,
