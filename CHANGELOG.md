@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.12.10
+
+- Allows passing user-created relocs to the disassembler via the `reloc_addrs.txt` file, allowing to improve the automatic disassembly.
+- Multiple reloc_addrs files can be specified in the yaml with the `reloc_addrs_path` option.
+
 ### 0.12.9
 * Added `format_sym_name()` to the vtx segment so it, too, can be extended
 
