@@ -17,9 +17,9 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols, relocs
 
-VERSION = "0.12.10"
+VERSION = "0.12.11"
 # This value should be keep in sync with the version listed on requirements.txt
-SPIMDISASM_MIN = (1, 9, 0)
+SPIMDISASM_MIN = (1, 10, 0)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -255,6 +255,10 @@ def configure_disassembler():
         spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
+
+    spimdisasm.common.GlobalConfig.ALLOW_ALL_ADDENDS_ON_DATA = (
+        options.opts.allow_data_addends
+    )
 
 
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
