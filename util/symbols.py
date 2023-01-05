@@ -186,6 +186,12 @@ def initialize(all_segments: "List[Segment]"):
                                         if attr_name == "force_not_migration":
                                             sym.force_not_migration = tf_val
                                             continue
+                                        if attr_name == "allow_addend":
+                                            sym.allow_addend = tf_val
+                                            continue
+                                        if attr_name == "dont_allow_addend":
+                                            sym.dont_allow_addend = tf_val
+                                            continue
                         if ignore_sym:
                             if sym.given_size == None or sym.given_size == 0:
                                 ignored_addresses.add(sym.vram_start)
@@ -346,6 +352,10 @@ def add_symbol_to_spim_segment(
         context_sym.forceMigration = True
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
+    if sym.allow_addend:
+        context_sym.allowedToReferenceAddends = True
+    if sym.dont_allow_addend:
+        context_sym.notAllowedToReferenceAddends = True
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     return context_sym
@@ -474,6 +484,9 @@ class Symbol:
 
     force_migration: bool = False
     force_not_migration: bool = False
+
+    allow_addend: bool = False
+    dont_allow_addend: bool = False
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
