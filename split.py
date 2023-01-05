@@ -256,7 +256,9 @@ def configure_disassembler():
 
     spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
 
-    spimdisasm.common.GlobalConfig.ALLOW_ALL_ADDENDS_ON_DATA = options.opts.allow_data_addends
+    spimdisasm.common.GlobalConfig.ALLOW_ALL_ADDENDS_ON_DATA = (
+        options.opts.allow_data_addends
+    )
 
 
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
