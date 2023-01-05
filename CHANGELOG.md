@@ -1,14 +1,24 @@
 # splat Release Notes
 
+### 0.12.11
+
+* New disassembly option in the yaml: `allow_data_addends`.
+  * Allows enabling/disabling using addends on all `.data` symbols.
+* Three new options for symbols: `name_end`, `allow_addend` and `dont_allow_addend`.
+  * `name_end`: allows to provide a closing name for any symbol. Useful for handwritten asm which usually have an "end" name.
+  * `allow_addend` and `dont_allow_addend`: Allow overriding the global `allow_data_addends` option for allowing addends on data symbols.
+
 ### 0.12.10
 
-- Allows passing user-created relocs to the disassembler via the `reloc_addrs.txt` file, allowing to improve the automatic disassembly.
-- Multiple reloc_addrs files can be specified in the yaml with the `reloc_addrs_path` option.
+* Allows passing user-created relocs to the disassembler via the `reloc_addrs.txt` file, allowing to improve the automatic disassembly.
+* Multiple reloc_addrs files can be specified in the yaml with the `reloc_addrs_path` option.
 
 ### 0.12.9
+
 * Added `format_sym_name()` to the vtx segment so it, too, can be extended
 
 ### 0.12.8
+
 * The gfx and vtx segments now have a `data_only` option, which, if enabled, will emit only the plain data for the type and omit the enclosing symbol definition. This mode is useful when you want to manually declare the symbol and then #include the extracted data within the declaration.
 * The gfx segment has a method, `format_sym_name()`, which will allow custom overriding of the output of symbol names by extending the `gfx` segment. For example, this can be used to transform context-specific symbol names like mac_01_vtx into N(vtx), where N() is a macro that applies the current "namespace" to the symbol. Paper Mario plans to use this so we can extract an asset once and then #include it in multiple places, while giving each inclusion unique symbol names for each component.
 

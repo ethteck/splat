@@ -151,6 +151,8 @@ class SplatOpts:
     create_asm_dependencies: bool
     # Global option for rodata string encoding. This can be overriden per segment
     string_encoding: Optional[str]
+    # Global option for allowing data symbols using addends on symbol references. It can be overriden per symbol
+    allow_data_addends: bool
 
     ################################################################################
     # N64-specific options
@@ -379,6 +381,7 @@ def _parse_yaml(
         add_set_gp_64=p.parse_opt("add_set_gp_64", bool, True),
         create_asm_dependencies=p.parse_opt("create_asm_dependencies", bool, False),
         string_encoding=p.parse_optional_opt("string_encoding", str),
+        allow_data_addends=p.parse_opt("allow_data_addends", bool, True),
         header_encoding=p.parse_opt("header_encoding", str, "ASCII"),
         gfx_ucode=p.parse_opt_within(
             "gfx_ucode",
