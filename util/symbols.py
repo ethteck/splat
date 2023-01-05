@@ -144,6 +144,9 @@ def initialize(all_segments: "List[Segment]"):
                                                 # Add segment to symbol
                                                 sym.segment = seg
                                             continue
+                                        if attr_name == "name_end":
+                                            sym.given_name_end = attr_val
+                                            continue
                                     except:
                                         log.parsing_error_preamble(path, line_num, line)
                                         log.write(
@@ -357,6 +360,8 @@ def add_symbol_to_spim_segment(
     if sym.dont_allow_addend:
         context_sym.notAllowedToReferenceAddends = True
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
+    if sym.given_name_end:
+        context_sym.nameEnd = sym.given_name_end
 
     return context_sym
 
@@ -400,6 +405,8 @@ def add_symbol_to_spim_section(
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
+    if sym.given_name_end:
+        context_sym.nameEnd = sym.given_name_end
 
     return context_sym
 
@@ -471,6 +478,7 @@ class Symbol:
     vram_start: int
 
     given_name: Optional[str] = None
+    given_name_end: Optional[str] = None
     rom: Optional[int] = None
     type: Optional[str] = None
     given_size: Optional[int] = None
