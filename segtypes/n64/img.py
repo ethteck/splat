@@ -57,6 +57,7 @@ class N64SegImg(N64Segment):
             expected_len = int(self.n64img.size())
             assert isinstance(self.rom_start, int)
             assert isinstance(self.rom_end, int)
+            assert isinstance(self.subalign, int)
             actual_len = self.rom_end - self.rom_start
             if actual_len > expected_len and actual_len - expected_len > self.subalign:
                 log.error(
