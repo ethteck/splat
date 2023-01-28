@@ -1,7 +1,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional, Set, List
 
 import spimdisasm
 
@@ -160,7 +160,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     def check_gaps_in_migrated_rodata(
         self,
         func: spimdisasm.mips.symbols.SymbolFunction,
-        rodata_list: list[spimdisasm.mips.symbols.SymbolBase],
+        rodata_list: List[spimdisasm.mips.symbols.SymbolBase],
     ):
         for index in range(len(rodata_list) - 1):
             rodata_sym = rodata_list[index]
@@ -209,8 +209,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                     func_rodata = list({s for s in self.parent.rodata_syms[func.vram]})
                     func_rodata.sort(key=lambda s: s.vram_start)
 
-                    rdata_list: list[spimdisasm.mips.symbols.SymbolBase] = []
-                    late_rodata_list: list[spimdisasm.mips.symbols.SymbolBase] = []
+                    rdata_list: List[spimdisasm.mips.symbols.SymbolBase] = []
+                    late_rodata_list: List[spimdisasm.mips.symbols.SymbolBase] = []
                     late_rodata_size = 0
 
                     processed_rodata_segments = set()
