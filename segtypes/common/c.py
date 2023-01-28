@@ -157,16 +157,28 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         return ret
 
-    def check_gaps_in_migrated_rodata(self, func: spimdisasm.mips.symbols.SymbolFunction, rodata_list: list[spimdisasm.mips.symbols.SymbolBase]):
-        for index in range(len(rodata_list)-1):
+    def check_gaps_in_migrated_rodata(
+        self,
+        func: spimdisasm.mips.symbols.SymbolFunction,
+        rodata_list: list[spimdisasm.mips.symbols.SymbolBase],
+    ):
+        for index in range(len(rodata_list) - 1):
             rodata_sym = rodata_list[index]
-            next_rodata_sym = rodata_list[index+1]
+            next_rodata_sym = rodata_list[index + 1]
 
             if rodata_sym.vramEnd != next_rodata_sym.vram:
-                log.write(f"\nA gap was detected in migrated rodata symbols!", status="warn")
-                log.write(f"\t In function '{func.getName()}' (0x{func.vram:08X}), gap detected between '{rodata_sym.getName()}' (0x{rodata_sym.vram:08X}) and '{next_rodata_sym.getName()}' (0x{next_rodata_sym.vram:08X})")
-                log.write(f"\t The address of the missing rodata symbol is 0x{rodata_sym.vramEnd:08X}.")
-                log.write(f"\t Try to force the migration of that symbol with `force_migration:True` in the symbol_addrs.txt file; or avoid the migration of symbols around this address with `force:not_migration:True`")
+                log.write(
+                    f"\nA gap was detected in migrated rodata symbols!", status="warn"
+                )
+                log.write(
+                    f"\t In function '{func.getName()}' (0x{func.vram:08X}), gap detected between '{rodata_sym.getName()}' (0x{rodata_sym.vram:08X}) and '{next_rodata_sym.getName()}' (0x{next_rodata_sym.vram:08X})"
+                )
+                log.write(
+                    f"\t The address of the missing rodata symbol is 0x{rodata_sym.vramEnd:08X}"
+                )
+                log.write(
+                    f"\t Try to force the migration of that symbol with `force_migration:True` in the symbol_addrs.txt file; or avoid the migration of symbols around this address with `force:not_migration:True`"
+                )
 
     def create_c_asm_file(
         self,
