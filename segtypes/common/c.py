@@ -136,7 +136,9 @@ class CommonSegC(CommonSegCodeSubsegment):
 
                 self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file)
 
-            assert self.spim_section is not None, f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
+            assert (
+                self.spim_section is not None
+            ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
             for func in self.spim_section.symbolList:
                 if func.getName() in self.global_asm_funcs or is_new_c_file:
                     assert func.vram is not None
