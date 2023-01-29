@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.12.13
+
+* New option: `find_rodata_to_text`.
+  * If enabled, splat will try to find to which text segment an unpaired rodata segment belongs and it will hint it to the user.
+
 ### 0.12.12
 
 * Try to detect and warn to the user if a gap between two migrated rodata symbols is detected and suggest possible solutions to the user.
