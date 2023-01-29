@@ -119,6 +119,8 @@ class SplatOpts:
     symbol_name_format_no_rom: str
     # Determines whether to detect and hint to the user about likely file splits when disassembling
     find_file_boundaries: bool
+    # Determines whether to detect and hint to the user about possible rodata sections corresponding to a text section
+    find_rodata_to_text: bool
     # Determines whether to attempt to automatically migrate rodata into functions
     # (only works in certain circumstances)
     migrate_rodata_to_functions: bool
@@ -349,6 +351,7 @@ def _parse_yaml(
             "symbol_name_format_no_rom", str, "$VRAM_$SEG"
         ),
         find_file_boundaries=p.parse_opt("find_file_boundaries", bool, True),
+        find_rodata_to_text=p.parse_opt("find_rodata_to_text", bool, True),
         migrate_rodata_to_functions=p.parse_opt(
             "migrate_rodata_to_functions", bool, True
         ),
