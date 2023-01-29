@@ -24,7 +24,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)
 
-        if super().should_scan():
+        if self.should_scan():
             self.disassemble_data(rom_bytes)
 
     def split(self, rom_bytes: bytes):
@@ -55,9 +55,6 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         return options.opts.is_mode_active("data")
 
     def should_split(self) -> bool:
-        return True
-
-    def should_scan(self) -> bool:
         return True
 
     def cache(self):

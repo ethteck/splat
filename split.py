@@ -62,6 +62,8 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     segments_by_name: Dict[str, Segment] = {}
     ret = []
 
+    last_rom_end = 0
+
     for i, seg_yaml in enumerate(config_segments):
         # end marker
         if isinstance(seg_yaml, list) and len(seg_yaml) == 1:
@@ -77,6 +79,12 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             next_start: Optional[int] = 0
         else:
             next_start = Segment.parse_segment_start(config_segments[i + 1])
+
+        if segment_class.is_noload():
+            # Pretend bss's rom address is after the last actual rom segment
+            this_start = last_rom_end
+            # and it has a rom size of zero
+            next_start = last_rom_end
 
         segment: Segment = Segment.from_yaml(
             segment_class, seg_yaml, this_start, next_start
@@ -101,6 +109,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             and segment.vram_start != segment.vram_end
         ):
             segment_rams.addi(segment.vram_start, segment.vram_end, segment)
+
+        if next_start is not None:
+            last_rom_end = next_start
 
     for segment in ret:
         if segment.follows_vram:

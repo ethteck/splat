@@ -199,4 +199,4 @@ class CommonSegCodeSubsegment(Segment):
     def should_split(self) -> bool:
         return self.extract and (
             self.partial_migration or options.opts.is_mode_active("code")
-        )
+        ) and self.should_scan() # only split if the segment was scanned first
