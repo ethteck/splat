@@ -10,14 +10,16 @@ class CommonSegRodata(CommonSegData):
     def get_linker_section(self) -> str:
         return ".rodata"
 
-    def get_possible_text_subsegment_for_symbol(self, rodata_sym: spimdisasm.mips.symbols.SymbolBase) -> Optional[Tuple[Segment, spimdisasm.common.ContextSymbol]]:
+    def get_possible_text_subsegment_for_symbol(
+        self, rodata_sym: spimdisasm.mips.symbols.SymbolBase
+    ) -> Optional[Tuple[Segment, spimdisasm.common.ContextSymbol]]:
         # Check if this rodata segment does not have a corresponding code file, try to look for one
 
         if self.sibling is not None or not options.opts.find_rodata_to_text:
             return None
 
         if not rodata_sym.shouldMigrate():
-            return
+            return None
 
         if len(rodata_sym.contextSym.referenceFunctions) != 1:
             return None
@@ -81,10 +83,13 @@ class CommonSegRodata(CommonSegData):
             if possible_text is not None:
                 text_segment, refenceeFunction = possible_text
                 if text_segment not in possible_text_segments:
-                    print(f"\nRodata segment '{self.name}' may belong to the text segment '{text_segment.name}'")
-                    print(f"    Based on the usage from the function {refenceeFunction.getName()} to the symbol {symbol.getName()}")
+                    print(
+                        f"\nRodata segment '{self.name}' may belong to the text segment '{text_segment.name}'"
+                    )
+                    print(
+                        f"    Based on the usage from the function {refenceeFunction.getName()} to the symbol {symbol.getName()}"
+                    )
                     possible_text_segments.add(text_segment)
-
 
     def split(self, rom_bytes: bytes):
         # Disassemble the file itself
