@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.12.12
+
+* Try to detect and warn to the user if a gap between two migrated rodata symbols is detected and suggest possible solutions to the user.
+
 ### 0.12.11
 
 * New disassembly option in the yaml: `allow_data_addends`.
