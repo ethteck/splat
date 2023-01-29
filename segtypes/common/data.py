@@ -54,6 +54,11 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def should_self_split(self) -> bool:
         return options.opts.is_mode_active("data")
 
+    def should_scan(self) -> bool:
+        # Ensure data segments are scanned even if extract is False so subsegments get scanned too
+        # Check for not None so we avoid scanning "auto" segments
+        return self.rom_start is not None and self.rom_end is not None
+
     def should_split(self) -> bool:
         return True
 
