@@ -1,5 +1,5 @@
 import spimdisasm
-from util import symbols, log
+from util import options, symbols, log
 
 from segtypes.common.data import CommonSegData
 
@@ -8,6 +8,10 @@ class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"
 
+    @staticmethod
+    def is_noload() -> bool:
+        return True
+
     def disassemble_data(self, rom_bytes: bytes):
         if not isinstance(self.rom_start, int):
             log.error(
@@ -15,11 +19,11 @@ class CommonSegBss(CommonSegData):
             )
 
         # Supposedly logic error, not user error
-        assert isinstance(self.rom_end, int), self.rom_end
+        assert isinstance(self.rom_end, int), f"{self.name} {self.rom_end}"
 
         # Supposedly logic error, not user error
         segment_rom_start = self.get_most_parent().rom_start
-        assert isinstance(segment_rom_start, int), segment_rom_start
+        assert isinstance(segment_rom_start, int), f"{self.name} {segment_rom_start}"
 
         if not isinstance(self.vram_start, int):
             log.error(
@@ -31,7 +35,7 @@ class CommonSegBss(CommonSegData):
             bss_end = self.get_most_parent().vram_end
         else:
             bss_end = next_subsegment.vram_start
-        assert isinstance(bss_end, int)
+        assert isinstance(bss_end, int), f"{self.name} {bss_end}"
 
         self.spim_section = spimdisasm.mips.sections.SectionBss(
             symbols.spim_context,
@@ -51,3 +55,6 @@ class CommonSegBss(CommonSegData):
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), spim_sym.contextSym
             )
+
+    def should_scan(self) -> bool:
+        return options.opts.is_mode_active("code") and self.vram_start is not None

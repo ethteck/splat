@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.12.13
+
+* bss segments can now omit the rom offset
+
 ### 0.12.12
 
 * Try to detect and warn to the user if a gap between two migrated rodata symbols is detected and suggest possible solutions to the user.

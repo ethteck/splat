@@ -287,6 +287,11 @@ class Segment:
             ret.align = parse_segment_align(yaml)
         return ret
 
+    # For segments which does not take space in ROM, like bss
+    @staticmethod
+    def is_noload() -> bool:
+        return False
+
     @property
     def needs_symbols(self) -> bool:
         return False
