@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.13.0
+
+* TODO
+
 ### 0.12.14
 
 * New option: `pair_rodata_to_text`.
