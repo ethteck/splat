@@ -10,6 +10,10 @@ class CommonSegRodata(CommonSegData):
     def get_linker_section(self) -> str:
         return ".rodata"
 
+    @staticmethod
+    def is_rodata() -> bool:
+        return True
+
     def get_possible_text_subsegment_for_symbol(
         self, rodata_sym: spimdisasm.mips.symbols.SymbolBase
     ) -> Optional[Tuple[Segment, spimdisasm.common.ContextSymbol]]:

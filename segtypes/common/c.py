@@ -124,35 +124,50 @@ class CommonSegC(CommonSegCodeSubsegment):
             self.scan_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
-        if self.rom_start != self.rom_end:
-            asm_out_dir = options.opts.nonmatchings_path / self.dir
-            asm_out_dir.mkdir(parents=True, exist_ok=True)
+        if self.rom_start == self.rom_end:
+            return
+        asm_out_dir = options.opts.nonmatchings_path / self.dir
+        asm_out_dir.mkdir(parents=True, exist_ok=True)
 
-            self.print_file_boundaries()
+        self.print_file_boundaries()
 
-            is_new_c_file = False
+        assert (
+            self.spim_section is not None and isinstance(self.spim_section, spimdisasm.mips.sections.SectionText)
+        ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
+        if self.rodata_sibling is not None:
+            assert isinstance(self.rodata_sibling, CommonSegRodata), self.rodata_sibling.type
+            if self.rodata_sibling.spim_section is not None:
+                assert isinstance(self.rodata_sibling.spim_section, spimdisasm.mips.sections.SectionRodata)
+                symbols_entries = spimdisasm.mips.FunctionRodataEntry.getAllEntriesFromSections(self.spim_section, self.rodata_sibling.spim_section)
 
-            c_path = self.out_path()
-            if c_path:
-                if not c_path.exists() and options.opts.create_c_files:
-                    self.create_c_file(asm_out_dir, c_path)
-                    is_new_c_file = True
+                if self.rom_start == 0x04E5E0:
+                    print()
+                    for entry in symbols_entries:
+                        if entry.function:
+                            print(f'INCLUDE_ASM("asm/cn/nonmatchings/main_segment/dm_game_main_cn", {entry.function.getName()})')
+                        else:
+                            for rodataSym in entry.rodataSyms:
+                                print(f'INCLUDE_RODATA("asm/cn/nonmatchings/main_segment/dm_game_main_cn", {rodataSym.getName()})')
 
-                self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file)
+        is_new_c_file = False
 
-            assert (
-                self.spim_section is not None
-            ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
-            for func in self.spim_section.symbolList:
-                if func.getName() in self.global_asm_funcs or is_new_c_file:
-                    assert func.vram is not None
-                    assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
-                    func_sym = self.get_symbol(
-                        func.vram, in_segment=True, type="func", local_only=True
-                    )
-                    assert func_sym is not None
+        c_path = self.out_path()
+        if c_path:
+            if not c_path.exists() and options.opts.create_c_files:
+                self.create_c_file(asm_out_dir, c_path)
+                is_new_c_file = True
 
-                    self.create_c_asm_file(func, asm_out_dir, func_sym)
+            self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file)
+
+        for func in self.spim_section.symbolList:
+            if func.getName() in self.global_asm_funcs or is_new_c_file:
+                assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
+                func_sym = self.get_symbol(
+                    func.vram, in_segment=True, type="func", local_only=True
+                )
+                assert func_sym is not None
+
+                self.create_c_asm_file(func, asm_out_dir, func_sym)
 
     def get_c_preamble(self):
         ret = []
