@@ -184,7 +184,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.create_c_file(asm_out_dir, c_path, symbols_entries)
                 is_new_c_file = True
 
-            self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file)
+            self.create_asm_dependencies_file(c_path, asm_out_dir, is_new_c_file, symbols_entries)
 
         # Produce the asm files for functions
         for entry in symbols_entries:
@@ -365,7 +365,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         log.write(f"Wrote {self.name} to {c_path}")
 
     def create_asm_dependencies_file(
-        self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool
+        self, c_path: Path, asm_out_dir: Path, is_new_c_file: bool, symbols_entries: list[spimdisasm.mips.FunctionRodataEntry]
     ):
         if not options.opts.create_asm_dependencies:
             return
@@ -382,13 +382,23 @@ class CommonSegC(CommonSegCodeSubsegment):
             o_path = build_path / c_path.with_suffix(".o")
             f.write(f"{o_path}:")
             depend_list = []
-            for func in self.spim_section.symbolList:
-                func_name = func.getName()
+            for entry in symbols_entries:
+                if entry.function is not None:
+                    func_name = entry.function.getName()
 
-                if func_name in self.global_asm_funcs or is_new_c_file:
-                    outpath = asm_out_dir / self.name / (func_name + ".s")
-                    depend_list.append(outpath)
-                    f.write(f" \\\n    {outpath}")
+                    if func_name in self.global_asm_funcs or is_new_c_file:
+                        outpath = asm_out_dir / self.name / (func_name + ".s")
+                        depend_list.append(outpath)
+                        f.write(f" \\\n    {outpath}")
+                else:
+                    for rodata_sym in entry.rodataSyms:
+                        rodata_name = rodata_sym.getName()
+
+                        if rodata_name in self.global_asm_rodata_syms or is_new_c_file:
+                            outpath = asm_out_dir / self.name / (rodata_name + ".s")
+                            depend_list.append(outpath)
+                            f.write(f" \\\n    {outpath}")
+
             f.write("\n")
 
             for depend_file in depend_list:
