@@ -365,7 +365,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         self,
         asm_out_dir: Path,
         c_path: Path,
-        symbols_entries: list[spimdisasm.mips.FunctionRodataEntry],
+        symbols_entries: List[spimdisasm.mips.FunctionRodataEntry],
     ):
         c_lines = self.get_c_preamble()
 
@@ -386,7 +386,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         c_path: Path,
         asm_out_dir: Path,
         is_new_c_file: bool,
-        symbols_entries: list[spimdisasm.mips.FunctionRodataEntry],
+        symbols_entries: List[spimdisasm.mips.FunctionRodataEntry],
     ):
         if not options.opts.create_asm_dependencies:
             return
