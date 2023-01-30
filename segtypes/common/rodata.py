@@ -79,9 +79,10 @@ class CommonSegRodata(CommonSegData):
         possible_text_segments: Set[Segment] = set()
 
         for symbol in self.spim_section.symbolList:
-            symbols.create_symbol_from_spim_symbol(
+            generated_symbol = symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym
             )
+            generated_symbol.linker_section = self.get_linker_section()
 
             possible_text = self.get_possible_text_subsegment_for_symbol(symbol)
             if possible_text is not None:
@@ -94,26 +95,3 @@ class CommonSegRodata(CommonSegData):
                         f"    Based on the usage from the function {refenceeFunction.getName()} to the symbol {symbol.getName()}"
                     )
                     possible_text_segments.add(text_segment)
-
-    def split(self, rom_bytes: bytes):
-        # Disassemble the file itself
-        super().split(rom_bytes)
-
-        if options.opts.migrate_rodata_to_functions:
-            if self.spim_section is not None and self.partial_migration:
-                path_folder = options.opts.nonmatchings_path / self.dir / self.name
-                path_folder.mkdir(parents=True, exist_ok=True)
-
-                for rodataSym in self.spim_section.symbolList:
-                    if rodataSym.shouldMigrate():
-                        continue
-
-                    path = path_folder / f"{rodataSym.getName()}.s"
-                    with open(path, "w", newline="\n") as f:
-                        if options.opts.include_macro_inc:
-                            f.write('.include "macro.inc"\n\n')
-                        preamble = options.opts.generated_s_preamble
-                        if preamble:
-                            f.write(preamble + "\n")
-                        f.write(f".section {self.get_linker_section()}\n\n")
-                        f.write(rodataSym.disassemble())

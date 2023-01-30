@@ -136,7 +136,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
 
         rodata_spim_segment = None
-        if self.rodata_sibling is not None:
+        if options.opts.migrate_rodata_to_functions and self.rodata_sibling is not None:
             assert isinstance(self.rodata_sibling, CommonSegRodata), self.rodata_sibling.type
             if self.rodata_sibling.spim_section is not None:
                 assert isinstance(self.rodata_sibling.spim_section, spimdisasm.mips.sections.SectionRodata)
@@ -166,6 +166,16 @@ class CommonSegC(CommonSegCodeSubsegment):
                     assert func_sym is not None
 
                     self.create_c_asm_file(entry, asm_out_dir, func_sym)
+            else:
+                for spim_rodata_sym in entry.rodataSyms:
+                    # if entry.function.getName() in self.global_asm_funcs or is_new_c_file:
+                    if True:
+                        rodata_sym = self.get_symbol(
+                            spim_rodata_sym.vram, in_segment=True, local_only=True
+                        )
+                        assert rodata_sym is not None
+
+                        self.create_unmigrated_rodata_file(spim_rodata_sym, asm_out_dir, rodata_sym)
 
     def get_c_preamble(self):
         ret = []
@@ -175,56 +185,6 @@ class CommonSegC(CommonSegCodeSubsegment):
         ret.append("")
 
         return ret
-
-    def get_referenced_rodata_symbols(self, func: spimdisasm.mips.symbols.SymbolFunction) -> Tuple[List[spimdisasm.mips.symbols.SymbolBase], List[spimdisasm.mips.symbols.SymbolBase], int]:
-        if not (self.parent and isinstance(self.parent, CommonSegGroup)):
-            return [], [], 0
-
-        if not (
-            options.opts.migrate_rodata_to_functions
-            and func.vram in self.parent.rodata_syms
-        ):
-            return [], [], 0
-
-        func_rodata = list({s for s in self.parent.rodata_syms[func.vram]})
-        func_rodata.sort(key=lambda s: s.vram_start)
-
-        rdata_list: List[spimdisasm.mips.symbols.SymbolBase] = []
-        late_rodata_list: List[spimdisasm.mips.symbols.SymbolBase] = []
-        late_rodata_size = 0
-
-        processed_rodata_segments = set()
-        for func_rodata_symbol in func_rodata:
-            rsub = self.parent.get_subsegment_for_ram(
-                func_rodata_symbol.vram_start
-            )
-
-            if rsub is not None and isinstance(rsub, CommonSegRodata):
-                if (
-                    rsub in processed_rodata_segments
-                    or rsub.spim_section is None
-                ):
-                    continue
-
-                assert isinstance(
-                    rsub.spim_section,
-                    spimdisasm.mips.sections.SectionRodata,
-                )
-                (
-                    rdata_list_aux,
-                    late_rodata_list_aux,
-                    late_rodata_size_aux,
-                ) = spimdisasm.mips.FilesHandlers.getRdataAndLateRodataForFunctionFromSection(
-                    func, rsub.spim_section
-                )
-                rdata_list += rdata_list_aux
-                late_rodata_list += late_rodata_list_aux
-                late_rodata_size += late_rodata_size_aux
-
-                processed_rodata_segments.add(rsub)
-
-        return rdata_list, late_rodata_list, late_rodata_size
-
 
     def check_gaps_in_migrated_rodata(
         self,
@@ -263,7 +223,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(outpath, "w", newline="\n") as f:
+        with outpath.open("w", newline="\n") as f:
             if options.opts.asm_inc_header:
                 f.write(
                     options.opts.c_newline.join(options.opts.asm_inc_header.split("\n"))
@@ -276,6 +236,27 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.check_gaps_in_migrated_rodata(func_rodata_entry.function, func_rodata_entry.lateRodataSyms)
 
         self.log(f"Disassembled {func_sym.name} to {outpath}")
+
+    def create_unmigrated_rodata_file(self, spim_rodata_sym: spimdisasm.mips.symbols.SymbolBase, out_dir: Path, rodata_sym: Symbol):
+        outpath = out_dir / self.name / (rodata_sym.name + ".s")
+
+        # Skip extraction if the file exists and the symbol is marked as extract=false
+        if outpath.exists() and not rodata_sym.extract:
+            return
+
+        outpath.parent.mkdir(parents=True, exist_ok=True)
+
+        with outpath.open("w", newline="\n") as f:
+            if options.opts.include_macro_inc:
+                f.write('.include "macro.inc"\n\n')
+            preamble = options.opts.generated_s_preamble
+            if preamble:
+                f.write(preamble + "\n")
+            assert rodata_sym.linker_section is not None, rodata_sym.name
+            f.write(f".section {rodata_sym.linker_section}\n\n")
+            f.write(spim_rodata_sym.disassemble())
+
+        self.log(f"Disassembled {rodata_sym.name} to {outpath}")
 
 
     def get_c_lines_for_function(self, func: spimdisasm.mips.symbols.SymbolFunction, asm_out_dir: Path):
@@ -322,7 +303,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     options.opts.nonmatchings_path
                 )
                 c_lines.append(
-                    f'INCLUDE_RODATA(s32, "{rel_asm_out_dir / self.name}", {rodata_sym.getName()});'
+                    f'INCLUDE_RODATA(const s32, "{rel_asm_out_dir / self.name}", {rodata_sym.getName()});'
                 )
             else:
                 c_lines.append(
