@@ -6,7 +6,7 @@ from typing import Optional, Set, List, Tuple
 import spimdisasm
 
 from util import log, options, symbols
-from util.compiler import GCC, SN64
+from util.compiler import GCC, SN64, IDO
 from util.symbols import Symbol
 
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
@@ -312,6 +312,26 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         self.log(f"Disassembled {rodata_sym.name} to {outpath}")
 
+    def get_c_line_include_macro(
+        self,
+        spim_sym: spimdisasm.mips.symbols.SymbolBase,
+        asm_out_dir: Path,
+        macro_name: str,
+    ) -> str:
+        if options.opts.compiler == IDO:
+            # IDO uses the asm processor to embeed assembly and it doesn't require a special directive to include symbols
+            asm_outpath = Path(
+                os.path.join(asm_out_dir, self.name, spim_sym.getName() + ".s")
+            )
+            rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
+            return f'#pragma GLOBAL_ASM("{rel_asm_outpath}")'
+
+        if options.opts.use_legacy_include_asm:
+            rel_asm_out_dir = asm_out_dir.relative_to(options.opts.nonmatchings_path)
+            return f'{macro_name}(const s32, "{rel_asm_out_dir / self.name}", {spim_sym.getName()});'
+
+        return f'{macro_name}("{asm_out_dir / self.name}", {spim_sym.getName()});'
+
     def get_c_lines_for_function(
         self, func: spimdisasm.mips.symbols.SymbolFunction, asm_out_dir: Path
     ) -> List[str]:
@@ -326,50 +346,18 @@ class CommonSegC(CommonSegCodeSubsegment):
             c_lines.append("void " + func.getName() + "(void) {")
             c_lines.append("}")
         else:
-            if options.opts.compiler in [GCC, SN64]:
-                if options.opts.use_legacy_include_asm:
-                    rel_asm_out_dir = asm_out_dir.relative_to(
-                        options.opts.nonmatchings_path
-                    )
-                    c_lines.append(
-                        f'INCLUDE_ASM(s32, "{rel_asm_out_dir / self.name}", {func.getName()});'
-                    )
-                else:
-                    c_lines.append(
-                        f'INCLUDE_ASM("{asm_out_dir / self.name}", {func.getName()});'
-                    )
-            else:
-                asm_outpath = Path(
-                    os.path.join(asm_out_dir, self.name, func.getName() + ".s")
-                )
-                rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
-                c_lines.append(f'#pragma GLOBAL_ASM("{rel_asm_outpath}")')
+            c_lines.append(
+                self.get_c_line_include_macro(func, asm_out_dir, "INCLUDE_ASM")
+            )
         c_lines.append("")
         return c_lines
 
     def get_c_lines_for_rodata_sym(
         self, rodata_sym: spimdisasm.mips.symbols.SymbolBase, asm_out_dir: Path
     ):
-        c_lines = []
-
-        if options.opts.compiler in [GCC, SN64]:
-            if options.opts.use_legacy_include_asm:
-                rel_asm_out_dir = asm_out_dir.relative_to(
-                    options.opts.nonmatchings_path
-                )
-                c_lines.append(
-                    f'INCLUDE_RODATA(const s32, "{rel_asm_out_dir / self.name}", {rodata_sym.getName()});'
-                )
-            else:
-                c_lines.append(
-                    f'INCLUDE_RODATA("{asm_out_dir / self.name}", {rodata_sym.getName()});'
-                )
-        else:
-            asm_outpath = Path(
-                os.path.join(asm_out_dir, self.name, rodata_sym.getName() + ".s")
-            )
-            rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
-            c_lines.append(f'#pragma GLOBAL_ASM("{rel_asm_outpath}")')
+        c_lines = [
+            self.get_c_line_include_macro(rodata_sym, asm_out_dir, "INCLUDE_RODATA")
+        ]
         c_lines.append("")
         return c_lines
 
