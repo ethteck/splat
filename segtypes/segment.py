@@ -292,6 +292,11 @@ class Segment:
     def is_text() -> bool:
         return False
 
+    # For segments which does not take space in ROM, like bss
+    @staticmethod
+    def is_noload() -> bool:
+        return False
+
     @property
     def needs_symbols(self) -> bool:
         return False
