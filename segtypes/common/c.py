@@ -17,6 +17,7 @@ from segtypes.common.rodata import CommonSegRodata
 class CommonSegC(CommonSegCodeSubsegment):
     defined_funcs: Set[str] = set()
     global_asm_funcs: Set[str] = set()
+    global_asm_rodata_syms: Set[str] = set()
 
     STRIP_C_COMMENTS_RE = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
@@ -43,27 +44,27 @@ class CommonSegC(CommonSegCodeSubsegment):
         return re.sub(CommonSegC.STRIP_C_COMMENTS_RE, replacer, text)
 
     @staticmethod
-    def get_funcs_defined_in_c(c_file):
+    def get_funcs_defined_in_c(c_file: Path) -> Set[str]:
         with open(c_file, "r") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
         return set(m.group(1) for m in CommonSegC.C_FUNC_RE.finditer(text))
 
     @staticmethod
-    def find_all_instances(str, sub):
+    def find_all_instances(string: str, sub: str):
         start = 0
         while True:
-            start = str.find(sub, start)
+            start = string.find(sub, start)
             if start == -1:
                 return
             yield start
             start += len(sub)
 
     @staticmethod
-    def get_close_parenthesis(str, pos):
+    def get_close_parenthesis(string: str, pos: int):
         paren_count = 0
         while True:
-            cur_char = str[pos]
+            cur_char = string[pos]
             if cur_char == "(":
                 paren_count += 1
             elif cur_char == ")":
@@ -89,8 +90,23 @@ class CommonSegC(CommonSegCodeSubsegment):
                     yield macro_args[1].strip(" )")
 
     @staticmethod
-    def get_global_asm_funcs(c_file):
-        with open(c_file, "r") as f:
+    def find_include_rodata(text: str):
+        for pos in CommonSegC.find_all_instances(text, "INCLUDE_RODATA("):
+            close_paren_pos = CommonSegC.get_close_parenthesis(
+                text, pos + len("INCLUDE_RODATA(")
+            )
+            macro_contents = text[pos:close_paren_pos]
+            macro_args = macro_contents.split(",")
+            if options.opts.use_legacy_include_asm:
+                if len(macro_args) >= 3:
+                    yield macro_args[2].strip(" )")
+            else:
+                if len(macro_args) >= 2:
+                    yield macro_args[1].strip(" )")
+
+    @staticmethod
+    def get_global_asm_funcs(c_file: Path) -> Set[str]:
+        with c_file.open() as f:
             text = CommonSegC.strip_c_comments(f.read())
         if options.opts.compiler in [GCC, SN64]:
             return set(CommonSegC.find_include_asm(text))
@@ -98,6 +114,18 @@ class CommonSegC(CommonSegCodeSubsegment):
             return set(
                 m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text)
             )
+
+    @staticmethod
+    def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
+        with c_file.open() as f:
+            text = CommonSegC.strip_c_comments(f.read())
+        if options.opts.compiler in [GCC, SN64]:
+            return set(CommonSegC.find_include_rodata(text))
+        else:
+            return set(
+                m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text)
+            )
+
 
     @staticmethod
     def is_text() -> bool:
@@ -118,8 +146,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
+                    self.global_asm_rodata_syms = self.get_global_asm_rodata_syms(path)
                     symbols.to_mark_as_defined.update(self.defined_funcs)
                     symbols.to_mark_as_defined.update(self.global_asm_funcs)
+                    symbols.to_mark_as_defined.update(self.global_asm_rodata_syms)
 
             self.scan_code(rom_bytes)
 
@@ -168,8 +198,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     self.create_c_asm_file(entry, asm_out_dir, func_sym)
             else:
                 for spim_rodata_sym in entry.rodataSyms:
-                    # if entry.function.getName() in self.global_asm_funcs or is_new_c_file:
-                    if True:
+                    if spim_rodata_sym.getName() in self.global_asm_rodata_syms or is_new_c_file:
                         rodata_sym = self.get_symbol(
                             spim_rodata_sym.vram, in_segment=True, local_only=True
                         )
@@ -340,7 +369,7 @@ class CommonSegC(CommonSegCodeSubsegment):
     ):
         if not options.opts.create_asm_dependencies:
             return
-        if not (len(self.global_asm_funcs) > 0 or is_new_c_file):
+        if (len(self.global_asm_funcs) + len(self.global_asm_rodata_syms)) == 0 and not is_new_c_file:
             return
 
         assert self.spim_section is not None
