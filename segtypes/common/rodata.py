@@ -15,7 +15,7 @@ class CommonSegRodata(CommonSegData):
     ) -> Optional[Tuple[Segment, spimdisasm.common.ContextSymbol]]:
         # Check if this rodata segment does not have a corresponding code file, try to look for one
 
-        if self.sibling is not None or not options.opts.find_rodata_to_text:
+        if self.sibling is not None or not options.opts.pair_rodata_to_text:
             return None
 
         if not rodata_sym.shouldMigrate():
