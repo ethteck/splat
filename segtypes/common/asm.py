@@ -7,6 +7,10 @@ from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
 
 class CommonSegAsm(CommonSegCodeSubsegment):
+    @staticmethod
+    def is_text() -> bool:
+        return True
+
     def out_path(self) -> Optional[Path]:
         return options.opts.asm_path / self.dir / f"{self.name}.s"
 

@@ -125,7 +125,7 @@ class CommonSegGroup(CommonSegment):
 
         return c
 
-    def get_subsegment_for_ram(self, addr) -> Optional[Segment]:
+    def get_subsegment_for_ram(self, addr: int) -> Optional[Segment]:
         for sub in self.subsegments:
             if sub.contains_vram(addr):
                 return sub

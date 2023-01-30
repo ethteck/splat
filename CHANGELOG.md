@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.12.14
+
+* New option: `pair_rodata_to_text`.
+  * If enabled, splat will try to find to which text segment an unpaired rodata segment belongs and it will hint it to the user.
+
 ### 0.12.13
 
 * bss segments can now omit the rom offset

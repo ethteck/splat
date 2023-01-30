@@ -287,6 +287,11 @@ class Segment:
             ret.align = parse_segment_align(yaml)
         return ret
 
+    # For segments executable (.text) sections, like c, asm and hasm
+    @staticmethod
+    def is_text() -> bool:
+        return False
+
     # For segments which does not take space in ROM, like bss
     @staticmethod
     def is_noload() -> bool:

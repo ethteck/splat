@@ -99,6 +99,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                 m.group(2) for m in CommonSegC.C_GLOBAL_ASM_IDO_RE.finditer(text)
             )
 
+    @staticmethod
+    def is_text() -> bool:
+        return True
+
     def out_path(self) -> Optional[Path]:
         return options.opts.src_path / self.dir / f"{self.name}.c"
 
