@@ -10,6 +10,7 @@ from util import options
 from segtypes.n64.palette import N64SegPalette
 from segtypes.segment import Segment
 
+
 # clean 'foo/../bar' to 'bar'
 @lru_cache(maxsize=None)
 def clean_up_path(path: Path) -> Path:

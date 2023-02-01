@@ -10,6 +10,7 @@ from segtypes.common.code import CommonSegCode
 
 from segtypes.segment import Segment
 
+
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
     def __init__(self, *args, **kwargs):
