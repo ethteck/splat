@@ -276,7 +276,11 @@ class CommonSegCode(CommonSegGroup):
             segment: Segment = Segment.from_yaml(
                 segment_class, subsection_yaml, start, end, vram
             )
+
             segment.sibling = base_segments.get(segment.name, None)
+            if segment.is_rodata() and segment.sibling is not None:
+                segment.sibling.rodata_sibling = segment
+
             segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
@@ -293,8 +297,7 @@ class CommonSegCode(CommonSegGroup):
             segment.bss_contains_common = self.bss_contains_common
             ret.append(segment)
 
-            # todo change
-            if typ in CODE_TYPES:
+            if segment.is_text():
                 base_segments[segment.name] = segment
 
             prev_start = start

@@ -216,6 +216,7 @@ class Segment:
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
+        self.rodata_sibling: Optional[Segment] = None
         self.follows_vram_segment: Optional[Segment] = None
         self.file_path: Optional[Path] = None
 
@@ -287,12 +288,17 @@ class Segment:
             ret.align = parse_segment_align(yaml)
         return ret
 
-    # For segments executable (.text) sections, like c, asm and hasm
+    # For executable segments (.text); like c, asm or hasm
     @staticmethod
     def is_text() -> bool:
         return False
 
-    # For segments which does not take space in ROM, like bss
+    # For readonly segments (.rodata); like rodata or rdata
+    @staticmethod
+    def is_rodata() -> bool:
+        return False
+
+    # For segments which does not take space in ROM; like bss
     @staticmethod
     def is_noload() -> bool:
         return False

@@ -496,6 +496,8 @@ class Symbol:
     allow_addend: bool = False
     dont_allow_addend: bool = False
 
+    linker_section: Optional[str] = None
+
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
 

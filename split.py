@@ -17,9 +17,9 @@ from segtypes.linker_entry import LinkerWriter, to_cname
 from segtypes.segment import Segment
 from util import compiler, log, options, palettes, symbols, relocs
 
-VERSION = "0.12.14"
+VERSION = "0.13.0"
 # This value should be keep in sync with the version listed on requirements.txt
-SPIMDISASM_MIN = (1, 10, 0)
+SPIMDISASM_MIN = (1, 11, 1)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
