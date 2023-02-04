@@ -203,6 +203,8 @@ class LinkerWriter:
                 )
                 self._write_symbol(path_cname, ".")
 
+            wildcard = "*" if options.opts.ld_wildcard_sections else ""
+
             # Create new linker section for BSS
             if entering_bss or leaving_bss:
                 # If this is the last entry of its type, add the END marker for the section we're ending
@@ -231,13 +233,13 @@ class LinkerWriter:
                 section_labels[cur_section].started = True
 
                 # Write THIS linker entry
-                self._writeln(f"{entry.object_path}({entry.section});")
+                self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
             else:
                 # Write THIS linker entry
                 if entry.section == ".bss" and entry.segment.bss_contains_common:
                     self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
                 else:
-                    self._writeln(f"{entry.object_path}({entry.section});")
+                    self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
