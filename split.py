@@ -427,7 +427,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     ):  # TODO move this to platform initialization when it gets implemented
 
         # Calculate list of segments for which we need to find the largest so we can safely place the symbol after it
-        linker_afters: Dict[Symbol, list[Segment]] = {}
+        linker_afters: Dict[Symbol, List[Segment]] = {}
         for sym in symbols.appears_after_overlays_syms:
             linker_afters[sym] = [
                 seg
