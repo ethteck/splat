@@ -425,7 +425,6 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     if (
         options.opts.is_mode_active("ld") and options.opts.platform != "gc"
     ):  # TODO move this to platform initialization when it gets implemented
-
         # Calculate list of segments for which we need to find the largest so we can safely place the symbol after it
         linker_afters: Dict[Symbol, List[Segment]] = {}
         for sym in symbols.appears_after_overlays_syms:
