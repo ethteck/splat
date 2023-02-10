@@ -122,6 +122,8 @@ class SplatOpts:
     symbol_name_format: str
     # Same as above but for symbols with no rom address
     symbol_name_format_no_rom: str
+    # Determins the file name format of the data section
+    data_file_name_override: str
     # Determines whether to detect and hint to the user about likely file splits when disassembling
     find_file_boundaries: bool
     # Determines whether to detect and hint to the user about possible rodata sections corresponding to a text section
@@ -356,6 +358,9 @@ def _parse_yaml(
         symbol_name_format=p.parse_opt("symbol_name_format", str, "$VRAM"),
         symbol_name_format_no_rom=p.parse_opt(
             "symbol_name_format_no_rom", str, "$VRAM_$SEG"
+        ),
+        data_file_name_override=p.parse_opt(
+            "data_file_name_override", str, "$ROM.$SEG.s"
         ),
         find_file_boundaries=p.parse_opt("find_file_boundaries", bool, True),
         pair_rodata_to_text=p.parse_opt("pair_rodata_to_text", bool, True),

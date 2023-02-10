@@ -6,6 +6,7 @@ from util import options, symbols, log
 
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
+from util.symbols import format_name
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
@@ -19,7 +20,12 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 return options.opts.src_path / self.dir / f"{self.name}.c"
         else:
             # ASM
-            return options.opts.data_path / self.dir / f"{self.name}.{self.type}.s"
+            if options.opts.data_file_name_override:
+                name = format_name(options.opts.data_file_name_override, self.vram_start, lambda: self.rom_start, lambda: self.type)
+            else:
+                name = f"{self.name}.{self.type}.s"
+            assert name is not None
+            return options.opts.data_path / self.dir / name
 
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)
