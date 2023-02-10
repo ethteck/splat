@@ -489,6 +489,23 @@ def mark_c_funcs_as_defined():
             symbol.defined = True
             to_mark_as_defined.remove(sym_name)
 
+def format_name(format: str, vram_start: int, rom_getter, segment_getter) -> str:
+        ret = format.replace("$VRAM", f"{vram_start:08X}")
+
+        if "$ROM" in ret:
+            ret = ret.replace("$ROM", f"{rom_getter():X}")
+
+        if "$SEG" in ret:
+            segment = segment_getter()
+            if segment is None:
+                # This probably is fine - we can't expect every symbol to have a segment. Fall back to just the ram address
+                return f"{vram_start:X}"
+            assert segment is not None
+
+            ret = ret.replace("$SEG", segment)
+
+        return ret
+
 
 @dataclass
 class Symbol:
@@ -532,26 +549,19 @@ class Symbol:
     def __hash__(self):
         return hash((self.vram_start, self.segment))
 
+    def get_rom(self) -> int:
+        if not isinstance(self.rom, int):
+            log.error(
+                f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:X} typed {self.type}"
+            )
+        return self.rom
+
+    def get_segment(self) ->  Optional["Segment"]:
+        return self.segment
+
     def format_name(self, format: str) -> str:
-        ret = format
-
-        ret = ret.replace("$VRAM", f"{self.vram_start:08X}")
-
-        if "$ROM" in ret:
-            if not isinstance(self.rom, int):
-                log.error(
-                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:X} typed {self.type}"
-                )
-            ret = ret.replace("$ROM", f"{self.rom:X}")
-
-        if "$SEG" in ret:
-            if self.segment is None:
-                # This probably is fine - we can't expect every symbol to have a segment. Fall back to just the ram address
-                return f"{self.vram_start:X}"
-            assert self.segment is not None
-            ret = ret.replace("$SEG", self.segment.name)
-
-        return ret
+        a = lambda: self.get_segment()
+        return format_name(format, self.vram_start, lambda: self.get_rom(), lambda: self.get_segment())
 
     @property
     def default_name(self) -> str:
