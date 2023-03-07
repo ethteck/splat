@@ -99,7 +99,7 @@ segments:
 
     segments += f"""\
     subsegments:
-      - [0x1000, asm]
+      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, asm]
 """
 
     if (
