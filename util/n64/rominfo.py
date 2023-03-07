@@ -70,6 +70,75 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 
 
 @dataclass
+class N64EntrypointInfo:
+    entry_address: int
+    entry_size: int
+    bss_start_address: int|None
+    bss_size: int|None
+    main_address: int|None
+    stack_top: int
+
+    @staticmethod
+    def parse_rom_bytes(entrypoint_address: int, rom_bytes, offset: int=0x1000, size: int=0x60) -> "N64EntrypointInfo":
+        word_list = spimdisasm.common.Utils.bytesToWords(rom_bytes, offset, offset+size)
+        nops_count = 0
+
+        register_values = [0 for _ in range(32)]
+
+        register_bss_address: int|None = None
+        register_bss_size: int|None = None
+        register_main_address: int|None = None
+
+        size = 0
+        for word in word_list:
+            insn = rabbitizer.Instruction(word)
+            if not insn.isImplemented():
+                break
+
+            if insn.isNop():
+                nops_count += 1
+            elif nops_count >= 3:
+                break
+            elif insn.canBeHi():
+                register_values[insn.rt.value] = insn.getProcessedImmediate() << 16
+            elif insn.canBeLo():
+                if insn.modifiesRt():
+                    register_values[insn.rt.value] = register_values[insn.rs.value] + insn.getProcessedImmediate()
+                elif insn.doesStore():
+                    if insn.rt == rabbitizer.RegGprO32.zero:
+                        # Try to detect the zero-ing bss algorithm
+                        # sw          $zero, 0x0($t0)
+                        register_bss_address = insn.rs.value
+            elif insn.isBranch():
+                # lui         $t1, 0x2
+                # addiu       $t1, $t1, -0x7220
+                # ...
+                # addi        $t1, $t1, -0x8
+                # ...
+                # bnez        $t1, label
+                register_bss_size = insn.rs.value
+
+            elif insn.isJumptableJump() or insn.isReturn():
+                # lui         $t2, 0x8000
+                # addiu       $t2, $t2, 0x494
+                # ...
+                # jr          $t2
+                register_main_address = insn.rs.value
+
+            # print(f"{word:08X}", insn)
+            size += 4
+
+        # for i, val in enumerate(register_values):
+        #     print(i, f"{val:08X}")
+
+        bss_address = register_values[register_bss_address] if register_bss_address is not None else None
+        bss_size = register_values[register_bss_size] if register_bss_size is not None else None
+        main_address = register_values[register_main_address] if register_main_address is not None else None
+        stack_top = register_values[rabbitizer.RegGprO32.sp.value]
+        return N64EntrypointInfo(entrypoint_address, size, bss_address, bss_size, main_address, stack_top)
+
+
+@dataclass
 class N64Rom:
     name: str
     header_encoding: str
@@ -81,6 +150,7 @@ class N64Rom:
     size: int
     compiler: str
     sha1: str
+    entrypoint_info: N64EntrypointInfo
 
     def get_country_name(self) -> str:
         return country_codes[self.country_code]
@@ -164,6 +234,8 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
+    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(entry_point, rom_bytes)
+
     return N64Rom(
         name,
         header_encoding,
@@ -175,6 +247,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
         len(rom_bytes),
         compiler,
         sha1,
+        entrypoint_info,
     )
 
 
@@ -182,9 +255,8 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
     jumps = 0
     branches = 0
 
-    vram = entry_point
-    wordList = spimdisasm.common.Utils.bytesToWords(rom_bytes[0x1000:])
-    for word in wordList:
+    word_list = spimdisasm.common.Utils.bytesToWords(rom_bytes[0x1000:])
+    for word in word_list:
         insn = rabbitizer.Instruction(word)
         if not insn.isImplemented():
             break
