@@ -71,7 +71,6 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 
 @dataclass
 class N64EntrypointInfo:
-    entry_address: int
     entry_size: int
     bss_start_address: int|None
     bss_size: int|None
@@ -79,7 +78,7 @@ class N64EntrypointInfo:
     stack_top: int
 
     @staticmethod
-    def parse_rom_bytes(entrypoint_address: int, rom_bytes, offset: int=0x1000, size: int=0x60) -> "N64EntrypointInfo":
+    def parse_rom_bytes(rom_bytes, offset: int=0x1000, size: int=0x60) -> "N64EntrypointInfo":
         word_list = spimdisasm.common.Utils.bytesToWords(rom_bytes, offset, offset+size)
         nops_count = 0
 
@@ -102,7 +101,12 @@ class N64EntrypointInfo:
             elif insn.canBeHi():
                 register_values[insn.rt.value] = insn.getProcessedImmediate() << 16
             elif insn.canBeLo():
-                if insn.modifiesRt():
+                if insn.isLikelyHandwritten():
+                    # Try to skip this instructions:
+                    # addi        $t0, $t0, 0x8
+                    # addi        $t1, $t1, -0x8
+                    pass
+                elif insn.modifiesRt():
                     register_values[insn.rt.value] = register_values[insn.rs.value] + insn.getProcessedImmediate()
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
@@ -135,7 +139,7 @@ class N64EntrypointInfo:
         bss_size = register_values[register_bss_size] if register_bss_size is not None else None
         main_address = register_values[register_main_address] if register_main_address is not None else None
         stack_top = register_values[rabbitizer.RegGprO32.sp.value]
-        return N64EntrypointInfo(entrypoint_address, size, bss_address, bss_size, main_address, stack_top)
+        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top)
 
 
 @dataclass
@@ -234,7 +238,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(entry_point, rom_bytes)
+    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes)
 
     return N64Rom(
         name,
