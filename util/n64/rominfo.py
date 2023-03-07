@@ -72,9 +72,9 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 @dataclass
 class N64EntrypointInfo:
     entry_size: int
-    bss_start_address: int | None
-    bss_size: int | None
-    main_address: int | None
+    bss_start_address: Optional[int]
+    bss_size: Optional[int]
+    main_address: Optional[int]
     stack_top: int
 
     @staticmethod
@@ -88,9 +88,9 @@ class N64EntrypointInfo:
 
         register_values = [0 for _ in range(32)]
 
-        register_bss_address: int | None = None
-        register_bss_size: int | None = None
-        register_main_address: int | None = None
+        register_bss_address: Optional[int] = None
+        register_bss_size: Optional[int] = None
+        register_main_address: Optional[int] = None
 
         size = 0
         for word in word_list:
