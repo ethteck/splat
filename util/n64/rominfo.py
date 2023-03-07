@@ -69,6 +69,23 @@ crc_to_cic = {
 unknown_cic = CIC("unknown", "unknown", 0x0000000)
 
 
+@dataclass
+class N64Rom:
+    name: str
+    header_encoding: str
+    country_code: int
+    libultra_version: str
+    checksum: str
+    cic: CIC
+    entry_point: int
+    size: int
+    compiler: str
+    sha1: str
+
+    def get_country_name(self) -> str:
+        return country_codes[self.country_code]
+
+
 def swap_bytes(data):
     return bytes(
         itertools.chain.from_iterable(
@@ -114,7 +131,7 @@ def guess_header_encoding(rom_bytes: bytes):
     sys.exit("Unknown header encoding, please raise an Issue with us")
 
 
-def get_info(rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None):
+def get_info(rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None) -> N64Rom:
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
 
@@ -124,7 +141,7 @@ def get_info(rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=
     return get_info_bytes(rom_bytes, header_encoding)
 
 
-def get_info_bytes(rom_bytes: bytes, header_encoding):
+def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     (program_counter,) = struct.unpack(">I", rom_bytes[0x8:0xC])
     libultra_version = chr(rom_bytes[0xF])
     checksum = rom_bytes[0x10:0x18].hex().upper()
@@ -161,41 +178,12 @@ def get_info_bytes(rom_bytes: bytes, header_encoding):
     )
 
 
-class N64Rom:
-    def __init__(
-        self,
-        name: str,
-        header_encoding,
-        country_code,
-        libultra_version,
-        checksum,
-        cic: CIC,
-        entry_point: int,
-        size: int,
-        compiler,
-        sha1,
-    ):
-        self.name = name
-        self.header_encoding = header_encoding
-        self.country_code = country_code
-        self.libultra_version = libultra_version
-        self.checksum = checksum
-        self.cic = cic
-        self.entry_point = entry_point
-        self.size = size
-        self.compiler = compiler
-        self.sha1 = sha1
-
-    def get_country_name(self):
-        return country_codes[self.country_code]
-
-
 def get_compiler_info(rom_bytes, entry_point, print_result=True):
     jumps = 0
     branches = 0
 
     vram = entry_point
-    wordList = spimdisasm.common.Utils.bytesToBEWords(rom_bytes[0x1000:])
+    wordList = spimdisasm.common.Utils.bytesToWords(rom_bytes[0x1000:])
     for word in wordList:
         insn = rabbitizer.Instruction(word)
         if not insn.isImplemented():
