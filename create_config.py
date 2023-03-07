@@ -102,7 +102,10 @@ segments:
       - [0x1000, asm]
 """
 
-    if rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_start_address is not None:
+    if (
+        rom.entrypoint_info.bss_size is not None
+        and rom.entrypoint_info.bss_start_address is not None
+    ):
         bss_start = rom.entrypoint_info.bss_start_address - rom.entry_point + 0x1000
         # first_section_end points to the start of data
         segments += f"""\

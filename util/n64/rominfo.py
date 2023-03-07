@@ -72,21 +72,25 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 @dataclass
 class N64EntrypointInfo:
     entry_size: int
-    bss_start_address: int|None
-    bss_size: int|None
-    main_address: int|None
+    bss_start_address: int | None
+    bss_size: int | None
+    main_address: int | None
     stack_top: int
 
     @staticmethod
-    def parse_rom_bytes(rom_bytes, offset: int=0x1000, size: int=0x60) -> "N64EntrypointInfo":
-        word_list = spimdisasm.common.Utils.bytesToWords(rom_bytes, offset, offset+size)
+    def parse_rom_bytes(
+        rom_bytes, offset: int = 0x1000, size: int = 0x60
+    ) -> "N64EntrypointInfo":
+        word_list = spimdisasm.common.Utils.bytesToWords(
+            rom_bytes, offset, offset + size
+        )
         nops_count = 0
 
         register_values = [0 for _ in range(32)]
 
-        register_bss_address: int|None = None
-        register_bss_size: int|None = None
-        register_main_address: int|None = None
+        register_bss_address: int | None = None
+        register_bss_size: int | None = None
+        register_main_address: int | None = None
 
         size = 0
         for word in word_list:
@@ -107,7 +111,9 @@ class N64EntrypointInfo:
                     # addi        $t1, $t1, -0x8
                     pass
                 elif insn.modifiesRt():
-                    register_values[insn.rt.value] = register_values[insn.rs.value] + insn.getProcessedImmediate()
+                    register_values[insn.rt.value] = (
+                        register_values[insn.rs.value] + insn.getProcessedImmediate()
+                    )
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
                         # Try to detect the zero-ing bss algorithm
@@ -135,9 +141,21 @@ class N64EntrypointInfo:
         # for i, val in enumerate(register_values):
         #     print(i, f"{val:08X}")
 
-        bss_address = register_values[register_bss_address] if register_bss_address is not None else None
-        bss_size = register_values[register_bss_size] if register_bss_size is not None else None
-        main_address = register_values[register_main_address] if register_main_address is not None else None
+        bss_address = (
+            register_values[register_bss_address]
+            if register_bss_address is not None
+            else None
+        )
+        bss_size = (
+            register_values[register_bss_size]
+            if register_bss_size is not None
+            else None
+        )
+        main_address = (
+            register_values[register_main_address]
+            if register_main_address is not None
+            else None
+        )
         stack_top = register_values[rabbitizer.RegGprO32.sp.value]
         return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top)
 
@@ -205,7 +223,9 @@ def guess_header_encoding(rom_bytes: bytes):
     sys.exit("Unknown header encoding, please raise an Issue with us")
 
 
-def get_info(rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None) -> N64Rom:
+def get_info(
+    rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None
+) -> N64Rom:
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
 
