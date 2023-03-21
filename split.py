@@ -23,9 +23,9 @@ from util import compiler, log, options, palettes, symbols, relocs
 
 from util.symbols import Symbol
 
-VERSION = "0.13.4"
+VERSION = "0.13.5"
 # This value should be kept in sync with the version listed on requirements.txt
-SPIMDISASM_MIN = (1, 11, 1)
+SPIMDISASM_MIN = (1, 12, 0)
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"

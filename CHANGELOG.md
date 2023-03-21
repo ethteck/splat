@@ -1,16 +1,26 @@
 # splat Release Notes
 
+### 0.13.5
+
+* An error will be produced if a symbol is declared with an unknown type in the symbol_addrs file.
+  * The current list of known symbols is `'func', 'label', 'jtbl', 'jtbl_label', 's8', 'u8', 's16', 'u16', 's32', 'u32', 's64', 'u64', 'f32', 'f64', 'Vec3f', 'asciz', 'char*', 'char'`.
+  * Custom types are allowed if they start with a capital letter.
+
 ### 0.13.4
+
 * Renamed `follows_vram_symbol` segment option to `vram_of_symbol` to more accurately reflect what it's used for - to set the segment's vram based on a symbol.
 * Refactored the `appears_after_overlays_addr` feature so that expressions are written at the latest possible moment in the linker script. This fixes errors and warnings regarding forward references to later symbols.
 
 ### 0.13.3
-* Added a new symbol_addrs attribute `appears_after_overlays_addr:0x1234` which will modify the linker script such that the symbol's address is equal to the value of the end of the longest overlay starting with address 0x1234. It achieve this by writing a series of sym = MAX(sym, seg_vram_END) statements into the linker script. For some games, it's feasible to manually create such statements, but for games with hundreds of overlays at the same address, this is very tedious and prone to error. The new attribute allows you to have peace of mind that the symbol will end up after all of these overlays. 
+
+* Added a new symbol_addrs attribute `appears_after_overlays_addr:0x1234` which will modify the linker script such that the symbol's address is equal to the value of the end of the longest overlay starting with address 0x1234. It achieve this by writing a series of sym = MAX(sym, seg_vram_END) statements into the linker script. For some games, it's feasible to manually create such statements, but for games with hundreds of overlays at the same address, this is very tedious and prone to error. The new attribute allows you to have peace of mind that the symbol will end up after all of these overlays.
 
 ### 0.13.2
+
 * Actually implemented `ld_use_follows`. Oopz
 
 ### 0.13.1
+
 * Added `ld_wildcard_sections` option (disabled by default), which adds a wildcard to the linker script for section linking. This can be helpful for modern GCC, which creates additional rodata sections such as ".rodata.xyz".
 * Added `ld_use_follows` option (enabled by default), which, if disabled, makes splat ignore follows_vram and follows_symbols. This helps for fixing matching builds while being able to add infrastructure to the yaml for non-matching builds by just re-enabling the option.
 
