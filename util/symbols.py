@@ -25,9 +25,8 @@ spim_context = spimdisasm.common.Context()
 TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
 
-splat_sym_types = {
-    "func", "jtbl", "jtbl_label", "label"
-}
+splat_sym_types = {"func", "jtbl", "jtbl_label", "label"}
+
 
 def check_valid_type(typename: str) -> bool:
     if typename[0].isupper():
@@ -40,6 +39,7 @@ def check_valid_type(typename: str) -> bool:
         return True
 
     return False
+
 
 def is_truey(str: str) -> bool:
     return str.lower() in TRUEY_VALS
@@ -146,10 +146,21 @@ def initialize(all_segments: "List[Segment]"):
                                     try:
                                         if attr_name == "type":
                                             if not check_valid_type(attr_val):
-                                                log.parsing_error_preamble(path, line_num, line)
-                                                log.write(f"Unrecognized symbol type in '{info}', it should be one of")
-                                                log.write([*splat_sym_types, *spimdisasm.common.gKnownTypes])
-                                                log.write("You may use a custom type that starts with a capital letter")
+                                                log.parsing_error_preamble(
+                                                    path, line_num, line
+                                                )
+                                                log.write(
+                                                    f"Unrecognized symbol type in '{info}', it should be one of"
+                                                )
+                                                log.write(
+                                                    [
+                                                        *splat_sym_types,
+                                                        *spimdisasm.common.gKnownTypes,
+                                                    ]
+                                                )
+                                                log.write(
+                                                    "You may use a custom type that starts with a capital letter"
+                                                )
                                                 log.error("")
                                             type = attr_val
                                             sym.type = type
