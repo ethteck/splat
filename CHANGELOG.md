@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.13.6
+
+* Changed CI image processing so that their data is fetched during the scan phase, supporting palettes that come before CI images.
+
 ### 0.13.5
 
 * An error will be produced if a symbol is declared with an unknown type in the symbol_addrs file.
