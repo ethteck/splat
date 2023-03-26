@@ -23,7 +23,7 @@ from util import compiler, log, options, palettes, symbols, relocs
 
 from util.symbols import Symbol
 
-VERSION = "0.13.5"
+VERSION = "0.13.6"
 # This value should be kept in sync with the version listed on requirements.txt
 SPIMDISASM_MIN = (1, 12, 0)
 
