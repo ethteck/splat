@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.13.7
+* Severely sped-up linker entry writing by using a set instead of a dict. Symbol headers will no longer be in any specific order (which shouldn't matter, because they're headers).
+
 ### 0.13.6
 
 * Changed CI image processing so that their data is fetched during the scan phase, supporting palettes that come before CI images.
