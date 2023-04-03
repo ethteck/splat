@@ -111,7 +111,7 @@ class LinkerWriter:
         self.entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
-        self.symbols: List[str] = []
+        self.header_symbols: Set[str] = set()
 
         self._indent_level = 0
 
@@ -303,7 +303,7 @@ class LinkerWriter:
                 "\n"
                 '#include "common.h"\n'
                 "\n"
-                + "".join(f"extern Addr {symbol};\n" for symbol in self.symbols)
+                + "".join(f"extern Addr {symbol};\n" for symbol in self.header_symbols)
                 + "\n"
                 "#endif\n",
             )
@@ -330,8 +330,7 @@ class LinkerWriter:
 
         self._writeln(f"{symbol} = {value};")
 
-        if symbol not in self.symbols:
-            self.symbols.append(symbol)
+        self.header_symbols.add(symbol)
 
     def _begin_segment(self, segment: Segment):
         if options.opts.ld_use_follows and segment.vram_of_symbol:
