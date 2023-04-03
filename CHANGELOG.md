@@ -1,7 +1,7 @@
 # splat Release Notes
 
 ### 0.13.7
-* Severely sped-up linker entry writing by using a set instead of a dict. Symbol headers will no longer be in any specific order (which shouldn't matter, because they're headers).
+* Severely sped-up linker entry writing by using a set instead of a list. Symbol headers will no longer be in any specific order (which shouldn't matter, because they're headers).
 
 ### 0.13.6
 
