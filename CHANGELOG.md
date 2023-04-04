@@ -1,6 +1,12 @@
 # splat Release Notes
 
+### 0.13.8
+
+* New option `segment_end_before_align`.
+  * If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
+
 ### 0.13.7
+
 * Severely sped-up linker entry writing by using a dict instead of a list. Symbol headers will no longer be in any specific order (which shouldn't matter, because they're headers).
 
 ### 0.13.6
