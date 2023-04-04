@@ -388,11 +388,16 @@ class LinkerWriter:
             self._writeln(f"__romPos += SIZEOF(.{name});")
 
         # Align directive
-        if segment.align:
-            self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
+        if not options.opts.segment_end_before_align:
+            if segment.align:
+                self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
 
         self._write_symbol(f"{name}_ROM_END", "__romPos")
-
         self._write_symbol(get_segment_vram_end_symbol_name(segment), ".")
+
+        # Align directive
+        if options.opts.segment_end_before_align:
+            if segment.align:
+                self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
 
         self._writeln("")
