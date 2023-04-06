@@ -101,6 +101,8 @@ class SplatOpts:
     # Determines whether to use use "follows" settings to determine locations of overlays in the linker script.
     # If disabled, this effectively ignores "follows" directives in the yaml.
     ld_use_follows: bool
+    # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
+    segment_end_before_align: bool
 
     ################################################################################
     # C file options
@@ -347,6 +349,7 @@ def _parse_yaml(
         ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
         ld_use_follows=p.parse_opt("ld_use_follows", bool, True),
+        segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True
