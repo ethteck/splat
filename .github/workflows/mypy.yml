@@ -24,3 +24,5 @@ jobs:
       run: mypy --show-column-numbers --hide-error-context .
     - name: black
       run: black --check .
+    - name: Unit Tests
+      run: sh run_tests.sh

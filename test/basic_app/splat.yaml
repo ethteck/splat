@@ -1,0 +1,22 @@
+options:
+  platform:     n64
+  basename:     basic_app
+  base_path:    .
+  build_path:   build
+  target_path:  main.bin
+  asm_path:     split/asm
+  src_path:     split/src
+  symbol_addrs_path:    generated.symbols.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.txt
+  undefined_syms_auto_path:  undefined_syms_auto.txt
+segments:
+  - name: basic_app
+    type: code
+    start: 0x00000000
+    vram:  0x00400000
+    subalign: 4
+    subsegments:
+      - [0, data]
+      - [0x1dc, c, main]
+      - [0x1fc, data]
+  - [0x129C]
