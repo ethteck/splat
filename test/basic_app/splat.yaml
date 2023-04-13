@@ -3,12 +3,14 @@ options:
   basename:     basic_app
   base_path:    .
   build_path:   build
-  target_path:  main.bin
+  target_path:  build/main.bin
   asm_path:     split/asm
   src_path:     split/src
-  symbol_addrs_path:    generated.symbols.txt
-  undefined_funcs_auto_path: undefined_funcs_auto.txt
-  undefined_syms_auto_path:  undefined_syms_auto.txt
+  ld_script_path: split/basic_app.ld
+  cache_path:     split/.splache
+  symbol_addrs_path:    split/generated.symbols.txt
+  undefined_funcs_auto_path: split/undefined_funcs_auto.txt
+  undefined_syms_auto_path:  split/undefined_syms_auto.txt
 segments:
   - name: basic_app
     type: code
@@ -19,4 +21,4 @@ segments:
       - [0, data]
       - [0x1dc, c, main]
       - [0x1fc, data]
-  - [0x129C]
+  - [0x1290]
