@@ -29,10 +29,10 @@ class Testing(unittest.TestCase):
 
         comparison = filecmp.dircmp("test/basic_app/split", "test/basic_app/expected")
 
-        diff_files = []
+        diff_files: List[Tuple[str, str, str]] = []
         self.get_diff_files(comparison, diff_files)
 
-        same_files = []
+        same_files: List[Tuple[str, str, str]] = []
         self.get_same_files(comparison, same_files)
 
         print("same_files", same_files)
