@@ -1,9 +1,16 @@
-class Disassembler:
-    def configure(self, options):
+from abc import ABC, abstractmethod
+from util.options import SplatOpts
+
+
+class Disassembler(ABC):
+    @abstractmethod
+    def configure(self, options: SplatOpts):
         raise NotImplementedError("configure")
 
-    def check_version(self, skip_version_check, splat_version):
+    @abstractmethod
+    def check_version(self, skip_version_check: bool, splat_version: str):
         raise NotImplementedError("check_version")
 
-    def known_types(self):
+    @abstractmethod
+    def known_types(self) -> set[str]:
         raise NotImplementedError("known_types")

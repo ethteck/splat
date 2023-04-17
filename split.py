@@ -267,7 +267,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
             "__options__": config.get("options"),
         }
 
-    disassembler.configure(options)
+    disassembler.configure(options.opts)
 
     platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
     platform_init = getattr(platform_module, "init")

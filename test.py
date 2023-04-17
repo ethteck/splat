@@ -68,11 +68,11 @@ def test_init():
                 "name": "basic_app",
                 "type": "code",
                 "start": 0,
-                "vram": 4194304,
+                "vram": 0x400000,
                 "subalign": 4,
-                "subsegments": [[0, "data"], [476, "c", "main"], [508, "data"]],
+                "subsegments": [[0, "data"], [0x1DC, "c", "main"], [0x1FC, "data"]],
             },
-            [4752],
+            [0x1290],
         ],
     }
     options.initialize(options_dict, ["./test/basic_app/splat.yaml"], [], False)
@@ -187,9 +187,9 @@ def get_yaml():
         "name": "basic_app",
         "type": "code",
         "start": 0,
-        "vram": 4194304,
+        "vram": 0x400000,
         "subalign": 4,
-        "subsegments": [[0, "data"], [476, "c", "main"], [508, "data"]],
+        "subsegments": [[0, "data"], [0x1DC, "c", "main"], [0x1FC, "data"]],
     }
     return yaml
 

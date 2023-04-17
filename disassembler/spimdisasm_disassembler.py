@@ -2,20 +2,21 @@ from disassembler import disassembler
 import spimdisasm
 import rabbitizer
 from util import log, compiler
+from util.options import SplatOpts
 
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt
     SPIMDISASM_MIN = (1, 12, 0)
 
-    def configure(self, options):
+    def configure(self, opts: SplatOpts):
         # Configure spimdisasm
         spimdisasm.common.GlobalConfig.PRODUCE_SYMBOLS_PLUS_OFFSET = True
         spimdisasm.common.GlobalConfig.TRUST_USER_FUNCTIONS = True
         spimdisasm.common.GlobalConfig.TRUST_JAL_FUNCTIONS = True
         spimdisasm.common.GlobalConfig.GLABEL_ASM_COUNT = False
 
-        if options.opts.rom_address_padding:
+        if opts.rom_address_padding:
             spimdisasm.common.GlobalConfig.ASM_COMMENT_OFFSET_WIDTH = 6
         else:
             spimdisasm.common.GlobalConfig.ASM_COMMENT_OFFSET_WIDTH = 0
@@ -29,23 +30,23 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         rabbitizer.config.regNames_userFpcCsr = False
         rabbitizer.config.regNames_vr4300Cop0NamedRegisters = False
 
-        rabbitizer.config.misc_opcodeLJust = options.opts.mnemonic_ljust - 1
+        rabbitizer.config.misc_opcodeLJust = opts.mnemonic_ljust - 1
 
         rabbitizer.config.regNames_gprAbiNames = rabbitizer.Abi.fromStr(
-            options.opts.mips_abi_gpr
+            opts.mips_abi_gpr
         )
         rabbitizer.config.regNames_fprAbiNames = rabbitizer.Abi.fromStr(
-            options.opts.mips_abi_float_regs
+            opts.mips_abi_float_regs
         )
 
-        if options.opts.endianness == "big":
+        if opts.endianness == "big":
             spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG
         else:
             spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
         rabbitizer.config.pseudos_pseudoMove = False
 
-        selected_compiler = options.opts.compiler
+        selected_compiler = opts.compiler
         if selected_compiler == compiler.SN64:
             rabbitizer.config.regNames_namedRegisters = False
             rabbitizer.config.toolchainTweaks_sn64DivFix = True
@@ -61,14 +62,12 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         elif selected_compiler == compiler.IDO:
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
 
-        spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
+        spimdisasm.common.GlobalConfig.GP_VALUE = opts.gp
 
-        spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = options.opts.asm_function_macro
-        spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = (
-            options.opts.asm_jtbl_label_macro
-        )
-        spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
-        spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
+        spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = opts.asm_function_macro
+        spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = opts.asm_jtbl_label_macro
+        spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = opts.asm_data_macro
+        spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = opts.asm_end_label
 
         if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
             spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
@@ -77,13 +76,13 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         if spimdisasm.common.GlobalConfig.ASM_DATA_LABEL == ".globl":
             spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
-        spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
+        spimdisasm.common.GlobalConfig.LINE_ENDS = opts.c_newline
 
         spimdisasm.common.GlobalConfig.ALLOW_ALL_ADDENDS_ON_DATA = (
-            options.opts.allow_data_addends
+            opts.allow_data_addends
         )
 
-    def check_version(self, skip_version_check, splat_version):
+    def check_version(self, skip_version_check: bool, splat_version: str):
         if not skip_version_check and spimdisasm.__version_info__ < self.SPIMDISASM_MIN:
             log.error(
                 f"splat {splat_version} requires as minimum spimdisasm {self.SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
@@ -93,5 +92,5 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             f"splat {splat_version} (powered by spimdisasm {spimdisasm.__version__})"
         )
 
-    def known_types(self):
+    def known_types(self) -> set[str]:
         return spimdisasm.common.gKnownTypes
