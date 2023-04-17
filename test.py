@@ -5,6 +5,10 @@ import filecmp
 import pprint
 from util import symbols, options
 import spimdisasm
+from segtypes.common.rodata import CommonSegRodata
+from segtypes.common.code import CommonSegCode
+from segtypes.common.c import CommonSegC
+from segtypes.common.bss import CommonSegBss
 
 
 class Testing(unittest.TestCase):
@@ -41,6 +45,37 @@ class Testing(unittest.TestCase):
         print("diff_files", diff_files)
 
         assert len(diff_files) == 0
+
+
+def test_init():
+    options_dict = {
+        "options": {
+            "platform": "n64",
+            "basename": "basic_app",
+            "base_path": ".",
+            "build_path": "build",
+            "target_path": "build/main.bin",
+            "asm_path": "split/asm",
+            "src_path": "split/src",
+            "ld_script_path": "split/basic_app.ld",
+            "cache_path": "split/.splache",
+            "symbol_addrs_path": "split/generated.symbols.txt",
+            "undefined_funcs_auto_path": "split/undefined_funcs_auto.txt",
+            "undefined_syms_auto_path": "split/undefined_syms_auto.txt",
+        },
+        "segments": [
+            {
+                "name": "basic_app",
+                "type": "code",
+                "start": 0,
+                "vram": 4194304,
+                "subalign": 4,
+                "subsegments": [[0, "data"], [476, "c", "main"], [508, "data"]],
+            },
+            [4752],
+        ],
+    }
+    options.initialize(options_dict, ["./test/basic_app/splat.yaml"], [], False)
 
 
 class Symbols(unittest.TestCase):
@@ -129,34 +164,8 @@ class Symbols(unittest.TestCase):
 
         # need to init otherwise options.opts isn't defined.
         # used in initializing a Segment
-        options_dict = {
-            "options": {
-                "platform": "n64",
-                "basename": "basic_app",
-                "base_path": ".",
-                "build_path": "build",
-                "target_path": "build/main.bin",
-                "asm_path": "split/asm",
-                "src_path": "split/src",
-                "ld_script_path": "split/basic_app.ld",
-                "cache_path": "split/.splache",
-                "symbol_addrs_path": "split/generated.symbols.txt",
-                "undefined_funcs_auto_path": "split/undefined_funcs_auto.txt",
-                "undefined_syms_auto_path": "split/undefined_syms_auto.txt",
-            },
-            "segments": [
-                {
-                    "name": "basic_app",
-                    "type": "code",
-                    "start": 0,
-                    "vram": 4194304,
-                    "subalign": 4,
-                    "subsegments": [[0, "data"], [476, "c", "main"], [508, "data"]],
-                },
-                [4752],
-            ],
-        }
-        options.initialize(options_dict, ["./test/basic_app/splat.yaml"], [], False)
+        test_init()
+
         segment = Segment(
             rom_start=rom_start,
             rom_end=rom_end,
@@ -171,6 +180,99 @@ class Symbols(unittest.TestCase):
         assert result.referenced == True
         assert result.extract == True
         assert result.name == "D_0"
+
+
+def get_yaml():
+    yaml = {
+        "name": "basic_app",
+        "type": "code",
+        "start": 0,
+        "vram": 4194304,
+        "subalign": 4,
+        "subsegments": [[0, "data"], [476, "c", "main"], [508, "data"]],
+    }
+    return yaml
+
+
+class Rodata(unittest.TestCase):
+    def test_get_possible_text_subsegment_for_symbol(self):
+        context = spimdisasm.common.Context()
+
+        # use SymbolRodata to test migration
+        rodata_sym = spimdisasm.mips.symbols.SymbolRodata(
+            context=context,
+            vromStart=0x100,
+            vromEnd=None,
+            inFileOffset=None,
+            vram=0x100,
+            words=[0, 1, 2, 3, 4, 5, 6, 7],
+            segmentVromStart=None,
+            overlayCategory=None,
+        )
+        rodata_sym.contextSym.forceMigration = True
+
+        context_sym = spimdisasm.common.ContextSymbol(address=0)
+        context_sym.address = 0x100
+
+        rodata_sym.contextSym.referenceFunctions = [context_sym]
+        # Segment __init__ requires opts to be initialized
+        test_init()
+
+        common_seg_rodata = CommonSegRodata(
+            rom_start=0x0,
+            rom_end=0x100,
+            type=".rodata",
+            name="MyRodata",
+            vram_start=0x400,
+            args=None,
+            yaml=None,
+        )
+
+        common_seg_rodata.parent = CommonSegCode(
+            rom_start=0x0,
+            rom_end=0x200,
+            type="code",
+            name="MyCode",
+            vram_start=0x100,
+            args=[],
+            yaml=get_yaml(),
+        )
+        result = common_seg_rodata.get_possible_text_subsegment_for_symbol(rodata_sym)
+        # hard to get non-None result here
+        assert result == None
+
+
+class Bss(unittest.TestCase):
+    def test_disassemble_data(self):
+        # Segment __init__ requires opts to be initialized
+        test_init()
+
+        bss = CommonSegBss(
+            rom_start=0x0,
+            rom_end=0x100,
+            type=".bss",
+            name=None,
+            vram_start=0x40000000,
+            args=None,
+            yaml=None,
+        )
+
+        bss.parent = CommonSegCode(
+            rom_start=0x0,
+            rom_end=0x200,
+            type="code",
+            name="MyCode",
+            vram_start=0x100,
+            args=[],
+            yaml=get_yaml(),
+        )
+
+        rom_bytes = bytes([0, 1, 2, 3, 4, 5, 6, 7])
+        bss.disassemble_data(rom_bytes)
+
+        assert isinstance(bss.spim_section, spimdisasm.mips.sections.SectionBss)
+        assert bss.spim_section.bssVramStart == 0x40000000
+        assert bss.spim_section.bssVramEnd == 0x300
 
 
 if __name__ == "__main__":

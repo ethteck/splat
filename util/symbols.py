@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 import spimdisasm
 import tqdm
 from intervaltree import IntervalTree
+from disassembler import SpimdisasmDisassembler
 
 # circular import
 if TYPE_CHECKING:
@@ -21,6 +22,7 @@ appears_after_overlays_syms: List["Symbol"] = []
 
 # Initialize a spimdisasm context, used to store symbols and functions
 spim_context = spimdisasm.common.Context()
+disassembler = SpimdisasmDisassembler()
 
 TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
@@ -35,7 +37,7 @@ def check_valid_type(typename: str) -> bool:
     if typename in splat_sym_types:
         return True
 
-    if typename in spimdisasm.common.gKnownTypes:
+    if typename in disassembler.known_types():
         return True
 
     return False
