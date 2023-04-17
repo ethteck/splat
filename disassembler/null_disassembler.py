@@ -11,5 +11,4 @@ class NullDisassembler(disassembler.Disassembler):
         pass
 
     def known_types(self) -> Set[str]:
-        print("NullDisassembler.gKnownTypes")
         return set()
