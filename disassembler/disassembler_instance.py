@@ -9,7 +9,7 @@ __initialized = False
 def create_disassembler_instance(platform: str):
     global __instance
     global __initialized
-    if platform in ["n64", "psx", "gc", "ps2"]:
+    if platform in ["n64", "psx", "ps2"]:
         print(f"Creating SpimdisasmDisassembler for {platform}")
         __instance = SpimdisasmDisassembler()
         __initialized = True
