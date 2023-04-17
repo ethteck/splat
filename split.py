@@ -23,8 +23,6 @@ from util.symbols import Symbol
 
 VERSION = "0.13.8"
 
-disassembler = spimdisasm_disassembler.SpimdisasmDisassembler()
-
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
 )
@@ -216,7 +214,7 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     global config
 
-    disassembler.check_version(skip_version_check, VERSION)
+    spimdisasm_disassembler.instance.check_version(skip_version_check, VERSION)
 
     # Load config
     config = {}
@@ -267,7 +265,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
             "__options__": config.get("options"),
         }
 
-    disassembler.configure(options.opts)
+    spimdisasm_disassembler.instance.configure(options.opts)
 
     platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
     platform_init = getattr(platform_module, "init")
