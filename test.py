@@ -80,6 +80,8 @@ def test_init():
 
 class Symbols(unittest.TestCase):
     def test_check_valid_type(self):
+        disassembler_instance.create_disassembler_instance("n64")
+
         # first char is uppercase
         assert symbols.check_valid_type("Symbol") == True
 

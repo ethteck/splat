@@ -5,7 +5,7 @@ import hashlib
 import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from disassembler import spimdisasm_disassembler
+from disassembler import disassembler_instance
 import tqdm
 import yaml
 from colorama import Fore, Style
@@ -214,8 +214,6 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     global config
 
-    spimdisasm_disassembler.instance.check_version(skip_version_check, VERSION)
-
     # Load config
     config = {}
     for entry in config_path:
@@ -224,6 +222,9 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
         config = merge_configs(config, additional_config)
 
     options.initialize(config, config_path, modes, verbose)
+
+    disassembler_instance.create_disassembler_instance(options.opts.platform)
+    disassembler_instance.get_instance().check_version(skip_version_check, VERSION)
 
     with options.opts.target_path.open("rb") as f2:
         rom_bytes = f2.read()
@@ -265,7 +266,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
             "__options__": config.get("options"),
         }
 
-    spimdisasm_disassembler.instance.configure(options.opts)
+    disassembler_instance.get_instance().configure(options.opts)
 
     platform_module = importlib.import_module(f"platforms.{options.opts.platform}")
     platform_init = getattr(platform_module, "init")

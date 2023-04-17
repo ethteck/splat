@@ -95,6 +95,3 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
 
     def known_types(self) -> Set[str]:
         return spimdisasm.common.gKnownTypes
-
-
-instance = SpimdisasmDisassembler()
