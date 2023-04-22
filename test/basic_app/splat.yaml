@@ -11,14 +11,23 @@ options:
   symbol_addrs_path:    split/generated.symbols.txt
   undefined_funcs_auto_path: split/undefined_funcs_auto.txt
   undefined_syms_auto_path:  split/undefined_syms_auto.txt
+  asset_path: split/assets
+  asm_generated_by: False
 segments:
   - name: basic_app
     type: code
     start: 0x00000000
     vram:  0x00400000
+    bss_size: 0x24
     subalign: 4
     subsegments:
-      - [0, data]
-      - [0x1dc, c, main]
-      - [0x1fc, data]
-  - [0x1290]
+      - [0x0, data, .MIPS.abiflags]
+      - [0x1dc, hasm, mymb]
+      - [0x204, c, main]
+      - [0x230, data]
+      - [0x12D4, bin, bin_data]
+      - [0x12D8] # intentionally short since 0x12DC seems to break spimdisasm bss output
+      - { type: bss, vram: 0x004012dc, name: __bss_start }
+      - { type: bss, vram: 0x004012e0, name: dtor_idx.3753 }
+      - { type: bss, vram: 0x004012e4, name: object.3763 }
+  - [0x12DC]

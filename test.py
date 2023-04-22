@@ -9,6 +9,7 @@ from segtypes.common.rodata import CommonSegRodata
 from segtypes.common.code import CommonSegCode
 from segtypes.common.c import CommonSegC
 from segtypes.common.bss import CommonSegBss
+import difflib
 
 
 class Testing(unittest.TestCase):
@@ -30,6 +31,20 @@ class Testing(unittest.TestCase):
         for sub_dcmp in dcmp.subdirs.values():
             self.get_diff_files(sub_dcmp, out)
 
+    def get_left_only_files(self, dcmp, out):
+        for name in dcmp.left_only:
+            out.append((name, dcmp.left, dcmp.right))
+
+        for sub_dcmp in dcmp.subdirs.values():
+            self.get_left_only_files(sub_dcmp, out)
+
+    def get_right_only_files(self, dcmp, out):
+        for name in dcmp.right_only:
+            out.append((name, dcmp.left, dcmp.right))
+
+        for sub_dcmp in dcmp.subdirs.values():
+            self.get_right_only_files(sub_dcmp, out)
+
     def test_basic_app(self):
         main(["test/basic_app/splat.yaml"], None, None)
 
@@ -41,10 +56,37 @@ class Testing(unittest.TestCase):
         same_files: List[Tuple[str, str, str]] = []
         self.get_same_files(comparison, same_files)
 
+        left_only_files: List[Tuple[str, str, str]] = []
+        self.get_left_only_files(comparison, left_only_files)
+
+        right_only_files: List[Tuple[str, str, str]] = []
+        self.get_right_only_files(comparison, right_only_files)
+
         print("same_files", same_files)
         print("diff_files", diff_files)
+        print("left_only_files", left_only_files)
+        print("right_only_files", right_only_files)
+
+        # if the files are different print out the difference
+        for file in diff_files:
+            # can't diff binary
+            if file[0] == ".splache":
+                continue
+            file1_lines = []
+            file2_lines = []
+            with open(f"{file[1]}/{file[0]}") as file1:
+                file1_lines = file1.readlines()
+            with open(f"{file[2]}/{file[0]}") as file2:
+                file2_lines = file2.readlines()
+
+            for line in difflib.unified_diff(
+                file1_lines, file2_lines, fromfile="file1", tofile="file2", lineterm=""
+            ):
+                print(line)
 
         assert len(diff_files) == 0
+        assert len(left_only_files) == 0
+        assert len(right_only_files) == 0
 
 
 def test_init():
