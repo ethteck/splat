@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 import spimdisasm
 import tqdm
 from intervaltree import IntervalTree
+from disassembler import disassembler_instance
 
 # circular import
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ def check_valid_type(typename: str) -> bool:
     if typename in splat_sym_types:
         return True
 
-    if typename in spimdisasm.common.gKnownTypes:
+    if typename in disassembler_instance.get_instance().known_types():
         return True
 
     return False
