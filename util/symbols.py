@@ -639,3 +639,8 @@ class Symbol:
 
     def contains_rom(self, offset):
         return offset >= self.rom and offset < self.rom_end
+
+
+def get_all_symbols():
+    global all_symbols
+    return all_symbols
