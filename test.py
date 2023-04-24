@@ -10,6 +10,7 @@ from segtypes.common.code import CommonSegCode
 from segtypes.common.c import CommonSegC
 from segtypes.common.bss import CommonSegBss
 import difflib
+from segtypes.common.group import CommonSegGroup
 
 
 class Testing(unittest.TestCase):
@@ -239,8 +240,31 @@ def get_yaml():
 
 
 class Rodata(unittest.TestCase):
+    def test_disassemble_data(self):
+        test_init()
+        common_seg_rodata = CommonSegRodata(
+            rom_start=0x0,
+            rom_end=0x100,
+            type=".rodata",
+            name="MyRodata",
+            vram_start=0x400,
+            args=None,
+            yaml=None,
+        )
+        rom_data = []
+        for i in range(0, 0x100):
+            rom_data.append(i)
+        common_seg_rodata.disassemble_data(bytes(rom_data))
+        assert common_seg_rodata.spim_section is not None
+        assert common_seg_rodata.spim_section.words[0] == 0x0010203
+        assert symbols.get_all_symbols()[0].vram_start == 0x400
+        assert symbols.get_all_symbols()[0].segment == common_seg_rodata
+        assert symbols.get_all_symbols()[0].linker_section == ".rodata"
+
     def test_get_possible_text_subsegment_for_symbol(self):
         context = spimdisasm.common.Context()
+
+        result_symbol_addr = 0x2DC
 
         # use SymbolRodata to test migration
         rodata_sym = spimdisasm.mips.symbols.SymbolRodata(
@@ -256,7 +280,7 @@ class Rodata(unittest.TestCase):
         rodata_sym.contextSym.forceMigration = True
 
         context_sym = spimdisasm.common.ContextSymbol(address=0)
-        context_sym.address = 0x100
+        context_sym.address = result_symbol_addr
 
         rodata_sym.contextSym.referenceFunctions = [context_sym]
         # Segment __init__ requires opts to be initialized
@@ -281,9 +305,11 @@ class Rodata(unittest.TestCase):
             args=[],
             yaml=get_yaml(),
         )
+
         result = common_seg_rodata.get_possible_text_subsegment_for_symbol(rodata_sym)
-        # hard to get non-None result here
-        assert result == None
+        assert result is not None
+        assert type(result[0]) == CommonSegC
+        assert result[1].address == result_symbol_addr
 
 
 class Bss(unittest.TestCase):
