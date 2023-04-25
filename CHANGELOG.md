@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.13.9
+
+* New segment option `linker_entry` (true by default).
+  * If disabled, this segment will not produce entries in the linker script.
+
 ### 0.13.8
 
 * New option `segment_end_before_align`.

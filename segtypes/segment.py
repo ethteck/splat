@@ -287,7 +287,6 @@ class Segment:
 
         if not ret.align:
             ret.align = parse_segment_align(yaml)
-
         return ret
 
     # For executable segments (.text); like c, asm or hasm
