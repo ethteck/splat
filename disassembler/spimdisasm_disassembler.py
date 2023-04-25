@@ -85,6 +85,10 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
 
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = opts.asm_generated_by
 
+        spimdisasm.common.GlobalConfig.DISASSEMBLE_UNKNOWN_INSTRUCTIONS = (
+            opts.disasm_unknown
+        )
+
     def check_version(self, skip_version_check: bool, splat_version: str):
         if not skip_version_check and spimdisasm.__version_info__ < self.SPIMDISASM_MIN:
             log.error(

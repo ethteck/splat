@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.13.10
+
+* New option `disasm_unknown` (False by default)
+  * If enabled it tells the disassembler to try disassembling functions with unknown instructions instead of falling back to disassembling as raw data
+
 ### 0.13.9
 
 * New segment option `linker_entry` (true by default).
