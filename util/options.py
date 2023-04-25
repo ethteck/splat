@@ -411,7 +411,7 @@ def _parse_yaml(
         use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, True),
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
         asm_generated_by=p.parse_opt("asm_generated_by", bool, True),
-        disasm_unknown=p.parse_opt("disasm_unknown", bool, Falase),
+        disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
     )
     p.check_no_unread_opts()
     return ret
