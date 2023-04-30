@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.14.0
+
+* Add support for PSX's GTE instruction set
+
 ### 0.13.10
 
 * New option `disasm_unknown` (False by default)
