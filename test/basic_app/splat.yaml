@@ -3,7 +3,7 @@ options:
   basename:     basic_app
   base_path:    .
   build_path:   build
-  target_path:  build/main.bin
+  target_path:  build/basic_app.bin
   asm_path:     split/asm
   src_path:     split/src
   ld_script_path: split/basic_app.ld
@@ -14,20 +14,24 @@ options:
   asset_path: split/assets
   asm_generated_by: False
 segments:
-  - name: basic_app
+  - name: header
+    type: header
+    start: 0x00
+  - name: dummy_ipl3
     type: code
-    start: 0x00000000
-    vram:  0x00400000
-    bss_size: 0x24
-    subalign: 4
+    start: 0x40
+    vram: 0xA4000040
     subsegments:
-      - [0x0, data, .MIPS.abiflags]
-      - [0x1dc, hasm, mymb]
-      - [0x204, c, main]
-      - [0x230, data]
-      - [0x12D4, bin, bin_data]
-      - [0x12D8] # intentionally short since 0x12DC seems to break spimdisasm bss output
-      - { type: bss, vram: 0x004012dc, name: __bss_start }
-      - { type: bss, vram: 0x004012e0, name: dtor_idx.3753 }
-      - { type: bss, vram: 0x004012e4, name: object.3763 }
-  - [0x12DC]
+      - [0x0040, bin, dummy_ipl3]
+  - name: boot
+    type: code
+    start: 0x1000
+    vram:  0x80000400
+    bss_size: 0x80
+    subsegments:
+      - [0x1000, c, main]
+      - [0x10F0, hasm, handwritten]
+      - [0x1100, .data, main]
+      - [0x1110, .rodata, main]
+      - { type: bss, vram: 0x80000540, name: main }
+  - [0x1138]
