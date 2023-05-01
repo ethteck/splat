@@ -1,3 +1,6 @@
+.set noat      /* allow manual use of $at */
+.set noreorder /* don't insert nops after branches */
+
 glabel func_80000400
 /* 1000 80000400 27BDFFF8 */  addiu      $sp, $sp, -0x8
 /* 1004 80000404 AFBE0000 */  sw         $fp, 0x0($sp)

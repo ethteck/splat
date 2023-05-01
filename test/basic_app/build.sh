@@ -7,6 +7,6 @@ COMPILER_PATH=/gcc-2.7.2 /gcc-2.7.2/gcc -G0 -mgp32 -mfp32 -mips3 handwritten.s -
 COMPILER_PATH=/gcc-2.7.2 /gcc-2.7.2/gcc -G0 -mgp32 -mfp32 -mips3 dummy_ipl3.s -c -o build/dummy_ipl3.o
 mips-linux-gnu-strip -N dummy_symbol_name build/*.o
 echo "Linking..."
-mips-linux-gnu-ld -T basic_app.ld -o build/basic_app.elf
+mips-linux-gnu-ld -Map build/basic_app.map -T basic_app.ld -o build/basic_app.elf
 echo "Dumping bin..."
 mips-linux-gnu-objcopy build/basic_app.elf -O binary build/basic_app.bin --pad-to=0x1140 --gap-fill=0xFF

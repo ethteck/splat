@@ -41,12 +41,12 @@ SECTIONS
         boot_TEXT_END = .;
         boot_TEXT_SIZE = ABSOLUTE(boot_TEXT_END - boot_TEXT_START);
         boot_DATA_START = .;
-        main_c = .;
-        build/split/src/main.c.o(.data);
+        main_data__s = .;
+        build/split/asm/data/main.data.s.o(.data);
         boot_DATA_END = .;
         boot_DATA_SIZE = ABSOLUTE(boot_DATA_END - boot_DATA_START);
         boot_RODATA_START = .;
-        build/split/src/main.c.o(.rodata);
+        build/split/asm/data/main.rodata.s.o(.rodata);
         boot_RODATA_END = .;
         boot_RODATA_SIZE = ABSOLUTE(boot_RODATA_END - boot_RODATA_START);
     }

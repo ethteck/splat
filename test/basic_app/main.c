@@ -1,10 +1,12 @@
+// .data
 volatile int test = 1;
 
-// bin
+// bin (.rodata)
 const char bin_data[] = {0,1,2,3,4,5,6,7};
 
 unsigned long long bss_data[0x10];
 
+// .data
 volatile int switch_arg = 0;
 
 int do_switch()
