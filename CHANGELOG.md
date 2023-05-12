@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.14.1
+* New option `pseudo_move` (False by default)
+  * If enabled it will tell the disassembler to generate pseudo move instructions
+
 ### 0.14.0
 
 * Add support for PSX's GTE instruction set

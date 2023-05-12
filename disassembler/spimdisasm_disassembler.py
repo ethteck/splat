@@ -45,7 +45,7 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         else:
             spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
-        rabbitizer.config.pseudos_pseudoMove = False
+        rabbitizer.config.pseudos_pseudoMove = opts.pseudo_move
 
         selected_compiler = opts.compiler
         if selected_compiler == compiler.SN64:

@@ -166,6 +166,8 @@ class SplatOpts:
     asm_generated_by: bool
     # Tells the disassembler to try disassembling functions with unknown instructions instead of falling back to disassembling as raw data
     disasm_unknown: bool
+    # Configure whether to generate the pseudo move instruction in rabbitizer
+    pseudo_move: bool
 
     ################################################################################
     # N64-specific options
@@ -412,6 +414,7 @@ def _parse_yaml(
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
         asm_generated_by=p.parse_opt("asm_generated_by", bool, True),
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
+        pseudo_move=p.parse_opt("pseudo_move", bool, False),
     )
     p.check_no_unread_opts()
     return ret
