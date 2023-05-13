@@ -256,7 +256,7 @@ class Rodata(unittest.TestCase):
             rom_data.append(i)
         common_seg_rodata.disassemble_data(bytes(rom_data))
         assert common_seg_rodata.spim_section is not None
-        assert common_seg_rodata.spim_section.words[0] == 0x0010203
+        assert common_seg_rodata.spim_section.get_section().words[0] == 0x0010203
         assert symbols.get_all_symbols()[0].vram_start == 0x400
         assert symbols.get_all_symbols()[0].segment == common_seg_rodata
         assert symbols.get_all_symbols()[0].linker_section == ".rodata"
@@ -340,9 +340,13 @@ class Bss(unittest.TestCase):
         rom_bytes = bytes([0, 1, 2, 3, 4, 5, 6, 7])
         bss.disassemble_data(rom_bytes)
 
-        assert isinstance(bss.spim_section, spimdisasm.mips.sections.SectionBss)
-        assert bss.spim_section.bssVramStart == 0x40000000
-        assert bss.spim_section.bssVramEnd == 0x300
+        assert bss.spim_section is not None
+
+        assert isinstance(
+            bss.spim_section.get_section(), spimdisasm.mips.sections.SectionBss
+        )
+        assert bss.spim_section.get_section().bssVramStart == 0x40000000
+        assert bss.spim_section.get_section().bssVramEnd == 0x300
 
 
 if __name__ == "__main__":
