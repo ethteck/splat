@@ -349,5 +349,185 @@ class Bss(unittest.TestCase):
         assert bss.spim_section.get_section().bssVramEnd == 0x300
 
 
+class SymbolsInitialize(unittest.TestCase):
+    def test_attrs(self):
+        import segtypes
+        import pathlib
+
+        symbols.reset_symbols()
+        test_init()
+
+        sym_addrs_lines = [
+            "func_1 = 0x100 // type:func size:10 rom:100 segment:test_segment name_end:the_name_end appears_after_overlays_addr:1234"
+        ]
+
+        all_segments = [
+            Segment(
+                rom_start=0x100,
+                rom_end=0x200,
+                type="func",
+                name="test_segment",
+                vram_start=0x300,
+                args=[],
+                yaml={},
+            )
+        ]
+
+        symbols.handle_sym_addrs(
+            pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
+        )
+        assert symbols.all_symbols[0].given_name == "func_1"
+        assert symbols.all_symbols[0].type == "func"
+        assert symbols.all_symbols[0].given_size == 10
+        assert symbols.all_symbols[0].rom == 100
+        assert symbols.all_symbols[0].segment == all_segments[0]
+        assert symbols.all_symbols[0].given_name_end == "the_name_end"
+        assert symbols.appears_after_overlays_syms[0] == symbols.all_symbols[0]
+
+    def test_boolean_attrs(self):
+        import segtypes
+        import pathlib
+
+        symbols.reset_symbols()
+        test_init()
+
+        sym_addrs_lines = [
+            "func_1 = 0x100 // dead:True defined:True extract:True force_migration:True force_not_migration:True allow_addend:True dont_allow_addend:True"
+        ]
+
+        all_segments = [
+            Segment(
+                rom_start=0x100,
+                rom_end=0x200,
+                type="func",
+                name="test_segment",
+                vram_start=0x300,
+                args=[],
+                yaml={},
+            )
+        ]
+
+        symbols.handle_sym_addrs(
+            pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
+        )
+        assert symbols.all_symbols[0].dead == True
+        assert symbols.all_symbols[0].defined == True
+        assert symbols.all_symbols[0].force_migration == True
+        assert symbols.all_symbols[0].force_not_migration == True
+        assert symbols.all_symbols[0].allow_addend == True
+        assert symbols.all_symbols[0].dont_allow_addend == True
+
+    # test spim ban range
+    def test_ignore(self):
+        import segtypes
+        import pathlib
+
+        symbols.reset_symbols()
+        test_init()
+
+        sym_addrs_lines = ["func_1 = 0x100 // ignore:True size:4"]
+
+        all_segments = [
+            Segment(
+                rom_start=0x100,
+                rom_end=0x200,
+                type="func",
+                name="test_segment",
+                vram_start=0x300,
+                args=[],
+                yaml={},
+            )
+        ]
+
+        symbols.handle_sym_addrs(
+            pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
+        )
+        assert symbols.spim_context.bannedRangedSymbols[0].start == 16
+        assert symbols.spim_context.bannedRangedSymbols[0].end == 20
+
+
+class InitializeSpimContext(unittest.TestCase):
+    def test_overlay(self):
+        symbols.reset_symbols()
+        test_init()
+
+        yaml = {
+            "name": "boot",
+            "type": "code",
+            "start": 4096,
+            "vram": 2147484672,
+            "bss_size": 128,
+            "exclusive_ram_id": "overlay",
+            "subsegments": [
+                [4096, "c", "main"],
+                [4336, "hasm", "handwritten"],
+                [4352, "data", "main"],
+                [4368, "rodata", "main"],
+                {"type": "bss", "vram": 2147484992, "name": "main"},
+            ],
+        }
+
+        all_segments: List["Segment"] = [
+            CommonSegCode(
+                rom_start=0x0,
+                rom_end=0x200,
+                type="code",
+                name="main",
+                vram_start=0x100,
+                args=[],
+                yaml=yaml,
+            )
+        ]
+
+        # force this since it's hard to set up
+        all_segments[0].exclusive_ram_id = "overlay"
+
+        symbols.initialize_spim_context(all_segments)
+        # spim should have added something to overlaySegments
+        assert (
+            type(symbols.spim_context.overlaySegments["overlay"][0])
+            == spimdisasm.common.SymbolsSegment
+        )
+
+    # test globalSegment settings
+    def test_global(self):
+        symbols.reset_symbols()
+        test_init()
+
+        yaml = {
+            "name": "boot",
+            "type": "code",
+            "start": 4096,
+            "vram": 2147484672,
+            "bss_size": 128,
+            "exclusive_ram_id": "overlay",
+            "subsegments": [
+                [4096, "c", "main"],
+                [4336, "hasm", "handwritten"],
+                [4352, "data", "main"],
+                [4368, "rodata", "main"],
+                {"type": "bss", "vram": 2147484992, "name": "main"},
+            ],
+        }
+
+        all_segments: List["Segment"] = [
+            CommonSegCode(
+                rom_start=0x0,
+                rom_end=0x200,
+                type="code",
+                name="main",
+                vram_start=0x100,
+                args=[],
+                yaml=yaml,
+            )
+        ]
+
+        assert symbols.spim_context.globalSegment.vramStart == 2147483648
+        assert symbols.spim_context.globalSegment.vramEnd == 2147487744
+        symbols.initialize_spim_context(all_segments)
+        assert symbols.spim_context.globalSegment.vramStart == 256
+        assert symbols.spim_context.globalSegment.vramEnd == 896
+
+
 if __name__ == "__main__":
     unittest.main()
