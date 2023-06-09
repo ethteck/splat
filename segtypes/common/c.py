@@ -156,7 +156,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.spim_section.get_section(), spimdisasm.mips.sections.SectionText
             ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
 
-            rodata_spim_segment = None
+            rodata_spim_segment: Optional[spimdisasm.mips.sections.SectionRodata] = None
             if (
                 options.opts.migrate_rodata_to_functions
                 and self.rodata_sibling is not None
@@ -169,7 +169,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         self.rodata_sibling.spim_section.get_section(),
                         spimdisasm.mips.sections.SectionRodata,
                     )
-                    rodata_spim_segment = self.rodata_sibling.spim_section
+                    rodata_spim_segment = self.rodata_sibling.spim_section.get_section()
 
             # Precompute function-rodata pairings
             symbols_entries = (
