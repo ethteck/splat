@@ -169,7 +169,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         self.rodata_sibling.spim_section.get_section(),
                         spimdisasm.mips.sections.SectionRodata,
                     )
-                    rodata_spim_segment = self.rodata_sibling.spim_section
+                    rodata_spim_segment = self.rodata_sibling.spim_section.get_section()
 
             # Precompute function-rodata pairings
             symbols_entries = (
