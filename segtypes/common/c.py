@@ -319,7 +319,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         macro_name: str,
     ) -> str:
         if options.opts.compiler == IDO:
-            # IDO uses the asm processor to embeed assembly and it doesn't require a special directive to include symbols
+            # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
             asm_outpath = Path(
                 os.path.join(asm_out_dir, self.name, spim_sym.getName() + ".s")
             )
