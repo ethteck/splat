@@ -98,7 +98,7 @@ class SplatOpts:
     ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
     ld_wildcard_sections: bool
-    # Determines whether to use use "follows" settings to determine locations of overlays in the linker script.
+    # Determines whether to use "follows" settings to determine locations of overlays in the linker script.
     # If disabled, this effectively ignores "follows" directives in the yaml.
     ld_use_follows: bool
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
@@ -154,7 +154,7 @@ class SplatOpts:
     # o32 is highly recommended, as it provides logically named registers for floating point instructions
     # For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
     mips_abi_float_regs: str
-    # Determines whether to ad ".set gp=64 to asm/hasm files"
+    # Determines whether to add ".set gp=64" to asm/hasm files
     add_set_gp_64: bool
     # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
     create_asm_dependencies: bool

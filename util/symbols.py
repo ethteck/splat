@@ -225,14 +225,13 @@ def handle_sym_addrs(path: Path, sym_addrs_lines: List[str], all_segments):
                                 continue
 
             if ignore_sym:
-                if sym.given_size == None or sym.given_size == 0:
+                if sym.given_size is None or sym.given_size == 0:
                     ignored_addresses.add(sym.vram_start)
                 else:
                     spim_context.addBannedSymbolRangeBySize(
                         sym.vram_start, sym.given_size
                     )
 
-                ignore_sym = False
                 continue
 
             if sym.segment:
