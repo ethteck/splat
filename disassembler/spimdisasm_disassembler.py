@@ -28,6 +28,12 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
 
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
 
+        if opts.rodata_string_guesser_level is not None:
+            spimdisasm.common.GlobalConfig.RODATA_STRING_GUESSER_LEVEL = opts.rodata_string_guesser_level
+
+        if opts.data_string_guesser_level is not None:
+            spimdisasm.common.GlobalConfig.DATA_STRING_GUESSER_LEVEL = opts.data_string_guesser_level
+
         rabbitizer.config.regNames_userFpcCsr = False
         rabbitizer.config.regNames_vr4300Cop0NamedRegisters = False
 
