@@ -103,6 +103,17 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         assert self.spim_section is not None
 
+        # Set rodata string encoding
+        # First check the global configuration
+        if options.opts.data_string_encoding is not None:
+            self.spim_section.get_section().stringEncoding = (
+                options.opts.data_string_encoding
+            )
+
+        # Then check the per-segment configuration in case we want to override the global one
+        if self.str_encoding is not None:
+            self.spim_section.get_section().stringEncoding = self.str_encoding
+
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
 

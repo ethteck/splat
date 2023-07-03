@@ -1,5 +1,22 @@
 # splat Release Notes
 
+### 0.15.0
+
+* New options:
+  * `data_string_encoding` can be set at the global level (or `str_encoding` at the segment level) to specify the encoding using when guessing and disassembling strings the the data section. In spimdisasm this value defaults to ASCII.
+  * `rodata_string_guesser_level` changes the behaviour of the rodata string guesser. A higher value means more agressive guessing, while 0 and negative means no guessing at all. Even if the guesser feature is disabled, symbols manually marked as strings in the symbol_addrs.txt file will still be disassembled as strings. In spimdisasm this value defaults to 1.
+    * level 0: Completely disable the guessing feature.
+    * level 1: The most conservative guessing level. Imposes the following restrictions:
+      * Do not try to guess if the user provided a type for the symbol.
+      * Do no try to guess if type information for the symbol can be inferred by other means.
+      * A string symbol must be referenced only once.
+      * Strings must not be empty.
+    * level 2: A string no longer needs to be referenced only once to be considered a possible string. This can happen because of a deduplication optimization.
+    * level 3: Empty strings are allowed.
+    * level 4: Symbols with autodetected type information but no user type information can still be guessed as strings.
+  * `data_string_guesser_level` is similar to `rodata_string_guesser_level`, but for the data section instead. In spimdisasm this value defaults to 2.
+  * `asm_emit_size_directive` toggles the size directived emitted by the disassembler. In spimdisasm this defaults to True.
+
 ### 0.14.1
 
 * Fix bug, cod cleanup
