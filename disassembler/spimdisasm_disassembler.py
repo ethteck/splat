@@ -76,6 +76,9 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = opts.asm_data_macro
         spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = opts.asm_end_label
 
+        if opts.asm_emit_size_directive is not None:
+            spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = opts.asm_emit_size_directive
+
         if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
             spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
             spimdisasm.common.GlobalConfig.ASM_TEXT_FUNC_AS_LABEL = True

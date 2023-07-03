@@ -141,6 +141,8 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
+    # 
+    asm_emit_size_directive: Optional[bool]
     # Determines including the macro.inc file on non-migrated rodata variables
     include_macro_inc: bool
     # Determines the number of characters to left align before the TODO finish documenting
@@ -384,6 +386,7 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
+        asm_emit_size_directive=p.parse_optional_opt("asm_emit_size_directive", bool),
         include_macro_inc=p.parse_opt(
             "include_macro_inc", bool, comp.include_macro_inc
         ),
