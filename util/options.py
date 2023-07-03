@@ -141,7 +141,7 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
-    # 
+    # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
     # Determines including the macro.inc file on non-migrated rodata variables
     include_macro_inc: bool
@@ -408,8 +408,12 @@ def _parse_yaml(
         create_asm_dependencies=p.parse_opt("create_asm_dependencies", bool, False),
         string_encoding=p.parse_optional_opt("string_encoding", str),
         data_string_encoding=p.parse_optional_opt("data_string_encoding", str),
-        rodata_string_guesser_level=p.parse_optional_opt("rodata_string_guesser_level", int),
-        data_string_guesser_level=p.parse_optional_opt("data_string_guesser_level", int),
+        rodata_string_guesser_level=p.parse_optional_opt(
+            "rodata_string_guesser_level", int
+        ),
+        data_string_guesser_level=p.parse_optional_opt(
+            "data_string_guesser_level", int
+        ),
         allow_data_addends=p.parse_opt("allow_data_addends", bool, True),
         header_encoding=p.parse_opt("header_encoding", str, "ASCII"),
         gfx_ucode=p.parse_opt_within(

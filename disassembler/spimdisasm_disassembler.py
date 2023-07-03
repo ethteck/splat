@@ -8,7 +8,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt
-    SPIMDISASM_MIN = (1, 13, 0)
+    SPIMDISASM_MIN = (1, 15, 0)
 
     def configure(self, opts: SplatOpts):
         # Configure spimdisasm
@@ -29,10 +29,14 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
 
         if opts.rodata_string_guesser_level is not None:
-            spimdisasm.common.GlobalConfig.RODATA_STRING_GUESSER_LEVEL = opts.rodata_string_guesser_level
+            spimdisasm.common.GlobalConfig.RODATA_STRING_GUESSER_LEVEL = (
+                opts.rodata_string_guesser_level
+            )
 
         if opts.data_string_guesser_level is not None:
-            spimdisasm.common.GlobalConfig.DATA_STRING_GUESSER_LEVEL = opts.data_string_guesser_level
+            spimdisasm.common.GlobalConfig.DATA_STRING_GUESSER_LEVEL = (
+                opts.data_string_guesser_level
+            )
 
         rabbitizer.config.regNames_userFpcCsr = False
         rabbitizer.config.regNames_vr4300Cop0NamedRegisters = False
@@ -77,7 +81,9 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = opts.asm_end_label
 
         if opts.asm_emit_size_directive is not None:
-            spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = opts.asm_emit_size_directive
+            spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = (
+                opts.asm_emit_size_directive
+            )
 
         if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
             spimdisasm.common.GlobalConfig.ASM_TEXT_ENT_LABEL = ".ent"
