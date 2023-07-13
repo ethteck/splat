@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.15.1
+* Made some modifications such that linker object paths should be simpler in some circumstances
+
 ### 0.15.0
 
 * New options:
