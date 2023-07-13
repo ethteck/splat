@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import cast, Dict, List, Literal, Mapping, Optional, Set, Type, TypeVar
 
@@ -248,7 +249,7 @@ class OptParser:
     def parse_path(
         self, base_path: Path, opt: str, default: Optional[str] = None
     ) -> Path:
-        return base_path / Path(self.parse_opt(opt, str, default))
+        return Path(os.path.normpath(base_path / self.parse_opt(opt, str, default)))
 
     def parse_optional_path(self, base_path: Path, opt: str) -> Optional[Path]:
         if opt not in self._yaml:
@@ -283,7 +284,9 @@ def _parse_yaml(
     platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2"])
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
-    base_path = Path(config_paths[0]).parent / p.parse_opt("base_path", str)
+    base_path = Path(
+        os.path.normpath(Path(config_paths[0]).parent / p.parse_opt("base_path", str))
+    )
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
     def parse_endianness() -> Literal["big", "little"]:
