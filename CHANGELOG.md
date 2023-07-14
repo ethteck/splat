@@ -1,9 +1,15 @@
 # splat Release Notes
 
+### 0.15.3
+
+* Disabled `asm_emit_size_directive` by default for IDO projects.
+
 ### 0.15.2
+
 * Various cleanup and fixes to support more liberal use of `auto` for rom addresses
 
 ### 0.15.1
+
 * Made some modifications such that linker object paths should be simpler in some circumstances
 
 ### 0.15.0
