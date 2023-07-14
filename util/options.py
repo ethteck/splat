@@ -289,6 +289,11 @@ def _parse_yaml(
     )
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
+    asm_emit_size_directive = p.parse_optional_opt("asm_emit_size_directive", bool)
+    # If option not provided then use the compiler default
+    if asm_emit_size_directive is None:
+        asm_emit_size_directive = comp.asm_emit_size_directive
+
     def parse_endianness() -> Literal["big", "little"]:
         endianness = p.parse_opt_within(
             "endianness",
@@ -389,7 +394,7 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
-        asm_emit_size_directive=p.parse_optional_opt("asm_emit_size_directive", bool),
+        asm_emit_size_directive=asm_emit_size_directive,
         include_macro_inc=p.parse_opt(
             "include_macro_inc", bool, comp.include_macro_inc
         ),
