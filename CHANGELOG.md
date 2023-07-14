@@ -2,7 +2,7 @@
 
 ### 0.15.3
 
-* Turn of `asm_emit_size_directive` by default for IDO projects.
+* Turned off (or maybe just "disabled") `asm_emit_size_directive` by default for IDO projects.
 
 ### 0.15.2
 
