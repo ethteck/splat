@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.15.4
+
+* Try to assign a segment to an user-declared symbol if the user declared the rom address.
+  * Helps to disambiguate symbols for same-address overlays.
+
 ### 0.15.3
 
 * Disabled `asm_emit_size_directive` by default for IDO projects.
