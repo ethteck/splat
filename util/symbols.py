@@ -72,7 +72,9 @@ def to_cname(symbol_name: str) -> str:
     return symbol_name
 
 
-def handle_sym_addrs(path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]"):
+def handle_sym_addrs(
+    path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]"
+):
     def get_seg_for_name(name: str) -> Optional["Segment"]:
         for segment in all_segments:
             if segment.name == name:
