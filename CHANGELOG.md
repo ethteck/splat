@@ -8,6 +8,7 @@
   * This option can also be overriden per file.
 * Disable `include_macro_inc` by default for IDO projects.
 * Disable `asm_emit_size_directive` by default for SN64 projects.
+* `spimdisasm` 1.16.0 or above is now required.
 
 ### 0.15.4
 
