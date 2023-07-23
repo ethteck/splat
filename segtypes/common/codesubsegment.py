@@ -33,7 +33,7 @@ class CommonSegCodeSubsegment(Segment):
         elif options.opts.platform == "psx":
             self.instr_category = rabbitizer.InstrCategory.R3000GTE
 
-        self.detect_redundant_function_end: bool = self.yaml.get("detect_redundant_function_end", False) if isinstance(self.yaml, dict) else False
+        self.detect_redundant_function_end: Optional[bool] = self.yaml.get("detect_redundant_function_end", None) if isinstance(self.yaml, dict) else None
 
     @property
     def needs_symbols(self) -> bool:
