@@ -438,7 +438,9 @@ def _parse_yaml(
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
         asm_generated_by=p.parse_opt("asm_generated_by", bool, True),
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
-        detect_redundant_function_end=p.parse_opt("detect_redundant_function_end", bool, True),
+        detect_redundant_function_end=p.parse_opt(
+            "detect_redundant_function_end", bool, True
+        ),
     )
     p.check_no_unread_opts()
     return ret

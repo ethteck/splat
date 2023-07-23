@@ -73,7 +73,9 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         elif selected_compiler == compiler.IDO:
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
 
-        spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = opts.detect_redundant_function_end
+        spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = (
+            opts.detect_redundant_function_end
+        )
 
         spimdisasm.common.GlobalConfig.GP_VALUE = opts.gp
 
