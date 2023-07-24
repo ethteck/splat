@@ -28,9 +28,10 @@ SN64 = Compiler(
     asm_end_label=".end",
     c_newline="\r\n",
     include_macro_inc=False,
+    asm_emit_size_directive=False,
 )
 
-IDO = Compiler("IDO", asm_emit_size_directive=False)
+IDO = Compiler("IDO", include_macro_inc=False, asm_emit_size_directive=False)
 
 compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO}
 

@@ -1,5 +1,15 @@
 # splat Release Notes
 
+### 0.16.0
+
+* Add option `detect_redundant_function_end`. It tries to detect redundant and unreferenced functions ends and merge them together.
+  * This option is ignored if the compiler is not set to IDO.
+  * This type of codegen is only affected by flags `-g`, `-g1` and `-g2`.
+  * This option can also be overriden per file.
+* Disable `include_macro_inc` by default for IDO projects.
+* Disable `asm_emit_size_directive` by default for SN64 projects.
+* `spimdisasm` 1.16.0 or above is now required.
+
 ### 0.15.4
 
 * Try to assign a segment to an user-declared symbol if the user declared the rom address.
