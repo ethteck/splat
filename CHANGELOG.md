@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.16.1
+* Various changes so that series of image and palette subsegments can have `auto` rom addresses (as long as the first can find its rom address from the parent segment or its own definition)
+
 ### 0.16.0
 
 * Add option `detect_redundant_function_end`. It tries to detect redundant and unreferenced functions ends and merge them together.
@@ -370,7 +373,7 @@ The `auto_all_sections` option, when set to true, will automatically add `all_` 
     * Code and ASM modes have been combined into the `code` mode
 * BREAKING: The `name` attribute of a segment now should no longer be a subdirectory but rather a meaningful name for the segment which will be used as the name of the linker section. If your `name` was previously a directory, please change it into a `dir`.
 * BREAKING: `subsections` has been renamed to `subsegments`
-* New `dir` segment attribute specifies a subdirectory into which files will be saved. You can combine `dir` ("foo") with a subsection file name containing a subdirectory ("bar/out"), and the paths will be joined (foo/bar/out.c)
+* New `dir` segment attribute specifies a subdirectory into which files will be saved. You can combine `dir` ("foo") with a subsegment name containing a subdirectory ("bar/out"), and the paths will be joined (foo/bar/out.c)
   * If the `dir` attribute is specified but the `name` isn't, the `name` becomes `dir` with directory separation slashes replaced with underscores (foo/bar/baz -> foo_bar_baz)
 * BREAKING: Many configuration options have been renamed. `_dir` options have been changed to the suffix `_path`.
 * BREAKING: Assets (non-code, like `bin` and images) are now placed in the directory `asset_path` (defaults to `assets`).
