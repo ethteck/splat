@@ -504,6 +504,27 @@ class Segment:
             return None
         return items[0]
 
+    def retrieve_sym_type(
+        self, syms: Dict[int, List[Symbol]], addr: int, type: str
+    ) -> Optional[symbols.Symbol]:
+        if addr not in syms:
+            return None
+
+        items = syms[addr]
+
+        items = [
+            i
+            for i in items
+            if i.segment is None
+            or Segment.visible_ram(self, i.segment)
+            and (type == i.type)
+        ]
+
+        if len(items) == 0:
+            return None
+
+        return items[0]
+
     def get_symbol(
         self,
         addr: int,
