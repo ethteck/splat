@@ -177,6 +177,8 @@ class SplatOpts:
     disasm_unknown: bool
     # Tries to detect redundant and unreferenced functions ends and merge them together. This option is ignored if the compiler is not set to IDO.
     detect_redundant_function_end: bool
+    # Don't skip disassembling already matched functions and migrated sections
+    disassembly_all: bool
 
     ################################################################################
     # N64-specific options
@@ -441,6 +443,7 @@ def _parse_yaml(
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True
         ),
+        disassembly_all = p.parse_opt("disassembly_all", bool, False),
     )
     p.check_no_unread_opts()
     return ret

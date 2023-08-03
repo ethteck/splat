@@ -31,26 +31,29 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
-        if (
-            not self.type.startswith(".")
-            and self.spim_section
-            and self.should_self_split()
-        ):
-            path = self.out_path()
+        if self.type.startswith(".") and not options.opts.disassembly_all:
+            return
 
-            if path:
-                path.parent.mkdir(parents=True, exist_ok=True)
+        if self.spim_section is None or not self.should_self_split():
+            return
 
-                self.print_file_boundaries()
+        path = self.out_path()
 
-                with open(path, "w", newline="\n") as f:
-                    f.write('.include "macro.inc"\n\n')
-                    preamble = options.opts.generated_s_preamble
-                    if preamble:
-                        f.write(preamble + "\n")
-                    f.write(f".section {self.get_linker_section()}\n\n")
+        if path is None:
+            return
 
-                    f.write(self.spim_section.disassemble())
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        self.print_file_boundaries()
+
+        with open(path, "w", newline="\n") as f:
+            f.write('.include "macro.inc"\n\n')
+            preamble = options.opts.generated_s_preamble
+            if preamble:
+                f.write(preamble + "\n")
+            f.write(f".section {self.get_linker_section()}\n\n")
+
+            f.write(self.spim_section.disassemble())
 
     def should_self_split(self) -> bool:
         return options.opts.is_mode_active("data")
