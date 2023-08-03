@@ -2,7 +2,7 @@
 
 ### 0.16.2
 
-* Add option `disassembly_all`. If enabled then already matched functions and migrated data will be disassembled to files anyways.
+* Add option `disassemble_all`. If enabled then already matched functions and migrated data will be disassembled to files anyways.
 
 ### 0.16.1
 

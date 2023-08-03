@@ -197,7 +197,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     if (
                         entry.function.getName() in self.global_asm_funcs
                         or is_new_c_file
-                        or options.opts.disassembly_all
+                        or options.opts.disassemble_all
                     ):
                         func_sym = self.get_symbol(
                             entry.function.vram,
@@ -213,7 +213,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         if (
                             spim_rodata_sym.getName() in self.global_asm_rodata_syms
                             or is_new_c_file
-                            or options.opts.disassembly_all
+                            or options.opts.disassemble_all
                         ):
                             rodata_sym = self.get_symbol(
                                 spim_rodata_sym.vram, in_segment=True, local_only=True

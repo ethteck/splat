@@ -38,7 +38,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
-        if self.type.startswith(".") and not options.opts.disassembly_all:
+        if self.type.startswith(".") and not options.opts.disassemble_all:
             return
 
         if self.spim_section is None or not self.should_self_split():
