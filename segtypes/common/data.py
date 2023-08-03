@@ -10,6 +10,13 @@ from disassembler_section import make_data_section
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
+    def asm_out_path(self) -> Path:
+        typ = self.type
+        if typ.startswith("."):
+            typ = typ[1:]
+
+        return options.opts.data_path / self.dir / f"{self.name}.{typ}.s"
+
     def out_path(self) -> Optional[Path]:
         if self.type.startswith("."):
             if self.sibling:
@@ -20,7 +27,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 return options.opts.src_path / self.dir / f"{self.name}.c"
         else:
             # ASM
-            return options.opts.data_path / self.dir / f"{self.name}.{self.type}.s"
+            return self.asm_out_path()
 
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)
@@ -37,16 +44,13 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if self.spim_section is None or not self.should_self_split():
             return
 
-        path = self.out_path()
-
-        if path is None:
-            return
+        path = self.asm_out_path()
 
         path.parent.mkdir(parents=True, exist_ok=True)
 
         self.print_file_boundaries()
 
-        with open(path, "w", newline="\n") as f:
+        with path.open("w", newline="\n") as f:
             f.write('.include "macro.inc"\n\n')
             preamble = options.opts.generated_s_preamble
             if preamble:
