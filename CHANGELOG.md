@@ -1,6 +1,11 @@
 # splat Release Notes
 
+### 0.16.2
+
+* Add option `disassemble_all`. If enabled then already matched functions and migrated data will be disassembled to files anyways.
+
 ### 0.16.1
+
 * Various changes so that series of image and palette subsegments can have `auto` rom addresses (as long as the first can find its rom address from the parent segment or its own definition)
 
 ### 0.16.0
