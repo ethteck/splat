@@ -443,7 +443,7 @@ def _parse_yaml(
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True
         ),
-        disassemble_all = p.parse_opt("disassemble_all", bool, False),
+        disassemble_all=p.parse_opt("disassemble_all", bool, False),
     )
     p.check_no_unread_opts()
     return ret
