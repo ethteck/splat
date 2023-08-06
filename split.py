@@ -36,6 +36,7 @@ parser.add_argument(
     action="store_true",
     help="Skips the disassembler's version check",
 )
+parser.add_argument("--stdout-only", help="Print all output to stdout", action="store_true")
 
 linker_writer: LinkerWriter
 config: Dict[str, Any]
@@ -210,8 +211,11 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     return s
 
 
-def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
+def main(config_path, modes, verbose, use_cache=True, skip_version_check=False, stdout_only=False):
     global config
+
+    if stdout_only:
+        progress_bar.out_file = sys.stdout
 
     # Load config
     config = {}
@@ -472,4 +476,4 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.config, args.modes, args.verbose, args.use_cache, args.skip_version_check)
+    main(args.config, args.modes, args.verbose, args.use_cache, args.skip_version_check, args.stdout_only)
