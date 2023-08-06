@@ -1,12 +1,9 @@
-from typing import TextIO, TypeVar
 import tqdm
 import sys
 
-T = TypeVar("T")
+out_file = sys.stderr
 
-out_file: TextIO = sys.stderr
-
-def get_progress_bar(elements: list[T]) -> tqdm.tqdm[T]:
+def get_progress_bar(elements: list) -> tqdm.tqdm:
     return tqdm.tqdm(
         elements,
         total=len(elements),
