@@ -6,10 +6,11 @@ import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from disassembler import disassembler_instance
-import tqdm
+from util import progress_bar
 import yaml
 from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
+import sys
 
 from segtypes.linker_entry import (
     LinkerWriter,
@@ -289,7 +290,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
         palettes.initialize(all_segments)
 
     # Scan
-    scan_bar = tqdm.tqdm(all_segments, total=len(all_segments))
+    scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
         assert isinstance(segment, Segment)
         scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
@@ -319,10 +320,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     symbols.mark_c_funcs_as_defined()
 
     # Split
-    split_bar = tqdm.tqdm(
-        all_segments,
-        total=len(all_segments),
-    )
+    split_bar = progress_bar.get_progress_bar(all_segments)
     for segment in split_bar:
         split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
 
@@ -376,10 +374,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
 
         global linker_writer
         linker_writer = LinkerWriter()
-        linker_bar = tqdm.tqdm(
-            all_segments,
-            total=len(all_segments),
-        )
+        linker_bar = progress_bar.get_progress_bar(all_segments)
 
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")

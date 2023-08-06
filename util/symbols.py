@@ -3,7 +3,7 @@ import re
 from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import spimdisasm
-import tqdm
+
 from intervaltree import IntervalTree
 from disassembler import disassembler_instance
 from pathlib import Path
@@ -12,7 +12,7 @@ from pathlib import Path
 if TYPE_CHECKING:
     from segtypes.segment import Segment
 
-from util import log, options
+from util import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
@@ -87,9 +87,9 @@ def handle_sym_addrs(
                 return segment
         return None
 
-    for line_num, line in enumerate(
-        tqdm.tqdm(sym_addrs_lines, desc=f"Loading symbols ({path.stem})")
-    ):
+    prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
+    prog_bar.set_description(f"Loading symbols ({path.stem})")
+    for line_num, line in enumerate(prog_bar):
         line = line.strip()
         if not line == "" and not line.startswith("//"):
             comment_loc = line.find("//")
