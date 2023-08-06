@@ -2,10 +2,8 @@ from dataclasses import dataclass
 from typing import Dict
 
 import spimdisasm
-import tqdm
-from intervaltree import Interval, IntervalTree
 
-from util import log, options, symbols
+from util import log, options, symbols, progress_bar
 
 
 @dataclass
@@ -35,9 +33,10 @@ def initialize():
 
         with path.open() as f:
             sym_addrs_lines = f.readlines()
-        for line_num, line in enumerate(
-            tqdm.tqdm(sym_addrs_lines, desc=f"Loading relocs ({path.stem})")
-        ):
+
+        prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
+        prog_bar.set_description(f"Loading relocs ({path.stem})")
+        for line_num, line in enumerate(prog_bar):
             line = line.strip()
             # Allow comments
             line = line.split("//")[0]
