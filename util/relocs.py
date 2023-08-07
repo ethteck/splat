@@ -110,7 +110,9 @@ def initialize():
 
             if reloc.rom_address in all_relocs:
                 log.parsing_error_preamble(path, line_num, line)
-                log.error(f"Duplicated 'rom' address for reloc: 0x{reloc.rom_address:X}")
+                log.error(
+                    f"Duplicated 'rom' address for reloc: 0x{reloc.rom_address:X}"
+                )
             add_reloc(reloc)
 
 
