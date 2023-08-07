@@ -342,6 +342,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         # Terrible hack to "auto-decompile" empty functions
         if (
             options.opts.auto_decompile_empty_functions
+            and len(func.instructions) == 2
             and func.instructions[0].isReturn()
             and func.instructions[1].isNop()
         ):
