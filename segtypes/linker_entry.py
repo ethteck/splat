@@ -68,8 +68,31 @@ def segment_cname(segment: Segment) -> str:
     return to_cname(name)
 
 
+def get_segment_rom_start(cname: str) -> str:
+    return f"{cname}_ROM_START"
+    return f"_{cname}SegmentRomStart"
+
+def get_segment_rom_end(cname: str) -> str:
+    return f"{cname}_ROM_END"
+    return f"_{cname}SegmentRomEnd"
+
+def get_segment_vram_start(cname: str) -> str:
+    return f"{cname}_VRAM"
+    return f"_{cname}SegmentStart"
+
+def get_segment_vram_end(cname: str) -> str:
+    return f"{cname}_VRAM_END"
+    return f"_{cname}SegmentEnd"
+
+def get_segment_bss_start(cname: str) -> str:
+    return f"{cname}_BSS_START"
+
+def get_segment_bss_end(cname: str) -> str:
+    return f"{cname}_BSS_END"
+
+
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
-    return segment_cname(segment) + "_VRAM_END"
+    return get_segment_vram_end(segment_cname(segment))
 
 
 @dataclass
@@ -157,11 +180,13 @@ class LinkerWriter:
 
         # Start the first linker section
 
-        self._write_symbol(f"{seg_name}_ROM_START", "__romPos")
+        seg_rom_start = get_segment_rom_start(seg_name)
+        self._write_symbol(seg_rom_start, "__romPos")
 
         if entries[0].section_type == ".bss":
             self._begin_bss_segment(segment, is_first=True)
-            self._write_symbol(f"{seg_name}_BSS_START", ".")
+            seg_bss_start = get_segment_bss_start(seg_name)
+            self._write_symbol(seg_bss_start, ".")
             if ".bss" in section_labels:
                 section_labels[".bss"].started = True
         else:
@@ -347,9 +372,11 @@ class LinkerWriter:
 
         name = segment_cname(segment)
 
-        self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
+        seg_vram_start = get_segment_vram_start(name)
+        self._write_symbol(seg_vram_start, f"ADDR(.{name})")
 
-        line = f".{name} {vram_str}: AT({name}_ROM_START)"
+        seg_rom_start = get_segment_rom_start(name)
+        line = f".{name} {vram_str}: AT({seg_rom_start})"
         if segment.subalign != None:
             line += f" SUBALIGN({segment.subalign})"
 
@@ -368,7 +395,8 @@ class LinkerWriter:
 
         name = segment_cname(segment) + "_bss"
 
-        self._write_symbol(f"{name}_VRAM", f"ADDR(.{name})")
+        seg_vram_start = get_segment_vram_start(name)
+        self._write_symbol(seg_vram_start, f"ADDR(.{name})")
 
         if is_first:
             addr_str = vram_str + "(NOLOAD)"
@@ -395,7 +423,8 @@ class LinkerWriter:
             if segment.align:
                 self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
 
-        self._write_symbol(f"{name}_ROM_END", "__romPos")
+        seg_rom_end = get_segment_rom_end(name)
+        self._write_symbol(seg_rom_end, "__romPos")
         self._write_symbol(get_segment_vram_end_symbol_name(segment), ".")
 
         # Align directive
