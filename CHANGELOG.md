@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.16.3
+
+* Add `--stdout-only` flag. Redirects the progress bar output to `stdout` instead of `stderr`.
+* Add a check to prevent relocs with duplicated rom addresses.
+* Check empty functions only have 2 instructions before autodecompiling them.
+
 ### 0.16.2
 
 * Add option `disassemble_all`. If enabled then already matched functions and migrated data will be disassembled to files anyways.

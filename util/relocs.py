@@ -36,6 +36,7 @@ def initialize():
 
         prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
         prog_bar.set_description(f"Loading relocs ({path.stem})")
+        line: str
         for line_num, line in enumerate(prog_bar):
             line = line.strip()
             # Allow comments
@@ -107,6 +108,11 @@ def initialize():
             if addend is not None:
                 reloc.addend = addend
 
+            if reloc.rom_address in all_relocs:
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(
+                    f"Duplicated 'rom' address for reloc: 0x{reloc.rom_address:X}"
+                )
             add_reloc(reloc)
 
 
