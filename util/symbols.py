@@ -90,6 +90,7 @@ def handle_sym_addrs(
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     for line_num, line in enumerate(prog_bar):
+        line: str
         line = line.strip()
         if not line == "" and not line.startswith("//"):
             comment_loc = line.find("//")
