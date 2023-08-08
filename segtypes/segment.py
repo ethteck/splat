@@ -428,6 +428,9 @@ class Segment:
     def get_linker_section(self) -> str:
         return ".data"
 
+    def get_linker_section_flags(self) -> Optional[str]:
+        return None
+
     def out_path(self) -> Optional[Path]:
         return None
 
