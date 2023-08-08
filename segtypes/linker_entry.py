@@ -86,10 +86,34 @@ def get_segment_vram_end(cname: str) -> str:
 
 def get_segment_bss_start(cname: str) -> str:
     return f"{cname}_BSS_START"
+    return f"_{cname}SegmentBssStart"
 
 def get_segment_bss_end(cname: str) -> str:
     return f"{cname}_BSS_END"
+    return f"_{cname}SegmentBssEnd"
 
+def convert_section_name_to_linker_format(section_type: str) -> str:
+    assert section_type.startswith(".")
+
+    return to_cname(section_type.upper())
+    if section_type == ".rodata":
+        return "RoData"
+    return section_type[1:].capitalize()
+
+def get_segment_section_start(segment_name: str, section_type: str) -> str:
+    sec = convert_section_name_to_linker_format(section_type)
+    return f"{segment_name}{sec}_START"
+    return f"_{segment_name}Segment{sec}Start"
+
+def get_segment_section_end(segment_name: str, section_type: str) -> str:
+    sec = convert_section_name_to_linker_format(section_type)
+    return f"{segment_name}{sec}_END"
+    return f"_{segment_name}Segment{sec}End"
+
+def get_segment_section_size(segment_name: str, section_type: str) -> str:
+    sec = convert_section_name_to_linker_format(section_type)
+    return f"{segment_name}{sec}_SIZE"
+    return f"_{segment_name}Segment{sec}Size"
 
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
     return get_segment_vram_end(segment_cname(segment))
@@ -221,12 +245,10 @@ class LinkerWriter:
                     elif cur_section == ".bss":
                         entering_bss = True
 
-                    if not (
-                        entering_bss or leaving_bss
-                    ):  # Don't write a START symbol if we are about to end the section
-                        self._write_symbol(
-                            f"{seg_name}{entry.section_type.upper()}_START", "."
-                        )
+                    if not (entering_bss or leaving_bss):
+                        # Don't write a START symbol if we are about to end the section
+                        section_start = get_segment_section_start(seg_name, entry.section_type)
+                        self._write_symbol(section_start, ".")
                         section_labels[entry.section_type].started = True
 
             if (
@@ -251,13 +273,13 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
-                    seg_name_section = to_cname(
-                        f"{seg_name}{last_seen_sections[entry].upper()}"
-                    )
-                    self._write_symbol(f"{seg_name_section}_END", ".")
+                    section_start = get_segment_section_start(seg_name, last_seen_sections[entry])
+                    section_end = get_segment_section_end(seg_name, last_seen_sections[entry])
+                    section_size = get_segment_section_size(seg_name, last_seen_sections[entry])
+                    self._write_symbol(section_end, ".")
                     self._write_symbol(
-                        f"{seg_name_section}_SIZE",
-                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
+                        section_size,
+                        f"ABSOLUTE({section_end} - {section_start})",
                     )
                     section_labels[last_seen_sections[entry]].ended = True
 
@@ -268,7 +290,8 @@ class LinkerWriter:
                 else:
                     self._begin_segment(segment)
 
-                self._write_symbol(f"{seg_name}{entry.section_type.upper()}_START", ".")
+                section_start = get_segment_section_start(seg_name, entry.section_type)
+                self._write_symbol(section_start, ".")
                 section_labels[cur_section].started = True
 
                 # Write THIS linker entry
@@ -282,11 +305,13 @@ class LinkerWriter:
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    seg_name_section = to_cname(f"{seg_name}{cur_section.upper()}")
-                    self._write_symbol(f"{seg_name_section}_END", ".")
+                    section_start = get_segment_section_start(seg_name, cur_section)
+                    section_end = get_segment_section_end(seg_name, cur_section)
+                    section_size = get_segment_section_size(seg_name, cur_section)
+                    self._write_symbol(section_end, ".")
                     self._write_symbol(
-                        f"{seg_name_section}_SIZE",
-                        f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
+                        section_size,
+                        f"ABSOLUTE({section_end} - {section_start})",
                     )
                     section_labels[cur_section].ended = True
 
@@ -295,11 +320,13 @@ class LinkerWriter:
         # End all un-ended sections
         for section in section_labels.values():
             if section.started and not section.ended:
-                seg_name_section = to_cname(f"{seg_name}{section.name.upper()}")
-                self._write_symbol(f"{seg_name_section}_END", ".")
+                section_start = get_segment_section_start(seg_name, section.name)
+                section_end = get_segment_section_end(seg_name, section.name)
+                section_size = get_segment_section_size(seg_name, section.name)
+                self._write_symbol(section_end, ".")
                 self._write_symbol(
-                    f"{seg_name_section}_SIZE",
-                    f"ABSOLUTE({seg_name_section}_END - {seg_name_section}_START)",
+                    section_size,
+                    f"ABSOLUTE({section_end} - {section_start})",
                 )
 
         all_bss = all(e.section == ".bss" for e in entries)
