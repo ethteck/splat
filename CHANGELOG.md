@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.16.4
+
+* Add `get_section_flags` method to the `Segment` class.
+  * Useful for providing linker section flags when creating a custom section when making splat extensions.
+  * This may be necessary for some custom section types, because sections unrecognized by the linker will not link its data properly.
+  * More info about section flags: <https://sourceware.org/binutils/docs/as/Section.html#ELF-Version>
+
 ### 0.16.3
 
 * Add `--stdout-only` flag. Redirects the progress bar output to `stdout` instead of `stderr`.
