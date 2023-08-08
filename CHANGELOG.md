@@ -1,6 +1,6 @@
 # splat Release Notes
 
-### 0.16.4
+### 0.16.5
 
 * Add option `segment_symbols_style`.
   * Allows changing the style of the generated segment symbols in the linker script.
@@ -8,6 +8,13 @@
     * `splat`: The current style for segment symbols.
     * `makerom`: Style that aims to be compatible with makerom generated symbols.
   * Defaults to `splat`.
+
+### 0.16.4
+
+* Add `get_section_flags` method to the `Segment` class.
+  * Useful for providing linker section flags when creating a custom section when making splat extensions.
+  * This may be necessary for some custom section types, because sections unrecognized by the linker will not link its data properly.
+  * More info about section flags: <https://sourceware.org/binutils/docs/as/Section.html#ELF-Version>
 
 ### 0.16.3
 
