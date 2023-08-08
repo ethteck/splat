@@ -84,14 +84,6 @@ def get_segment_vram_end(cname: str) -> str:
     return f"{cname}_VRAM_END"
     return f"_{cname}SegmentEnd"
 
-def get_segment_bss_start(cname: str) -> str:
-    return f"{cname}_BSS_START"
-    return f"_{cname}SegmentBssStart"
-
-def get_segment_bss_end(cname: str) -> str:
-    return f"{cname}_BSS_END"
-    return f"_{cname}SegmentBssEnd"
-
 def convert_section_name_to_linker_format(section_type: str) -> str:
     assert section_type.startswith(".")
 
@@ -209,7 +201,7 @@ class LinkerWriter:
 
         if entries[0].section_type == ".bss":
             self._begin_bss_segment(segment, is_first=True)
-            seg_bss_start = get_segment_bss_start(seg_name)
+            seg_bss_start = get_segment_section_start(seg_name, ".bss")
             self._write_symbol(seg_bss_start, ".")
             if ".bss" in section_labels:
                 section_labels[".bss"].started = True
@@ -273,15 +265,7 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
-                    section_start = get_segment_section_start(seg_name, last_seen_sections[entry])
-                    section_end = get_segment_section_end(seg_name, last_seen_sections[entry])
-                    section_size = get_segment_section_size(seg_name, last_seen_sections[entry])
-                    self._write_symbol(section_end, ".")
-                    self._write_symbol(
-                        section_size,
-                        f"ABSOLUTE({section_end} - {section_start})",
-                    )
-                    section_labels[last_seen_sections[entry]].ended = True
+                    self._end_section(seg_name, last_seen_sections[entry], section_labels)
 
                 self._end_block()
 
@@ -305,29 +289,14 @@ class LinkerWriter:
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
-                    section_start = get_segment_section_start(seg_name, cur_section)
-                    section_end = get_segment_section_end(seg_name, cur_section)
-                    section_size = get_segment_section_size(seg_name, cur_section)
-                    self._write_symbol(section_end, ".")
-                    self._write_symbol(
-                        section_size,
-                        f"ABSOLUTE({section_end} - {section_start})",
-                    )
-                    section_labels[cur_section].ended = True
+                    self._end_section(seg_name, cur_section, section_labels)
 
             prev_section = cur_section
 
         # End all un-ended sections
         for section in section_labels.values():
             if section.started and not section.ended:
-                section_start = get_segment_section_start(seg_name, section.name)
-                section_end = get_segment_section_end(seg_name, section.name)
-                section_size = get_segment_section_size(seg_name, section.name)
-                self._write_symbol(section_end, ".")
-                self._write_symbol(
-                    section_size,
-                    f"ABSOLUTE({section_end} - {section_start})",
-                )
+                self._end_section(seg_name, section.name, section_labels)
 
         all_bss = all(e.section == ".bss" for e in entries)
         self._end_segment(segment, all_bss)
@@ -460,3 +429,14 @@ class LinkerWriter:
                 self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
 
         self._writeln("")
+
+    def _end_section(self, seg_name: str, cur_section: str, section_labels: OrderedDict[str, LinkerSection]) -> None:
+        section_start = get_segment_section_start(seg_name, cur_section)
+        section_end = get_segment_section_end(seg_name, cur_section)
+        section_size = get_segment_section_size(seg_name, cur_section)
+        self._write_symbol(section_end, ".")
+        self._write_symbol(
+            section_size,
+            f"ABSOLUTE({section_end} - {section_start})",
+        )
+        section_labels[cur_section].ended = True
