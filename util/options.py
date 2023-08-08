@@ -104,8 +104,8 @@ class SplatOpts:
     ld_use_follows: bool
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
     segment_end_before_align: bool
-    #
-    segment_symbol_style: str
+    # Controls the style of the auto-generated segment symbols in the linker script. Possible values: splat, makerom
+    segment_symbols_style: str
 
     ################################################################################
     # C file options
@@ -376,8 +376,8 @@ def _parse_yaml(
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
         ld_use_follows=p.parse_opt("ld_use_follows", bool, True),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
-        segment_symbol_style=p.parse_opt_within(
-            "segment_symbol_style", str, ["splat", "makerom"], "splat"
+        segment_symbols_style=p.parse_opt_within(
+            "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(

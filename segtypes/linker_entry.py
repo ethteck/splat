@@ -69,32 +69,32 @@ def segment_cname(segment: Segment) -> str:
 
 
 def get_segment_rom_start(cname: str) -> str:
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{cname}SegmentRomStart"
     return f"{cname}_ROM_START"
 
 
 def get_segment_rom_end(cname: str) -> str:
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{cname}SegmentRomEnd"
     return f"{cname}_ROM_END"
 
 
 def get_segment_vram_start(cname: str) -> str:
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{cname}SegmentStart"
     return f"{cname}_VRAM"
 
 
 def get_segment_vram_end(cname: str) -> str:
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{cname}SegmentEnd"
     return f"{cname}_VRAM_END"
 
 
 def convert_section_name_to_linker_format(section_type: str) -> str:
     assert section_type.startswith(".")
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         if section_type == ".rodata":
             return "RoData"
         return section_type[1:].capitalize()
@@ -104,21 +104,21 @@ def convert_section_name_to_linker_format(section_type: str) -> str:
 
 def get_segment_section_start(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{segment_name}Segment{sec}Start"
     return f"{segment_name}{sec}_START"
 
 
 def get_segment_section_end(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{segment_name}Segment{sec}End"
     return f"{segment_name}{sec}_END"
 
 
 def get_segment_section_size(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
-    if options.opts.segment_symbol_style == "makerom":
+    if options.opts.segment_symbols_style == "makerom":
         return f"_{segment_name}Segment{sec}Size"
     return f"{segment_name}{sec}_SIZE"
 
