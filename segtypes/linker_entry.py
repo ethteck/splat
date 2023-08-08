@@ -73,20 +73,24 @@ def get_segment_rom_start(cname: str) -> str:
         return f"_{cname}SegmentRomStart"
     return f"{cname}_ROM_START"
 
+
 def get_segment_rom_end(cname: str) -> str:
     if options.opts.segment_symbol_style == "makerom":
         return f"_{cname}SegmentRomEnd"
     return f"{cname}_ROM_END"
+
 
 def get_segment_vram_start(cname: str) -> str:
     if options.opts.segment_symbol_style == "makerom":
         return f"_{cname}SegmentStart"
     return f"{cname}_VRAM"
 
+
 def get_segment_vram_end(cname: str) -> str:
     if options.opts.segment_symbol_style == "makerom":
         return f"_{cname}SegmentEnd"
     return f"{cname}_VRAM_END"
+
 
 def convert_section_name_to_linker_format(section_type: str) -> str:
     assert section_type.startswith(".")
@@ -97,11 +101,13 @@ def convert_section_name_to_linker_format(section_type: str) -> str:
 
     return to_cname(section_type.upper())
 
+
 def get_segment_section_start(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
     if options.opts.segment_symbol_style == "makerom":
         return f"_{segment_name}Segment{sec}Start"
     return f"{segment_name}{sec}_START"
+
 
 def get_segment_section_end(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
@@ -109,11 +115,13 @@ def get_segment_section_end(segment_name: str, section_type: str) -> str:
         return f"_{segment_name}Segment{sec}End"
     return f"{segment_name}{sec}_END"
 
+
 def get_segment_section_size(segment_name: str, section_type: str) -> str:
     sec = convert_section_name_to_linker_format(section_type)
     if options.opts.segment_symbol_style == "makerom":
         return f"_{segment_name}Segment{sec}Size"
     return f"{segment_name}{sec}_SIZE"
+
 
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
     return get_segment_vram_end(segment_cname(segment))
@@ -247,7 +255,9 @@ class LinkerWriter:
 
                     if not (entering_bss or leaving_bss):
                         # Don't write a START symbol if we are about to end the section
-                        section_start = get_segment_section_start(seg_name, entry.section_type)
+                        section_start = get_segment_section_start(
+                            seg_name, entry.section_type
+                        )
                         self._write_symbol(section_start, ".")
                         section_labels[entry.section_type].started = True
 
@@ -273,7 +283,9 @@ class LinkerWriter:
                     entry in last_seen_sections
                     and section_labels[entry.section_type].started
                 ):
-                    self._end_section(seg_name, last_seen_sections[entry], section_labels)
+                    self._end_section(
+                        seg_name, last_seen_sections[entry], section_labels
+                    )
 
                 self._end_block()
 
@@ -438,7 +450,12 @@ class LinkerWriter:
 
         self._writeln("")
 
-    def _end_section(self, seg_name: str, cur_section: str, section_labels: OrderedDict[str, LinkerSection]) -> None:
+    def _end_section(
+        self,
+        seg_name: str,
+        cur_section: str,
+        section_labels: OrderedDict[str, LinkerSection],
+    ) -> None:
         section_start = get_segment_section_start(seg_name, cur_section)
         section_end = get_segment_section_end(seg_name, cur_section)
         section_size = get_segment_section_size(seg_name, cur_section)
