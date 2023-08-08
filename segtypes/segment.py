@@ -428,7 +428,22 @@ class Segment:
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_linker_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> Optional[str]:
+        """
+        Allows specifying flags for a section.
+
+        This can be useful when creating a custom section, since sections not recognized by the linker will not be linked properly.
+
+        GNU as docs about the section directive and flags: https://sourceware.org/binutils/docs/as/Section.html#ELF-Version
+
+        Example:
+
+        ```
+        def get_section_flags(self) -> Optional[str]:
+            # Tells the linker to allocate this section
+            return "a"
+        ```
+        """
         return None
 
     def out_path(self) -> Optional[Path]:

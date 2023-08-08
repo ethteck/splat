@@ -2,7 +2,7 @@
 
 ### 0.16.4
 
-* Add `get_linker_section_flags` method to the `Segment` class.
+* Add `get_section_flags` method to the `Segment` class.
   * Useful for providing linker section flags when creating a custom section when making splat extensions.
   * This may be necessary for some custom section types, because sections unrecognized by the linker will not link its data properly.
   * More info about section flags: <https://sourceware.org/binutils/docs/as/Section.html#ELF-Version>
