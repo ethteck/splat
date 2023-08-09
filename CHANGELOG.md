@@ -1,5 +1,14 @@
 # splat Release Notes
 
+### 0.16.5
+
+* Add option `segment_symbols_style`.
+  * Allows changing the style of the generated segment symbols in the linker script.
+  * Possible values:
+    * `splat`: The current style for segment symbols.
+    * `makerom`: Style that aims to be compatible with makerom generated symbols.
+  * Defaults to `splat`.
+
 ### 0.16.4
 
 * Add `get_section_flags` method to the `Segment` class.
