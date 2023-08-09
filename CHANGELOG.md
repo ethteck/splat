@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.16.6
+* Add option `ld_rom_start`.
+  * Allows offsetting rom address linker symbols by some arbitrary value.
+    * Useful for SN64 games which often have rom addresses offset by 0xB0000000.
+  * Defaults to 0.
+
 ### 0.16.5
 
 * Add option `segment_symbols_style`.
