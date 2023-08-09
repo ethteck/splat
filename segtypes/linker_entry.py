@@ -175,7 +175,7 @@ class LinkerWriter:
 
         self._writeln("SECTIONS")
         self._begin_block()
-        self._writeln("__romPos = 0;")
+        self._writeln(f"__romPos = {options.opts.ld_rom_start};")
 
         if options.opts.gp is not None:
             self._writeln("_gp = " + f"0x{options.opts.gp:X};")
