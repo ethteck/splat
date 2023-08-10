@@ -7,7 +7,11 @@ import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from disassembler import disassembler_instance
 from util import progress_bar
+
+# This unused import makes the yaml library faster. don't remove
+import pylibyaml
 import yaml
+
 from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
 import sys
