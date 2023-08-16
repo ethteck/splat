@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.16.8
+
+* Avoid ignoring the `align` defined in a segment for `code` segments
+
 ### 0.16.7
 
 * Use `pylibyaml` to speed-up yaml parsing
