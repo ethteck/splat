@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.16.9
+
+* Add command line argument `--disassemble-all`, which has the same effect as the `disassemble_all` yaml option so will disamble already matched functions as well as migrated data.
+  * Note: the command line argument takes precedence over the yaml, so will take effect even if the yaml option is set to false.
+
 ### 0.16.8
 
 * Avoid ignoring the `align` defined in a segment for `code` segments

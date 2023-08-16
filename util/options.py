@@ -285,6 +285,7 @@ def _parse_yaml(
     config_paths: List[str],
     modes: List[str],
     verbose: bool = False,
+    disasm_all: bool = False,
 ) -> SplatOpts:
     p = OptParser(yaml)
 
@@ -451,7 +452,10 @@ def _parse_yaml(
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True
         ),
-        disassemble_all=p.parse_opt("disassemble_all", bool, False),
+        # Command line argument takes precedence over yaml option
+        disassemble_all=disasm_all
+        if disasm_all
+        else p.parse_opt("disassemble_all", bool, False),
     )
     p.check_no_unread_opts()
     return ret
@@ -462,10 +466,11 @@ def initialize(
     config_paths: List[str],
     modes: Optional[List[str]] = None,
     verbose=False,
+    disasm_all=False,
 ):
     global opts
 
     if not modes:
         modes = ["all"]
 
-    opts = _parse_yaml(config["options"], config_paths, modes, verbose)
+    opts = _parse_yaml(config["options"], config_paths, modes, verbose, disasm_all)
