@@ -44,7 +44,9 @@ parser.add_argument(
     "--stdout-only", help="Print all output to stdout", action="store_true"
 )
 parser.add_argument(
-    "--disassemble-all", help="Disasemble matched functions and migrated data", action="store_true"
+    "--disassemble-all",
+    help="Disasemble matched functions and migrated data",
+    action="store_true",
 )
 
 linker_writer: LinkerWriter

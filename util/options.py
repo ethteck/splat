@@ -453,7 +453,9 @@ def _parse_yaml(
             "detect_redundant_function_end", bool, True
         ),
         # Command line argument takes precedence over yaml option
-        disassemble_all = disasm_all if disasm_all else p.parse_opt("disassemble_all", bool, False),
+        disassemble_all=disasm_all
+        if disasm_all
+        else p.parse_opt("disassemble_all", bool, False),
     )
     p.check_no_unread_opts()
     return ret
