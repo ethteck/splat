@@ -7,7 +7,7 @@ from util.range import Range
 from util.symbols import Symbol
 
 from segtypes.common.group import CommonSegGroup
-from segtypes.segment import Segment
+from segtypes.segment import Segment, parse_segment_align
 
 CODE_TYPES = ["c", "asm", "hasm"]
 
@@ -44,7 +44,10 @@ class CommonSegCode(CommonSegGroup):
         self.jtbl_glabels_to_add: Set[int] = set()
         self.jumptables: Dict[int, Tuple[int, int]] = {}
         self.rodata_syms: Dict[int, List[Symbol]] = {}
-        self.align = 0x10
+
+        self.align = parse_segment_align(yaml)
+        if self.align is None:
+            self.align = 0x10
 
     @property
     def needs_symbols(self) -> bool:
