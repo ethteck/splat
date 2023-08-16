@@ -19,6 +19,8 @@ class CommonSegC(CommonSegCodeSubsegment):
     global_asm_funcs: Set[str] = set()
     global_asm_rodata_syms: Set[str] = set()
 
+    file_extension = "c"
+
     STRIP_C_COMMENTS_RE = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
         re.DOTALL | re.MULTILINE,
@@ -124,7 +126,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         return True
 
     def out_path(self) -> Optional[Path]:
-        return options.opts.src_path / self.dir / f"{self.name}.c"
+        return options.opts.src_path / self.dir / f"{self.name}.{self.file_extension}"
 
     def scan(self, rom_bytes: bytes):
         if (
