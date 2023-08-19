@@ -221,7 +221,7 @@ options:
   find_file_boundaries: False
   gp_value: 0x{exe.initial_gp:08X}
 
-  use_o_as_suffix: True
+  o_as_suffix: True
   use_legacy_include_asm: False
 
   asm_function_macro: glabel
@@ -255,7 +255,7 @@ segments:
   - name: main
     type: code
     start: 0x800
-    vram: 0x{exe.text_vram:X}
+    vram: 0x{exe.destination_vram:X}
     bss_size: 0x{exe.bss_size:X}
     subsegments:
 """
@@ -268,32 +268,20 @@ segments:
       - [0x{text_offset:X}, asm, {text_offset:X}]
 """
 
-    section_end = text_offset + exe.text_size
-    if exe.data_size != 0:
+    if exe.data_vram != 0 and exe.data_size != 0:
+        data_offset = exe.data_offset
         segments += f"""\
-      - [0x{section_end:X}, data, {section_end:X}]
+      - [0x{data_offset:X}, data, {data_offset:X}]
 """
-        section_end += exe.data_size
 
     if exe.bss_size != 0:
         segments += f"""\
-      - {{ start: 0x{section_end:X}, type: bss, name: {section_end:X}, vram: 0x{exe.bss_vram:X} }}
-"""
-        section_end += exe.bss_size
-
-    if section_end != exe.size:
-        segments += f"""\
-
-  - type: bin
-    start: 0x{section_end:X}
-    follows_vram: main
+      - {{ start: 0x{exe.size:X}, type: bss, name: {exe.bss_vram:X}, vram: 0x{exe.bss_vram:X} }}
 """
 
     segments += f"""\
   - [0x{exe.size:X}]
 """
-
-    print(header + segments)
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
