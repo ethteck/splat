@@ -35,8 +35,7 @@ def main(file_path: Path):
         create_gc_config(file_path, file_bytes)
         return
 
-    psx_exe_header = file_bytes[0:8].decode()
-    if psx_exe_header == "PS-X EXE":
+    if file_bytes[0:8] == b"PS-X EXE":
         create_psx_config(file_path, file_bytes)
         return
 
