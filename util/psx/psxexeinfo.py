@@ -68,3 +68,50 @@ class PsxExe:
             len(exe_bytes),
             sha1,
         )
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Gives information on PSX EXEs")
+    parser.add_argument("exe", help="path to an PSX EXE")
+
+    args = parser.parse_args()
+
+    exe_path = Path(args.exe)
+    exe_bytes = exe_path.read_bytes()
+    exe = PsxExe.get_info(exe_path, exe_bytes)
+
+    print(f"Initial PC: 0x{exe.initial_pc:08X}")
+
+    print(f"Initial GP: ", end="")
+    if exe.initial_gp != 0:
+        print(f"0x{exe.initial_gp:08X}")
+    else:
+        print(f"No")
+
+    print()
+    print(f"Destination VRAM: 0x{exe.destination_vram:08X}")
+    print(f"File size (without header): 0x{exe.file_size:X}")
+    print(f"Text binary offset: 0x{exe.text_offset:08X}")
+
+    if exe.data_vram != 0 and exe.data_size != 0:
+        print()
+        print(f"Data VRAM: 0x{exe.data_vram:08X}")
+        print(f"Data size: 0x{exe.data_size:08X}")
+        print(f"Data binary offset: 0x{exe.data_offset:08X}")
+
+    if exe.bss_vram != 0 and exe.bss_size != 0:
+        print()
+        print(f"bss VRAM: 0x{exe.bss_vram:08X}")
+        print(f"bss size: 0x{exe.bss_size:08X}")
+
+    print()
+    print(f"Initial SP base: 0x{exe.initial_sp_base:08X}")
+    print(f"Initial SP offset: 0x{exe.initial_sp_offset:08X}")
+
+    print()
+    print(f"File size: 0x{exe.size:X}")
+    print(f"sha1: {exe.sha1}")
+
+
+if __name__ == "__main__":
+    main()

@@ -196,9 +196,6 @@ segments:
 
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
-    # rom_bytes = rominfo.read_rom(rom_path)
-
-    # rom = rominfo.get_info(rom_path, file_bytes)
     exe = psxexeinfo.PsxExe.get_info(exe_path, exe_bytes)
     basename = exe_path.name.replace(" ", "").lower()
 
