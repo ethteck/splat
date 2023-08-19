@@ -246,13 +246,6 @@ options:
   data_string_guesser_level: 2
 """
 
-    print(exe)
-    print(f"{exe.initial_pc:X}")
-    print(f"{exe.text_vram:X}")
-    print(f"{exe.initial_sp_base:X}")
-    print(f"{exe.initial_gp:X}")
-
-
     segments = f"""\
 segments:
   - name: header
