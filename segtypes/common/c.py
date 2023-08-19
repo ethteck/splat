@@ -260,7 +260,12 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_dir: Path,
         func_sym: Symbol,
     ):
-        outpath = out_dir / self.name / (func_sym.name + ".s")
+        name = self.name
+
+        if options.opts.force_c_asm_files_in_nonmatchings:
+            name = self.name.lstrip("../")
+
+        outpath = out_dir / name / (func_sym.name + ".s")
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not func_sym.extract:

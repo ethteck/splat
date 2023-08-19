@@ -193,6 +193,9 @@ class SplatOpts:
     # only applies to GCC/SN64
     use_legacy_include_asm: bool
 
+    # forces c paths like ../ to go in asm/nonmatchings
+    force_c_asm_files_in_nonmatchings: bool
+
     # Returns whether the given mode is currently enabled
     def is_mode_active(self, mode: str) -> bool:
         return mode in self.modes or "all" in self.modes
@@ -412,6 +415,9 @@ def _parse_yaml(
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
         asm_generated_by=p.parse_opt("asm_generated_by", bool, True),
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
+        force_c_asm_files_in_nonmatchings=p.parse_opt(
+            "force_c_asm_files_in_nonmatchings", bool, False
+        ),
     )
     p.check_no_unread_opts()
     return ret
