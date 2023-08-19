@@ -9,6 +9,8 @@ from util.gc import gcinfo
 
 from util.n64 import find_code_length, rominfo
 
+from util.psx import psxexeinfo
+
 parser = argparse.ArgumentParser(
     description="Create a splat config from an N64 ROM or a GameCube disc image."
 )
@@ -31,6 +33,12 @@ def main(file_path: Path):
     # Check for GC disc image
     if int.from_bytes(file_bytes[0x1C:0x20], byteorder="big") == 0xC2339F3D:
         create_gc_config(file_path, file_bytes)
+        return
+
+    psx_exe_header = file_bytes[0:8].decode()
+    if psx_exe_header == "PS-X EXE":
+        create_psx_config(file_path, file_bytes)
+        return
 
 
 def create_n64_config(rom_path: Path):
@@ -179,6 +187,120 @@ segments:
     type: dol
     path: filesystem/sys/main.dol
 """
+
+    out_file = f"{basename}.yaml"
+    with open(out_file, "w", newline="\n") as f:
+        print(f"Writing config to {out_file}")
+        f.write(header)
+        f.write(segments)
+
+
+def create_psx_config(exe_path: Path, exe_bytes: bytes):
+    # rom_bytes = rominfo.read_rom(rom_path)
+
+    # rom = rominfo.get_info(rom_path, file_bytes)
+    exe = psxexeinfo.PsxExe.get_info(exe_path, exe_bytes)
+    basename = exe_path.name.replace(" ", "").lower()
+
+    header = f"""\
+name: {exe_path.name}
+sha1: {exe.sha1}
+options:
+  basename: {basename}
+  target_path: {exe_path}
+  base_path: .
+  platform: psx
+  compiler: GCC
+
+  asm_path: asm
+  src_path: src
+  build_path: build
+
+  ld_script_path: {basename}.ld
+
+  find_file_boundaries: False
+  gp_value: 0x{exe.initial_gp:08X}
+
+  use_o_as_suffix: True
+  use_legacy_include_asm: False
+
+  asm_function_macro: glabel
+  asm_jtbl_label_macro: jlabel
+  asm_data_macro: dlabel
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  # auto_all_sections: [".data", ".rodata", ".bss"]
+
+  symbol_addrs_path: symbol_addrs.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.txt
+  undefined_syms_auto_path: undefined_syms_auto.txt
+  reloc_addrs_path: reloc_addrs.txt
+
+  extensions_path: tools/splat_ext
+
+  subalign: 2
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+"""
+
+    print(exe)
+    print(f"{exe.initial_pc:X}")
+    print(f"{exe.text_vram:X}")
+    print(f"{exe.initial_sp_base:X}")
+    print(f"{exe.initial_gp:X}")
+
+
+    segments = f"""\
+segments:
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: main
+    type: code
+    start: 0x800
+    vram: 0x{exe.text_vram:X}
+    bss_size: 0x{exe.bss_size:X}
+    subsegments:
+"""
+    text_offset = exe.text_offset
+    if text_offset != 0x800:
+        segments += f"""\
+      - [0x800, rodata, 800]
+"""
+    segments += f"""\
+      - [0x{text_offset:X}, asm, {text_offset:X}]
+"""
+
+    section_end = text_offset + exe.text_size
+    if exe.data_size != 0:
+        segments += f"""\
+      - [0x{section_end:X}, data, {section_end:X}]
+"""
+        section_end += exe.data_size
+
+    if exe.bss_size != 0:
+        segments += f"""\
+      - {{ start: 0x{section_end:X}, type: bss, name: {section_end:X}, vram: 0x{exe.bss_vram:X} }}
+"""
+        section_end += exe.bss_size
+
+    if section_end != exe.size:
+        segments += f"""\
+
+  - type: bin
+    start: 0x{section_end:X}
+    follows_vram: main
+"""
+
+    segments += f"""\
+  - [0x{exe.size:X}]
+"""
+
+    print(header + segments)
 
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
