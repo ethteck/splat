@@ -19,6 +19,8 @@ class CommonSegC(CommonSegCodeSubsegment):
     global_asm_funcs: Set[str] = set()
     global_asm_rodata_syms: Set[str] = set()
 
+    file_extension = "c"
+
     STRIP_C_COMMENTS_RE = re.compile(
         r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
         re.DOTALL | re.MULTILINE,
@@ -124,7 +126,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         return True
 
     def out_path(self) -> Optional[Path]:
-        return options.opts.src_path / self.dir / f"{self.name}.c"
+        return options.opts.src_path / self.dir / f"{self.name}.{self.file_extension}"
 
     def scan(self, rom_bytes: bytes):
         if (
@@ -197,6 +199,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     if (
                         entry.function.getName() in self.global_asm_funcs
                         or is_new_c_file
+                        or options.opts.disassemble_all
                     ):
                         func_sym = self.get_symbol(
                             entry.function.vram,
@@ -212,6 +215,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         if (
                             spim_rodata_sym.getName() in self.global_asm_rodata_syms
                             or is_new_c_file
+                            or options.opts.disassemble_all
                         ):
                             rodata_sym = self.get_symbol(
                                 spim_rodata_sym.vram, in_segment=True, local_only=True
@@ -324,7 +328,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         macro_name: str,
     ) -> str:
         if options.opts.compiler == IDO:
-            # IDO uses the asm processor to embeed assembly and it doesn't require a special directive to include symbols
+            # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
             asm_outpath = Path(
                 os.path.join(asm_out_dir, self.name, spim_sym.getName() + ".s")
             )
@@ -345,6 +349,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         # Terrible hack to "auto-decompile" empty functions
         if (
             options.opts.auto_decompile_empty_functions
+            and len(func.instructions) == 2
             and func.instructions[0].isReturn()
             and func.instructions[1].isNop()
         ):

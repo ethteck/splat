@@ -1,16 +1,22 @@
 from pathlib import Path
 from typing import Optional
 
-import spimdisasm
 from util import options, symbols, log
 
 from segtypes.common.codesubsegment import CommonSegCodeSubsegment
 from segtypes.common.group import CommonSegGroup
 
-from disassembler_section import DisassemblerSection, make_data_section
+from disassembler_section import make_data_section
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
+    def asm_out_path(self) -> Path:
+        typ = self.type
+        if typ.startswith("."):
+            typ = typ[1:]
+
+        return options.opts.data_path / self.dir / f"{self.name}.{typ}.s"
+
     def out_path(self) -> Optional[Path]:
         if self.type.startswith("."):
             if self.sibling:
@@ -21,45 +27,48 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 return options.opts.src_path / self.dir / f"{self.name}.c"
         else:
             # ASM
-            return options.opts.data_path / self.dir / f"{self.name}.{self.type}.s"
+            return self.asm_out_path()
 
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)
 
-        if self.should_scan():
+        if self.rom_start is not None and self.rom_end is not None:
             self.disassemble_data(rom_bytes)
 
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
-        if (
-            not self.type.startswith(".")
-            and self.spim_section
-            and self.should_self_split()
-        ):
-            path = self.out_path()
+        if self.type.startswith(".") and not options.opts.disassemble_all:
+            return
 
-            if path:
-                path.parent.mkdir(parents=True, exist_ok=True)
+        if self.spim_section is None or not self.should_self_split():
+            return
 
-                self.print_file_boundaries()
+        path = self.asm_out_path()
 
-                with open(path, "w", newline="\n") as f:
-                    f.write('.include "macro.inc"\n\n')
-                    preamble = options.opts.generated_s_preamble
-                    if preamble:
-                        f.write(preamble + "\n")
-                    f.write(f".section {self.get_linker_section()}\n\n")
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-                    f.write(self.spim_section.disassemble())
+        self.print_file_boundaries()
+
+        with path.open("w", newline="\n") as f:
+            f.write('.include "macro.inc"\n\n')
+            preamble = options.opts.generated_s_preamble
+            if preamble:
+                f.write(preamble + "\n")
+
+            f.write(f".section {self.get_linker_section()}")
+            section_flags = self.get_section_flags()
+            if section_flags:
+                f.write(f', "{section_flags}"')
+            f.write("\n\n")
+
+            f.write(self.spim_section.disassemble())
 
     def should_self_split(self) -> bool:
         return options.opts.is_mode_active("data")
 
     def should_scan(self) -> bool:
-        # Ensure data segments are scanned even if extract is False so subsegments get scanned too
-        # Check for not None so we avoid scanning "auto" segments
-        return self.rom_start is not None and self.rom_end is not None
+        return True
 
     def should_split(self) -> bool:
         return True
@@ -102,6 +111,17 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         )
 
         assert self.spim_section is not None
+
+        # Set rodata string encoding
+        # First check the global configuration
+        if options.opts.data_string_encoding is not None:
+            self.spim_section.get_section().stringEncoding = (
+                options.opts.data_string_encoding
+            )
+
+        # Then check the per-segment configuration in case we want to override the global one
+        if self.str_encoding is not None:
+            self.spim_section.get_section().stringEncoding = self.str_encoding
 
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)

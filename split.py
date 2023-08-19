@@ -6,10 +6,15 @@ import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from disassembler import disassembler_instance
-import tqdm
+from util import progress_bar
+
+# This unused import makes the yaml library faster. don't remove
+import pylibyaml  # pyright: ignore
 import yaml
+
 from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
+import sys
 
 from segtypes.linker_entry import (
     LinkerWriter,
@@ -19,7 +24,7 @@ from segtypes.linker_entry import (
 from segtypes.segment import Segment
 from util import log, options, palettes, symbols, relocs
 
-VERSION = "0.14.0"
+VERSION = "0.16.9"
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -34,6 +39,14 @@ parser.add_argument(
     "--skip-version-check",
     action="store_true",
     help="Skips the disassembler's version check",
+)
+parser.add_argument(
+    "--stdout-only", help="Print all output to stdout", action="store_true"
+)
+parser.add_argument(
+    "--disassemble-all",
+    help="Disasemble matched functions and migrated data",
+    action="store_true",
 )
 
 linker_writer: LinkerWriter
@@ -209,8 +222,19 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     return s
 
 
-def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
+def main(
+    config_path,
+    modes,
+    verbose,
+    use_cache=True,
+    skip_version_check=False,
+    stdout_only=False,
+    disassemble_all=False,
+):
     global config
+
+    if stdout_only:
+        progress_bar.out_file = sys.stdout
 
     # Load config
     config = {}
@@ -219,7 +243,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
             additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
         config = merge_configs(config, additional_config)
 
-    options.initialize(config, config_path, modes, verbose)
+    options.initialize(config, config_path, modes, verbose, disassemble_all)
 
     disassembler_instance.create_disassembler_instance(options.opts.platform)
     disassembler_instance.get_instance().check_version(skip_version_check, VERSION)
@@ -289,7 +313,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
         palettes.initialize(all_segments)
 
     # Scan
-    scan_bar = tqdm.tqdm(all_segments, total=len(all_segments))
+    scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
         assert isinstance(segment, Segment)
         scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
@@ -319,10 +343,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     symbols.mark_c_funcs_as_defined()
 
     # Split
-    split_bar = tqdm.tqdm(
-        all_segments,
-        total=len(all_segments),
-    )
+    split_bar = progress_bar.get_progress_bar(all_segments)
     for segment in split_bar:
         split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
 
@@ -349,7 +370,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
     if (
         options.opts.is_mode_active("ld") and options.opts.platform != "gc"
     ):  # TODO move this to platform initialization when it gets implemented
-        # Calculate list of segments for which we need to find the largest so we can safely place the symbol after it
+        # Calculate list of segments for which we need to find the largest, so we can safely place the symbol after it
         max_vram_end_syms: Dict[str, List[Segment]] = {}
         for sym in symbols.appears_after_overlays_syms:
             max_vram_end_syms[sym.name] = [
@@ -376,10 +397,7 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
 
         global linker_writer
         linker_writer = LinkerWriter()
-        linker_bar = tqdm.tqdm(
-            all_segments,
-            total=len(all_segments),
-        )
+        linker_bar = progress_bar.get_progress_bar(all_segments)
 
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
@@ -477,4 +495,12 @@ def main(config_path, modes, verbose, use_cache=True, skip_version_check=False):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.config, args.modes, args.verbose, args.use_cache, args.skip_version_check)
+    main(
+        args.config,
+        args.modes,
+        args.verbose,
+        args.use_cache,
+        args.skip_version_check,
+        args.stdout_only,
+        args.disassemble_all,
+    )
