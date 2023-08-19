@@ -54,24 +54,48 @@ options:
   basename: {basename}
   target_path: {rom_path.with_suffix(".z64")}
   base_path: .
+  platform: n64
   compiler: {rom.compiler}
+
+  asm_path: asm
+  src_path: src
+  build_path: build
+  # create_asm_dependencies: True
+
+  ld_script_path: {basename}.ld
+
   find_file_boundaries: True
   header_encoding: {rom.header_encoding}
-  platform: n64
-  # undefined_funcs_auto: True
-  # undefined_funcs_auto_path: undefined_funcs_auto.txt
-  # undefined_syms_auto: True
-  # undefined_syms_auto_path: undefined_syms_auto.txt
-  # symbol_addrs_path: symbol_addrs.txt
-  # asm_path: asm
-  # src_path: src
-  # build_path: build
-  # extensions_path: tools/splat_ext
-  # mips_abi_float_regs: o32
+
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  mips_abi_float_regs: o32
+
+  asm_function_macro: glabel
+  asm_jtbl_label_macro: jlabel
+  asm_data_macro: dlabel
+
   # section_order: [".text", ".data", ".rodata", ".bss"]
   # auto_all_sections: [".data", ".rodata", ".bss"]
+
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  undefined_funcs_auto_path:
+    - undefined_funcs_auto.txt
+  undefined_syms_auto_path:
+    - undefined_syms_auto.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+
+  extensions_path: tools/splat_ext
+
+  # string_encoding: ASCII
+  # data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
   # libultra_symbols: True
   # hardware_regs: True
+  # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 """
 
     first_section_end = find_code_length.run(rom_bytes, 0x1000, rom.entry_point)
@@ -212,6 +236,7 @@ options:
   asm_path: asm
   src_path: src
   build_path: build
+  # create_asm_dependencies: True
 
   ld_script_path: {basename}.ld
 
@@ -228,10 +253,14 @@ options:
   section_order: [".rodata", ".text", ".data", ".bss"]
   # auto_all_sections: [".data", ".rodata", ".bss"]
 
-  symbol_addrs_path: symbol_addrs.txt
-  undefined_funcs_auto_path: undefined_funcs_auto.txt
-  undefined_syms_auto_path: undefined_syms_auto.txt
-  reloc_addrs_path: reloc_addrs.txt
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  undefined_funcs_auto_path:
+    - undefined_funcs_auto.txt
+  undefined_syms_auto_path:
+    - undefined_syms_auto.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
 
   extensions_path: tools/splat_ext
 
