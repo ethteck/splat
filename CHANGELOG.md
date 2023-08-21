@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.16.10
+
+* Produce an error if subsegments do not have an ascending vram order.
+  * This can happen because bss subsegments need their vram to be specified explicitly.
+
 ### 0.16.9
 
 * Add command line argument `--disassemble-all`, which has the same effect as the `disassemble_all` yaml option so will disamble already matched functions as well as migrated data.
