@@ -291,9 +291,14 @@ class CommonSegCode(CommonSegGroup):
                 segment_class, subsegment_yaml, start, end, vram
             )
 
-            if segment.vram_start is not None and prev_vram is not None and segment.vram_start < prev_vram:
+            if (
+                segment.vram_start is not None
+                and prev_vram is not None
+                and segment.vram_start < prev_vram
+            ):
                 log.error(
-                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending vram order (0x{prev_vram:X} followed by 0x{segment.vram_start:X}).\n" + f"Detected when processing file '{segment.name}' of type '{segment.type}'"
+                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending vram order (0x{prev_vram:X} followed by 0x{segment.vram_start:X}).\n"
+                    + f"Detected when processing file '{segment.name}' of type '{segment.type}'"
                 )
 
             segment.sibling = base_segments.get(segment.name, None)
