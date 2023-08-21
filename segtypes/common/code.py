@@ -163,6 +163,7 @@ class CommonSegCode(CommonSegGroup):
         base_segments: OrderedDict[str, Segment] = OrderedDict()
         ret = []
         prev_start: Optional[int] = -1
+        prev_vram: Optional[int] = -1
         inserts: OrderedDict[
             str, int
         ] = (
@@ -272,7 +273,7 @@ class CommonSegCode(CommonSegGroup):
 
             if start is not None and prev_start is not None and start < prev_start:
                 log.error(
-                    f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})"
+                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})"
                 )
 
             vram = None
@@ -289,6 +290,11 @@ class CommonSegCode(CommonSegGroup):
             segment: Segment = Segment.from_yaml(
                 segment_class, subsegment_yaml, start, end, vram
             )
+
+            if segment.vram_start is not None and prev_vram is not None and segment.vram_start < prev_vram:
+                log.error(
+                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending vram order (0x{prev_vram:X} followed by 0x{segment.vram_start:X}).\n" + f"Detected when processing file '{segment.name}' of type '{segment.type}'"
+                )
 
             segment.sibling = base_segments.get(segment.name, None)
 
@@ -327,6 +333,7 @@ class CommonSegCode(CommonSegGroup):
                     base_segments[segment.name] = segment
 
             prev_start = start
+            prev_vram = segment.vram_start
             if end is not None:
                 last_rom_end = end
 
