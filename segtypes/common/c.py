@@ -407,7 +407,10 @@ class CommonSegC(CommonSegCodeSubsegment):
         dep_path = build_path / c_path.with_suffix(".asmproc.d")
         dep_path.parent.mkdir(parents=True, exist_ok=True)
         with dep_path.open("w") as f:
-            o_path = build_path / c_path.with_suffix(".o")
+            if options.opts.use_o_as_suffix:
+                o_path = build_path / c_path.with_suffix(".o")
+            else:
+                o_path = build_path / c_path.with_suffix(c_path.suffix + ".o")
             f.write(f"{o_path}:")
             depend_list = []
             for entry in symbols_entries:
