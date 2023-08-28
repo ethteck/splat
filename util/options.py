@@ -102,6 +102,12 @@ class SplatOpts:
     # Determines whether to use "follows" settings to determine locations of overlays in the linker script.
     # If disabled, this effectively ignores "follows" directives in the yaml.
     ld_use_follows: bool
+    # 
+    ld_partial_linking: bool
+    # 
+    ld_partial_scripts_path: Optional[Path]
+    # 
+    ld_partial_build_segments_path: Optional[Path]
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
     segment_end_before_align: bool
     # Controls the style of the auto-generated segment symbols in the linker script. Possible values: splat, makerom
@@ -378,6 +384,9 @@ def _parse_yaml(
         ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
         ld_use_follows=p.parse_opt("ld_use_follows", bool, True),
+        ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
+        ld_partial_scripts_path=p.parse_optional_path(base_path, "ld_partial_scripts_path"),
+        ld_partial_build_segments_path=p.parse_optional_path(base_path, "ld_partial_build_segments_path"),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         segment_symbols_style=p.parse_opt_within(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"

@@ -400,21 +400,34 @@ def main(
         linker_writer = LinkerWriter()
         linker_bar = progress_bar.get_progress_bar(all_segments)
 
+        partial_linking = options.opts.ld_partial_linking
+        partial_scripts_path = options.opts.ld_partial_scripts_path
+        if partial_linking:
+            if partial_scripts_path is None:
+                log.error("Partial linking is enabled but ld_partial_scripts_path has not been set")
+            if options.opts.ld_partial_build_segments_path is None:
+                log.error("Partial linking is enabled but ld_partial_build_segments_path has not been set")
+
         i = 0
         segment: Segment
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             max_vram_syms = max_vram_end_insertion_points.get(segment, [])
-            linker_writer.add(segment, max_vram_syms)
 
             # if i == 3:
             #     exit(1)
 
-            if True:
+            if options.opts.ld_partial_linking:
+                linker_writer.add_referenced_partial_segment(segment, max_vram_syms)
+
+                # Create linker script for segment
                 sub_linker_writer = LinkerWriter(is_partial=True)
-                sub_linker_writer.add_partial_segment(segment, max_vram_syms)
+                sub_linker_writer.add_partial_segment(segment)
                 # TODO: use segment_cname
-                sub_linker_writer.save_linker_script(Path(f"test/{segment.name}.ld"))
+                assert partial_scripts_path is not None
+                sub_linker_writer.save_linker_script(partial_scripts_path / f"{segment.name}.ld")
+            else:
+                linker_writer.add(segment, max_vram_syms)
 
             i += 1
         linker_writer.save_linker_script(options.opts.ld_script_path)
