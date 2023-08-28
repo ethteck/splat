@@ -263,22 +263,6 @@ class LinkerWriter:
                         # Don't write a START symbol if we are about to end the section
                         self._begin_section(seg_name, cur_section, section_labels)
 
-            # TODO: option to turn this off?
-            if (
-                entry.object_path
-                and cur_section == ".data"
-                and entry.segment.type != "lib"
-            ):
-                path_cname = re.sub(
-                    r"[^0-9a-zA-Z_]",
-                    "_",
-                    str(entry.segment.dir / entry.segment.name)
-                    + ".".join(entry.object_path.suffixes[:-1]),
-                )
-                self._write_symbol(path_cname, ".")
-
-            # wildcard = "*" if options.opts.ld_wildcard_sections else ""
-
             # Create new linker section for BSS
             if entering_bss or leaving_bss:
                 # If this is the last entry of its type, add the END marker for the section we're ending
@@ -316,14 +300,14 @@ class LinkerWriter:
             if section.started and not section.ended:
                 self._end_section(seg_name, section.name, section_labels)
 
-        all_bss = all(e.section == ".bss" for e in entries)
+        all_bss = all(e.noload for e in entries)
         self._end_segment(segment, all_bss)
 
         print()
 
     def add_referenced_partial_segment(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
         entries = segment.get_linker_entries()
-        # self.entries.extend(entries)
+        self.entries.extend(entries)
 
         segments_path = options.opts.ld_partial_build_segments_path
         assert segments_path is not None
@@ -333,40 +317,49 @@ class LinkerWriter:
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
 
-        self._begin_segment(segment)
+        any_load = any(not e.noload for e in entries)
+        is_first = True
 
-        for l in options.opts.section_order:
-            if l not in options.opts.ld_section_labels:
-                continue
+        if any_load:
+            # Only emit normal segment if there's at least one normal entry
 
-            if l == ".bss":
-                continue
+            self._begin_segment(segment)
 
-            entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", l, noload=False)
+            for l in options.opts.section_order:
+                if l not in options.opts.ld_section_labels:
+                    continue
+
+                if l == ".bss":
+                    continue
+
+                entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", l, noload=False)
+                self._writer_linker_entry(entry)
+            is_first = False
+
+        if any(e.noload for e in entries):
+            # Only emit NOLOAD segment if there is at least one noload entry
+
+            if not is_first:
+                self._end_block()
+
+            self._begin_bss_segment(segment, is_first=is_first)
+
+            # Check if any section has the bss_contains_common option
+            bss_contains_common = False
+            for entry in entries:
+                if entry.segment.bss_contains_common:
+                    bss_contains_common = True
+                    break
+
+            entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True)
+            entry.bss_contains_common = bss_contains_common
             self._writer_linker_entry(entry)
 
-        # self._end_segment(segment)
-        self._end_block()
-
-        self._begin_bss_segment(segment, is_first=False)
-
-        # Check if any section has the bss_contains_common option
-        bss_contains_common = False
-        for entry in entries:
-            if entry.segment.bss_contains_common:
-                bss_contains_common = True
-                break
-
-        entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True)
-        entry.bss_contains_common = bss_contains_common
-        self._writer_linker_entry(entry)
-
-        self._end_segment(segment)
+        self._end_segment(segment, all_bss=not any_load)
 
 
     def add_partial_segment(self, segment: Segment):
         entries = segment.get_linker_entries()
-        # self.entries.extend(entries)
 
         seg_name = segment_cname(segment)
 
@@ -583,6 +576,20 @@ class LinkerWriter:
             sect_label.ended = True
 
     def _writer_linker_entry(self, entry: LinkerEntry):
+        # TODO: option to turn this off?
+        if (
+            entry.object_path
+            and entry.section_type == ".data"
+            and entry.segment.type != "lib"
+        ):
+            path_cname = re.sub(
+                r"[^0-9a-zA-Z_]",
+                "_",
+                str(entry.segment.dir / entry.segment.name)
+                + ".".join(entry.object_path.suffixes[:-1]),
+            )
+            self._write_symbol(path_cname, ".")
+
         if entry.noload and entry.bss_contains_common:
             self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
         else:
