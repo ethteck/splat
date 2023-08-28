@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from pathlib import Path
 from disassembler import disassembler_instance
 from util import progress_bar
 
@@ -399,10 +400,24 @@ def main(
         linker_writer = LinkerWriter()
         linker_bar = progress_bar.get_progress_bar(all_segments)
 
+        i = 0
+        segment: Segment
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
-            linker_writer.add(segment, max_vram_end_insertion_points.get(segment, []))
-        linker_writer.save_linker_script()
+            max_vram_syms = max_vram_end_insertion_points.get(segment, [])
+            linker_writer.add(segment, max_vram_syms)
+
+            # if i == 3:
+            #     exit(1)
+
+            if True:
+                sub_linker_writer = LinkerWriter(is_partial=True)
+                sub_linker_writer.add_partial_segment(segment, max_vram_syms)
+                # TODO: use segment_cname
+                sub_linker_writer.save_linker_script(Path(f"test/{segment.name}.ld"))
+
+            i += 1
+        linker_writer.save_linker_script(options.opts.ld_script_path)
         linker_writer.save_symbol_header()
 
         # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
@@ -466,8 +481,6 @@ def main(
             pickle.dump(cache, f4)
 
     if options.opts.dump_symbols and options.opts.is_mode_active("code"):
-        from pathlib import Path
-
         splat_hidden_folder = Path(".splat/")
         splat_hidden_folder.mkdir(exist_ok=True)
 

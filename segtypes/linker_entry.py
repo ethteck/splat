@@ -142,11 +142,12 @@ class LinkerSection:
 
 class LinkerEntry:
     def __init__(
-        self, segment: Segment, src_paths: List[Path], object_path: Path, section: str
+        self, segment: Segment, src_paths: List[Path], object_path: Path, section: str, noload: bool=False
     ):
         self.segment = segment
         self.src_paths = [clean_up_path(p) for p in src_paths]
         self.section = section
+        self.noload = noload
         if self.section == "linker" or self.section == "linker_offset":
             self.object_path = None
         elif self.segment.type == "lib":
@@ -163,7 +164,7 @@ class LinkerEntry:
 
 
 class LinkerWriter:
-    def __init__(self):
+    def __init__(self, is_partial: bool=False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
         # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
@@ -171,14 +172,18 @@ class LinkerWriter:
         self.buffer: List[str] = []
         self.header_symbols: Set[str] = set()
 
+        self.is_partial: bool = is_partial
+
         self._indent_level = 0
 
         self._writeln("SECTIONS")
         self._begin_block()
-        self._writeln(f"__romPos = {options.opts.ld_rom_start};")
 
-        if options.opts.gp is not None:
-            self._writeln("_gp = " + f"0x{options.opts.gp:X};")
+        if not self.is_partial:
+            self._writeln(f"__romPos = {options.opts.ld_rom_start};")
+
+            if options.opts.gp is not None:
+                self._writeln("_gp = " + f"0x{options.opts.gp:X};")
 
     # Write a series of statements which compute a symbol that represents the highest address among a list of segments' end addresses
     def write_max_vram_end_sym(self, symbol: str, overlays: List[Segment]):
@@ -217,10 +222,7 @@ class LinkerWriter:
 
         if entries[0].section_type == ".bss":
             self._begin_bss_segment(segment, is_first=True)
-            seg_bss_start = get_segment_section_start(seg_name, ".bss")
-            self._write_symbol(seg_bss_start, ".")
-            if ".bss" in section_labels:
-                section_labels[".bss"].started = True
+            self._begin_section(seg_name, ".bss", section_labels)
         else:
             self._begin_segment(segment)
 
@@ -241,13 +243,16 @@ class LinkerWriter:
             leaving_bss = False
             cur_section = entry.section_type
 
+            # print(entry, entry.section)
+
             if cur_section == "linker_offset":
                 self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
                 continue
 
-            for i, section in enumerate(section_labels.values()):
+            current_section_label = section_labels.get(entry.section_type)
+            if current_section_label is not None:
                 # If we haven't seen this section yet
-                if not section.started and section.section_type == entry.section_type:
+                if not current_section_label.started and current_section_label.section_type == entry.section_type:
                     if prev_section == ".bss":
                         leaving_bss = True
                     elif cur_section == ".bss":
@@ -255,11 +260,7 @@ class LinkerWriter:
 
                     if not (entering_bss or leaving_bss):
                         # Don't write a START symbol if we are about to end the section
-                        section_start = get_segment_section_start(
-                            seg_name, entry.section_type
-                        )
-                        self._write_symbol(section_start, ".")
-                        section_labels[entry.section_type].started = True
+                        self._begin_section(seg_name, cur_section, section_labels)
 
             if (
                 entry.object_path
@@ -274,7 +275,7 @@ class LinkerWriter:
                 )
                 self._write_symbol(path_cname, ".")
 
-            wildcard = "*" if options.opts.ld_wildcard_sections else ""
+            # wildcard = "*" if options.opts.ld_wildcard_sections else ""
 
             # Create new linker section for BSS
             if entering_bss or leaving_bss:
@@ -294,18 +295,13 @@ class LinkerWriter:
                 else:
                     self._begin_segment(segment)
 
-                section_start = get_segment_section_start(seg_name, entry.section_type)
-                self._write_symbol(section_start, ".")
-                section_labels[cur_section].started = True
+                self._begin_section(seg_name, cur_section, section_labels)
 
                 # Write THIS linker entry
-                self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
+                self._writer_linker_entry(entry)
             else:
                 # Write THIS linker entry
-                if entry.section == ".bss" and entry.segment.bss_contains_common:
-                    self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
-                else:
-                    self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
+                self._writer_linker_entry(entry)
 
                 # If this is the last entry of its type, add the END marker for the section we're ending
                 if entry in last_seen_sections:
@@ -321,7 +317,58 @@ class LinkerWriter:
         all_bss = all(e.section == ".bss" for e in entries)
         self._end_segment(segment, all_bss)
 
-    def save_linker_script(self):
+        print()
+
+    def add_partial_segment(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
+        entries = segment.get_linker_entries()
+        self.entries.extend(entries)
+
+        seg_name = segment_cname(segment)
+
+        for sym, segs in max_vram_syms:
+            self.write_max_vram_end_sym(sym, segs)
+
+
+        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
+        # noload_entries: List[LinkerEntry] = []
+        for l in options.opts.section_order:
+            if l in options.opts.ld_section_labels:
+                section_entries[l] = []
+
+        # Add all entries to section_entries
+        prev_entry = None
+        for entry in entries:
+            # if entry.noload:
+            #     noload_entries.append(entry)
+            # elif entry.section in section_entries:
+            if entry.section in section_entries:
+                section_entries[entry.section].append(entry)
+            elif prev_entry is not None:
+                # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
+                section_entries[prev_entry].append(entry)
+            prev_entry = entry.section
+
+        for section_name, entries in section_entries.items():
+            if len(entries) == 0:
+                continue
+            first_entry = entries[0]
+
+            self._begin_partial_segment(section_name, segment, first_entry.noload)
+
+            self._begin_section(seg_name, section_name, OrderedDict())
+
+            for entry in entries:
+                if entry.section_type == "linker_offset":
+                    self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
+                    continue
+
+                self._writer_linker_entry(entry)
+
+            self._end_section(seg_name, section_name, OrderedDict())
+
+            self._end_partial_segment(section_name)
+
+    def save_linker_script(self, output_path: Path):
         if self.linker_discard_section:
             self._writeln("/DISCARD/ :")
             self._begin_block()
@@ -332,9 +379,7 @@ class LinkerWriter:
 
         assert self._indent_level == 0
 
-        write_file_if_different(
-            options.opts.ld_script_path, "\n".join(self.buffer) + "\n"
-        )
+        write_file_if_different(output_path, "\n".join(self.buffer) + "\n")
 
     def save_symbol_header(self):
         path = options.opts.ld_symbol_header_path
@@ -450,6 +495,33 @@ class LinkerWriter:
 
         self._writeln("")
 
+    def _begin_partial_segment(self, section_name: str, segment: Segment, noload: bool):
+        line = f"{section_name}"
+        if noload:
+            line += " (NOLOAD)"
+        line += " :"
+        if segment.subalign != None:
+            line += f" SUBALIGN({segment.subalign})"
+
+        self._writeln(line)
+        self._begin_block()
+
+    def _end_partial_segment(self, section_name: str, all_bss=False):
+        self._end_block()
+
+        self._writeln("")
+
+    def _begin_section(self,
+        seg_name: str,
+        cur_section: str,
+        section_labels: OrderedDict[str, LinkerSection],
+    ) -> None:
+        section_start = get_segment_section_start(seg_name, cur_section)
+        self._write_symbol(section_start, ".")
+        sect_label = section_labels.get(cur_section)
+        if sect_label is not None:
+            sect_label.started = True
+
     def _end_section(
         self,
         seg_name: str,
@@ -464,4 +536,15 @@ class LinkerWriter:
             section_size,
             f"ABSOLUTE({section_end} - {section_start})",
         )
-        section_labels[cur_section].ended = True
+        sect_label = section_labels.get(cur_section)
+        if sect_label is not None:
+            sect_label.ended = True
+
+    def _writer_linker_entry(self, entry: LinkerEntry):
+        if entry.noload and entry.segment.bss_contains_common:
+            self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
+        else:
+            wildcard = "*" if options.opts.ld_wildcard_sections else ""
+
+            self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
+

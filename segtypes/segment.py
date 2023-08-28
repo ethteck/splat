@@ -466,7 +466,7 @@ class Segment:
         path = self.out_path()
 
         if path:
-            return [LinkerEntry(self, [path], path, self.get_linker_section())]
+            return [LinkerEntry(self, [path], path, self.get_linker_section(), self.is_noload())]
         else:
             return []
 
