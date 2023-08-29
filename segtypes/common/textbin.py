@@ -47,13 +47,30 @@ class CommonSegTextbin(CommonSegment):
         self.log(f"Wrote {self.name} to {binpath}")
 
         with s_path.open("w") as f:
+            f.write('.include "macro.inc"\n\n')
+            preamble = options.opts.generated_s_preamble
+            if preamble:
+                f.write(preamble + "\n")
+
             f.write(f".section {self.get_linker_section()}")
             section_flags = self.get_section_flags()
             if section_flags:
                 f.write(f', "{section_flags}"')
             f.write("\n\n")
 
+            # Check if there's a symbol at this address
+            sym = None
+            vram = self.rom_to_ram(self.rom_start)
+            if vram is not None:
+                sym = self.get_symbol(vram, in_segment=True)
+
+            if sym is not None:
+                f.write(f"{options.opts.asm_function_macro} {sym.name}\n")
+
             f.write(f'.incbin "{binpath}"\n')
+
+            if sym is not None and sym.given_name_end is not None:
+                f.write(f"{options.opts.asm_function_macro} {sym.given_name_end}\n")
 
     def should_scan(self) -> bool:
         return (
