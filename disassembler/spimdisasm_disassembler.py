@@ -80,6 +80,7 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.GP_VALUE = opts.gp
 
         spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = opts.asm_function_macro
+        spimdisasm.common.GlobalConfig.ASM_TEXT_ALT_LABEL = opts.asm_function_alt_macro
         spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = opts.asm_jtbl_label_macro
         spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = opts.asm_data_macro
         spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = opts.asm_end_label

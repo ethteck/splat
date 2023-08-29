@@ -140,6 +140,8 @@ class SplatOpts:
     asm_inc_header: str
     # Determines the macro used to declare functions in asm files
     asm_function_macro: str
+    # Determines the macro used to declare symbols in the middle of functions in asm files (which may be alternative entries)
+    asm_function_alt_macro: str
     # Determines the macro used to declare jumptable labels in asm files
     asm_jtbl_label_macro: str
     # Determines the macro used to declare data symbols in asm files
@@ -403,6 +405,9 @@ def _parse_yaml(
         asm_inc_header=p.parse_opt("asm_inc_header", str, comp.asm_inc_header),
         asm_function_macro=p.parse_opt(
             "asm_function_macro", str, comp.asm_function_macro
+        ),
+        asm_function_alt_macro=p.parse_opt(
+            "asm_function_alt_macro", str, comp.asm_function_alt_macro
         ),
         asm_jtbl_label_macro=p.parse_opt(
             "asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro

@@ -1,4 +1,4 @@
-from util import compiler, log, options, palettes, symbols
+from util import options, symbols
 
 
 def init(target_bytes: bytes):
