@@ -203,7 +203,7 @@ class LinkerWriter:
             self.write_max_vram_end_sym(sym, segs)
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
-        for l in options.opts.section_order:
+        for l in segment.section_order:
             if l in options.opts.ld_section_labels:
                 section_entries[l] = []
 
@@ -265,7 +265,7 @@ class LinkerWriter:
 
             self._begin_segment(segment, seg_name, noload=False, is_first=is_first)
 
-            for l in options.opts.section_order:
+            for l in segment.section_order:
                 if l not in options.opts.ld_section_labels:
                     continue
                 if l == ".bss":
@@ -310,7 +310,7 @@ class LinkerWriter:
         seg_name = segment_cname(segment)
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
-        for l in options.opts.section_order:
+        for l in segment.section_order:
             if l in options.opts.ld_section_labels:
                 section_entries[l] = []
 
