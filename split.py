@@ -405,9 +405,9 @@ def main(
         segments_path = options.opts.ld_partial_build_segments_path
         if partial_linking:
             if partial_scripts_path is None:
-                log.error("Partial linking is enabled but ld_partial_scripts_path has not been set")
+                log.error("Partial linking is enabled but `ld_partial_scripts_path` has not been set")
             if options.opts.ld_partial_build_segments_path is None:
-                log.error("Partial linking is enabled but ld_partial_build_segments_path has not been set")
+                log.error("Partial linking is enabled but `ld_partial_build_segments_path` has not been set")
 
         segment: Segment
         for segment in linker_bar:
@@ -434,6 +434,11 @@ def main(
 
         linker_writer.save_linker_script(options.opts.ld_script_path)
         linker_writer.save_symbol_header()
+        if options.opts.ld_dependencies:
+            elf_path = options.opts.elf_path
+            if elf_path is None:
+                log.error("Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options")
+            linker_writer.save_dependencies_file(options.opts.ld_script_path.with_suffix(".d"), elf_path)
 
         # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
         # that the elf combines into one section

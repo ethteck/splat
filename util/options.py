@@ -20,6 +20,8 @@ class SplatOpts:
     base_path: Path
     # Determines the path to the target binary
     target_path: Path
+    # 
+    elf_path: Optional[Path]
     # Determines the platform of the target binary
     platform: str
     # Determines the compiler used to compile the target binary
@@ -332,6 +334,7 @@ def _parse_yaml(
         modes=modes,
         base_path=base_path,
         target_path=p.parse_path(base_path, "target_path"),
+        elf_path=p.parse_optional_path(base_path, "elf_path"),
         platform=platform,
         compiler=comp,
         endianness=parse_endianness(),
