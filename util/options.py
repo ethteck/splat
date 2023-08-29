@@ -108,6 +108,8 @@ class SplatOpts:
     ld_partial_scripts_path: Optional[Path]
     # 
     ld_partial_build_segments_path: Optional[Path]
+    # 
+    ld_dependencies: bool
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
     segment_end_before_align: bool
     # Controls the style of the auto-generated segment symbols in the linker script. Possible values: splat, makerom
@@ -387,6 +389,7 @@ def _parse_yaml(
         ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
         ld_partial_scripts_path=p.parse_optional_path(base_path, "ld_partial_scripts_path"),
         ld_partial_build_segments_path=p.parse_optional_path(base_path, "ld_partial_build_segments_path"),
+        ld_dependencies=p.parse_opt("ld_dependencies", bool, False),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         segment_symbols_style=p.parse_opt_within(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"

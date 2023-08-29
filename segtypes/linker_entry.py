@@ -156,6 +156,7 @@ class LinkerWriter:
         self.linker_discard_section: bool = options.opts.ld_discard_section
         # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
+        self.dependencies_entries: List[LinkerEntry] = []
 
         self.buffer: List[str] = []
         self.header_symbols: Set[str] = set()
@@ -189,6 +190,7 @@ class LinkerWriter:
     def add(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
+        self.dependencies_entries.extend(entries)
 
         seg_name = segment_cname(segment)
 
@@ -260,6 +262,7 @@ class LinkerWriter:
                     continue
 
                 entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", l, noload=False)
+                self.dependencies_entries.append(entry)
                 self._writer_linker_entry(entry)
             is_first = False
 
@@ -280,6 +283,7 @@ class LinkerWriter:
 
             entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True)
             entry.bss_contains_common = bss_contains_common
+            self.dependencies_entries.append(entry)
             self._writer_linker_entry(entry)
 
         self._end_segment(segment, all_bss=not any_load)
@@ -287,6 +291,8 @@ class LinkerWriter:
 
     def add_partial_segment(self, segment: Segment):
         entries = segment.get_linker_entries()
+        self.entries.extend(entries)
+        self.dependencies_entries.extend(entries)
 
         seg_name = segment_cname(segment)
 
@@ -349,6 +355,22 @@ class LinkerWriter:
                 + "\n"
                 "#endif\n",
             )
+
+    def save_dependencies_file(self, output_path: Path, target_elf_path: Path):
+        output = f"{target_elf_path}:"
+
+        for entry in self.dependencies_entries:
+            if entry.object_path is None:
+                continue
+            output += f" \\\n    {entry.object_path}"
+
+        output += "\n"
+        for entry in self.dependencies_entries:
+            if entry.object_path is None:
+                continue
+            output += f"{entry.object_path}:\n"
+        write_file_if_different(output_path, output)
+
 
     def _writeln(self, line: str):
         if len(line) == 0:

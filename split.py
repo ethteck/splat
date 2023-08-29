@@ -20,7 +20,7 @@ import sys
 from segtypes.linker_entry import (
     LinkerWriter,
     get_segment_vram_end_symbol_name,
-    to_cname,
+    segment_cname,
 )
 from segtypes.segment import Segment
 from util import log, options, palettes, symbols, relocs
@@ -402,20 +402,17 @@ def main(
 
         partial_linking = options.opts.ld_partial_linking
         partial_scripts_path = options.opts.ld_partial_scripts_path
+        segments_path = options.opts.ld_partial_build_segments_path
         if partial_linking:
             if partial_scripts_path is None:
                 log.error("Partial linking is enabled but ld_partial_scripts_path has not been set")
             if options.opts.ld_partial_build_segments_path is None:
                 log.error("Partial linking is enabled but ld_partial_build_segments_path has not been set")
 
-        i = 0
         segment: Segment
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             max_vram_syms = max_vram_end_insertion_points.get(segment, [])
-
-            # if i == 3:
-            #     exit(1)
 
             if options.opts.ld_partial_linking:
                 linker_writer.add_referenced_partial_segment(segment, max_vram_syms)
@@ -423,13 +420,18 @@ def main(
                 # Create linker script for segment
                 sub_linker_writer = LinkerWriter(is_partial=True)
                 sub_linker_writer.add_partial_segment(segment)
-                # TODO: use segment_cname
+
                 assert partial_scripts_path is not None
-                sub_linker_writer.save_linker_script(partial_scripts_path / f"{segment.name}.ld")
+                assert segments_path is not None
+
+                seg_name = segment_cname(segment)
+
+                sub_linker_writer.save_linker_script(partial_scripts_path / f"{seg_name}.ld")
+                if options.opts.ld_dependencies:
+                    sub_linker_writer.save_dependencies_file(partial_scripts_path / f"{seg_name}.d", segments_path / f"{seg_name}.o")
             else:
                 linker_writer.add(segment, max_vram_syms)
 
-            i += 1
         linker_writer.save_linker_script(options.opts.ld_script_path)
         linker_writer.save_symbol_header()
 
@@ -438,7 +440,7 @@ def main(
         if options.opts.elf_section_list_path:
             section_list = ""
             for segment in all_segments:
-                section_list += "." + to_cname(segment.name) + "\n"
+                section_list += "." + segment_cname(segment) + "\n"
             with open(options.opts.elf_section_list_path, "w", newline="\n") as f:
                 f.write(section_list)
 
