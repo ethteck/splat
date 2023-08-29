@@ -208,102 +208,76 @@ class LinkerWriter:
         for sym, segs in max_vram_syms:
             self.write_max_vram_end_sym(sym, segs)
 
-        section_labels: OrderedDict[str, LinkerSection] = OrderedDict(
-            {
-                l: LinkerSection(l)
-                for l in options.opts.section_order
-                if l in options.opts.ld_section_labels
-            }
-        )
+        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
+        for l in options.opts.section_order:
+            if l in options.opts.ld_section_labels:
+                section_entries[l] = []
+
+        # Add all entries to section_entries
+        prev_entry = None
+        for entry in entries:
+            if entry.section in section_entries:
+                section_entries[entry.section].append(entry)
+            elif prev_entry is not None:
+                # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
+                section_entries[prev_entry].append(entry)
+            prev_entry = entry.section
 
         # Start the first linker section
 
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
 
-        if entries[0].section_type == ".bss":
-            self._begin_bss_segment(segment, is_first=True)
-            self._begin_section(seg_name, ".bss", section_labels)
-        else:
+        any_load = any(not e.noload for e in entries)
+        is_first = True
+
+        if any_load:
+            # Only emit normal segment if there's at least one normal entry
+
             self._begin_segment(segment)
 
-        last_seen_sections: Dict[LinkerEntry, str] = {}
+            for section_name, entries in section_entries.items():
+                if len(entries) == 0:
+                    continue
 
-        # Find where sections are last seen
-        for entry in reversed(entries):
-            if (
-                entry.section_type in section_labels.keys()
-                and entry.section_type not in last_seen_sections.values()
-            ):
-                last_seen_sections[entry] = entry.section_type
+                first_entry = entries[0]
+                if first_entry.noload:
+                    continue
 
-        cur_section = None
-        prev_section = None
-        for entry in entries:
-            entering_bss = False
-            leaving_bss = False
-            cur_section = entry.section_type
+                self._begin_section(seg_name, section_name, OrderedDict())
 
-            # print(entry, entry.section)
+                for entry in entries:
+                    self._writer_linker_entry(entry)
 
-            if cur_section == "linker_offset":
-                self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
-                continue
+                self._end_section(seg_name, section_name, OrderedDict())
 
-            current_section_label = section_labels.get(entry.section_type)
-            if current_section_label is not None:
-                # If we haven't seen this section yet
-                if not current_section_label.started and current_section_label.section_type == entry.section_type:
-                    if prev_section == ".bss":
-                        leaving_bss = True
-                    elif cur_section == ".bss":
-                        entering_bss = True
+            is_first = False
 
-                    if not (entering_bss or leaving_bss):
-                        # Don't write a START symbol if we are about to end the section
-                        self._begin_section(seg_name, cur_section, section_labels)
+        if any(e.noload for e in entries):
+            # Only emit NOLOAD segment if there is at least one noload entry
 
-            # Create new linker section for BSS
-            if entering_bss or leaving_bss:
-                # If this is the last entry of its type, add the END marker for the section we're ending
-                if (
-                    entry in last_seen_sections
-                    and section_labels[entry.section_type].started
-                ):
-                    self._end_section(
-                        seg_name, last_seen_sections[entry], section_labels
-                    )
-
+            if not is_first:
                 self._end_block()
 
-                if entering_bss:
-                    self._begin_bss_segment(segment)
-                else:
-                    self._begin_segment(segment)
+            self._begin_bss_segment(segment, is_first=is_first)
 
-                self._begin_section(seg_name, cur_section, section_labels)
+            for section_name, entries in section_entries.items():
+                if len(entries) == 0:
+                    continue
 
-                # Write THIS linker entry
-                self._writer_linker_entry(entry)
-            else:
-                # Write THIS linker entry
-                self._writer_linker_entry(entry)
+                first_entry = entries[0]
+                if not first_entry.noload:
+                    continue
 
-                # If this is the last entry of its type, add the END marker for the section we're ending
-                if entry in last_seen_sections:
-                    self._end_section(seg_name, cur_section, section_labels)
+                self._begin_section(seg_name, section_name, OrderedDict())
 
-            prev_section = cur_section
+                for entry in entries:
+                    self._writer_linker_entry(entry)
 
-        # End all un-ended sections
-        for section in section_labels.values():
-            if section.started and not section.ended:
-                self._end_section(seg_name, section.name, section_labels)
+                self._end_section(seg_name, section_name, OrderedDict())
 
-        all_bss = all(e.noload for e in entries)
-        self._end_segment(segment, all_bss)
+        self._end_segment(segment, all_bss=not any_load)
 
-        print()
 
     def add_referenced_partial_segment(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
         entries = segment.get_linker_entries()
@@ -313,6 +287,9 @@ class LinkerWriter:
         assert segments_path is not None
 
         seg_name = segment_cname(segment)
+
+        for sym, segs in max_vram_syms:
+            self.write_max_vram_end_sym(sym, segs)
 
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
@@ -363,9 +340,7 @@ class LinkerWriter:
 
         seg_name = segment_cname(segment)
 
-
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
-        # noload_entries: List[LinkerEntry] = []
         for l in options.opts.section_order:
             if l in options.opts.ld_section_labels:
                 section_entries[l] = []
@@ -373,9 +348,6 @@ class LinkerWriter:
         # Add all entries to section_entries
         prev_entry = None
         for entry in entries:
-            # if entry.noload:
-            #     noload_entries.append(entry)
-            # elif entry.section in section_entries:
             if entry.section in section_entries:
                 section_entries[entry.section].append(entry)
             elif prev_entry is not None:
@@ -393,10 +365,6 @@ class LinkerWriter:
             self._begin_section(seg_name, section_name, OrderedDict())
 
             for entry in entries:
-                if entry.section_type == "linker_offset":
-                    self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
-                    continue
-
                 self._writer_linker_entry(entry)
 
             self._end_section(seg_name, section_name, OrderedDict())
@@ -576,6 +544,10 @@ class LinkerWriter:
             sect_label.ended = True
 
     def _writer_linker_entry(self, entry: LinkerEntry):
+        if entry.section_type == "linker_offset":
+            self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
+            return
+
         # TODO: option to turn this off?
         if (
             entry.object_path
