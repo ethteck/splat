@@ -129,7 +129,12 @@ def get_segment_vram_end_symbol_name(segment: Segment) -> str:
 
 class LinkerEntry:
     def __init__(
-        self, segment: Segment, src_paths: List[Path], object_path: Path, section: str, noload: bool=False
+        self,
+        segment: Segment,
+        src_paths: List[Path],
+        object_path: Path,
+        section: str,
+        noload: bool = False,
     ):
         self.segment = segment
         self.src_paths = [clean_up_path(p) for p in src_paths]
@@ -152,7 +157,7 @@ class LinkerEntry:
 
 
 class LinkerWriter:
-    def __init__(self, is_partial: bool=False):
+    def __init__(self, is_partial: bool = False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
         # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
@@ -222,18 +227,23 @@ class LinkerWriter:
         is_first = True
         if any_load:
             # Only emit normal segment if there's at least one normal entry
-            self._write_segment_sections(segment, seg_name, section_entries, noload=False, is_first=is_first)
+            self._write_segment_sections(
+                segment, seg_name, section_entries, noload=False, is_first=is_first
+            )
             is_first = False
 
         if any_noload:
             # Only emit NOLOAD segment if there is at least one noload entry
-            self._write_segment_sections(segment, seg_name, section_entries, noload=True, is_first=is_first)
+            self._write_segment_sections(
+                segment, seg_name, section_entries, noload=True, is_first=is_first
+            )
             is_first = False
 
         self._end_segment(segment, all_bss=not any_load)
 
-
-    def add_referenced_partial_segment(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
+    def add_referenced_partial_segment(
+        self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]
+    ):
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
 
@@ -261,7 +271,9 @@ class LinkerWriter:
                 if l == ".bss":
                     continue
 
-                entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", l, noload=False)
+                entry = LinkerEntry(
+                    segment, [], segments_path / f"{seg_name}.o", l, noload=False
+                )
                 self.dependencies_entries.append(entry)
                 self._writer_linker_entry(entry)
             is_first = False
@@ -281,13 +293,14 @@ class LinkerWriter:
                     bss_contains_common = True
                     break
 
-            entry = LinkerEntry(segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True)
+            entry = LinkerEntry(
+                segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True
+            )
             entry.bss_contains_common = bss_contains_common
             self.dependencies_entries.append(entry)
             self._writer_linker_entry(entry)
 
         self._end_segment(segment, all_bss=not any_load)
-
 
     def add_partial_segment(self, segment: Segment):
         entries = segment.get_linker_entries()
@@ -371,7 +384,6 @@ class LinkerWriter:
             output += f"{entry.object_path}:\n"
         write_file_if_different(output_path, output)
 
-
     def _writeln(self, line: str):
         if len(line) == 0:
             self.buffer.append(line)
@@ -396,7 +408,9 @@ class LinkerWriter:
 
         self.header_symbols.add(symbol)
 
-    def _begin_segment(self, segment: Segment, seg_name: str, noload: bool, is_first: bool):
+    def _begin_segment(
+        self, segment: Segment, seg_name: str, noload: bool, is_first: bool
+    ):
         if options.opts.ld_use_follows and segment.vram_of_symbol:
             vram_str = segment.vram_of_symbol + " "
         else:
@@ -466,18 +480,11 @@ class LinkerWriter:
 
         self._writeln("")
 
-    def _begin_section(self,
-        seg_name: str,
-        cur_section: str
-    ) -> None:
+    def _begin_section(self, seg_name: str, cur_section: str) -> None:
         section_start = get_segment_section_start(seg_name, cur_section)
         self._write_symbol(section_start, ".")
 
-    def _end_section(
-        self,
-        seg_name: str,
-        cur_section: str
-    ) -> None:
+    def _end_section(self, seg_name: str, cur_section: str) -> None:
         section_start = get_segment_section_start(seg_name, cur_section)
         section_end = get_segment_section_end(seg_name, cur_section)
         section_size = get_segment_section_size(seg_name, cur_section)
@@ -513,7 +520,14 @@ class LinkerWriter:
 
             self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
 
-    def _write_segment_sections(self, segment: Segment, seg_name: str, section_entries: OrderedDict[str, List[LinkerEntry]], noload: bool, is_first: bool):
+    def _write_segment_sections(
+        self,
+        segment: Segment,
+        seg_name: str,
+        section_entries: OrderedDict[str, List[LinkerEntry]],
+        noload: bool,
+        is_first: bool,
+    ):
         if not is_first:
             self._end_block()
 

@@ -405,11 +405,14 @@ def main(
         segments_path = options.opts.ld_partial_build_segments_path
         if partial_linking:
             if partial_scripts_path is None:
-                log.error("Partial linking is enabled but `ld_partial_scripts_path` has not been set")
+                log.error(
+                    "Partial linking is enabled but `ld_partial_scripts_path` has not been set"
+                )
             if options.opts.ld_partial_build_segments_path is None:
-                log.error("Partial linking is enabled but `ld_partial_build_segments_path` has not been set")
+                log.error(
+                    "Partial linking is enabled but `ld_partial_build_segments_path` has not been set"
+                )
 
-        segment: Segment
         for segment in linker_bar:
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             max_vram_syms = max_vram_end_insertion_points.get(segment, [])
@@ -426,9 +429,14 @@ def main(
 
                 seg_name = segment_cname(segment)
 
-                sub_linker_writer.save_linker_script(partial_scripts_path / f"{seg_name}.ld")
+                sub_linker_writer.save_linker_script(
+                    partial_scripts_path / f"{seg_name}.ld"
+                )
                 if options.opts.ld_dependencies:
-                    sub_linker_writer.save_dependencies_file(partial_scripts_path / f"{seg_name}.d", segments_path / f"{seg_name}.o")
+                    sub_linker_writer.save_dependencies_file(
+                        partial_scripts_path / f"{seg_name}.d",
+                        segments_path / f"{seg_name}.o",
+                    )
             else:
                 linker_writer.add(segment, max_vram_syms)
 
@@ -437,8 +445,12 @@ def main(
         if options.opts.ld_dependencies:
             elf_path = options.opts.elf_path
             if elf_path is None:
-                log.error("Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options")
-            linker_writer.save_dependencies_file(options.opts.ld_script_path.with_suffix(".d"), elf_path)
+                log.error(
+                    "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
+                )
+            linker_writer.save_dependencies_file(
+                options.opts.ld_script_path.with_suffix(".d"), elf_path
+            )
 
         # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
         # that the elf combines into one section
