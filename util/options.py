@@ -194,6 +194,8 @@ class SplatOpts:
     gfx_ucode: str
     # Use named libultra symbols by default. Those will need to be added to a linker script manually by the user
     libultra_symbols: bool
+    # Use named libultra symbols by default. Those will need to be added to a linker script manually by the user
+    ique_symbols: bool
     # Use named hardware register symbols by default. Those will need to be added to a linker script manually by the user
     hardware_regs: bool
 
@@ -444,6 +446,7 @@ def _parse_yaml(
             "f3dex2",
         ),
         libultra_symbols=p.parse_opt("libultra_symbols", bool, False),
+        ique_symbols=p.parse_opt("ique_symbols", bool, False),
         hardware_regs=p.parse_opt("hardware_regs", bool, False),
         use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, True),
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
