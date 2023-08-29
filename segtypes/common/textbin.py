@@ -27,7 +27,6 @@ class CommonSegTextbin(CommonSegment):
 
         return options.opts.asset_path / self.dir / f"{self.name}.{typ}.bin"
 
-
     def write_bin(self, rom_bytes):
         binpath = self.bin_path()
         binpath.parent.mkdir(parents=True, exist_ok=True)
@@ -38,7 +37,6 @@ class CommonSegTextbin(CommonSegment):
         binpath.write_bytes(rom_bytes[self.rom_start : self.rom_end])
 
         self.log(f"Wrote {self.name} to {binpath}")
-
 
     def write_asm_contents(self, rom_bytes, f: TextIO):
         binpath = self.bin_path()
@@ -64,9 +62,11 @@ class CommonSegTextbin(CommonSegment):
         f.write(f'.incbin "{binpath}"\n')
 
         if sym is not None and sym.given_name_end is not None:
-            if sym.given_size is None or sym.given_size == self.rom_end - self.rom_start:
+            if (
+                sym.given_size is None
+                or sym.given_size == self.rom_end - self.rom_start
+            ):
                 f.write(f"{options.opts.asm_function_macro} {sym.given_name_end}\n")
-
 
     def split(self, rom_bytes):
         if self.rom_end is None:
@@ -108,4 +108,3 @@ class CommonSegTextbin(CommonSegment):
         return (
             self.extract and options.opts.is_mode_active("code") and self.should_scan()
         )  # only split if the segment was scanned first
-
