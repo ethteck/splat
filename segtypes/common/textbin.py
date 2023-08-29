@@ -64,7 +64,8 @@ class CommonSegTextbin(CommonSegment):
         f.write(f'.incbin "{binpath}"\n')
 
         if sym is not None and sym.given_name_end is not None:
-            f.write(f"{options.opts.asm_function_macro} {sym.given_name_end}\n")
+            if sym.given_size is None or sym.given_size == self.rom_end - self.rom_start:
+                f.write(f"{options.opts.asm_function_macro} {sym.given_name_end}\n")
 
 
     def split(self, rom_bytes):
