@@ -88,6 +88,10 @@ class CommonSegTextbin(CommonSegment):
             self.write_asm_contents(rom_bytes, f)
 
             # We check against CommonSegTextbin instead of the specific type because the other incbins inherit from this class
+            if isinstance(self.data_sibling, CommonSegTextbin):
+                f.write("\n")
+                self.data_sibling.write_asm_contents(rom_bytes, f)
+
             if isinstance(self.rodata_sibling, CommonSegTextbin):
                 f.write("\n")
                 self.rodata_sibling.write_asm_contents(rom_bytes, f)
