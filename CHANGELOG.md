@@ -1,5 +1,14 @@
 # splat Release Notes
 
+### 0.17.0
+
+* New yaml options: `ld_partial_linking`, `ld_partial_scripts_path`, `ld_partial_build_segments_path`, `elf_path`, `ld_dependencies`
+  * `ld_partial_linking`: Changes how the linker script is generated, allowing partially linking each segment. This allows for faster linking times when making changes to files at the cost of a slower build time from a clean build and loosing filepaths in the mapfile. This is also known as "incremental linking". This option requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path`.
+  * `ld_partial_scripts_path`: Folder were each intermediary linker script will be written to.
+  * `ld_partial_build_segments_path`: Folder where the built partially linked segments will be placed by the build system.
+  * `elf_path`: Path to the final elf target.
+  * `ld_dependencies`: Generate a dependency file for every linker script generated, including the main linker script and the ones for partial linking. Dependency files will have the same path and name as the corresponding linker script, but changing the extension to `.d`. Requires `elf_path` to be set.
+
 ### 0.16.10
 
 * Produce an error if subsegments do not have an ascending vram order.

@@ -20,7 +20,7 @@ class SplatOpts:
     base_path: Path
     # Determines the path to the target binary
     target_path: Path
-    # 
+    # Path to the final elf target
     elf_path: Optional[Path]
     # Determines the platform of the target binary
     platform: str
@@ -104,13 +104,13 @@ class SplatOpts:
     # Determines whether to use "follows" settings to determine locations of overlays in the linker script.
     # If disabled, this effectively ignores "follows" directives in the yaml.
     ld_use_follows: bool
-    # 
+    # Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
     ld_partial_linking: bool
-    # 
+    # Folder were each intermediary linker script will be written to.
     ld_partial_scripts_path: Optional[Path]
-    # 
+    # Folder where the built partially linked segments will be placed by the build system.
     ld_partial_build_segments_path: Optional[Path]
-    # 
+    # Generate a dependency file for every linker script generated. Dependency files will have the same path and name as the corresponding linker script, but changing the extension to `.d`. Requires `elf_path` to be set.
     ld_dependencies: bool
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
     segment_end_before_align: bool
