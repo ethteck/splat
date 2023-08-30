@@ -140,6 +140,8 @@ class SplatOpts:
     asm_inc_header: str
     # Determines the macro used to declare functions in asm files
     asm_function_macro: str
+    # Determines the macro used to declare symbols in the middle of functions in asm files (which may be alternative entries)
+    asm_function_alt_macro: str
     # Determines the macro used to declare jumptable labels in asm files
     asm_jtbl_label_macro: str
     # Determines the macro used to declare data symbols in asm files
@@ -194,6 +196,8 @@ class SplatOpts:
     gfx_ucode: str
     # Use named libultra symbols by default. Those will need to be added to a linker script manually by the user
     libultra_symbols: bool
+    # Use named libultra symbols by default. Those will need to be added to a linker script manually by the user
+    ique_symbols: bool
     # Use named hardware register symbols by default. Those will need to be added to a linker script manually by the user
     hardware_regs: bool
 
@@ -402,6 +406,9 @@ def _parse_yaml(
         asm_function_macro=p.parse_opt(
             "asm_function_macro", str, comp.asm_function_macro
         ),
+        asm_function_alt_macro=p.parse_opt(
+            "asm_function_alt_macro", str, comp.asm_function_alt_macro
+        ),
         asm_jtbl_label_macro=p.parse_opt(
             "asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro
         ),
@@ -444,6 +451,7 @@ def _parse_yaml(
             "f3dex2",
         ),
         libultra_symbols=p.parse_opt("libultra_symbols", bool, False),
+        ique_symbols=p.parse_opt("ique_symbols", bool, False),
         hardware_regs=p.parse_opt("hardware_regs", bool, False),
         use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, True),
         filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
