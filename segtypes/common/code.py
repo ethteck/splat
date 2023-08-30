@@ -314,6 +314,16 @@ class CommonSegCode(CommonSegGroup):
                         segment.rodata_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
+                if self.section_order.index(".text") < self.section_order.index(
+                    ".data"
+                ):
+                    if segment.is_data():
+                        segment.sibling.data_sibling = segment
+                else:
+                    if segment.is_text() and segment.sibling.is_data():
+                        segment.data_sibling = segment.sibling
+                        segment.sibling.sibling = segment
+
             segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True

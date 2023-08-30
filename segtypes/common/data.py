@@ -10,6 +10,10 @@ from disassembler_section import make_data_section
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
+    @staticmethod
+    def is_data() -> bool:
+        return True
+
     def asm_out_path(self) -> Path:
         typ = self.type
         if typ.startswith("."):
