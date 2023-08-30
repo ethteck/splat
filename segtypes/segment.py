@@ -216,6 +216,7 @@ class Segment:
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
+        self.data_sibling: Optional[Segment] = None
         self.rodata_sibling: Optional[Segment] = None
         self.file_path: Optional[Path] = None
 
@@ -292,6 +293,11 @@ class Segment:
     # For executable segments (.text); like c, asm or hasm
     @staticmethod
     def is_text() -> bool:
+        return False
+
+    # For read-write segments (.data); like data
+    @staticmethod
+    def is_data() -> bool:
         return False
 
     # For readonly segments (.rodata); like rodata or rdata
