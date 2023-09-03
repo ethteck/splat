@@ -52,6 +52,7 @@ sha1: {rom.sha1}
 options:
   basename: {basename}
   target_path: {rom_path.with_suffix(".z64")}
+  elf_path: build/{basename}.elf
   base_path: .
   platform: n64
   compiler: {rom.compiler}
@@ -62,6 +63,7 @@ options:
   # create_asm_dependencies: True
 
   ld_script_path: {basename}.ld
+  ld_dependencies: True
 
   find_file_boundaries: True
   header_encoding: {rom.header_encoding}
