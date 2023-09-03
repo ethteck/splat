@@ -40,6 +40,9 @@ class CommonSegTextbin(CommonSegment):
 
     def write_asm_contents(self, rom_bytes, f: TextIO):
         binpath = self.bin_path()
+        asm_label = options.opts.asm_function_macro
+        if not self.is_text():
+            asm_label = options.opts.asm_data_macro
 
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
@@ -57,16 +60,20 @@ class CommonSegTextbin(CommonSegment):
             sym = self.get_symbol(vram, in_segment=True)
 
         if sym is not None:
-            f.write(f"{options.opts.asm_function_macro} {sym.name}\n")
+            f.write(f"{asm_label} {sym.name}\n")
 
         f.write(f'.incbin "{binpath}"\n')
 
-        if sym is not None and sym.given_name_end is not None:
-            if (
-                sym.given_size is None
-                or sym.given_size == self.rom_end - self.rom_start
-            ):
-                f.write(f"{options.opts.asm_function_macro} {sym.given_name_end}\n")
+        if sym is not None:
+            if self.is_text() and options.opts.asm_end_label != "":
+                f.write(f"{options.opts.asm_end_label} {sym.name}\n")
+
+            if sym.given_name_end is not None:
+                if (
+                    sym.given_size is None
+                    or sym.given_size == self.rom_end - self.rom_start
+                ):
+                    f.write(f"{asm_label} {sym.given_name_end}\n")
 
     def split(self, rom_bytes):
         if self.rom_end is None:
