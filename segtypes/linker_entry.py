@@ -249,7 +249,9 @@ class LinkerWriter:
         seg_name = segment_cname(segment)
 
         # To keep track which sections has been started
-        started_sections: Dict[str, bool] = {l: False for l in options.opts.ld_section_labels}
+        started_sections: Dict[str, bool] = {
+            l: False for l in options.opts.ld_section_labels
+        }
 
         # Find where sections are last seen
         last_seen_sections: Dict[LinkerEntry, str] = {}
