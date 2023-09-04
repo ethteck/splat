@@ -7,6 +7,6 @@ def init(target_bytes: bytes):
     if options.opts.libultra_symbols:
         symbols.spim_context.globalSegment.fillLibultraSymbols()
     if options.opts.ique_symbols:
-        symbols.spim_context.globalSegment.fillIQueSymbols
+        symbols.spim_context.globalSegment.fillIQueSymbols()
     if options.opts.hardware_regs:
         symbols.spim_context.globalSegment.fillHardwareRegs(True)
