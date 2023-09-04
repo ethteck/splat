@@ -112,6 +112,8 @@ class SplatOpts:
     ld_partial_build_segments_path: Optional[Path]
     # Generate a dependency file for every linker script generated. Dependency files will have the same path and name as the corresponding linker script, but changing the extension to `.d`. Requires `elf_path` to be set.
     ld_dependencies: bool
+    # Legacy linker script generation does not impose the section_order specified in the yaml options or per-segment options.
+    ld_legacy_generation: bool
     # If enabled, the end symbol for each segment will be placed before the alignment directive for the segment
     segment_end_before_align: bool
     # Controls the style of the auto-generated segment symbols in the linker script. Possible values: splat, makerom
@@ -399,6 +401,7 @@ def _parse_yaml(
             base_path, "ld_partial_build_segments_path"
         ),
         ld_dependencies=p.parse_opt("ld_dependencies", bool, False),
+        ld_legacy_generation=p.parse_opt("ld_legacy_generation", bool, False),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         segment_symbols_style=p.parse_opt_within(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"

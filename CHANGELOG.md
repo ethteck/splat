@@ -2,6 +2,8 @@
 
 ### 0.17.0
 
+* BREAKING: Linker script generation now imposes the specified `section_order`, which may not completely reflect the yaml order.
+  * In case this new linker script generation can't be properly adapted to a repo, the old generation can be reenabled by using the `ld_legacy_generation` flag as a temporary solution. Keep in mind this option may be removed in the future.
 * New yaml options related to linker script generation: `ld_partial_linking`, `ld_partial_scripts_path`, `ld_partial_build_segments_path`, `elf_path`, `ld_dependencies`
   * `ld_partial_linking`: Changes how the linker script is generated, allowing partially linking each segment. This allows for faster linking times when making changes to files at the cost of a slower build time from a clean build and loosing filepaths in the mapfile. This is also known as "incremental linking". This option requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path`.
   * `ld_partial_scripts_path`: Folder were each intermediary linker script will be written to.

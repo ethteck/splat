@@ -202,6 +202,10 @@ class LinkerWriter:
         for sym, segs in max_vram_syms:
             self.write_max_vram_end_sym(sym, segs)
 
+        if options.opts.ld_legacy_generation:
+            self.add_legacy(segment, entries)
+            return
+
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for l in segment.section_order:
             if l in options.opts.ld_section_labels:
@@ -240,6 +244,61 @@ class LinkerWriter:
             is_first = False
 
         self._end_segment(segment, all_bss=not any_load)
+
+    def add_legacy(self, segment: Segment, entries: List[LinkerEntry]):
+        seg_name = segment_cname(segment)
+
+        # To keep track which sections has been started
+        started_sections: Dict[str, bool] = {l: False for l in options.opts.ld_section_labels}
+
+        # Find where sections are last seen
+        last_seen_sections: Dict[LinkerEntry, str] = {}
+        for entry in reversed(entries):
+            if (
+                entry.section_type in options.opts.ld_section_labels
+                and entry.section_type not in last_seen_sections.values()
+            ):
+                last_seen_sections[entry] = entry.section_type
+
+        seg_rom_start = get_segment_rom_start(seg_name)
+        self._write_symbol(seg_rom_start, "__romPos")
+
+        self._begin_segment(segment, seg_name, noload=False, is_first=True)
+
+        i = 0
+        for entry in entries:
+            if entry.noload:
+                break
+
+            started = started_sections.get(entry.section, True)
+            if not started:
+                self._begin_section(seg_name, entry.section)
+                started_sections[entry.section] = True
+
+            self._writer_linker_entry(entry)
+
+            if entry in last_seen_sections:
+                self._end_section(seg_name, entry.section)
+
+            i += 1
+
+        if any(entry.noload for entry in entries):
+            self._end_block()
+
+            self._begin_segment(segment, seg_name, noload=True, is_first=False)
+
+            for entry in entries[i:]:
+                started = started_sections.get(entry.section, True)
+                if not started:
+                    self._begin_section(seg_name, entry.section)
+                    started_sections[entry.section] = True
+
+                self._writer_linker_entry(entry)
+
+                if entry in last_seen_sections:
+                    self._end_section(seg_name, entry.section)
+
+        self._end_segment(segment, all_bss=False)
 
     def add_referenced_partial_segment(
         self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]
