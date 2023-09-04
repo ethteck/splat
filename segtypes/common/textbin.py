@@ -61,6 +61,7 @@ class CommonSegTextbin(CommonSegment):
 
         if sym is not None:
             f.write(f"{asm_label} {sym.name}\n")
+            sym.defined = True
 
         f.write(f'.incbin "{binpath}"\n')
 
