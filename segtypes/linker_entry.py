@@ -213,6 +213,13 @@ class LinkerWriter:
 
         # Add all entries to section_entries
         prev_entry = None
+        for entry in entries:
+            if entry.section in section_entries:
+                # Search for the very first section type
+                # This is required in case the very first entry is a type that's not listed on ld_section_labels (like linker_offset) because it would be dropped
+                prev_entry = entry.section
+                break
+
         any_load = False
         any_noload = False
         for entry in entries:
@@ -277,7 +284,7 @@ class LinkerWriter:
                 self._begin_section(seg_name, entry.section)
                 started_sections[entry.section] = True
 
-            self._writer_linker_entry(entry)
+            self._write_linker_entry(entry)
 
             if entry in last_seen_sections:
                 self._end_section(seg_name, entry.section)
@@ -295,7 +302,7 @@ class LinkerWriter:
                     self._begin_section(seg_name, entry.section)
                     started_sections[entry.section] = True
 
-                self._writer_linker_entry(entry)
+                self._write_linker_entry(entry)
 
                 if entry in last_seen_sections:
                     self._end_section(seg_name, entry.section)
@@ -336,7 +343,7 @@ class LinkerWriter:
                     segment, [], segments_path / f"{seg_name}.o", l, noload=False
                 )
                 self.dependencies_entries.append(entry)
-                self._writer_linker_entry(entry)
+                self._write_linker_entry(entry)
             is_first = False
 
         if any(e.noload for e in entries):
@@ -359,7 +366,7 @@ class LinkerWriter:
             )
             entry.bss_contains_common = bss_contains_common
             self.dependencies_entries.append(entry)
-            self._writer_linker_entry(entry)
+            self._write_linker_entry(entry)
 
         self._end_segment(segment, all_bss=not any_load)
 
@@ -395,7 +402,7 @@ class LinkerWriter:
             self._begin_section(seg_name, section_name)
 
             for entry in entries:
-                self._writer_linker_entry(entry)
+                self._write_linker_entry(entry)
 
             self._end_section(seg_name, section_name)
 
@@ -555,7 +562,7 @@ class LinkerWriter:
             f"ABSOLUTE({section_end} - {section_start})",
         )
 
-    def _writer_linker_entry(self, entry: LinkerEntry):
+    def _write_linker_entry(self, entry: LinkerEntry):
         if entry.section_type == "linker_offset":
             self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
             return
@@ -597,11 +604,12 @@ class LinkerWriter:
         for section_name, entries in section_entries.items():
             if len(entries) == 0:
                 continue
+
             first_entry = entries[0]
             if first_entry.noload != noload:
                 continue
 
             self._begin_section(seg_name, section_name)
             for entry in entries:
-                self._writer_linker_entry(entry)
+                self._write_linker_entry(entry)
             self._end_section(seg_name, section_name)
