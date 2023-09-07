@@ -103,8 +103,6 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             opts.allow_data_addends
         )
 
-        spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = opts.asm_generated_by
-
         spimdisasm.common.GlobalConfig.DISASSEMBLE_UNKNOWN_INSTRUCTIONS = (
             opts.disasm_unknown
         )

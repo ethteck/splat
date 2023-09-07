@@ -47,6 +47,7 @@ class Testing(unittest.TestCase):
             self.get_right_only_files(sub_dcmp, out)
 
     def test_basic_app(self):
+        spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
         main(["test/basic_app/splat.yaml"], None, None)
 
         comparison = filecmp.dircmp("test/basic_app/split", "test/basic_app/expected")

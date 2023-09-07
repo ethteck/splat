@@ -1,5 +1,24 @@
 # splat Release Notes
 
+### 0.17.0
+
+* BREAKING: Linker script generation now imposes the specified `section_order`, which may not completely reflect the yaml order.
+  * In case this new linker script generation can't be properly adapted to a repo, the old generation can be reenabled by using the `ld_legacy_generation` flag as a temporary solution. Keep in mind this option may be removed in the future.
+* New yaml options related to linker script generation: `ld_partial_linking`, `ld_partial_scripts_path`, `ld_partial_build_segments_path`, `elf_path`, `ld_dependencies`
+  * `ld_partial_linking`: Changes how the linker script is generated, allowing partially linking each segment. This allows for faster linking times when making changes to files at the cost of a slower build time from a clean build and loosing filepaths in the mapfile. This is also known as "incremental linking". This option requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path`.
+  * `ld_partial_scripts_path`: Folder were each intermediary linker script will be written to.
+  * `ld_partial_build_segments_path`: Folder where the built partially linked segments will be placed by the build system.
+  * `elf_path`: Path to the final elf target.
+  * `ld_dependencies`: Generate a dependency file for every linker script generated, including the main linker script and the ones for partial linking. Dependency files will have the same path and name as the corresponding linker script, but changing the extension to `.d`. Requires `elf_path` to be set.
+* New misc yaml options: `asm_function_alt_macro` and `ique_symbols`
+  * `asm_function_alt_macro`: Allows to use a different label on symbols that are in the middle of functions (that are not branch targets of any kind) than the one used for the label for functions, allowing for alternative function entrypoints.
+  * `ique_symbols` Automatically fills libultra symbols that are exclusive for iQue. This option is ignored if platform is not N64.
+* New "incbin" segments: `textbin`, `databin` and `rodatabin`
+  * Allows to specify binary blobs to be linked in a specific section instead of the data default.
+  * If a `textbin` section has a corresponding `databin` and/or `rodatabin` section with the same name then those will be included in the same generated assembly file.
+  * If a known symbol matches the vram of a incbin section then it will be emitted properly, allowing for better integration with the rest of splat's symbol system.
+* `spimdisasm` 1.17.0 or above is now required.
+
 ### 0.16.10
 
 * Produce an error if subsegments do not have an ascending vram order.

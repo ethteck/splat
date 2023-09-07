@@ -44,5 +44,6 @@ class CommonSegDecompressor(N64Segment):
                 / self.dir
                 / f"{self.name}.{self.compression_type}",
                 self.get_linker_section(),
+                self.is_noload(),
             )
         ]

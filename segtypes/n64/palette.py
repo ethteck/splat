@@ -95,6 +95,7 @@ class N64SegPalette(N64Segment):
                 [options.opts.asset_path / self.dir / f"{self.name}.png"],
                 options.opts.asset_path / self.dir / f"{self.name}.pal",
                 self.get_linker_section(),
+                self.is_noload(),
             )
         ]
 
