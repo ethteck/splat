@@ -97,9 +97,9 @@ class SplatOpts:
     ld_symbol_header_path: Optional[Path]
     # Determines whether to add a discard section with a wildcard to the linker script
     ld_discard_section: bool
-    # 
+    # A list of sections to preserve during link time. It can be useful to preserve debugging sections
     ld_sections_whitelist: List[str]
-    # 
+    # A list of sections to discard during link time. It can be useful to avoid using the wildcard discard. Note that this option does not turn off `ld_discard_section`
     ld_sections_blacklist: List[str]
     # Determines the list of section labels that are to be added to the linker script
     ld_section_labels: List[str]
