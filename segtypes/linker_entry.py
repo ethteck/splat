@@ -411,6 +411,18 @@ class LinkerWriter:
             self._end_partial_segment(section_name)
 
     def save_linker_script(self, output_path: Path):
+        if len(self.sections_whitelist) > 0:
+            address = " 0"
+            if self.is_partial:
+                address = ""
+            for sect in self.sections_whitelist:
+                self._writeln(f"{sect}{address} :")
+                self._begin_block()
+                self._writeln(f"*({sect});")
+                self._end_block()
+
+            self._writeln("")
+
         if self.linker_discard_section or len(self.sections_blacklist) > 0:
             self._writeln("/DISCARD/ :")
             self._begin_block()
