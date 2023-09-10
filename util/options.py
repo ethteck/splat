@@ -98,9 +98,9 @@ class SplatOpts:
     # Determines whether to add a discard section with a wildcard to the linker script
     ld_discard_section: bool
     # A list of sections to preserve during link time. It can be useful to preserve debugging sections
-    ld_sections_whitelist: List[str]
+    ld_sections_allowlist: List[str]
     # A list of sections to discard during link time. It can be useful to avoid using the wildcard discard. Note that this option does not turn off `ld_discard_section`
-    ld_sections_blacklist: List[str]
+    ld_sections_denylist: List[str]
     # Determines the list of section labels that are to be added to the linker script
     ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
@@ -390,8 +390,8 @@ def _parse_yaml(
         ld_script_path=p.parse_path(base_path, "ld_script_path", f"{basename}.ld"),
         ld_symbol_header_path=p.parse_optional_path(base_path, "ld_symbol_header_path"),
         ld_discard_section=p.parse_opt("ld_discard_section", bool, True),
-        ld_sections_whitelist=p.parse_opt("ld_sections_whitelist", list, []),
-        ld_sections_blacklist=p.parse_opt("ld_sections_blacklist", list, []),
+        ld_sections_allowlist=p.parse_opt("ld_sections_allowlist", list, []),
+        ld_sections_denylist=p.parse_opt("ld_sections_denylist", list, []),
         ld_section_labels=p.parse_opt(
             "ld_section_labels",
             list,

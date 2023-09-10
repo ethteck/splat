@@ -159,8 +159,8 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self, is_partial: bool = False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
-        self.sections_whitelist: List[str] = options.opts.ld_sections_whitelist
-        self.sections_blacklist: List[str] = options.opts.ld_sections_blacklist
+        self.sections_allowlist: List[str] = options.opts.ld_sections_allowlist
+        self.sections_denylist: List[str] = options.opts.ld_sections_denylist
         # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
         self.dependencies_entries: List[LinkerEntry] = []
@@ -411,11 +411,11 @@ class LinkerWriter:
             self._end_partial_segment(section_name)
 
     def save_linker_script(self, output_path: Path):
-        if len(self.sections_whitelist) > 0:
+        if len(self.sections_allowlist) > 0:
             address = " 0"
             if self.is_partial:
                 address = ""
-            for sect in self.sections_whitelist:
+            for sect in self.sections_allowlist:
                 self._writeln(f"{sect}{address} :")
                 self._begin_block()
                 self._writeln(f"*({sect});")
@@ -423,10 +423,10 @@ class LinkerWriter:
 
             self._writeln("")
 
-        if self.linker_discard_section or len(self.sections_blacklist) > 0:
+        if self.linker_discard_section or len(self.sections_denylist) > 0:
             self._writeln("/DISCARD/ :")
             self._begin_block()
-            for sect in self.sections_blacklist:
+            for sect in self.sections_denylist:
                 self._writeln(f"*({sect});")
             if self.linker_discard_section:
                 self._writeln("*(*);")

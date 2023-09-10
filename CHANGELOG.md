@@ -2,9 +2,9 @@
 
 ### 0.17.1
 
-* New yaml options: `ld_sections_whitelist` and `ld_sections_blacklist`
-  * `ld_sections_whitelist`: A list of sections to preserve during link time. It can be useful to preserve debugging sections.
-  * `ld_sections_blacklist`: A list of sections to discard during link time. It can be useful to avoid using the wildcard discard. Note that this option does not turn off `ld_discard_section`.
+* New yaml options: `ld_sections_allowlist` and `ld_sections_denylist`
+  * `ld_sections_allowlist`: A list of sections to preserve during link time. It can be useful to preserve debugging sections.
+  * `ld_sections_denylist`: A list of sections to discard during link time. It can be useful to avoid using the wildcard discard. Note that this option does not turn off `ld_discard_section`.
 
 ### 0.17.0
 
