@@ -159,6 +159,8 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self, is_partial: bool = False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
+        self.sections_whitelist: List[str] = options.opts.ld_sections_whitelist
+        self.sections_blacklist: List[str] = options.opts.ld_sections_blacklist
         # Used to store all the linker entries - build tools may want this information
         self.entries: List[LinkerEntry] = []
         self.dependencies_entries: List[LinkerEntry] = []
@@ -409,10 +411,13 @@ class LinkerWriter:
             self._end_partial_segment(section_name)
 
     def save_linker_script(self, output_path: Path):
-        if self.linker_discard_section:
+        if self.linker_discard_section or len(self.sections_blacklist) > 0:
             self._writeln("/DISCARD/ :")
             self._begin_block()
-            self._writeln("*(*);")
+            for sect in self.sections_blacklist:
+                self._writeln(f"*({sect});")
+            if self.linker_discard_section:
+                self._writeln("*(*);")
             self._end_block()
 
         self._end_block()  # SECTIONS
