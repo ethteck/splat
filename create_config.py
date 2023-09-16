@@ -4,11 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from segtypes.gc.rarc import GcSegRarc
 from util.gc import gcinfo
-
 from util.n64 import find_code_length, rominfo
-
 from util.psx import psxexeinfo
 
 parser = argparse.ArgumentParser(
