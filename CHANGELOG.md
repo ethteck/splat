@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.17.2
+* Added more support for PS2 elf files
+
 ### 0.17.1
 
 * New yaml options: `ld_sections_allowlist` and `ld_sections_denylist`
