@@ -10,11 +10,6 @@ on:
     branches:
       - main # This can be changed to any branch of your preference
 
-env:
-#   USER_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is the repository secret
-  OWNER: ${{ github.event.repository.owner.name }} # This is the repository owner
-  REPOSITORY_NAME: ${{ github.event.repository.name }} # This is the repository name
-
 jobs:
   publish_docs_to_wiki:
     name: Publish docs to Wiki
@@ -24,14 +19,14 @@ jobs:
     - name: Checkout Wiki repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.repository.name }}.wiki
+        repository: ${{ github.event.repository.owner.name }}/${{ github.event.repository.name }}.wiki
         path: wiki_repo
 
     # Clone the main repository
     - name: Checkout main repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.repository.name }}
+        repository: ${{ github.event.repository.owner.name }}/${{ github.event.repository.name }}
         path: splat_repo
 
     - name: Get the new Wiki files
