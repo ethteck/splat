@@ -1,4 +1,4 @@
-# Taken from https://nimblehq.co/blog/create-github-wiki-pull-request
+# Based on script from https://github.com/orgs/community/discussions/25929
 
 name: Publish docs to Wiki
 
@@ -11,7 +11,7 @@ on:
       - main # This can be changed to any branch of your preference
 
 env:
-  USER_TOKEN: ${{ secrets.WIKI_ACTION_TOKEN }} # This is the repository secret
+#   USER_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This is the repository secret
   OWNER: ${{ github.event.repository.owner.name }} # This is the repository owner
   REPOSITORY_NAME: ${{ github.event.repository.name }} # This is the repository name
 
@@ -20,29 +20,40 @@ jobs:
     name: Publish docs to Wiki
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-      - uses: actions/checkout@v4
+    # Clone the wiki repository
+    - name: Checkout Wiki repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.repository.name }}.wiki
+        path: wiki_repo
 
-      # 1. Create folder named `tmp_wiki`
-      # 2. Initialize Git
-      # 3. Pull old Wiki content
-      # `git log -1 --pretty=%aN` prints the current commit's author name
-      # `git log -1 --pretty=%aE` prints the current commit's author mail
-      - name: Pull content from wiki
-        run: |
-          mkdir tmp_wiki
-          cd tmp_wiki
-          git init
-          git config user.name $(git log -1 --pretty=%aN)
-          git config user.email $(git log -1 --pretty=%aE)
-          git pull https://$USER_TOKEN@github.com/$OWNER/$REPOSITORY_NAME.wiki.git
-      # 4. Synchronize differences between `docs` & `tmp_wiki`
-      # 5. Push new Wiki content
-      # `git log -1 --pretty=%B` prints the current commit's message
-      - name: Push content to wiki
-        run: |
-          rsync -av --delete docs/ tmp_wiki/ --exclude .git
-          cd tmp_wiki
-          git add .
-          git commit -m "$(git log -1 --pretty=%B)"
-          git push -f --set-upstream https://$USER_TOKEN@github.com/$OWNER/$REPOSITORY_NAME.wiki.git master
+    # Clone the main repository
+    - name: Checkout main repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.repository.name }}
+        path: splat_repo
+
+    - name: Get the new Wiki files
+      run: |
+        cd wiki_repo
+        rm *.md
+        cp ../splat_repo/docs/* .
+
+    # `git log -1 --pretty=%aN` prints the current commit's author name
+    # `git log -1 --pretty=%aE` prints the current commit's author mail
+    - name: Stage new files
+      run: |
+        cd wiki_repo
+        git config user.name $(git log -1 --pretty=%aN)
+        git config user.email $(git log -1 --pretty=%aE)
+        git add .
+
+    # `git diff-index --quiet HEAD` returns non-zero if there are any changes.
+    # This allows to avoid making a commit/push if there are no changes to the Wiki files
+
+    # `git log -1 --pretty=%B` prints the current commit's message
+    - name: Push new files to the Wiki
+      run: |
+        cd wiki_repo
+        git diff-index --quiet HEAD || (git commit -m "$(git log -1 --pretty=%B)" && git push)
