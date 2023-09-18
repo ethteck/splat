@@ -179,6 +179,8 @@ class SplatOpts:
     # o32 is highly recommended, as it provides logically named registers for floating point instructions
     # For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
     mips_abi_float_regs: str
+    # Determines whether functions inside c files should have named registers
+    named_regs_for_c_funcs: bool
     # Determines whether to add ".set gp=64" to asm/hasm files
     add_set_gp_64: bool
     # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
@@ -458,6 +460,7 @@ def _parse_yaml(
             ["numeric", "o32", "n32", "n64"],
             "numeric",
         ),
+        named_regs_for_c_funcs=p.parse_opt("named_regs_for_c_funcs", bool, True),
         add_set_gp_64=p.parse_opt("add_set_gp_64", bool, True),
         create_asm_dependencies=p.parse_opt("create_asm_dependencies", bool, False),
         string_encoding=p.parse_optional_opt("string_encoding", str),

@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.17.3
+* `named_regs_for_c_funcs` (default True): Can be disabled to make c functions' disassembled functions contain numeric registers.
+
 ### 0.17.2
 * Added more support for PS2 elf files
 

@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import Optional, Set, List, Tuple
 
+import rabbitizer
 import spimdisasm
 
 from util import log, options, symbols
@@ -278,7 +279,13 @@ class CommonSegC(CommonSegCodeSubsegment):
                     options.opts.c_newline.join(options.opts.asm_inc_header.split("\n"))
                 )
 
+            named_registers_opt = rabbitizer.config.regNames_namedRegisters
+
+            rabbitizer.config.regNames_namedRegisters = (
+                options.opts.named_regs_for_c_funcs
+            )
             func_rodata_entry.writeToFile(f)
+            rabbitizer.config.regNames_namedRegisters = named_registers_opt
 
             if func_rodata_entry.function is not None:
                 self.check_gaps_in_migrated_rodata(
