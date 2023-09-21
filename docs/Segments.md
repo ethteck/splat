@@ -146,9 +146,6 @@ Data located in the ROM, linked from a C file.
 
 Once you have figured out the types of symbols in the data section and you are confident about its file split, you will want probably to migrate symbols from assembly to C. To do this, it's possible to prefix the `data` with a `.`, like `.data`. This instructs the linker to, in the build stage, link to the symbols in the C file specified at `filepath`. You'll have to define the symbols in this C file to prevent undefined reference errors.
 
-`splat` will not generate `.data.s` files for these sections, as the symbols should be declared in the specified C file.
-
-
 **Example:**
 
 ```yaml
@@ -161,7 +158,7 @@ Once you have figured out the types of symbols in the data section and you are c
   start: 0xABC
 ```
 
-This will created `filepath.c` in your `src` folder where you can define the symbols which were originally defined in the `data` segment.
+`splat` will not generate `.data.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
 
 ## `rodata`
 
@@ -191,8 +188,6 @@ Read-only data located in the ROM, linked to a C file.
 
 If you want to migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata`. 
 
-`splat` will not generate `.rodata.s` files for these sections, as the symbols should be declared in the specified C file.
-
 **Example:**
 
 ```yaml
@@ -205,7 +200,7 @@ If you want to migrate symbols from assembly to C, please prefix the `rodata` wi
   start: 0xABC
 ```
 
-This will created `filepath.c` in your `src` folder where you can define the symbols which were originally defined in the `rodata` segment.
+`splat` will not generate `.rodata.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
 
 
 ## Images
