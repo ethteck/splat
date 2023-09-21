@@ -66,7 +66,7 @@ Rodata segment '3E930' may belong to the text segment '16100'
     Based on the usage from the function func_800862C0 to the symbol jtbl_800AE530
 ```
 
-This hint tells you that `splat` thinks one text (`asm`) segment seems to have two `rodata` sections. This usually means that there should not be a split at `0x3E930`, since one text segment should only have one `rodata` segment. 
+This hint tells you that `splat` thinks one text (`asm`) segment seems to have two `rodata` sections. This usually means that either there should not be a split at `0x3E930` or `0x16100` is missing a file split, since one text segment should only have one `rodata` segment. 
 
 To fix this, simply remove the second split from the configuration:
 ```yaml
