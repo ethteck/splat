@@ -118,6 +118,54 @@ This is platform specific; parses the data and interprets as a header for e.g. N
   start: 0xABC
 ```
 
+## `data`
+
+**Description:**
+
+Data located in the ROM.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, data, filepath]
+
+# as dictionary
+- name: filepath
+  type: data
+  start: 0xABC
+```
+
+**Alternative:**
+
+If you want to migrate symbols from assembly to C, please prefix the `data` with a `.`, like `.data`. This instructs the linker to, in the build stage, link the `data` in the C file specified at `filepath`. 
+
+`splat` will not generate `.data.s` files for these sections, as the symbols should be declared in the specified C file.
+
+## `rodata`
+
+**Description:**
+
+Read-only data located in the ROM.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, rodata, filepath]
+
+# as dictionary
+- name: filepath
+  type: rodata
+  start: 0xABC
+```
+
+**Alternative:**
+
+If you want to migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata`. This instructs the linker to, in the build stage, link the `data` in the C file specified at `filepath`. 
+
+`splat` will not generate `.rodata.s` files for these sections, as the symbols should be declared in the specified C file.
+
 ## Images
 
 **Description:**
