@@ -68,7 +68,8 @@ Rodata segment '3E930' may belong to the text segment '16100'
 
 This hint tells you that `splat` thinks one text (`asm`) segment seems to have two `rodata` sections. This usually means that there should not be a split at `0x3E930`, since one text segment should only have one `rodata` segment. 
 
-To fix this, simply remove the second split from the configuration:
+Please note that this could be a false positive, and you need to investigate the thruth. If you, however, feel confident that the `rodata` should not be split, simply remove the second split from the configuration:
+
 ```yaml
 # ...
 - [0x3E900, rodata, "16100"]
@@ -77,10 +78,9 @@ To fix this, simply remove the second split from the configuration:
 
 ```
 
-### Multiple `asm` referring to the same `rodata`
+### **TODO** Multiple `asm` referring to the same `rodata`
 
-**TODO**
-Sometimes the opposite from above is true, and you should try to split the `asm` segment to make sure two files are not paired with the same `rodata`.
+Sometimes the opposite from above is true, and `splat` shows you two `asm` segments belonging to one `rodata` segment. In this case should try to split the `asm` segment to make sure two files are not paired with the same `rodata`. Please do note that it could be a false positive.
 
 # 2 Disassemble text, data, rodata
 
