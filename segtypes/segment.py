@@ -277,7 +277,9 @@ class Segment:
             ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
             ret.given_dir = Path(yaml.get("dir", ""))
             ret.has_linker_entry = bool(yaml.get("linker_entry", True))
-            ret.find_file_boundaries = bool(yaml.get("find_file_boundaries", options.opts.find_file_boundaries))
+            ret.find_file_boundaries = bool(
+                yaml.get("find_file_boundaries", options.opts.find_file_boundaries)
+            )
 
         ret.given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
         ret.given_symbol_name_format_no_rom = (
