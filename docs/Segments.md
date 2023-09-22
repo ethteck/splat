@@ -186,7 +186,7 @@ This will created `filepath.s` in your `asm` folder.
 
 Read-only data located in the ROM, linked to a C file.
 
-If you want to migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata`. 
+If you migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata` so the linker script chooses to link against that C file's `.rodata` section.
 
 **Example:**
 
