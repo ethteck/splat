@@ -144,7 +144,7 @@ This will created `filepath.asm` in your `asm` folder.
 
 Data located in the ROM, linked from a C file.
 
-Once you have figured out the types of symbols in the data section and you are confident about its file split, you will want probably to migrate symbols from assembly to C. To do this, it's possible to prefix the `data` with a `.`, like `.data`. This instructs the linker to, in the build stage, link to the symbols in the C file specified at `filepath`. You'll have to define the symbols in this C file to prevent undefined reference errors.
+Once you have figured out the types of symbols in the data section and you are confident about its file split, you will want probably to migrate symbols from assembly to C. To do this, you will want to first define all of the symbols in the c file. Then, change the `data` segment to `.data`. This instructs the linker to, in the build stage, link to the symbols in the C file specified at `filepath`.
 
 **Example:**
 
