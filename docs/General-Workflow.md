@@ -31,7 +31,7 @@ After succesfully following the [Quickstart](https://github.com/ethteck/splat/wi
 
 In order to simplify decompilation, it's good practice to start pairing `rodata` sections with `asm` sections.
 
-`splat` gives hints about what `rodata` is used in which `asm` segment.
+`splat` gives hints about what `rodata` is used in which `asm` segment. These look like:
 
 The hint look like:
 ```
