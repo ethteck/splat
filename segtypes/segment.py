@@ -198,6 +198,9 @@ class Segment:
         self.exclusive_ram_id: Optional[str] = None
         self.given_dir: Path = Path()
 
+        # Default to global options.
+        self.given_find_file_boundaries: Optional[bool] = None
+
         # Symbols known to be in this segment
         self.given_seg_symbols: Dict[int, List[Symbol]] = {}
 
@@ -268,11 +271,14 @@ class Segment:
         )
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
+
         if isinstance(yaml, dict):
             ret.extract = bool(yaml.get("extract", ret.extract))
             ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
             ret.given_dir = Path(yaml.get("dir", ""))
             ret.has_linker_entry = bool(yaml.get("linker_entry", True))
+            ret.given_find_file_boundaries = yaml.get("find_file_boundaries", None)
+
         ret.given_symbol_name_format = Segment.parse_segment_symbol_name_format(yaml)
         ret.given_symbol_name_format_no_rom = (
             Segment.parse_segment_symbol_name_format_no_rom(yaml)
@@ -324,6 +330,18 @@ class Segment:
             return self.parent.dir / self.given_dir
         else:
             return self.given_dir
+
+    @property
+    def show_file_boundaries(self) -> bool:
+        # If the segment has explicitly set `find_file_boundaries`, use it.
+        if self.given_find_file_boundaries is not None:
+            return self.given_find_file_boundaries
+
+        # If the segment has no parent, use options as default.
+        if not self.parent:
+            return options.opts.find_file_boundaries
+
+        return self.parent.show_file_boundaries
 
     @property
     def symbol_name_format(self) -> str:

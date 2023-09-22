@@ -423,7 +423,9 @@ Same as `symbol_name_format` but for symbols with no rom address
 
 ### find_file_boundaries
 
-Determines whether to detect and hint to the user about likely file splits when disassembling
+Determines whether to detect and hint to the user about likely file splits when disassembling.
+
+This setting can also be set on a per segment basis, if you'd like to enable or disable detection for specific segments. This could be useful when you are confident you identified all subsegments in a segment, yet `splat` still hints that subsegments could be split.  
 
 ### pair_rodata_to_text
 
