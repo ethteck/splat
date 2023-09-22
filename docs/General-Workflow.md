@@ -95,7 +95,7 @@ This will disassemble `0x25C20` to individual `.s` files for each function found
 
 It will also generate `asm/energy_orb_wave.data.s` (if it is paired with a `data` segment), and `energy_orb_wave.rodata.s` (using information gained during the disassembly of the functions).
 
-Finally, it will generate a C file at `src/energy_orb_wave` (depending on the `src_path` setting, found in the configuration) containing `GLOBAL_ASM()` and `GLOBAL_RODATA()` macro's to include all disassembled functions. (This macro is ultimately handled by the build system, which is out of the scope of `splat`)
+Finally, it will generate a C file at `src/energy_orb_wave.c` (depending on the `src_path` setting, found in the configuration) containing `GLOBAL_ASM()` and `GLOBAL_RODATA()` macros to include all disassembled functions. (This macro is to be defined in an included header, which splat currently does not produce. For an example, see [the include.h for Dr. Mario](https://github.com/AngheloAlf/drmario64/blob/master/include/include_asm.h),)
 
 Figuring out the data and rodata addresses is to be done manually. Just disassembling the whole segment may help:
 ```yaml
