@@ -91,7 +91,7 @@ Let's say you want to start decompiling the subsegment at `0x25C20` (`energy_orb
 - [0x3EE10, rodata, energy_orb_wave]
 ```
 
-This will disassemble `0x25C20` to individual `.s` files for each function found. The output will be located in `asm/energy_orb_wave` (depending on the `asm_path` setting, found in the configuration).
+This will disassemble `0x25C20` to individual `.s` files for each function found. The output will be located in `asm/nonmatchings/energy_orb_wave` (depending on the `asm_path` setting, found in the configuration).
 
 It will also generate `asm/energy_orb_wave.data.s` (if it is paired with a `data` segment), and `energy_orb_wave.rodata.s` (using information gained during the disassembly of the functions).
 
