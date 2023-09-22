@@ -33,7 +33,6 @@ In order to simplify decompilation, it's good practice to start pairing `rodata`
 
 `splat` gives hints about what `rodata` is used in which `asm` segment. These look like:
 
-The hint look like:
 ```
 Rodata segment '3EE10' may belong to the text segment 'energy_orb_wave'
     Based on the usage from the function func_0xXXXXXXXX to the symbol D_800AEA10
