@@ -4,7 +4,7 @@ This describes an example of how to iteratively edit the splat segments config, 
 
 # 1 Initially
 
-Assuming that after succesfully following the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart), you get an initial configuration like the one below:
+After succesfully following the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart), you should get an initial configuration like the one below:
 ```yaml
 - name: main
   type: code
