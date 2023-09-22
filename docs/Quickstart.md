@@ -148,6 +148,6 @@ It's up to you to figure out the layout of the ROM.
 
 The reassembly of the ROM is currently out of scope of this quickstart, as is switching out the `asm` segments for `c`.
 
-You can find a general workflow explained at [General Workflow](https://github.com/ethteck/splat/wiki/General-Workflow)
+You can find a general workflow for using `splat` at [General Workflow](https://github.com/ethteck/splat/wiki/General-Workflow)
 
 Please feel free to improve this guide!
