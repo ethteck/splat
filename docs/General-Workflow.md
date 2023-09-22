@@ -79,7 +79,7 @@ Please note that this could be a false positive, and you should do your own inve
 
 ### **TODO** Multiple `asm` referring to the same `rodata`
 
-Sometimes the opposite from above is true, and `splat` shows you two `asm` segments belonging to one `rodata` segment. In this case should try to split the `asm` segment to make sure two files are not paired with the same `rodata`. Please do note that it could be a false positive.
+Sometimes the opposite from above is true, and `splat` shows you two `asm` segments belonging to one `rodata` segment. In this case, try to split the `asm` segment to make sure two files are not paired with the same `rodata`. Note this too can be a false positive.
 
 # 2 Disassemble text, data, rodata
 
