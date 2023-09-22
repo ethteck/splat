@@ -1,26 +1,101 @@
 This describes an example of how to iteratively edit the splat segments config, when decompiling
 
+(If you have no idea what this is about, please head over to the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart) to get an initial configuration for your ROM.)
+
 # 1 Initially
 
-Assuming that after you split segments you start from a code segment which subsegments include
+After succesfully following the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart), you should get an initial configuration like the one below:
 ```yaml
-- [0x42100, bin]
+- name: main
+  type: code
+  start: 0x1060
+  vram: 0x80070C60
+  follows_vram: entry
+  bss_size: 0x3AE70
+  subsegments:
+      - [0x1060, asm]
+      # ... a lot of additional `asm` sections
+      # This section is found out to contain __osViSwapContext
+      - [0x25C20, asm, "energy_orb_wave"]
+      # ... a lot of addtiional `asm` sections
+      - [0x2E450, data]
+
+      - [0x3E330, rodata]
+      # ... a lot of addtional `rodata` sections
+      - { start: 0x3F1B0, type: bss, vram: 0x800E9C20 }
+
+- [0x3F1B0, bin]
 ```
+
+## 1.1 Match rodata to asm sections
+
+In order to simplify decompilation, it's good practice to start pairing `rodata` sections with `asm` sections.
+
+`splat` gives hints about what `rodata` is used in which `asm` segment. These look like:
+
+```
+Rodata segment '3EE10' may belong to the text segment 'energy_orb_wave'
+    Based on the usage from the function func_0xXXXXXXXX to the symbol D_800AEA10
+```
+
+To pair these two sections, simply add the name of the suggested text (`asm`) segment to the `rodata` segment:
+
+```yaml
+- [0x3EE10, rodata, "energy_orb_wave"]
+```
+
+### Useful knowledge about splitting
+
+#### Multiple `rodata`
+Using the following configuration:
+```yaml
+# ...
+- [0x3E900, rodata]
+- [0x3E930, rodata]
+# ...
+```
+
+`splat` outputs a hint that doesn't immediately seem to make sense:
+
+```
+Rodata segment '3E900' may belong to the text segment '16100'
+    Based on the usage from the function func_80085DA0 to the symbol jtbl_800AE500
+
+Rodata segment '3E930' may belong to the text segment '16100'
+    Based on the usage from the function func_800862C0 to the symbol jtbl_800AE530
+```
+
+This hint tells you that `splat` thinks one text (`asm`) segment seems to have two `rodata` sections. This usually means that either there should not be a split at `0x3E930` or `0x16100` is missing a file split, since one text segment should only have one `rodata` segment. 
+
+Please note that this could be a false positive, and you should do your own investigation to figure out the truth. If you, however, feel confident that the `rodata` should not be split, simply remove the second split from the configuration:
+
+```yaml
+# ...
+- [0x3E900, rodata, "16100"]
+# begone!
+# ...
+
+```
+
+### **TODO** Multiple `asm` referring to the same `rodata`
+
+Sometimes the opposite from above is true, and `splat` shows you two `asm` segments belonging to one `rodata` segment. In this case, try to split the `asm` segment to make sure two files are not paired with the same `rodata`. Note this too can be a false positive.
 
 # 2 Disassemble text, data, rodata
 
-To start decompiling this subsegment, replace it with
+Let's say you want to start decompiling the subsegment at `0x25C20` (`energy_orb_wave`). Start by replacing the `asm` type with `c`.
+
 ```yaml
-- [0x42100, c, energy_orb_wave]
-- [0x42200, data, energy_orb_wave]
-- [0x42300, rodata, energy_orb_wave]
+- [0x25C20, c, energy_orb_wave]
+# ... 
+- [0x3EE10, rodata, energy_orb_wave]
 ```
 
-This will disassemble `0x42100-0x42200` to individual `.s` files for each function found
+This will disassemble `0x25C20` to individual `.s` files for each function found. The output will be located in `asm/nonmatchings/energy_orb_wave` (depending on the `asm_path` setting, found in the configuration).
 
-It will also write `energy_orb_wave.data.s` and `energy_orb_wave.rodata.s` (using information gained during the disassembly of the functions)
+It will also generate `asm/energy_orb_wave.data.s` (if it is paired with a `data` segment), and `energy_orb_wave.rodata.s` (using information gained during the disassembly of the functions).
 
-And if the project uses asm-processor, write a .c with `GLOBAL_ASM()` to include all disassembled functions.
+Finally, it will generate a C file at `src/energy_orb_wave.c` (depending on the `src_path` setting, found in the configuration) containing `GLOBAL_ASM()` and `GLOBAL_RODATA()` macros to include all disassembled functions. (This macro is to be defined in an included header, which splat currently does not produce. For an example, see [the include.h for Dr. Mario](https://github.com/AngheloAlf/drmario64/blob/master/include/include_asm.h),)
 
 Figuring out the data and rodata addresses is to be done manually. Just disassembling the whole segment may help:
 ```yaml

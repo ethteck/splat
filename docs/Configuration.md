@@ -14,7 +14,7 @@ base_path: path/to/base/folder
 
 #### Default
 
-`.`
+`.` *(Current directory)*
 
 
 ### target_path

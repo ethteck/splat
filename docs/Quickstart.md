@@ -143,8 +143,11 @@ Notice that **splat** has found some potential file splits (function start/end w
 
 It's up to you to figure out the layout of the ROM.
 
+
 ## Next Steps
 
 The reassembly of the ROM is currently out of scope of this quickstart, as is switching out the `asm` segments for `c`.
+
+You can find a general workflow for using `splat` at [General Workflow](https://github.com/ethteck/splat/wiki/General-Workflow)
 
 Please feel free to improve this guide!

@@ -118,6 +118,91 @@ This is platform specific; parses the data and interprets as a header for e.g. N
   start: 0xABC
 ```
 
+## `data`
+
+**Description:**
+
+Data located in the ROM.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, data, filepath]
+
+# as dictionary
+- name: filepath
+  type: data
+  start: 0xABC
+```
+
+This will created `filepath.asm` in your `asm` folder.
+
+## `.data`
+
+**Description:**
+
+Data located in the ROM, linked from a C file.
+
+Once you have figured out the types of symbols in the data section and you are confident about its file split, you will want probably to migrate symbols from assembly to C. To do this, you will want to first define all of the symbols in the c file. Then, change the `data` segment to `.data`. This instructs the linker to, in the build stage, link to the symbols in the C file specified at `filepath`.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, .data, filepath]
+
+# as dictionary
+- name: filepath
+  type: .data
+  start: 0xABC
+```
+
+`splat` will not generate `.data.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
+
+## `rodata`
+
+**Description:**
+
+Read-only data located in the ROM.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, rodata, filepath]
+
+# as dictionary
+- name: filepath
+  type: rodata
+  start: 0xABC
+```
+
+This will created `filepath.s` in your `asm` folder.
+
+## `.rodata`
+
+**Description:**
+
+Read-only data located in the ROM, linked to a C file.
+
+If you migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata` so the linker script chooses to link against that C file's `.rodata` section.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, .rodata, filepath]
+
+# as dictionary
+- name: filepath
+  type: .rodata
+  start: 0xABC
+```
+
+`splat` will not generate `.rodata.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
+
+
 ## Images
 
 **Description:**
