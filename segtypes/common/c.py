@@ -22,17 +22,16 @@ C_FUNC_RE = re.compile(
     r"^(?:static\s+)?[^\s]+\s+([^\s(]+)\(([^;)]*)\)[^;]+?{", re.MULTILINE
 )
 
-C_GLOBAL_ASM_IDO_RE = re.compile(
-    r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)", re.MULTILINE
-)
+C_GLOBAL_ASM_IDO_RE = re.compile(r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)", re.MULTILINE)
+
 
 class CommonSegC(CommonSegCodeSubsegment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        defined_funcs: Set[str] = set()
-        global_asm_funcs: Set[str] = set()
-        global_asm_rodata_syms: Set[str] = set()
+        self.defined_funcs: Set[str] = set()
+        self.global_asm_funcs: Set[str] = set()
+        self.global_asm_rodata_syms: Set[str] = set()
 
         self.file_extension = "c"
 
@@ -108,9 +107,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         if options.opts.compiler in [GCC, SN64]:
             return set(CommonSegC.find_include_asm(text))
         else:
-            return set(
-                m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text)
-            )
+            return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
 
     @staticmethod
     def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
@@ -119,9 +116,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         if options.opts.compiler in [GCC, SN64]:
             return set(CommonSegC.find_include_rodata(text))
         else:
-            return set(
-                m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text)
-            )
+            return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
 
     @staticmethod
     def is_text() -> bool:
