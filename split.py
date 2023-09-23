@@ -462,7 +462,7 @@ def main(
                 f.write(section_list)
 
     # Write undefined_funcs_auto.txt
-    if options.opts.create_undefined_funcs_auto and not use_cache:
+    if options.opts.create_undefined_funcs_auto:
         to_write = [
             s
             for s in symbols.all_symbols
@@ -475,7 +475,7 @@ def main(
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
     # write undefined_syms_auto.txt
-    if options.opts.create_undefined_syms_auto and not use_cache:
+    if options.opts.create_undefined_syms_auto:
         to_write = [
             s
             for s in symbols.all_symbols
