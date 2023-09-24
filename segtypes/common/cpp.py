@@ -2,4 +2,7 @@ from segtypes.common.c import CommonSegC
 
 
 class CommonSegCpp(CommonSegC):
-    file_extension = "cpp"
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.file_extension = "cpp"

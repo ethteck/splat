@@ -1,6 +1,13 @@
 # splat Release Notes
 
+### 0.17.3
+
+* Move wiki to the `docs` folder
+* Added the ability to specify `find_file_boundaries` on a per segment basis
+* Fix `cpp` segment not symbolizing rodata symbols properly
+
 ### 0.17.2
+
 * Added more support for PS2 elf files
 
 ### 0.17.1
