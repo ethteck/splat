@@ -254,9 +254,7 @@ def handle_sym_addrs(
             sym.user_declared = True
             if (sym.name, addr, sym.rom) in seen_symbols:
                 log.parsing_error_preamble(path, line_num, line)
-                log.write(
-                    f"Symbol '{sym}' has already been defined!"
-                )
+                log.write(f"Symbol '{sym}' has already been defined!")
                 log.write("")
                 raise
 
