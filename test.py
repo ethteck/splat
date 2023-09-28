@@ -426,7 +426,7 @@ class SymbolsInitialize(unittest.TestCase):
             pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
         )
         assert symbols.spim_context.bannedRangedSymbols[0].start == 0x100
-        assert symbols.spim_context.bannedRangedSymbols[0].end == 0x100+4
+        assert symbols.spim_context.bannedRangedSymbols[0].end == 0x100 + 4
 
 
 class InitializeSpimContext(unittest.TestCase):
