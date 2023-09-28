@@ -252,13 +252,13 @@ def handle_sym_addrs(
                 sym.segment.add_symbol(sym)
 
             sym.user_declared = True
-            if (sym.name, addr, sym.rom) in seen_symbols:
+            if (addr, sym.rom) in seen_symbols:
                 log.parsing_error_preamble(path, line_num, line)
-                log.write(f"Symbol '{sym}' has already been defined!")
-                log.write("")
-                raise
+                log.error(
+                    f"Duplicate symbol detected ({sym}). 0x{addr:X} has already a symbol definition"
+                )
 
-            seen_symbols.add((sym.name, addr, sym.rom))
+            seen_symbols.add((addr, sym.rom))
             add_symbol(sym)
 
 
