@@ -87,6 +87,7 @@ def handle_sym_addrs(
                 return segment
         return None
 
+    seen_symbols = set()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -250,6 +251,15 @@ def handle_sym_addrs(
                 sym.segment.add_symbol(sym)
 
             sym.user_declared = True
+            if (sym.name, addr, sym.rom) in seen_symbols:
+                log.parsing_error_preamble(path, line_num, line)
+                log.write(
+                    f"Symbol '{sym}' has already been defined!"
+                )
+                log.write("")
+                raise
+
+            seen_symbols.add((sym.name, addr, sym.rom))
             add_symbol(sym)
 
 
