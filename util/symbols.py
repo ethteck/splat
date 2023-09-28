@@ -103,13 +103,14 @@ def handle_sym_addrs(
                 line_main = line[:comment_loc].strip()
 
             try:
+                assert line.count(";") == 1
                 line_split = line_main.split("=")
                 name = line_split[0].strip()
                 addr = int(line_split[1].strip()[:-1], 0)
             except:
                 log.parsing_error_preamble(path, line_num, line)
-                log.write("Line should be of the form")
-                log.write("<function_name> = <address> // attr0:val0 attr1:val1 [...]")
+                log.write("Line must be of the form")
+                log.write("<function_name> = <address>; // attr0:val0 attr1:val1 [...]")
                 log.write("with <address> in hex preceded by 0x, or dec")
                 log.write("")
                 raise
