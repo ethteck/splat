@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 from util import log, options, progress_bar
 
-all_symbols: List["Symbol"] = []
+all_symbols: Set["Symbol"] = set()
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
 all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
@@ -52,7 +52,7 @@ def is_falsey(str: str) -> bool:
 
 
 def add_symbol(sym: "Symbol"):
-    all_symbols.append(sym)
+    all_symbols.add(sym)
     if sym.vram_start is not None:
         if sym.vram_start not in all_symbols_dict:
             all_symbols_dict[sym.vram_start] = []
@@ -87,7 +87,8 @@ def handle_sym_addrs(
                 return segment
         return None
 
-    seen_symbols = set()
+    seen_symbols = dict()
+    seen_vram_rom = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -252,13 +253,20 @@ def handle_sym_addrs(
                 sym.segment.add_symbol(sym)
 
             sym.user_declared = True
-            if (addr, sym.rom) in seen_symbols:
+
+            if sym.name in seen_symbols:
                 log.parsing_error_preamble(path, line_num, line)
                 log.error(
-                    f"Duplicate symbol detected ({sym}). 0x{addr:X} has already a symbol definition"
+                    f"Duplicate symbol detected! {sym.name} has already been defined at 0x{seen_symbols[sym.name].vram_start:X}"
+                )
+            if (addr, sym.rom) in seen_vram_rom:
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(
+                    f"Duplicate symbol detected! {sym} clashes with {seen_vram_rom[(addr, sym.rom)].name} defined at 0x{addr:X}"
                 )
 
-            seen_symbols.add((addr, sym.rom))
+            seen_symbols[sym.name] = sym
+            seen_vram_rom[(addr, sym.rom)] = sym
             add_symbol(sym)
 
 
@@ -267,7 +275,7 @@ def initialize(all_segments: "List[Segment]"):
     global all_symbols_dict
     global all_symbols_ranges
 
-    all_symbols = []
+    all_symbols = set()
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
 
@@ -670,7 +678,7 @@ def reset_symbols():
     global ignored_addresses
     global to_mark_as_defined
     global appears_after_overlays_syms
-    all_symbols = []
+    all_symbols = set()
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
