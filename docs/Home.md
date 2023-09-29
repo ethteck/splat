@@ -1,8 +1,8 @@
 ### What is splat?
 
-**splat** is a binary splitting tool, written in Python. It's goal is to support the successful disassembly and then reassembly of binary data.
+**splat** is a binary splitting tool, written in Python. Its goal is to support the successful disassembly and then rebuilding of binary data.
 
-It is the spiritual successor to [n64split](https://github.com/queueRAM/sm64tools/blob/master/n64split.c), originally written to handle N64 ROMs, it now has limited support for PS1 and PS2 binaries.
+It is the spiritual successor to [n64split](https://github.com/queueRAM/sm64tools/blob/master/n64split.c), originally written to handle N64 ROMs, it now has limited support for PSX and PS2 binaries.
 
 MIPS code disassembly is handled via [spimdisasm](https://github.com/Decompollaborate/spimdisasm/).
 

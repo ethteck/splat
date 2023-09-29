@@ -1,6 +1,6 @@
 The configuration file for **splat** consists of a number of well-defined segments.
 
-Mosy segments can be defined as a either a dictionary or a list, however the list syntax is only suitable for simple cases as it does not allow for specifying many of the options a segment type has to offer.
+Most segments can be defined as a either a dictionary or a list, however the list syntax is only suitable for simple cases as it does not allow for specifying many of the options a segment type has to offer.
 
 Splat segments' behavior generally falls under two categories: extraction and linking. Some segments will only do extraction, some will only do linking, some both, and some neither. Generally, segments will describe both extraction and linking behavior. Additionally, a segment type whose name starts with a dot (.) will only focus on linking.
 
@@ -202,7 +202,9 @@ Read-only data located in the ROM, linked to a C file. Use the `.rodata` segment
 
 **Description:**
 
-`bss` is where variables are placed that have been declared but are not given an initial value. These sections are usually discarded from the final binary (although PS1 binaries seem to include them!).
+`bss` is where variables are placed that have been declared but are not given an initial value. These sections are usually discarded from the final binary (although PSX binaries seem to include them!).
+
+Note that the `bss_size` option needs to be set at segment level for `bss` segments to work correctly.
 
 **Example:**
 
