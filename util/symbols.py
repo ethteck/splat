@@ -104,7 +104,7 @@ def handle_sym_addrs(
                 line_main = line[:comment_loc].strip()
 
             try:
-                assert line.count(";") == 1
+                assert line.count(";") == 1, "Line must contain a single semi-colon"
                 line_split = line_main.split("=")
                 name = line_split[0].strip()
                 addr = int(line_split[1].strip()[:-1], 0)
