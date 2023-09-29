@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import re
-from typing import Dict, List, Optional, Set, TYPE_CHECKING, Tuple
+from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import spimdisasm
 
@@ -88,7 +88,6 @@ def handle_sym_addrs(
         return None
 
     seen_symbols: Dict[str, "Symbol"] = dict()
-    seen_vram_rom: Dict[Tuple[int, Optional[int]], "Symbol"] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -259,14 +258,23 @@ def handle_sym_addrs(
                 log.error(
                     f"Duplicate symbol detected! {sym.name} has already been defined at 0x{seen_symbols[sym.name].vram_start:X}"
                 )
-            if (addr, sym.rom) in seen_vram_rom:
-                log.parsing_error_preamble(path, line_num, line)
-                log.error(
-                    f"Duplicate symbol detected! {sym} clashes with {seen_vram_rom[(addr, sym.rom)].name} defined at 0x{addr:X}"
-                )
+
+            if addr in all_symbols_dict:
+                items = all_symbols_dict[addr]
+                for item in items:
+                    if (
+                        sym.rom == item.rom
+                        or None in (sym.rom, item.rom)
+                        or sym.segment == item.segment
+                        or None in (sym.segment, item.rom)
+                    ):
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.error(
+                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}"
+                        )
 
             seen_symbols[sym.name] = sym
-            seen_vram_rom[(addr, sym.rom)] = sym
+
             add_symbol(sym)
 
 
