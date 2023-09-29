@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import re
-from typing import Dict, List, Optional, Set, TYPE_CHECKING
+from typing import Dict, List, Optional, Set, TYPE_CHECKING, Tuple
 
 import spimdisasm
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 from util import log, options, progress_bar
 
-all_symbols: Set["Symbol"] = set()
+all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
 all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
@@ -52,7 +52,7 @@ def is_falsey(str: str) -> bool:
 
 
 def add_symbol(sym: "Symbol"):
-    all_symbols.add(sym)
+    all_symbols.append(sym)
     if sym.vram_start is not None:
         if sym.vram_start not in all_symbols_dict:
             all_symbols_dict[sym.vram_start] = []
@@ -87,8 +87,8 @@ def handle_sym_addrs(
                 return segment
         return None
 
-    seen_symbols = dict()
-    seen_vram_rom = dict()
+    seen_symbols: Dict[str, "Symbol"] = dict()
+    seen_vram_rom: Dict[Tuple[int, Optional[int]], "Symbol"] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -275,7 +275,7 @@ def initialize(all_segments: "List[Segment]"):
     global all_symbols_dict
     global all_symbols_ranges
 
-    all_symbols = set()
+    all_symbols = []
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
 
@@ -678,7 +678,7 @@ def reset_symbols():
     global ignored_addresses
     global to_mark_as_defined
     global appears_after_overlays_syms
-    all_symbols = set()
+    all_symbols = []
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
