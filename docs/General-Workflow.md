@@ -113,8 +113,8 @@ Finally, splat will generate a C file, at `{src_path}/energy_orb_wave.c` contain
 
 The macros to include text/rodata assembly are different for GCC vs IDO compiler:
 
-**IDO**: `INCLUDE_ASM`/`INCLUDE_RODATA`
-**GCC**: `GLOBAL_ASM`/`GLOBAL_RODATA`
+**IDO**: `INCLUDE_ASM` & `INCLUDE_RODATA` (text/rodata respectively)
+**GCC**: `GLOBAL_ASM`
 
 These macros must be defined in an included header, which splat currently does not produce.
 
