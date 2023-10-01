@@ -87,6 +87,7 @@ def handle_sym_addrs(
                 return segment
         return None
 
+    seen_symbols: Dict[str, "Symbol"] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -102,13 +103,14 @@ def handle_sym_addrs(
                 line_main = line[:comment_loc].strip()
 
             try:
+                assert line.count(";") == 1, "Line must contain a single semi-colon"
                 line_split = line_main.split("=")
                 name = line_split[0].strip()
                 addr = int(line_split[1].strip()[:-1], 0)
             except:
                 log.parsing_error_preamble(path, line_num, line)
-                log.write("Line should be of the form")
-                log.write("<function_name> = <address> // attr0:val0 attr1:val1 [...]")
+                log.write("Line must be of the form")
+                log.write("<function_name> = <address>; // attr0:val0 attr1:val1 [...]")
                 log.write("with <address> in hex preceded by 0x, or dec")
                 log.write("")
                 raise
@@ -250,6 +252,29 @@ def handle_sym_addrs(
                 sym.segment.add_symbol(sym)
 
             sym.user_declared = True
+
+            if sym.name in seen_symbols:
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(
+                    f"Duplicate symbol detected! {sym.name} has already been defined at 0x{seen_symbols[sym.name].vram_start:X}"
+                )
+
+            if addr in all_symbols_dict:
+                items = all_symbols_dict[addr]
+                for item in items:
+                    if (
+                        sym.rom == item.rom
+                        or None in (sym.rom, item.rom)
+                        or sym.segment == item.segment
+                        or None in (sym.segment, item.rom)
+                    ):
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.error(
+                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}"
+                        )
+
+            seen_symbols[sym.name] = sym
+
             add_symbol(sym)
 
 

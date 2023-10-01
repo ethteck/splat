@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.18.0
+
+* `symbol_addrs` parsing checks:
+  * Enforce lines contain a single `;`
+  * Enforce no duplicates (same vram, same rom)
+
 ### 0.17.3
 
 * Move wiki to the `docs` folder
@@ -516,10 +522,10 @@ Internally, there's a new Symbol class which stores information about a symbol a
 
 ## 0.5 The Rename Update
 * n64splat name changed to splat
-  * Some refactoring was done to support other platforms besides n64 in the future 
+  * Some refactoring was done to support other platforms besides n64 in the future
     * New `platform` option, which defaults to `n64`
   * This will cause breaking changes in custom segments, so please refer to one of the changes in one of the n64 base segments for details
-* Support for custom artifact paths 
+* Support for custom artifact paths
   * New `undefined_syms_auto_path` option
   * New `undefined_funcs_auto_path` option
   * New `cache_path` option
