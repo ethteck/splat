@@ -1,4 +1,4 @@
-Symbols (i.e. labelling a function or variable) are controlled by the `symbols_addrs.txt` file. 
+Symbols (i.e. labelling a function or variable) are controlled by the `symbols_addrs.txt` file.
 
 The format for defining symbols is:
 
@@ -10,7 +10,7 @@ e.g.
 osInitialize = 0x801378C0; // type:func
 ```
 
-:information_source: The file used can be overridden via the `symbol_addrs_path` setting in the global `options` section of the splat yaml. This option can also accept multiple paths, allowing to organize symbols in multiple files.
+:information_source: The file used can be overridden via the `symbol_addrs_path` setting in the global `options` section of the splat yaml. This option can also accept a list of paths, allowing for symbols to be organized in multiple files.
 
 ## symbol
 
@@ -34,7 +34,7 @@ Override splat's automatic type detection, possible values are:
 - `s8`, `u8`: To specify data/rodata to be disassembled as `.byte`s
 - `s16`, `u16`: To specify data/rodata to be disassembled as `.short`s
 - `s32`, `u32`: To specify data/rodata to be disassembled as `.word`s (the default)
-- `s64`, `u64`: :man_shrugging: 
+- `s64`, `u64`: :man_shrugging:
 - `f32`, `Vec3f`: To specify data/rodata to be disassembled as `.float`s
 - `f64`: To specify data/rodata to be disassembled as `.double`s
 - `asciz`, `char*`, `char`: C strings (disassembled as `.asciz`)

@@ -1,14 +1,14 @@
 The configuration file for **splat** consists of a number of well-defined segments.
 
-Most segments can be defined as a dictionary or a list, but the list syntax is only suitable for very simple cases and doesn't allow for specifying most of the options a segment type has to offer.
+Most segments can be defined as a either a dictionary or a list, however the list syntax is only suitable for simple cases as it does not allow for specifying many of the options a segment type has to offer.
 
-Splat segments' behavior generally falls under two categories: extraction and linking. Some segments will only do extraction, some will only do linking, some both, and some neither. Generally, segments both will describe extraction and linking behavior. Additionally, a segment type whose name starts with a dot (.) will only focus on linking. 
+Splat segments' behavior generally falls under two categories: extraction and linking. Some segments will only do extraction, some will only do linking, some both, and some neither. Generally, segments will describe both extraction and linking behavior. Additionally, a segment type whose name starts with a dot (.) will only focus on linking.
 
 ## `asm`
 
 **Description:**
 
-Segments designated Assembly, `asm`, will be disassembled via Capstone and then enriched with Symbols based on the contents of `symbol_addrs`.
+Segments designated Assembly, `asm`, will be disassembled via [spimdisasm](https://github.com/Decompollaborate/spimdisasm) and enriched with Symbols based on the contents of the `symbol_addrs` configuration.
 
 **Example:**
 
@@ -27,7 +27,7 @@ Segments designated Assembly, `asm`, will be disassembled via Capstone and then 
 
 **Description:**
 
-Hand-written Assembly, `hasm`, similar to `asm` except it will not overwrite any existing files.
+Hand-written Assembly, `hasm`, similar to `asm` except it will not overwrite any existing files. Useful when assembly has been manually edited.
 
 **Example:**
 
@@ -45,7 +45,7 @@ Hand-written Assembly, `hasm`, similar to `asm` except it will not overwrite any
 
 **Description:**
 
-The 'binary' segment type is for 'raw' data, or data where the type is yet to be determined.
+The `bin`(ary) segment type is for raw data, or data where the type is yet to be determined, data will be written out as raw `.bin` files.
 
 **Example:**
 
@@ -63,7 +63,7 @@ The 'binary' segment type is for 'raw' data, or data where the type is yet to be
 
 **Description:**
 
-The 'code' segment type, `code` is a group that can have many `subsegments`.
+The 'code' segment type, `code` is a group that can have many `subsegments`. Useful to group sections of code together (e.g. all files part of the same overlay).
 
 **Example:**
 
@@ -83,10 +83,10 @@ The 'code' segment type, `code` is a group that can have many `subsegments`.
 **Description:**
 
 The C code segments have two behaviors:
-- If the target `.c` file does not exist, a new file will be generated with macros to include the original Assembly (macros differ for IDO vs GCC compiler).
+- If the target `.c` file does not exist, a new file will be generated with macros to include the original assembly (macros differ for IDO vs GCC compiler).
 - Otherwise the target `.c` file is scanned to determine what assembly needs to be extracted from the ROM.
 
-Assembly that is extracted due to a `c` segment will be written to a `nonmatching` folder, with one function per file.
+Assembly that is extracted due to a `c` segment will be written to a `nonmatchings` folder, with one function per file.
 
 **Example:**
 
@@ -122,7 +122,7 @@ This is platform specific; parses the data and interprets as a header for e.g. N
 
 **Description:**
 
-Data located in the ROM.
+Data located in the ROM. Extracted as assembly; integer, float and string types will be attempted to be inferred by the disassembler.
 
 **Example:**
 
@@ -136,15 +136,13 @@ Data located in the ROM.
   start: 0xABC
 ```
 
-This will created `filepath.asm` in your `asm` folder.
+This will created `filepath.data.s` within the `asm` folder.
 
 ## `.data`
 
 **Description:**
 
-Data located in the ROM, linked from a C file.
-
-Once you have figured out the types of symbols in the data section and you are confident about its file split, you will want probably to migrate symbols from assembly to C. To do this, you will want to first define all of the symbols in the c file. Then, change the `data` segment to `.data`. This instructs the linker to, in the build stage, link to the symbols in the C file specified at `filepath`.
+Data located in the ROM that is linked from a C file. Use the `.data` segment to tell the linker to pull the `.data` section from the compiled object of corresponding `c` segment.
 
 **Example:**
 
@@ -158,13 +156,13 @@ Once you have figured out the types of symbols in the data section and you are c
   start: 0xABC
 ```
 
-`splat` will not generate `.data.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
+**NOTE:** `splat` will not generate any `.data.s` files for these `.` (dot) sections.
 
 ## `rodata`
 
 **Description:**
 
-Read-only data located in the ROM.
+Read-only data located in the ROM, e.g. floats, strings and jump tables. Extracted as assembly; integer, float and string types will be attempted to be inferred by the disassembler.
 
 **Example:**
 
@@ -178,15 +176,13 @@ Read-only data located in the ROM.
   start: 0xABC
 ```
 
-This will created `filepath.s` in your `asm` folder.
+This will created `filepath.rodata.s` within the `asm` folder.
 
 ## `.rodata`
 
 **Description:**
 
-Read-only data located in the ROM, linked to a C file.
-
-If you migrate symbols from assembly to C, please prefix the `rodata` with a `.`, like `.rodata` so the linker script chooses to link against that C file's `.rodata` section.
+Read-only data located in the ROM, linked to a C file. Use the `.rodata` segment to tell the linker to pull the `.rodata` section from the compiled object of corresponding `c` segment.
 
 **Example:**
 
@@ -200,8 +196,31 @@ If you migrate symbols from assembly to C, please prefix the `rodata` with a `.`
   start: 0xABC
 ```
 
-`splat` will not generate `.rodata.s` files for these sections, as the symbols should be declared in the C file specified by `filepath`.
+**NOTE:** `splat` will not generate any `.rodata.s` files for these `.` (dot) sections.
 
+## `bss`
+
+**Description:**
+
+`bss` is where variables are placed that have been declared but are not given an initial value. These sections are usually discarded from the final binary (although PSX binaries seem to include them!).
+
+Note that the `bss_size` option needs to be set at segment level for `bss` segments to work correctly.
+
+**Example:**
+
+```yaml
+- { start: 0x7D1AD0, type: bss, name: filepath, vram: 0x803C0420 }
+```
+## `.bss`
+
+**Description:**
+
+Links the `.bss` section of the associated `c` file.
+
+**Example:**
+```yaml
+- { start: 0x7D1AD0, type: .bss, name: filepath, vram: 0x803C0420 }
+```
 
 ## Images
 
