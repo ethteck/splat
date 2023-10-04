@@ -449,7 +449,9 @@ class LinkerWriter:
                 "\n"
                 '#include "common.h"\n'
                 "\n"
-                + "".join(f"extern Addr {symbol};\n" for symbol in self.header_symbols)
+                + "".join(
+                    f"extern Addr {symbol};\n" for symbol in sorted(self.header_symbols)
+                )
                 + "\n"
                 "#endif\n",
             )
