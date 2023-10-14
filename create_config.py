@@ -11,7 +11,9 @@ from util.psx import psxexeinfo
 parser = argparse.ArgumentParser(
     description="Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
 )
-parser.add_argument("file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image")
+parser.add_argument(
+    "file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image"
+)
 
 
 def main(file_path: Path):
