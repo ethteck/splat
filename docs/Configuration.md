@@ -119,6 +119,12 @@ Determines whether to replace the suffix of the file to `.o` or to append `.o` t
 The value of the `$gp` register to correctly calculate offset to `%gp_rel` relocs.
 
 
+### check_consecutive_segment_types
+
+By default splat will check and error if there are any non consecutive segment types.
+This option disables said feature.
+
+
 ## Paths
 
 

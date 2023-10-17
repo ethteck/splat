@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.18.1
+
+* New yaml options: `check_consecutive_segment_types`
+  * Allows to turn off checking for segment types not being in a consecutive order
+
 ### 0.18.0
 
 * `symbol_addrs` parsing checks:
