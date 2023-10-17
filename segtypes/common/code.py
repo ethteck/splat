@@ -199,14 +199,16 @@ class CommonSegCode(CommonSegGroup):
                 else:
                     if cur_section != typ:
                         # We're changing sections
-                        if found_sections[cur_section].has_end():
-                            log.error(
-                                f"Section {cur_section} end encountered but was already ended earlier!"
-                            )
-                        if found_sections[typ].has_start():
-                            log.error(
-                                f"Section {typ} start encounted but has already started earlier!"
-                            )
+
+                        if options.opts.check_consecutive_segment_types:
+                            if found_sections[cur_section].has_end():
+                                log.error(
+                                    f"Section {cur_section} end encountered but was already ended earlier!"
+                                )
+                            if found_sections[typ].has_start():
+                                log.error(
+                                    f"Section {typ} start encounted but has already started earlier!"
+                                )
 
                         # End the current section
                         found_sections[cur_section].end = i
