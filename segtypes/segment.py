@@ -452,6 +452,20 @@ class Segment:
     def get_linker_section(self) -> str:
         return ".data"
 
+    def get_linker_section_order(self) -> str:
+        """
+        Used to override the linking _order_ of a specific section
+
+        Useful for files that may have non-conventional orderings (like putting .data with the other .rodata sections)
+        """
+        return self.get_linker_section()
+
+    def get_linker_section_linksection(self) -> str:
+        """
+        The actual section that will be used when linking
+        """
+        return self.get_linker_section()
+
     def get_section_flags(self) -> Optional[str]:
         """
         Allows specifying flags for a section.
@@ -492,7 +506,7 @@ class Segment:
         if path:
             return [
                 LinkerEntry(
-                    self, [path], path, self.get_linker_section(), self.is_noload()
+                    self, [path], path, self.get_linker_section_order(), self.get_linker_section_linksection(), self.is_noload()
                 )
             ]
         else:
