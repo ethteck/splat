@@ -373,7 +373,12 @@ class LinkerWriter:
                     break
 
             entry = LinkerEntry(
-                segment, [], segments_path / f"{seg_name}.o", ".bss", ".bss", noload=True
+                segment,
+                [],
+                segments_path / f"{seg_name}.o",
+                ".bss",
+                ".bss",
+                noload=True,
             )
             entry.bss_contains_common = bss_contains_common
             self.dependencies_entries.append(entry)

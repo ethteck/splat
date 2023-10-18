@@ -506,7 +506,12 @@ class Segment:
         if path:
             return [
                 LinkerEntry(
-                    self, [path], path, self.get_linker_section_order(), self.get_linker_section_linksection(), self.is_noload()
+                    self,
+                    [path],
+                    path,
+                    self.get_linker_section_order(),
+                    self.get_linker_section_linksection(),
+                    self.is_noload(),
                 )
             ]
         else:

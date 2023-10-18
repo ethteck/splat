@@ -357,7 +357,9 @@ def _parse_yaml(
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_opt("gp_value", int, 0),
-        check_consecutive_segment_types=p.parse_opt("check_consecutive_segment_types", bool, True),
+        check_consecutive_segment_types=p.parse_opt(
+            "check_consecutive_segment_types", bool, True
+        ),
         asset_path=p.parse_path(base_path, "asset_path", "assets"),
         symbol_addrs_paths=p.parse_path_list(
             base_path, "symbol_addrs_path", "symbol_addrs.txt"
