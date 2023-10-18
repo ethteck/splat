@@ -3,7 +3,7 @@ from pathlib import Path
 from util import options
 from segtypes.common.data import CommonSegData
 
-class CommonSegData_with_rodata(CommonSegData):
+class CommonSegData_within_rodata(CommonSegData):
     def get_linker_section_order(self) -> str:
         return ".rodata"
 

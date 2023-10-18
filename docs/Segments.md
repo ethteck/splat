@@ -83,6 +83,7 @@ The 'code' segment type, `code` is a group that can have many `subsegments`. Use
 **Description:**
 
 The C code segments have two behaviors:
+
 - If the target `.c` file does not exist, a new file will be generated with macros to include the original assembly (macros differ for IDO vs GCC compiler).
 - Otherwise the target `.c` file is scanned to determine what assembly needs to be extracted from the ROM.
 
@@ -158,6 +159,28 @@ Data located in the ROM that is linked from a C file. Use the `.data` segment to
 
 **NOTE:** `splat` will not generate any `.data.s` files for these `.` (dot) sections.
 
+## `data_within_rodata`
+
+**Description:**
+
+Data located in the ROM, but for whatever reason said data is between rodata sections in the ROM. Useful for the rare ocassions when the enforced linker section order needs to be ignored.
+
+Take in mind this segment type may need the [`check_consecutive_segment_types`](Configuration.md#check_consecutive_segment_types) yaml option to be turned off.
+
+**Example:**
+
+```yaml
+- [0x400, data, file1]
+# data ends
+
+# rodata starts
+- [0x800, rodata, file2]
+- [0xA00, data_within_rodata, file3]
+- [0xC00, rpdata, file4]
+```
+
+This will created `file3.data.s` within the `asm` folder.
+
 ## `rodata`
 
 **Description:**
@@ -198,6 +221,28 @@ Read-only data located in the ROM, linked to a C file. Use the `.rodata` segment
 
 **NOTE:** `splat` will not generate any `.rodata.s` files for these `.` (dot) sections.
 
+## `rodata_within_data`
+
+**Description:**
+
+Read-only located in the ROM, but for whatever reason said rodata is between data sections in the ROM. Useful for the rare ocassions when the enforced linker section order needs to be ignored.
+
+Take in mind this segment type may need the [`check_consecutive_segment_types`](Configuration.md#check_consecutive_segment_types) yaml option to be turned off.
+
+**Example:**
+
+```yaml
+- [0x400, data, file1]
+- [0x800, rodata_within_data, file2]
+- [0xA00, data, file3]
+# data ends
+
+# rodata starts
+- [0xC00, rpdata, file4]
+```
+
+This will created `file2.rodata.s` within the `asm` folder.
+
 ## `bss`
 
 **Description:**
@@ -211,6 +256,7 @@ Note that the `bss_size` option needs to be set at segment level for `bss` segme
 ```yaml
 - { start: 0x7D1AD0, type: bss, name: filepath, vram: 0x803C0420 }
 ```
+
 ## `.bss`
 
 **Description:**
@@ -218,6 +264,7 @@ Note that the `bss_size` option needs to be set at segment level for `bss` segme
 Links the `.bss` section of the associated `c` file.
 
 **Example:**
+
 ```yaml
 - { start: 0x7D1AD0, type: .bss, name: filepath, vram: 0x803C0420 }
 ```

@@ -4,6 +4,9 @@
 
 * New yaml options: `check_consecutive_segment_types`
   * Allows to turn off checking for segment types not being in a consecutive order
+* Two new segment types: `data_within_rodata` and `rodata_within_data`
+  * `data_within_rodata`: Allows specifying a `data` section that lives between other `rodata` segments instead of `data`, preventing splat's linker script generation to reorder this section back with the other `data` sections.
+  * `rodata_within_data`: Same as `data_within_rodata`, but for `rodata` that is between `data`
 
 ### 0.18.0
 
