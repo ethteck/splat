@@ -163,7 +163,7 @@ Data located in the ROM that is linked from a C file. Use the `.data` segment to
 
 **Description:**
 
-Data located in the ROM, but for whatever reason said data is between rodata sections in the ROM. Useful for the rare ocassions when the enforced linker section order needs to be ignored.
+Data located in the ROM, but for whatever reason said data is between rodata sections in the ROM. Useful for the rare occasions when the enforced linker section order needs to be ignored.
 
 Take in mind this segment type may need the [`check_consecutive_segment_types`](Configuration.md#check_consecutive_segment_types) yaml option to be turned off.
 
@@ -225,7 +225,7 @@ Read-only data located in the ROM, linked to a C file. Use the `.rodata` segment
 
 **Description:**
 
-Read-only located in the ROM, but for whatever reason said rodata is between data sections in the ROM. Useful for the rare ocassions when the enforced linker section order needs to be ignored.
+Read-only located in the ROM, but for whatever reason said rodata is between data sections in the ROM. Useful for the rare occasions when the enforced linker section order needs to be ignored.
 
 Take in mind this segment type may need the [`check_consecutive_segment_types`](Configuration.md#check_consecutive_segment_types) yaml option to be turned off.
 
