@@ -176,7 +176,7 @@ Take in mind this segment type may need the [`check_consecutive_segment_types`](
 # rodata starts
 - [0x800, rodata, file2]
 - [0xA00, data_within_rodata, file3]
-- [0xC00, rpdata, file4]
+- [0xC00, rodata, file4]
 ```
 
 This will created `file3.data.s` within the `asm` folder.
