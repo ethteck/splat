@@ -4,9 +4,8 @@
 
 * New yaml options: `check_consecutive_segment_types`
   * Allows to turn off checking for segment types not being in a consecutive order
-* Two new segment types: `data_within_rodata` and `rodata_within_data`
-  * `data_within_rodata`: Allows specifying a `data` section that lives between other `rodata` segments instead of `data`, preventing splat's linker script generation to reorder this section back with the other `data` sections.
-  * `rodata_within_data`: Same as `data_within_rodata`, but for `rodata` that is between `data`
+* New option for segments: `linker_section_order`
+  * `linker_section_order`: Allows overriding the section order used for linker script generation. Useful when a section of a file is not between the other sections of the same type in the ROM, for example a file having its data section between other files's rodata.
 
 ### 0.18.0
 
