@@ -225,23 +225,23 @@ class LinkerWriter:
         # Add all entries to section_entries
         prev_entry = None
         for entry in entries:
-            if entry.section_order in section_entries:
+            if entry.section_order_type in section_entries:
                 # Search for the very first section type
                 # This is required in case the very first entry is a type that's not listed on ld_section_labels (like linker_offset) because it would be dropped
-                prev_entry = entry.section_order
+                prev_entry = entry.section_order_type
                 break
 
         any_load = False
         any_noload = False
         for entry in entries:
-            if entry.section_order in section_entries:
-                section_entries[entry.section_order].append(entry)
+            if entry.section_order_type in section_entries:
+                section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
             any_load = any_load or not entry.noload
             any_noload = any_noload or entry.noload
-            prev_entry = entry.section_order
+            prev_entry = entry.section_order_type
 
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
@@ -290,15 +290,15 @@ class LinkerWriter:
             if entry.noload:
                 break
 
-            started = started_sections.get(entry.section_order, True)
+            started = started_sections.get(entry.section_order_type, True)
             if not started:
-                self._begin_section(seg_name, entry.section_order)
-                started_sections[entry.section_order] = True
+                self._begin_section(seg_name, entry.section_order_type)
+                started_sections[entry.section_order_type] = True
 
             self._write_linker_entry(entry)
 
             if entry in last_seen_sections:
-                self._end_section(seg_name, entry.section_order)
+                self._end_section(seg_name, entry.section_order_type)
 
             i += 1
 
@@ -308,15 +308,15 @@ class LinkerWriter:
             self._begin_segment(segment, seg_name, noload=True, is_first=False)
 
             for entry in entries[i:]:
-                started = started_sections.get(entry.section_order, True)
+                started = started_sections.get(entry.section_order_type, True)
                 if not started:
-                    self._begin_section(seg_name, entry.section_order)
-                    started_sections[entry.section_order] = True
+                    self._begin_section(seg_name, entry.section_order_type)
+                    started_sections[entry.section_order_type] = True
 
                 self._write_linker_entry(entry)
 
                 if entry in last_seen_sections:
-                    self._end_section(seg_name, entry.section_order)
+                    self._end_section(seg_name, entry.section_order_type)
 
         self._end_segment(segment, all_bss=False)
 
@@ -401,12 +401,12 @@ class LinkerWriter:
         # Add all entries to section_entries
         prev_entry = None
         for entry in entries:
-            if entry.section_order in section_entries:
-                section_entries[entry.section_order].append(entry)
+            if entry.section_order_type in section_entries:
+                section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
-            prev_entry = entry.section_order
+            prev_entry = entry.section_order_type
 
         for section_name, entries in section_entries.items():
             if len(entries) == 0:
