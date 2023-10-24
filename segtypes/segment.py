@@ -183,6 +183,12 @@ class Segment:
             return str(yaml["linker_section_order"])
         return None
 
+    @staticmethod
+    def parse_linker_section(yaml: Union[dict, list]) ->  Optional[str]:
+        if isinstance(yaml, dict) and "linker_section" in yaml:
+            return str(yaml["linker_section"])
+        return None
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -247,6 +253,7 @@ class Segment:
         self.special_vram_segment: bool = False
 
         self.linker_section_order: Optional[str] = self.parse_linker_section_order(yaml)
+        self.linker_section: Optional[str] = self.parse_linker_section(yaml)
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
@@ -474,6 +481,8 @@ class Segment:
         """
         The actual section that will be used when linking
         """
+        if self.linker_section is not None:
+            return self.linker_section
         return self.get_linker_section()
 
     def get_section_flags(self) -> Optional[str]:

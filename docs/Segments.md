@@ -284,3 +284,19 @@ Take in mind this option may need the [`check_consecutive_segment_types`](Config
 ```
 
 This will created `file3.data.s` within the `asm` folder, but won't be reordered in the generated linker script to be placed on the data section.
+
+### `linker_section`
+
+**Description:**
+
+Allows to override the `.section` directive that will be used when generating the disassembly of the corresponding section, without needing to write an extension segment. This also affects the section name that will be used during link time.
+
+Useful for sections with special names, like an executable section named `.start`
+
+**Example:**
+
+```yaml
+- { start: 0x1000, type: asm, name: snmain, linker_section: .start }
+- [0x1070, rdata, libc]
+- [0x10A0, rdata, main_030]
+```
