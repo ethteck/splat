@@ -178,13 +178,13 @@ class Segment:
             return False
 
     @staticmethod
-    def parse_linker_section_order(yaml: Union[dict, list]) ->  Optional[str]:
+    def parse_linker_section_order(yaml: Union[dict, list]) -> Optional[str]:
         if isinstance(yaml, dict) and "linker_section_order" in yaml:
             return str(yaml["linker_section_order"])
         return None
 
     @staticmethod
-    def parse_linker_section(yaml: Union[dict, list]) ->  Optional[str]:
+    def parse_linker_section(yaml: Union[dict, list]) -> Optional[str]:
         if isinstance(yaml, dict) and "linker_section" in yaml:
             return str(yaml["linker_section"])
         return None
