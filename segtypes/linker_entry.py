@@ -133,15 +133,17 @@ class LinkerEntry:
         segment: Segment,
         src_paths: List[Path],
         object_path: Path,
-        section: str,
+        section_order: str,
+        section_link: str,
         noload: bool = False,
     ):
         self.segment = segment
         self.src_paths = [clean_up_path(p) for p in src_paths]
-        self.section = section
+        self.section_order = section_order
+        self.section_link = section_link
         self.noload = noload
         self.bss_contains_common = segment.bss_contains_common
-        if self.section == "linker" or self.section == "linker_offset":
+        if self.section_link == "linker" or self.section_link == "linker_offset":
             self.object_path = None
         elif self.segment.type == "lib":
             self.object_path = object_path
@@ -149,11 +151,18 @@ class LinkerEntry:
             self.object_path = path_to_object_path(object_path)
 
     @property
-    def section_type(self) -> str:
-        if self.section == ".rdata":
+    def section_order_type(self) -> str:
+        if self.section_order == ".rdata":
             return ".rodata"
         else:
-            return self.section
+            return self.section_order
+
+    @property
+    def section_link_type(self) -> str:
+        if self.section_link == ".rdata":
+            return ".rodata"
+        else:
+            return self.section_link
 
 
 class LinkerWriter:
@@ -216,23 +225,23 @@ class LinkerWriter:
         # Add all entries to section_entries
         prev_entry = None
         for entry in entries:
-            if entry.section in section_entries:
+            if entry.section_order_type in section_entries:
                 # Search for the very first section type
                 # This is required in case the very first entry is a type that's not listed on ld_section_labels (like linker_offset) because it would be dropped
-                prev_entry = entry.section
+                prev_entry = entry.section_order_type
                 break
 
         any_load = False
         any_noload = False
         for entry in entries:
-            if entry.section in section_entries:
-                section_entries[entry.section].append(entry)
+            if entry.section_order_type in section_entries:
+                section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
             any_load = any_load or not entry.noload
             any_noload = any_noload or entry.noload
-            prev_entry = entry.section
+            prev_entry = entry.section_order_type
 
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
@@ -266,10 +275,10 @@ class LinkerWriter:
         last_seen_sections: Dict[LinkerEntry, str] = {}
         for entry in reversed(entries):
             if (
-                entry.section_type in options.opts.ld_section_labels
-                and entry.section_type not in last_seen_sections.values()
+                entry.section_order_type in options.opts.ld_section_labels
+                and entry.section_order_type not in last_seen_sections.values()
             ):
-                last_seen_sections[entry] = entry.section_type
+                last_seen_sections[entry] = entry.section_order_type
 
         seg_rom_start = get_segment_rom_start(seg_name)
         self._write_symbol(seg_rom_start, "__romPos")
@@ -281,15 +290,15 @@ class LinkerWriter:
             if entry.noload:
                 break
 
-            started = started_sections.get(entry.section, True)
+            started = started_sections.get(entry.section_order_type, True)
             if not started:
-                self._begin_section(seg_name, entry.section)
-                started_sections[entry.section] = True
+                self._begin_section(seg_name, entry.section_order_type)
+                started_sections[entry.section_order_type] = True
 
             self._write_linker_entry(entry)
 
             if entry in last_seen_sections:
-                self._end_section(seg_name, entry.section)
+                self._end_section(seg_name, entry.section_order_type)
 
             i += 1
 
@@ -299,15 +308,15 @@ class LinkerWriter:
             self._begin_segment(segment, seg_name, noload=True, is_first=False)
 
             for entry in entries[i:]:
-                started = started_sections.get(entry.section, True)
+                started = started_sections.get(entry.section_order_type, True)
                 if not started:
-                    self._begin_section(seg_name, entry.section)
-                    started_sections[entry.section] = True
+                    self._begin_section(seg_name, entry.section_order_type)
+                    started_sections[entry.section_order_type] = True
 
                 self._write_linker_entry(entry)
 
                 if entry in last_seen_sections:
-                    self._end_section(seg_name, entry.section)
+                    self._end_section(seg_name, entry.section_order_type)
 
         self._end_segment(segment, all_bss=False)
 
@@ -342,7 +351,7 @@ class LinkerWriter:
                     continue
 
                 entry = LinkerEntry(
-                    segment, [], segments_path / f"{seg_name}.o", l, noload=False
+                    segment, [], segments_path / f"{seg_name}.o", l, l, noload=False
                 )
                 self.dependencies_entries.append(entry)
                 self._write_linker_entry(entry)
@@ -364,7 +373,12 @@ class LinkerWriter:
                     break
 
             entry = LinkerEntry(
-                segment, [], segments_path / f"{seg_name}.o", ".bss", noload=True
+                segment,
+                [],
+                segments_path / f"{seg_name}.o",
+                ".bss",
+                ".bss",
+                noload=True,
             )
             entry.bss_contains_common = bss_contains_common
             self.dependencies_entries.append(entry)
@@ -387,12 +401,12 @@ class LinkerWriter:
         # Add all entries to section_entries
         prev_entry = None
         for entry in entries:
-            if entry.section in section_entries:
-                section_entries[entry.section].append(entry)
+            if entry.section_order_type in section_entries:
+                section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
-            prev_entry = entry.section
+            prev_entry = entry.section_order_type
 
         for section_name, entries in section_entries.items():
             if len(entries) == 0:
@@ -582,14 +596,14 @@ class LinkerWriter:
         )
 
     def _write_linker_entry(self, entry: LinkerEntry):
-        if entry.section_type == "linker_offset":
+        if entry.section_link_type == "linker_offset":
             self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
             return
 
         # TODO: option to turn this off?
         if (
             entry.object_path
-            and entry.section_type == ".data"
+            and entry.section_link_type == ".data"
             and entry.segment.type != "lib"
         ):
             path_cname = re.sub(
@@ -605,7 +619,7 @@ class LinkerWriter:
         else:
             wildcard = "*" if options.opts.ld_wildcard_sections else ""
 
-            self._writeln(f"{entry.object_path}({entry.section}{wildcard});")
+            self._writeln(f"{entry.object_path}({entry.section_link}{wildcard});")
 
     def _write_segment_sections(
         self,

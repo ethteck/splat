@@ -177,6 +177,18 @@ class Segment:
         else:
             return False
 
+    @staticmethod
+    def parse_linker_section_order(yaml: Union[dict, list]) -> Optional[str]:
+        if isinstance(yaml, dict) and "linker_section_order" in yaml:
+            return str(yaml["linker_section_order"])
+        return None
+
+    @staticmethod
+    def parse_linker_section(yaml: Union[dict, list]) -> Optional[str]:
+        if isinstance(yaml, dict) and "linker_section" in yaml:
+            return str(yaml["linker_section"])
+        return None
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -239,6 +251,9 @@ class Segment:
 
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
         self.special_vram_segment: bool = False
+
+        self.linker_section_order: Optional[str] = self.parse_linker_section_order(yaml)
+        self.linker_section: Optional[str] = self.parse_linker_section(yaml)
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
@@ -452,6 +467,24 @@ class Segment:
     def get_linker_section(self) -> str:
         return ".data"
 
+    def get_linker_section_order(self) -> str:
+        """
+        Used to override the linking _order_ of a specific section
+
+        Useful for files that may have non-conventional orderings (like putting .data with the other .rodata sections)
+        """
+        if self.linker_section_order is not None:
+            return self.linker_section_order
+        return self.get_linker_section()
+
+    def get_linker_section_linksection(self) -> str:
+        """
+        The actual section that will be used when linking
+        """
+        if self.linker_section is not None:
+            return self.linker_section
+        return self.get_linker_section()
+
     def get_section_flags(self) -> Optional[str]:
         """
         Allows specifying flags for a section.
@@ -492,7 +525,12 @@ class Segment:
         if path:
             return [
                 LinkerEntry(
-                    self, [path], path, self.get_linker_section(), self.is_noload()
+                    self,
+                    [path],
+                    path,
+                    self.get_linker_section_order(),
+                    self.get_linker_section_linksection(),
+                    self.is_noload(),
                 )
             ]
         else:

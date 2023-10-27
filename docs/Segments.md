@@ -1,3 +1,5 @@
+# Segments
+
 The configuration file for **splat** consists of a number of well-defined segments.
 
 Most segments can be defined as a either a dictionary or a list, however the list syntax is only suitable for simple cases as it does not allow for specifying many of the options a segment type has to offer.
@@ -83,6 +85,7 @@ The 'code' segment type, `code` is a group that can have many `subsegments`. Use
 **Description:**
 
 The C code segments have two behaviors:
+
 - If the target `.c` file does not exist, a new file will be generated with macros to include the original assembly (macros differ for IDO vs GCC compiler).
 - Otherwise the target `.c` file is scanned to determine what assembly needs to be extracted from the ROM.
 
@@ -211,6 +214,7 @@ Note that the `bss_size` option needs to be set at segment level for `bss` segme
 ```yaml
 - { start: 0x7D1AD0, type: bss, name: filepath, vram: 0x803C0420 }
 ```
+
 ## `.bss`
 
 **Description:**
@@ -218,6 +222,7 @@ Note that the `bss_size` option needs to be set at segment level for `bss` segme
 Links the `.bss` section of the associated `c` file.
 
 **Example:**
+
 ```yaml
 - { start: 0x7D1AD0, type: .bss, name: filepath, vram: 0x803C0420 }
 ```
@@ -250,4 +255,48 @@ These segments will parse the image data and dump out a `png` file.
   height: 64
   flip_x: yes
   flip_y: no
+```
+
+## General segment options
+
+All splat's segments can be passed extra options for finer configuration. Note that those extra options require to rewrite the entry using the dictionary yaml notation instead of the list one.
+
+### `linker_section_order`
+
+**Description:**
+
+Allows overriding the section order used for linker script generation.
+
+Useful when a section of a file is not between the other sections of the same type in the ROM, for example a file having its data section between other files's rodata.
+
+Take in mind this option may need the [`check_consecutive_segment_types`](Configuration.md#check_consecutive_segment_types) yaml option to be turned off.
+
+**Example:**
+
+```yaml
+- [0x400, data, file1]
+# data ends
+
+# rodata starts
+- [0x800, rodata, file2]
+- { start: 0xA00, type: data, name: file3, linker_section_order: .rodata }
+- [0xC00, rodata, file4]
+```
+
+This will created `file3.data.s` within the `asm` folder, but won't be reordered in the generated linker script to be placed on the data section.
+
+### `linker_section`
+
+**Description:**
+
+Allows to override the `.section` directive that will be used when generating the disassembly of the corresponding section, without needing to write an extension segment. This also affects the section name that will be used during link time.
+
+Useful for sections with special names, like an executable section named `.start`
+
+**Example:**
+
+```yaml
+- { start: 0x1000, type: asm, name: snmain, linker_section: .start }
+- [0x1070, rdata, libc]
+- [0x10A0, rdata, main_030]
 ```

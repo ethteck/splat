@@ -1,5 +1,13 @@
 # splat Release Notes
 
+### 0.18.1
+
+* New yaml options: `check_consecutive_segment_types`
+  * Allows to turn off checking for segment types not being in a consecutive order
+* New option for segments: `linker_section_order` and `linker_section`
+  * `linker_section_order`: Allows overriding the section order used for linker script generation. Useful when a section of a file is not between the other sections of the same type in the ROM, for example a file having its data section between other files's rodata.
+  * `linker_section`: Allows to override the `.section` directive that will be used when generating the disassembly of the corresponding section, without needing to write an extension segment. This also affects the section name that will be used during link time. Useful for sections with special names, like an executable section named `.start`
+
 ### 0.18.0
 
 * `symbol_addrs` parsing checks:
