@@ -127,15 +127,15 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         if next_start is not None:
             last_rom_end = next_start
 
-    for segment in ret:
-        if segment.given_follows_vram:
-            if segment.given_follows_vram not in segments_by_name:
-                log.error(
-                    f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist"
-                )
-            segment.vram_of_symbol = get_segment_vram_end_symbol_name(
-                segments_by_name[segment.given_follows_vram]
-            )
+    # for segment in ret:
+    #     if segment.given_follows_vram:
+    #         if segment.given_follows_vram not in segments_by_name:
+    #             log.error(
+    #                 f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist"
+    #             )
+    #         segment.vram_of_symbol = get_segment_vram_end_symbol_name(
+    #             segments_by_name[segment.given_follows_vram]
+    #         )
 
     return ret
 
@@ -377,13 +377,14 @@ def main(
     ):  # TODO move this to platform initialization when it gets implemented
         # Calculate list of segments for which we need to find the largest, so we can safely place the symbol after it
         max_vram_end_syms: Dict[str, List[Segment]] = {}
-        for sym in symbols.appears_after_overlays_syms:
-            max_vram_end_syms[sym.name] = [
-                seg
-                for seg in all_segments
-                if isinstance(seg.vram_start, int)
-                and seg.vram_start == sym.appears_after_overlays_addr
-            ]
+        # TODO
+        # for sym in symbols.appears_after_overlays_syms:
+        #     max_vram_end_syms[sym.name] = [
+        #         seg
+        #         for seg in all_segments
+        #         if isinstance(seg.vram_start, int)
+        #         and seg.vram_start == sym.appears_after_overlays_addr
+        #     ]
         max_vram_end_sym_names: Set[str] = set(max_vram_end_syms.keys())
 
         max_vram_end_insertion_points: Dict[
@@ -391,7 +392,7 @@ def main(
         ] = {}
         # Find the last segment whose vram_of_symbol is one of the max_vram_end_syms
         for segment in reversed(all_segments):
-            vram_of_sym = segment.vram_of_symbol
+            vram_of_sym = None  # segment.vram_of_symbol
             if vram_of_sym is not None and vram_of_sym in max_vram_end_sym_names:
                 if segment not in max_vram_end_insertion_points:
                     max_vram_end_insertion_points[segment] = []
@@ -470,7 +471,7 @@ def main(
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and not s.dead and s.type == "func"
+            if s.referenced and not s.defined and s.type == "func"
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
@@ -485,7 +486,6 @@ def main(
             for s in symbols.all_symbols
             if s.referenced
             and not s.defined
-            and not s.dead
             and s.type not in {"func", "label", "jtbl_label"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
@@ -522,7 +522,7 @@ def main(
 
         with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
             f.write(
-                "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,dead,extract\n"
+                "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
             )
             for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
                 f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
@@ -535,9 +535,7 @@ def main(
                     f.write(f"0x{s.rom:X},")
                 else:
                     f.write("None,")
-                f.write(
-                    f"{s.defined},{s.user_declared},{s.referenced},{s.dead},{s.extract}\n"
-                )
+                f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}\n")
 
         symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 

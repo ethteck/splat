@@ -33,14 +33,14 @@ def initialize(yaml: Any):
 
             if "vram" not in vram_class:
                 raise KeyError(f"vram_class ({vram_class}) must have a vram")
-            vram = int(vram_class["vram"], 0)
+            vram = vram_class["vram"]
         elif isinstance(vram_class, list):
             if len(vram_class) != 2:
                 raise ValueError(
                     f"vram_class ({vram_class}) must have 2 elements, got {len(vram_class)}"
                 )
             name = vram_class[0]
-            vram = int(vram_class[1], 0)
+            vram = vram_class[1]
         else:
             raise TypeError(
                 f"vram_class must be a dict or list, got {type(vram_class)}"

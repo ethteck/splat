@@ -342,7 +342,6 @@ class SymbolsInitialize(unittest.TestCase):
 
         sym_addrs_lines = [
             "func_1 = 0x100; // type:func size:10 rom:100 segment:test_segment name_end:the_name_end "
-            "appears_after_overlays_addr:1234"
         ]
 
         all_segments = [
@@ -375,7 +374,7 @@ class SymbolsInitialize(unittest.TestCase):
         test_init()
 
         sym_addrs_lines = [
-            "func_1 = 0x100; // dead:True defined:True extract:True force_migration:True force_not_migration:True "
+            "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True "
             "allow_addend:True dont_allow_addend:True"
         ]
 
@@ -394,7 +393,6 @@ class SymbolsInitialize(unittest.TestCase):
         symbols.handle_sym_addrs(
             pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
         )
-        assert symbols.all_symbols[0].dead == True
         assert symbols.all_symbols[0].defined == True
         assert symbols.all_symbols[0].force_migration == True
         assert symbols.all_symbols[0].force_not_migration == True

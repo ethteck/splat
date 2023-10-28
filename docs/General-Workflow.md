@@ -9,7 +9,6 @@ After successfully following the [Quickstart](https://github.com/ethteck/splat/w
   type: code
   start: 0x1060
   vram: 0x80070C60
-  follows_vram: entry
   bss_size: 0x3AE70
   subsegments:
       - [0x1060, asm]

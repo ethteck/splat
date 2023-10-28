@@ -182,10 +182,6 @@ def handle_sym_addrs(
                             if attr_name == "name_end":
                                 sym.given_name_end = attr_val
                                 continue
-                            if attr_name == "appears_after_overlays_addr":
-                                sym.appears_after_overlays_addr = int(attr_val, 0)
-                                appears_after_overlays_syms.append(sym)
-                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -210,9 +206,6 @@ def handle_sym_addrs(
                             log.write([*TRUEY_VALS, *FALSEY_VALS])
                             log.error("")
                         else:
-                            if attr_name == "dead":
-                                sym.dead = tf_val
-                                continue
                             if attr_name == "defined":
                                 sym.defined = tf_val
                                 continue
@@ -569,7 +562,6 @@ class Symbol:
 
     defined: bool = False
     referenced: bool = False
-    dead: bool = False
     extract: bool = True
     user_declared: bool = False
 
@@ -583,8 +575,6 @@ class Symbol:
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
-
-    appears_after_overlays_addr: Optional[int] = None
 
     def __str__(self):
         return self.name

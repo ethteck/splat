@@ -49,18 +49,6 @@ def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
     return default
 
 
-def parse_segment_follows_vram(segment: Union[dict, list]) -> Optional[str]:
-    if isinstance(segment, dict):
-        return segment.get("follows_vram", None)
-    return None
-
-
-def parse_segment_vram_of_symbol(segment: Union[dict, list]) -> Optional[str]:
-    if isinstance(segment, dict):
-        return segment.get("vram_of_symbol", segment.get("follows_vram_symbol", None))
-    return None
-
-
 class Segment:
     require_unique_name = True
 
@@ -226,8 +214,6 @@ class Segment:
         self.symbol_ranges_rom: IntervalTree = IntervalTree()
 
         self.given_section_order: List[str] = options.opts.section_order
-        self.given_follows_vram: Optional[str] = None
-        self.vram_of_symbol: Optional[str] = None
 
         self.given_symbol_name_format: str = options.opts.symbol_name_format
         self.given_symbol_name_format_no_rom: str = (
@@ -306,11 +292,6 @@ class Segment:
         ret.file_path = Segment.parse_segment_file_path(yaml)
 
         ret.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
-        if not ret.given_follows_vram:
-            ret.given_follows_vram = parse_segment_follows_vram(yaml)
-
-        if not ret.vram_of_symbol:
-            ret.vram_of_symbol = parse_segment_vram_of_symbol(yaml)
 
         if not ret.align:
             ret.align = parse_segment_align(yaml)
@@ -624,7 +605,6 @@ class Segment:
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
-        dead: bool = True,
     ) -> Optional[Symbol]:
         ret: Optional[Symbol] = None
         rom: Optional[int] = None
@@ -654,10 +634,6 @@ class Segment:
                 cands = symbols.all_symbols_ranges[addr]
                 if cands:
                     ret = cands.pop().data
-
-        # Reject dead symbols unless we allow them
-        if not dead and ret and ret.dead:
-            ret = None
 
         # Create the symbol if it doesn't exist
         if not ret and create:
@@ -694,7 +670,6 @@ class Segment:
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
-        dead: bool = True,
     ) -> Symbol:
         ret = self.get_symbol(
             addr,
@@ -705,7 +680,6 @@ class Segment:
             reference=reference,
             search_ranges=search_ranges,
             local_only=local_only,
-            dead=dead,
         )
         assert ret is not None
 
