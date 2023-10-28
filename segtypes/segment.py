@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
 
 from intervaltree import Interval, IntervalTree
 
-from util import log, options, symbols
+from util import log, options, symbols, vram_classes
 from util.symbols import Symbol, to_cname
 
 # circular import
@@ -16,7 +16,12 @@ if TYPE_CHECKING:
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
     if isinstance(segment, dict) and "vram" in segment:
-        return int(segment["vram"])
+        if isinstance(segment["vram"], str):
+            return vram_classes.resolve(segment["vram"])
+        elif isinstance(segment["vram"], int):
+            return int(segment["vram"])
+        else:
+            return log.error(f"vram must be a string or integer for segment {segment}")
     else:
         return None
 

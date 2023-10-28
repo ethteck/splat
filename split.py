@@ -7,7 +7,7 @@ import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from pathlib import Path
 from disassembler import disassembler_instance
-from util import progress_bar
+from util import progress_bar, vram_classes
 
 # This unused import makes the yaml library faster. don't remove
 import pylibyaml  # pyright: ignore
@@ -244,6 +244,8 @@ def main(
             additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
         config = merge_configs(config, additional_config)
 
+    vram_classes.initialize(config.get("vram_classes"))
+
     options.initialize(config, config_path, modes, verbose, disassemble_all)
 
     disassembler_instance.create_disassembler_instance(options.opts.platform)
@@ -257,6 +259,8 @@ def main(
         e_sha1 = config["sha1"].lower()
         if e_sha1 != sha1:
             log.error(f"sha1 mismatch: expected {e_sha1}, was {sha1}")
+    else:
+        log.write("Warning: no sha1 in config")
 
     # Create main output dir
     options.opts.base_path.mkdir(parents=True, exist_ok=True)

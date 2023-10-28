@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.19.0
+
+* New top-level yaml feature: `vram_classes`. TODO explanation
+* A warning is now emitted when the `sha1` top-level yaml option is not provided
+
 ### 0.18.1
 
 * New yaml options: `check_consecutive_segment_types`
