@@ -164,7 +164,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                 assert isinstance(
                     self.rodata_sibling, CommonSegRodata
                 ), self.rodata_sibling.type
-                rodata_section_type = self.rodata_sibling.get_linker_section_linksection()
+                rodata_section_type = (
+                    self.rodata_sibling.get_linker_section_linksection()
+                )
                 if self.rodata_sibling.spim_section is not None:
                     assert isinstance(
                         self.rodata_sibling.spim_section.get_section(),
