@@ -155,7 +155,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.spim_section.get_section(), spimdisasm.mips.sections.SectionText
             ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
 
-            rodataSectionType = ""
+            rodata_section_type = ""
             rodata_spim_segment: Optional[spimdisasm.mips.sections.SectionRodata] = None
             if (
                 options.opts.migrate_rodata_to_functions
@@ -164,7 +164,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 assert isinstance(
                     self.rodata_sibling, CommonSegRodata
                 ), self.rodata_sibling.type
-                rodataSectionType = self.rodata_sibling.get_linker_section_linksection()
+                rodata_section_type = self.rodata_sibling.get_linker_section_linksection()
                 if self.rodata_sibling.spim_section is not None:
                     assert isinstance(
                         self.rodata_sibling.spim_section.get_section(),
@@ -195,7 +195,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             # Produce the asm files for functions
             for entry in symbols_entries:
                 entry.sectionText = self.get_linker_section_linksection()
-                entry.sectionRodata = rodataSectionType
+                entry.sectionRodata = rodata_section_type
                 if entry.function is not None:
                     if (
                         entry.function.getName() in self.global_asm_funcs
