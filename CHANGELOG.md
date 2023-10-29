@@ -4,7 +4,7 @@
 
 * New top-level yaml feature: `vram_classes`. TODO explanation
   * Renamed `ld_use_follows` to `ld_use_symbolic_vram_addresses` to more accurately describe what it's doing
-  * Removed `follows_vram` and `vram_of_symbol` segment options in favor of specifying this functionality in the `vram_classes` section
+  * Removed `vram_of_symbol` segment option in favor of specifying this functionality in the `vram_classes` section via `vram_symbol` property
   * Removed `appears_after_overlays_addr` symbol_addrs option in favor of specifying this behavior with `vram_classes`
 * Removed `dead` symbol_addrs option
 * A warning is now emitted when the `sha1` top-level yaml option is not provided. Adding this is highly recommended, as it prevents errors using splat in which the wrong binary is provided.

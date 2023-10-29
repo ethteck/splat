@@ -512,14 +512,17 @@ class LinkerWriter:
     def _begin_segment(
         self, segment: Segment, seg_name: str, noload: bool, is_first: bool
     ):
-        # if options.opts.ld_use_symbolic_vram_addresses and segment.vram_of_symbol:
-        #     vram_str = segment.vram_of_symbol + " "
-        # else:
-        #     vram_str = (
-        #         f"0x{segment.vram_start:X} "
-        #         if isinstance(segment.vram_start, int)
-        #         else ""
-        #     )
+        if (
+            options.opts.ld_use_symbolic_vram_addresses
+            and segment.vram_symbol is not None
+        ):
+            vram_str = segment.vram_symbol + " "
+        else:
+            vram_str = (
+                f"0x{segment.vram_start:X} "
+                if isinstance(segment.vram_start, int)
+                else ""
+            )
         vram_str = (
             f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
         )
