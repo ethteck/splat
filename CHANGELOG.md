@@ -2,6 +2,9 @@
 
 ### 0.18.2
 
+* Fix rodata migration for `.rdata` sections (and other rodata sections that don't use the name `.rodata`)
+* `spimdisasm` 1.18.0 or above is now required.
+
 ### 0.18.1
 
 * New yaml options: `check_consecutive_segment_types`
