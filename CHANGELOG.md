@@ -9,6 +9,11 @@
 * Removed `dead` symbol_addrs option
 * A warning is now emitted when the `sha1` top-level yaml option is not provided. Adding this is highly recommended, as it prevents errors using splat in which the wrong binary is provided.
 
+### 0.18.2
+
+* Fix rodata migration for `.rdata` sections (and other rodata sections that don't use the name `.rodata`)
+* `spimdisasm` 1.18.0 or above is now required.
+
 ### 0.18.1
 
 * New yaml options: `check_consecutive_segment_types`
