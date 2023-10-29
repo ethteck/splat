@@ -1,5 +1,7 @@
 # splat Release Notes
 
+### 0.18.2
+
 ### 0.18.1
 
 * New yaml options: `check_consecutive_segment_types`
