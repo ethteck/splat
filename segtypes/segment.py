@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
     if isinstance(segment, dict) and "vram" in segment:
-        return segment["vram"]
+        return int(segment["vram"])
     else:
         return None
 
@@ -282,7 +282,15 @@ class Segment:
     ):
         type = Segment.parse_segment_type(yaml)
         name = Segment.parse_segment_name(cls, rom_start, yaml)
-        vram_start = vram if vram is not None else parse_segment_vram(yaml)
+
+        vram_class = parse_segment_vram_class(yaml)
+
+        if vram is not None:
+            vram_start = vram
+        elif vram_class:
+            vram_start = vram_class.vram
+        else:
+            vram_start = parse_segment_vram(yaml)
 
         args: List[str] = [] if isinstance(yaml, dict) else yaml[3:]
 
@@ -313,11 +321,11 @@ class Segment:
 
         ret.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
 
-        ret.vram_class = parse_segment_vram_class(yaml)
         ret.given_follows_vram = parse_segment_follows_vram(yaml)
         ret.given_vram_symbol = parse_segment_vram_symbol(yaml)
 
-        if ret.vram_class:
+        if vram_class:
+            ret.vram_class = vram_class
             if ret.given_follows_vram:
                 log.error(
                     f"Error: segment {ret.name} has both a vram class and a follows_vram property"

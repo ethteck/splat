@@ -512,9 +512,6 @@ class LinkerWriter:
                 if isinstance(segment.vram_start, int)
                 else ""
             )
-        vram_str = (
-            f"0x{segment.vram_start:X} " if isinstance(segment.vram_start, int) else ""
-        )
 
         addr_str = " "
         if is_first:
