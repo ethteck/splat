@@ -57,17 +57,6 @@ def write_file_if_different(path: Path, new_content: str):
             f.write(new_content)
 
 
-def segment_cname(segment: Segment) -> str:
-    name = segment.name
-    if segment.parent:
-        name = segment.parent.name + "_" + name
-
-    if isinstance(segment, N64SegPalette):
-        name += "_pal"
-
-    return to_cname(name)
-
-
 def get_segment_rom_start(cname: str) -> str:
     if options.opts.segment_symbols_style == "makerom":
         return f"_{cname}SegmentRomStart"
@@ -124,7 +113,7 @@ def get_segment_section_size(segment_name: str, section_type: str) -> str:
 
 
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
-    return get_segment_vram_end(segment_cname(segment))
+    return get_segment_vram_end(segment.get_cname())
 
 
 class LinkerEntry:
@@ -208,7 +197,7 @@ class LinkerWriter:
         self.entries.extend(entries)
         self.dependencies_entries.extend(entries)
 
-        seg_name = segment_cname(segment)
+        seg_name = segment.get_cname()
 
         for sym, segs in max_vram_syms:
             self.write_max_vram_end_sym(sym, segs)
@@ -264,7 +253,7 @@ class LinkerWriter:
         self._end_segment(segment, all_bss=not any_load)
 
     def add_legacy(self, segment: Segment, entries: List[LinkerEntry]):
-        seg_name = segment_cname(segment)
+        seg_name = segment.get_cname()
 
         # To keep track which sections has been started
         started_sections: Dict[str, bool] = {
@@ -329,7 +318,7 @@ class LinkerWriter:
         segments_path = options.opts.ld_partial_build_segments_path
         assert segments_path is not None
 
-        seg_name = segment_cname(segment)
+        seg_name = segment.get_cname()
 
         for sym, segs in max_vram_syms:
             self.write_max_vram_end_sym(sym, segs)
@@ -391,7 +380,7 @@ class LinkerWriter:
         self.entries.extend(entries)
         self.dependencies_entries.extend(entries)
 
-        seg_name = segment_cname(segment)
+        seg_name = segment.get_cname()
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for l in segment.section_order:
@@ -550,7 +539,7 @@ class LinkerWriter:
     def _end_segment(self, segment: Segment, all_bss=False):
         self._end_block()
 
-        name = segment_cname(segment)
+        name = segment.get_cname()
 
         if not all_bss:
             self._writeln(f"__romPos += SIZEOF(.{name});")
@@ -603,7 +592,7 @@ class LinkerWriter:
 
     def _write_linker_entry(self, entry: LinkerEntry):
         if entry.section_link_type == "linker_offset":
-            self._write_symbol(f"{segment_cname(entry.segment)}_OFFSET", ".")
+            self._write_symbol(f"{entry.segment.get_cname()}_OFFSET", ".")
             return
 
         # TODO: option to turn this off?

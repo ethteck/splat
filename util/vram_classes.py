@@ -1,11 +1,13 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class VramClass:
     name: str
     vram: int
+    vram_symbol: Optional[str] = None
+    follows_classes: Optional[List[str]] = None
 
 
 _vram_classes: Dict[str, VramClass] = {}
@@ -25,6 +27,8 @@ def initialize(yaml: Any):
     for vram_class in yaml:
         name: str
         vram: int
+        vram_symbol: Optional[str] = None
+        follows_classes: Optional[List[str]] = None
 
         if isinstance(vram_class, dict):
             if "name" not in vram_class:
@@ -34,6 +38,12 @@ def initialize(yaml: Any):
             if "vram" not in vram_class:
                 raise KeyError(f"vram_class ({vram_class}) must have a vram")
             vram = vram_class["vram"]
+
+            if "vram_symbol" in vram_class:
+                vram_symbol = vram_class["vram_symbol"]
+
+            if "follows_classes" in vram_class:
+                follows_classes = vram_class["follows_classes"]
         elif isinstance(vram_class, list):
             if len(vram_class) != 2:
                 raise ValueError(
@@ -56,10 +66,10 @@ def initialize(yaml: Any):
             )
         if name in _vram_classes:
             raise ValueError(f"Duplicate vram class name '{name}'")
-        _vram_classes[name] = VramClass(name, vram)
+        _vram_classes[name] = VramClass(name, vram, vram_symbol, follows_classes)
 
 
-def resolve(name: str) -> int:
+def resolve(name: str) -> VramClass:
     if name not in _vram_classes:
         raise ValueError(f"Unknown vram class '{name}'")
-    return _vram_classes[name].vram
+    return _vram_classes[name]

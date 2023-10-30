@@ -107,7 +107,8 @@ class SplatOpts:
     ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
     ld_wildcard_sections: bool
-    # Determines whether to use `vram_symbol` and `follows_classes` to calcualte vram addresses in the linker script.
+    # Determines whether to use `follows_vram` (segment option) and
+    # `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
     # If disabled, this uses the plain integer values for vram addresses defined in the yaml.
     ld_use_symbolic_vram_addresses: bool
     # Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
@@ -403,7 +404,9 @@ def _parse_yaml(
             [".text", ".data", ".rodata", ".bss"],
         ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
-        ld_use_symbolic_vram_addresses=p.parse_opt("ld_use_symbolic_vram_addresses", bool, True),
+        ld_use_symbolic_vram_addresses=p.parse_opt(
+            "ld_use_symbolic_vram_addresses", bool, True
+        ),
         ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
         ld_partial_scripts_path=p.parse_optional_path(
             base_path, "ld_partial_scripts_path"

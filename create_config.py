@@ -121,6 +121,7 @@ segments:
     type: code
     start: 0x{0x1000 + rom.entrypoint_info.entry_size:X}
     vram: 0x{rom.entry_point + rom.entrypoint_info.entry_size:X}
+    follows_vram: entry
 """
 
     if rom.entrypoint_info.bss_size is not None:
@@ -150,6 +151,7 @@ segments:
 
   - type: bin
     start: 0x{first_section_end:X}
+    follows_vram: main
   - [0x{rom.size:X}]
 """
 

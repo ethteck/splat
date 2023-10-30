@@ -20,7 +20,6 @@ import sys
 from segtypes.linker_entry import (
     LinkerWriter,
     get_segment_vram_end_symbol_name,
-    segment_cname,
 )
 from segtypes.segment import Segment
 from util import log, options, palettes, symbols, relocs
@@ -127,15 +126,15 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         if next_start is not None:
             last_rom_end = next_start
 
-    # for segment in ret:
-    #     if segment.given_follows_vram:
-    #         if segment.given_follows_vram not in segments_by_name:
-    #             log.error(
-    #                 f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist"
-    #             )
-    #         segment.vram_of_symbol = get_segment_vram_end_symbol_name(
-    #             segments_by_name[segment.given_follows_vram]
-    #         )
+    for segment in ret:
+        if segment.given_follows_vram:
+            if segment.given_follows_vram not in segments_by_name:
+                log.error(
+                    f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist"
+                )
+            segment.given_vram_symbol = get_segment_vram_end_symbol_name(
+                segments_by_name[segment.given_follows_vram]
+            )
 
     return ret
 
@@ -419,6 +418,7 @@ def main(
                 )
 
         for segment in linker_bar:
+            assert isinstance(segment, Segment)
             linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
             max_vram_syms = max_vram_end_insertion_points.get(segment, [])
 
@@ -432,7 +432,7 @@ def main(
                 assert partial_scripts_path is not None
                 assert segments_path is not None
 
-                seg_name = segment_cname(segment)
+                seg_name = segment.get_cname()
 
                 sub_linker_writer.save_linker_script(
                     partial_scripts_path / f"{seg_name}.ld"
@@ -462,7 +462,7 @@ def main(
         if options.opts.elf_section_list_path:
             section_list = ""
             for segment in all_segments:
-                section_list += "." + segment_cname(segment) + "\n"
+                section_list += "." + segment.get_cname() + "\n"
             with open(options.opts.elf_section_list_path, "w", newline="\n") as f:
                 f.write(section_list)
 
