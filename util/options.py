@@ -126,6 +126,8 @@ class SplatOpts:
     segment_symbols_style: str
     # Specifies the starting offset for rom address symbols in the linker script.
     ld_rom_start: int
+    # The value passed to the FILL statement on each segment. `None` disables using FILL statements on the linker script. Defaults to a fill value of 0.
+    ld_fill_value: Optional[int]
 
     ################################################################################
     # C file options
@@ -418,6 +420,7 @@ def _parse_yaml(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
+        ld_fill_value=p.parse_opt("ld_fill_value", int, 0),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True

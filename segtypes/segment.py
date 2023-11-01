@@ -189,6 +189,12 @@ class Segment:
             return str(yaml["linker_section"])
         return None
 
+    @staticmethod
+    def parse_ld_fill_value(yaml: Union[dict, list], default: Optional[int]) -> Optional[int]:
+        if isinstance(yaml, dict) and "ld_fill_value" in yaml:
+            return yaml["ld_fill_value"]
+        return default
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -254,6 +260,9 @@ class Segment:
 
         self.linker_section_order: Optional[str] = self.parse_linker_section_order(yaml)
         self.linker_section: Optional[str] = self.parse_linker_section(yaml)
+
+        # If not defined on the segment then default to the global option
+        self.ld_fill_value: Optional[int] = self.parse_ld_fill_value(yaml, options.opts.ld_fill_value)
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
