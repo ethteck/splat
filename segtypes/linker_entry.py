@@ -541,6 +541,9 @@ class LinkerWriter:
         self._writeln(line)
         self._begin_block()
 
+        if segment.ld_fill_value is not None:
+            self._writeln(f"FILL(0x{segment.ld_fill_value:08X});")
+
     def _end_segment(self, segment: Segment, all_bss=False):
         self._end_block()
 
