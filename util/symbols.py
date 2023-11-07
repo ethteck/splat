@@ -19,7 +19,6 @@ all_symbols_dict: Dict[int, List["Symbol"]] = {}
 all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
 to_mark_as_defined: Set[str] = set()
-appears_after_overlays_syms: List["Symbol"] = []
 
 # Initialize a spimdisasm context, used to store symbols and functions
 spim_context = spimdisasm.common.Context()
@@ -675,10 +674,8 @@ def reset_symbols():
     global all_symbols_ranges
     global ignored_addresses
     global to_mark_as_defined
-    global appears_after_overlays_syms
     all_symbols = []
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
     to_mark_as_defined = set()
-    appears_after_overlays_syms = []

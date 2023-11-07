@@ -365,7 +365,6 @@ class SymbolsInitialize(unittest.TestCase):
         assert symbols.all_symbols[0].rom == 100
         assert symbols.all_symbols[0].segment == all_segments[0]
         assert symbols.all_symbols[0].given_name_end == "the_name_end"
-        assert symbols.appears_after_overlays_syms[0] == symbols.all_symbols[0]
 
     def test_boolean_attrs(self):
         import pathlib
