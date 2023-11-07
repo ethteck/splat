@@ -464,10 +464,6 @@ def main(
             else:
                 linker_writer.add(segment, max_vram_syms)
 
-        # for vram_class, segments in vram_class_dependencies.items():
-        #     assert vram_class.vram_symbol is not None
-        #     linker_writer.write_max_vram_end_sym(vram_class.vram_symbol, segments)
-
         linker_writer.save_linker_script(options.opts.ld_script_path)
         linker_writer.save_symbol_header()
         if options.opts.ld_dependencies:
