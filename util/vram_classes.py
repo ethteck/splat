@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from util import log
+
 
 @dataclass(frozen=True)
 class VramClass:
@@ -31,13 +33,13 @@ def initialize(yaml: Any):
         return
 
     if not isinstance(yaml, list):
-        raise TypeError("vram_classes must be a list")
+        log.error("vram_classes must be a list")
 
     class_names = set()
     for vram_class in yaml:
         if isinstance(vram_class, dict):
             if "name" not in vram_class:
-                raise KeyError(f"vram_class ({vram_class}) must have a name")
+                log.error(f"vram_class ({vram_class}) must have a name")
             class_names.add(vram_class["name"])
         elif isinstance(vram_class, list):
             class_names.add(vram_class[0])
@@ -50,57 +52,51 @@ def initialize(yaml: Any):
 
         if isinstance(vram_class, dict):
             if "name" not in vram_class:
-                raise KeyError(f"vram_class ({vram_class}) must have a name")
+                log.error(f"vram_class ({vram_class}) must have a name")
             name = vram_class["name"]
 
             if "vram" not in vram_class:
-                raise KeyError(f"vram_class ({vram_class}) must have a vram")
+                log.error(f"vram_class ({vram_class}) must have a vram")
             vram = vram_class["vram"]
 
             if "vram_symbol" in vram_class:
                 vram_symbol = vram_class["vram_symbol"]
                 if not isinstance(vram_symbol, str):
-                    raise TypeError(
+                    log.error(
                         f"vram_symbol ({vram_symbol})must be a string, got {type(vram_symbol)}"
                     )
 
             if "follows_classes" in vram_class:
                 follows_classes = vram_class["follows_classes"]
                 if not isinstance(follows_classes, list):
-                    raise TypeError(
+                    log.error(
                         f"vram_symbol ({follows_classes})must be a list, got {type(follows_classes)}"
                     )
                 for follows_class in follows_classes:
                     if follows_class not in class_names:
-                        raise ValueError(
+                        log.error(
                             f"follows_class ({follows_class}) not found in vram_classes"
                         )
         elif isinstance(vram_class, list):
             if len(vram_class) != 2:
-                raise ValueError(
+                log.error(
                     f"vram_class ({vram_class}) must have 2 elements, got {len(vram_class)}"
                 )
             name = vram_class[0]
             vram = vram_class[1]
         else:
-            raise TypeError(
-                f"vram_class must be a dict or list, got {type(vram_class)}"
-            )
+            log.error(f"vram_class must be a dict or list, got {type(vram_class)}")
 
         if not isinstance(name, str):
-            raise TypeError(
-                f"vram_class name ({name}) must be a string, got {type(name)}"
-            )
+            log.error(f"vram_class name ({name}) must be a string, got {type(name)}")
         if not isinstance(vram, int):
-            raise TypeError(
-                f"vram_class vram ({vram}) must be an int, got {type(vram)}"
-            )
+            log.error(f"vram_class vram ({vram}) must be an int, got {type(vram)}")
         if name in _vram_classes:
-            raise ValueError(f"Duplicate vram class name '{name}'")
+            log.error(f"Duplicate vram class name '{name}'")
         _vram_classes[name] = VramClass(name, vram, vram_symbol, follows_classes)
 
 
 def resolve(name: str) -> VramClass:
     if name not in _vram_classes:
-        raise ValueError(f"Unknown vram class '{name}'")
+        log.error(f"Unknown vram class '{name}'")
     return _vram_classes[name]

@@ -365,7 +365,7 @@ Determines whether to add wildcards for section linking in the linker script (.r
 ### ld_use_symbolic_vram_addreses
 
 Determines whether to use `follows_vram` (segment option) and `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
-If disabled, this uses the plain integer values for vram addresses defined in the yaml.
+Enabled by default. If disabled, this uses the plain integer values for vram addresses defined in the yaml.
 
 ### ld_partial_linking
 
