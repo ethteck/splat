@@ -1,10 +1,8 @@
 import os
 import re
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union
-from segtypes.n64.palette import N64SegPalette
 
 from util import options
 

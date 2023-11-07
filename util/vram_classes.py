@@ -1,13 +1,22 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
-@dataclass
+@dataclass(frozen=True)
 class VramClass:
     name: str
     vram: int
-    vram_symbol: Optional[str] = None
-    follows_classes: Optional[List[str]] = None
+    given_vram_symbol: Optional[str] = None
+    follows_classes: List[str] = field(default_factory=list, compare=False)
+
+    @property
+    def vram_symbol(self) -> Optional[str]:
+        if self.given_vram_symbol is not None:
+            return self.given_vram_symbol
+        elif self.follows_classes:
+            return self.name + "_CLASS_VRAM"
+        else:
+            return None
 
 
 _vram_classes: Dict[str, VramClass] = {}
@@ -24,11 +33,20 @@ def initialize(yaml: Any):
     if not isinstance(yaml, list):
         raise TypeError("vram_classes must be a list")
 
+    class_names = set()
+    for vram_class in yaml:
+        if isinstance(vram_class, dict):
+            if "name" not in vram_class:
+                raise KeyError(f"vram_class ({vram_class}) must have a name")
+            class_names.add(vram_class["name"])
+        elif isinstance(vram_class, list):
+            class_names.add(vram_class[0])
+
     for vram_class in yaml:
         name: str
         vram: int
         vram_symbol: Optional[str] = None
-        follows_classes: Optional[List[str]] = None
+        follows_classes: List[str] = []
 
         if isinstance(vram_class, dict):
             if "name" not in vram_class:
@@ -41,9 +59,22 @@ def initialize(yaml: Any):
 
             if "vram_symbol" in vram_class:
                 vram_symbol = vram_class["vram_symbol"]
+                if not isinstance(vram_symbol, str):
+                    raise TypeError(
+                        f"vram_symbol ({vram_symbol})must be a string, got {type(vram_symbol)}"
+                    )
 
             if "follows_classes" in vram_class:
                 follows_classes = vram_class["follows_classes"]
+                if not isinstance(follows_classes, list):
+                    raise TypeError(
+                        f"vram_symbol ({follows_classes})must be a list, got {type(follows_classes)}"
+                    )
+                for follows_class in follows_classes:
+                    if follows_class not in class_names:
+                        raise ValueError(
+                            f"follows_class ({follows_class}) not found in vram_classes"
+                        )
         elif isinstance(vram_class, list):
             if len(vram_class) != 2:
                 raise ValueError(

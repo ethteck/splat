@@ -222,6 +222,32 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     return s
 
 
+# Return a mapping of vram classes to segments that need to be part of their vram symbol's calculation
+def calc_segment_dependences(
+    all_segments: List[Segment],
+) -> Dict[vram_classes.VramClass, List[Segment]]:
+    # Map vram class names to segments that have that vram class
+    vram_class_to_segments: Dict[str, List[Segment]] = {}
+    for seg in all_segments:
+        if seg.vram_class is not None:
+            if seg.vram_class.name not in vram_class_to_segments:
+                vram_class_to_segments[seg.vram_class.name] = []
+            vram_class_to_segments[seg.vram_class.name].append(seg)
+
+    # Map vram class names to segments that the vram class follows
+    vram_class_to_follows_segments: Dict[vram_classes.VramClass, List[Segment]] = {}
+    for vram_class in vram_classes._vram_classes.values():
+        if vram_class.follows_classes:
+            vram_class_to_follows_segments[vram_class] = []
+
+            for follows_class in vram_class.follows_classes:
+                if follows_class in vram_class_to_segments:
+                    vram_class_to_follows_segments[
+                        vram_class
+                    ] += vram_class_to_segments[follows_class]
+    return vram_class_to_follows_segments
+
+
 def main(
     config_path,
     modes,
@@ -374,31 +400,24 @@ def main(
     if (
         options.opts.is_mode_active("ld") and options.opts.platform != "gc"
     ):  # TODO move this to platform initialization when it gets implemented
-        # Calculate list of segments for which we need to find the largest, so we can safely place the symbol after it
-        max_vram_end_syms: Dict[str, List[Segment]] = {}
-        # TODO
-        # for sym in symbols.appears_after_overlays_syms:
-        #     max_vram_end_syms[sym.name] = [
-        #         seg
-        #         for seg in all_segments
-        #         if isinstance(seg.vram_start, int)
-        #         and seg.vram_start == sym.appears_after_overlays_addr
-        #     ]
-        max_vram_end_sym_names: Set[str] = set(max_vram_end_syms.keys())
+        vram_class_dependencies = calc_segment_dependences(all_segments)
+        vram_classes_to_search = set(vram_class_dependencies.keys())
 
         max_vram_end_insertion_points: Dict[
             Segment, List[Tuple[str, List[Segment]]]
         ] = {}
-        # Find the last segment whose vram_of_symbol is one of the max_vram_end_syms
-        for segment in reversed(all_segments):
-            vram_of_sym = None  # segment.vram_of_symbol
-            if vram_of_sym is not None and vram_of_sym in max_vram_end_sym_names:
-                if segment not in max_vram_end_insertion_points:
-                    max_vram_end_insertion_points[segment] = []
-                max_vram_end_insertion_points[segment].append(
-                    (vram_of_sym, max_vram_end_syms[vram_of_sym])
+        for seg in reversed(all_segments):
+            if seg.vram_class in vram_classes_to_search:
+                assert seg.vram_class.vram_symbol is not None
+                if seg not in max_vram_end_insertion_points:
+                    max_vram_end_insertion_points[seg] = []
+                max_vram_end_insertion_points[seg].append(
+                    (
+                        seg.vram_class.vram_symbol,
+                        vram_class_dependencies[seg.vram_class],
+                    )
                 )
-                max_vram_end_sym_names.remove(vram_of_sym)
+                vram_classes_to_search.remove(seg.vram_class)
 
         global linker_writer
         linker_writer = LinkerWriter()
@@ -444,6 +463,10 @@ def main(
                     )
             else:
                 linker_writer.add(segment, max_vram_syms)
+
+        # for vram_class, segments in vram_class_dependencies.items():
+        #     assert vram_class.vram_symbol is not None
+        #     linker_writer.write_max_vram_end_sym(vram_class.vram_symbol, segments)
 
         linker_writer.save_linker_script(options.opts.ld_script_path)
         linker_writer.save_symbol_header()
