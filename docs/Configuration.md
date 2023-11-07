@@ -405,6 +405,17 @@ Possible values:
 Specifies the starting offset for rom address symbols in the linker script.
 
 
+### ld_fill_value
+
+Allows to specify the value of the `FILL` statement generated on every segment of the linker script.
+
+It must be either an integer, which will be used as the parameter for the `FILL` statement, or `null`, which tells splat to not emit `FILL` statements.
+
+This behavior can be customized per segment too. See [ld_fill_value](Segments.md#ld_fill_value) on the Segments section.
+
+Defaults to 0.
+
+
 ## C file options
 
 ### create_c_files

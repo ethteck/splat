@@ -9,6 +9,17 @@
 * Removed `dead` symbol_addrs option
 * A warning is now emitted when the `sha1` top-level yaml option is not provided. Adding this is highly recommended, as it prevents errors using splat in which the wrong binary is provided.
 
+### 0.18.3
+
+* splat now will emit a `FILL(0)` statement on each segment of a linker script by default, to customize this behavior use the `ld_fill_value` yaml option or the per-segment `ld_fill_value` option.
+* New yaml option: `ld_fill_value`
+  * Allows to specify the value of the `FILL` statement generated on every segment of the linker script.
+  * It must be either an integer, which will be used as the parameter for the `FILL` statement, or `null`, which tells splat to not emit `FILL` statements.
+  * This behavior can be customized per segment too.
+* New per segment option: `ld_fill_value`
+  * Allows to specify the value of the `FILL` statement generated for this specific top-level segment of the linker script, ignoring the global configuration.
+  * If not set, then the global configuration is used.
+
 ### 0.18.2
 
 * Fix rodata migration for `.rdata` sections (and other rodata sections that don't use the name `.rodata`)
