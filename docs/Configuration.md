@@ -362,10 +362,10 @@ Determines the list of section labels that are to be added to the linker script
 
 Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
 
-### ld_use_follows
+### ld_use_symbolic_vram_addreses
 
-Determines whether to use "follows" settings to determine locations of overlays in the linker script.
-If disabled, this effectively ignores "follows" directives in the yaml.
+Determines whether to use `follows_vram` (segment option) and `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
+Enabled by default. If disabled, this uses the plain integer values for vram addresses defined in the yaml.
 
 ### ld_partial_linking
 

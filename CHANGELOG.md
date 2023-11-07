@@ -1,5 +1,14 @@
 # splat Release Notes
 
+### 0.19.0: vram_classes
+
+* New top-level yaml feature: `vram_classes`. This allows you to make common definitions for vram locations that can be applied to multiple segments. Please see the [documentation](docs/VramClasses.md) for more details!
+  * Renamed `ld_use_follows` to `ld_use_symbolic_vram_addresses` to more accurately describe what it's doing
+  * Renamed `vram_of_symbol` segment option to `vram_symbol` to provide consistency between the segment-level option and the vram class field.
+  * Removed `appears_after_overlays_addr` symbol_addrs option in favor of specifying this behavior with `vram_classes`
+* Removed `dead` symbol_addrs option
+* A warning is now emitted when the `sha1` top-level yaml option is not provided. Adding this is highly recommended, as it prevents errors using splat in which the wrong binary is provided.
+
 ### 0.18.3
 
 * splat now will emit a `FILL(0)` statement on each segment of a linker script by default, to customize this behavior use the `ld_fill_value` yaml option or the per-segment `ld_fill_value` option.
