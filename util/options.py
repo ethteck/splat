@@ -39,6 +39,8 @@ class SplatOpts:
     use_o_as_suffix: bool
     # the value of the $gp register to correctly calculate offset to %gp_rel relocs
     gp: Optional[int]
+    # Checks and errors if there are any non consecutive segment types
+    check_consecutive_segment_types: bool
 
     # Paths
     asset_path: Path
@@ -105,9 +107,10 @@ class SplatOpts:
     ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
     ld_wildcard_sections: bool
-    # Determines whether to use "follows" settings to determine locations of overlays in the linker script.
-    # If disabled, this effectively ignores "follows" directives in the yaml.
-    ld_use_follows: bool
+    # Determines whether to use `follows_vram` (segment option) and
+    # `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
+    # If disabled, this uses the plain integer values for vram addresses defined in the yaml.
+    ld_use_symbolic_vram_addresses: bool
     # Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
     ld_partial_linking: bool
     # Folder were each intermediary linker script will be written to.
@@ -124,6 +127,8 @@ class SplatOpts:
     segment_symbols_style: str
     # Specifies the starting offset for rom address symbols in the linker script.
     ld_rom_start: int
+    # The value passed to the FILL statement on each segment. `None` disables using FILL statements on the linker script. Defaults to a fill value of 0.
+    ld_fill_value: Optional[int]
 
     ################################################################################
     # C file options
@@ -357,6 +362,9 @@ def _parse_yaml(
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_opt("gp_value", int, 0),
+        check_consecutive_segment_types=p.parse_opt(
+            "check_consecutive_segment_types", bool, True
+        ),
         asset_path=p.parse_path(base_path, "asset_path", "assets"),
         symbol_addrs_paths=p.parse_path_list(
             base_path, "symbol_addrs_path", "symbol_addrs.txt"
@@ -400,7 +408,9 @@ def _parse_yaml(
             [".text", ".data", ".rodata", ".bss"],
         ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
-        ld_use_follows=p.parse_opt("ld_use_follows", bool, True),
+        ld_use_symbolic_vram_addresses=p.parse_opt(
+            "ld_use_symbolic_vram_addresses", bool, True
+        ),
         ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
         ld_partial_scripts_path=p.parse_optional_path(
             base_path, "ld_partial_scripts_path"
@@ -415,6 +425,7 @@ def _parse_yaml(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
+        ld_fill_value=p.parse_opt("ld_fill_value", int, 0),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True

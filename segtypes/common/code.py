@@ -9,8 +9,6 @@ from util.symbols import Symbol
 from segtypes.common.group import CommonSegGroup
 from segtypes.segment import Segment, parse_segment_align
 
-CODE_TYPES = ["c", "asm", "hasm"]
-
 
 def dotless_type(type: str) -> str:
     return type[1:] if type[0] == "." else type
@@ -201,14 +199,16 @@ class CommonSegCode(CommonSegGroup):
                 else:
                     if cur_section != typ:
                         # We're changing sections
-                        if found_sections[cur_section].has_end():
-                            log.error(
-                                f"Section {cur_section} end encountered but was already ended earlier!"
-                            )
-                        if found_sections[typ].has_start():
-                            log.error(
-                                f"Section {typ} start encounted but has already started earlier!"
-                            )
+
+                        if options.opts.check_consecutive_segment_types:
+                            if found_sections[cur_section].has_end():
+                                log.error(
+                                    f"Section {cur_section} end encountered but was already ended earlier!"
+                                )
+                            if found_sections[typ].has_start():
+                                log.error(
+                                    f"Section {typ} start encounted but has already started earlier!"
+                                )
 
                         # End the current section
                         found_sections[cur_section].end = i
@@ -410,10 +410,10 @@ class CommonSegCode(CommonSegGroup):
     def scan(self, rom_bytes):
         # Always scan code first
         for sub in self.subsegments:
-            if sub.type in CODE_TYPES and sub.should_scan():
+            if sub.is_text() and sub.should_scan():
                 sub.scan(rom_bytes)
 
         # Scan everyone else
         for sub in self.subsegments:
-            if sub.type not in CODE_TYPES and sub.should_scan():
+            if not sub.is_text() and sub.should_scan():
                 sub.scan(rom_bytes)

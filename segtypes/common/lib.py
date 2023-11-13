@@ -52,6 +52,11 @@ class CommonSegLib(N64Segment):
 
         return [
             LinkerEntry(
-                self, [path], object_path, self.get_linker_section(), self.is_noload()
+                self,
+                [path],
+                object_path,
+                self.get_linker_section_order(),
+                self.get_linker_section_linksection(),
+                self.is_noload(),
             )
         ]
