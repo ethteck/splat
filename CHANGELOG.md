@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.19.1
+
+* Fixed disassembly of certain ps2 instructions to properly re-assemble in a compatible and matching way.
+
 ### 0.19.0: vram_classes
 
 * New top-level yaml feature: `vram_classes`. This allows you to make common definitions for vram locations that can be applied to multiple segments. Please see the [documentation](docs/VramClasses.md) for more details!
