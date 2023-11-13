@@ -516,6 +516,10 @@ Valid values:
 `o32`` is highly recommended, as it provides logically named registers for floating point instructions.
 For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
 
+### named_regs_for_c_funcs
+
+Determines whether functions inside c files should have named registers
+
 ### add_set_gp_64
 
 Determines whether to add ".set gp=64" to asm/hasm files

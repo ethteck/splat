@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.19.2
+
+* `named_regs_for_c_funcs` (default True): Can be disabled to make c functions' disassembled functions contain numeric registers.
+
 ### 0.19.1
 
 * Fixed disassembly of certain ps2 instructions to properly re-assemble in a compatible and matching way.
