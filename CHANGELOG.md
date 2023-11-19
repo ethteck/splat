@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.18.4
+
+* New yaml option: `ld_bss_is_noload`
+  * Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
+  * Applies to all `bss` (`sbss`, `common`, `scommon`, etc) sections.
+  * Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
+
 ### 0.18.3
 
 * splat now will emit a `FILL(0)` statement on each segment of a linker script by default, to customize this behavior use the `ld_fill_value` yaml option or the per-segment `ld_fill_value` option.
