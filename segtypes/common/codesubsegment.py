@@ -130,6 +130,16 @@ class CommonSegCodeSubsegment(Segment):
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
+            if options.opts.platform == "ps2":
+                from segtypes.common.c import CommonSegC
+                from rabbitizer import TrinaryValue
+
+                if isinstance(self, CommonSegC):
+                    insn.flag_r5900UseDollar = TrinaryValue.FALSE
+                else:
+                    insn.flag_r5900UseDollar = TrinaryValue.TRUE
+                insn.flag_r5900DisasmAsData = TrinaryValue.TRUE
+
             instr_offset = i * 4
 
             # update pointer accesses from this function

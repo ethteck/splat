@@ -362,10 +362,10 @@ Determines the list of section labels that are to be added to the linker script
 
 Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
 
-### ld_use_follows
+### ld_use_symbolic_vram_addreses
 
-Determines whether to use "follows" settings to determine locations of overlays in the linker script.
-If disabled, this effectively ignores "follows" directives in the yaml.
+Determines whether to use `follows_vram` (segment option) and `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
+Enabled by default. If disabled, this uses the plain integer values for vram addresses defined in the yaml.
 
 ### ld_partial_linking
 
@@ -524,6 +524,10 @@ Valid values:
 
 `o32`` is highly recommended, as it provides logically named registers for floating point instructions.
 For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
+
+### named_regs_for_c_funcs
+
+Determines whether functions inside c files should have named registers
 
 ### add_set_gp_64
 

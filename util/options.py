@@ -107,9 +107,10 @@ class SplatOpts:
     ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
     ld_wildcard_sections: bool
-    # Determines whether to use "follows" settings to determine locations of overlays in the linker script.
-    # If disabled, this effectively ignores "follows" directives in the yaml.
-    ld_use_follows: bool
+    # Determines whether to use `follows_vram` (segment option) and
+    # `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
+    # If disabled, this uses the plain integer values for vram addresses defined in the yaml.
+    ld_use_symbolic_vram_addresses: bool
     # Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
     ld_partial_linking: bool
     # Folder were each intermediary linker script will be written to.
@@ -185,6 +186,8 @@ class SplatOpts:
     # o32 is highly recommended, as it provides logically named registers for floating point instructions
     # For more info, see https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d
     mips_abi_float_regs: str
+    # Determines whether functions inside c files should have named registers
+    named_regs_for_c_funcs: bool
     # Determines whether to add ".set gp=64" to asm/hasm files
     add_set_gp_64: bool
     # Generate .asmproc.d dependency files for each C file which still reference functions in assembly files
@@ -407,7 +410,9 @@ def _parse_yaml(
             [".text", ".data", ".rodata", ".bss"],
         ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
-        ld_use_follows=p.parse_opt("ld_use_follows", bool, True),
+        ld_use_symbolic_vram_addresses=p.parse_opt(
+            "ld_use_symbolic_vram_addresses", bool, True
+        ),
         ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
         ld_partial_scripts_path=p.parse_optional_path(
             base_path, "ld_partial_scripts_path"
@@ -469,6 +474,7 @@ def _parse_yaml(
             ["numeric", "o32", "n32", "n64"],
             "numeric",
         ),
+        named_regs_for_c_funcs=p.parse_opt("named_regs_for_c_funcs", bool, True),
         add_set_gp_64=p.parse_opt("add_set_gp_64", bool, True),
         create_asm_dependencies=p.parse_opt("create_asm_dependencies", bool, False),
         string_encoding=p.parse_optional_opt("string_encoding", str),

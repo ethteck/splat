@@ -1,11 +1,28 @@
 # splat Release Notes
 
-### 0.18.4
+### 0.19.3
 
 * New yaml option: `ld_bss_is_noload`
   * Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
   * Applies to all `bss` (`sbss`, `common`, `scommon`, etc) sections.
   * Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
+
+### 0.19.2
+
+* `named_regs_for_c_funcs` (default True): Can be disabled to make c functions' disassembled functions contain numeric registers.
+
+### 0.19.1
+
+* Fixed disassembly of certain ps2 instructions to properly re-assemble in a compatible and matching way.
+
+### 0.19.0: vram_classes
+
+* New top-level yaml feature: `vram_classes`. This allows you to make common definitions for vram locations that can be applied to multiple segments. Please see the [documentation](docs/VramClasses.md) for more details!
+  * Renamed `ld_use_follows` to `ld_use_symbolic_vram_addresses` to more accurately describe what it's doing
+  * Renamed `vram_of_symbol` segment option to `vram_symbol` to provide consistency between the segment-level option and the vram class field.
+  * Removed `appears_after_overlays_addr` symbol_addrs option in favor of specifying this behavior with `vram_classes`
+* Removed `dead` symbol_addrs option
+* A warning is now emitted when the `sha1` top-level yaml option is not provided. Adding this is highly recommended, as it prevents errors using splat in which the wrong binary is provided.
 
 ### 0.18.3
 
