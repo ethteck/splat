@@ -128,7 +128,7 @@ class SplatOpts:
     ld_rom_start: int
     # The value passed to the FILL statement on each segment. `None` disables using FILL statements on the linker script. Defaults to a fill value of 0.
     ld_fill_value: Optional[int]
-    # 
+    # Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
     ld_bss_is_noload: bool
 
     ################################################################################
