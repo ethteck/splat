@@ -11,6 +11,8 @@ class CommonSegBss(CommonSegData):
 
     @staticmethod
     def is_noload() -> bool:
+        if not options.opts.ld_bss_is_noload:
+            return False
         return True
 
     def disassemble_data(self, rom_bytes: bytes):

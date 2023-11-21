@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.19.3
+
+* New yaml option: `ld_bss_is_noload`
+  * Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
+  * Applies to all `bss` (`sbss`, `common`, `scommon`, etc) sections.
+  * Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
+
 ### 0.19.2
 
 * `named_regs_for_c_funcs` (default True): Can be disabled to make c functions' disassembled functions contain numeric registers.
