@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.19.4
+
+* Fix `ld_fill_value` not accepting `null` as a valid value on the yaml
+
 ### 0.19.3
 
 * New yaml option: `ld_bss_is_noload`
