@@ -427,7 +427,7 @@ def _parse_yaml(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
-        ld_fill_value=p.parse_opt("ld_fill_value", int, 0),
+        ld_fill_value=p.parse_opt("ld_fill_value", Optional[int], 0),
         ld_bss_is_noload=p.parse_opt("ld_bss_is_noload", bool, True),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
