@@ -273,6 +273,11 @@ class OptParser:
             return None
         return self.parse_opt(opt, t)
 
+    def parse_optional_opt_with_default(self, opt: str, t: Type[T], default: Optional[T]) -> Optional[T]:
+        if opt not in self._yaml:
+            return default
+        return self.parse_opt(opt, t)
+
     def parse_opt_within(
         self, opt: str, t: Type[T], within: List[T], default: Optional[T] = None
     ) -> T:
@@ -427,7 +432,7 @@ def _parse_yaml(
             "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
-        ld_fill_value=p.parse_opt("ld_fill_value", Optional[int], 0),
+        ld_fill_value=p.parse_optional_opt_with_default("ld_fill_value", Optional[int], 0),
         ld_bss_is_noload=p.parse_opt("ld_bss_is_noload", bool, True),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
