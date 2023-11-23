@@ -273,7 +273,9 @@ class OptParser:
             return None
         return self.parse_opt(opt, t)
 
-    def parse_optional_opt_with_default(self, opt: str, t: Type[T], default: Optional[T]) -> Optional[T]:
+    def parse_optional_opt_with_default(
+        self, opt: str, t: Type[T], default: Optional[T]
+    ) -> Optional[T]:
         if opt not in self._yaml:
             return default
         self._read_opts.add(opt)
