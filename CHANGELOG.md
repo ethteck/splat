@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.19.5
+
+* The `*_VRAM_END` linker symbol is now aligned to the configured alignment by default.
+* New yaml option: `ld_align_segment_vram_end`
+  * Allows to toggle aligning the `*_VRAM_END` linker symbol.
+  * Defaults to `True`.
+
 ### 0.19.4
 
 * Fix `ld_fill_value` not accepting `null` as a valid value on the yaml

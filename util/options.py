@@ -131,7 +131,7 @@ class SplatOpts:
     ld_fill_value: Optional[int]
     # Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
     ld_bss_is_noload: bool
-    #
+    # Allows to toggle aligning the `*_VRAM_END` linker.
     ld_align_segment_vram_end: bool
 
     ################################################################################
