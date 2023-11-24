@@ -546,6 +546,8 @@ class LinkerWriter:
         if not options.opts.segment_end_before_align:
             if segment.align:
                 self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
+                if options.opts.ld_align_segment_vram_end:
+                    self._writeln(f". = ALIGN(., {segment.align});")
 
         seg_rom_end = get_segment_rom_end(name)
         self._write_symbol(seg_rom_end, "__romPos")
@@ -555,6 +557,8 @@ class LinkerWriter:
         if options.opts.segment_end_before_align:
             if segment.align:
                 self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
+                if options.opts.ld_align_segment_vram_end:
+                    self._writeln(f". = ALIGN(., {segment.align});")
 
         self._writeln("")
 
