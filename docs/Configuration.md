@@ -425,6 +425,15 @@ Applies to all `bss` (`sbss`, `common`, `scommon`, etc) sections.
 Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
 
 
+### ld_align_segment_vram_end
+
+Allows to toggle aligning the `*_VRAM_END` linker symbol of each segment.
+
+Setting this to `True` will make the `*_VRAM_END` to be aligned to the configured alignment of the segment.
+
+Defaults to `True`.
+
+
 ## C file options
 
 ### create_c_files

@@ -30,6 +30,7 @@ SECTIONS
     }
     __romPos += SIZEOF(.dummy_ipl3);
     __romPos = ALIGN(__romPos, 16);
+    . = ALIGN(., 16);
     dummy_ipl3_ROM_END = __romPos;
     dummy_ipl3_VRAM_END = .;
 
@@ -64,6 +65,7 @@ SECTIONS
     }
     __romPos += SIZEOF(.boot);
     __romPos = ALIGN(__romPos, 16);
+    . = ALIGN(., 16);
     boot_ROM_END = __romPos;
     boot_VRAM_END = .;
 
