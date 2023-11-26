@@ -15,8 +15,8 @@ jobs:
         run: docker build --tag splat-build:latest .
 
       - name: Install Python dependencies
-        run: docker run --rm -v $(pwd):/splat -w /splat splat-build python3 -m pip install -U -r requirements.txt
+        run: docker run -v $(pwd):/splat -w /splat splat-build python3 -m pip install -U -r requirements.txt
 
       - name: Run unit tests
         run: |
-          docker run --rm -v $(pwd):/splat -w /splat splat-build sh run_tests.sh
+          docker run -v $(pwd):/splat -w /splat splat-build sh run_tests.sh
