@@ -11,12 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker
-        run: docker build --tag splat-build:latest .
+      - name: Install dependencies
+        run: apt install -y build-essential make binutils-mips-linux-gnu python3 python3-pip wget
 
       - name: Install Python dependencies
-        run: docker run -w /splat splat-build python3 -m pip install -U -r requirements.txt
+        run: python3 -m pip install -U -r requirements.txt
 
-      - name: Run unit tests
+      - name: Build basic_app
         run: |
-          docker run -w /splat splat-build sh run_tests.sh
+          make -C test/basic_app clean
+          make -C test/basic_app download_kmc
+          make -C test/basic_app all
+
+      - name: Run the test
+        run: python3 test.py
