@@ -2,12 +2,11 @@
 
 set -e
 
-# docker build container
-docker build --tag splat-build:latest . && \
-# get compilers and tools
 # clean
-make -C test/basic_app clean && \
+make -C test/basic_app clean
+# get compilers and tools
+make -C test/basic_app download_kmc
 # build
-docker run --rm -v $(pwd):/splat -w /splat/test/basic_app splat-build make -C test/basic_app all && \
+make -C test/basic_app all
 # test
 python3 test.py

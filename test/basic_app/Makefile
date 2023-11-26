@@ -21,15 +21,7 @@ CFLAGS          := -G0 -mgp32 -mfp32 -mips3
 
 all: $(ROM)
 
-download_kmc:
-	$(RM) -rf $(KMC_FOLDER)
-	wget https://github.com/decompals/mips-binutils-2.6/releases/latest/download/binutils-2.6-linux.tar.gz
-	wget https://github.com/decompals/mips-gcc-2.7.2/releases/latest/download/gcc-2.7.2-linux.tar.gz
-	mkdir -p $(KMC_FOLDER)
-	tar -xvf binutils-2.6-linux.tar.gz -C $(KMC_FOLDER)
-	tar -xvf gcc-2.7.2-linux.tar.gz -C $(KMC_FOLDER)
-	$(RM) -rf binutils-2.6-linux.tar.gz
-	$(RM) -rf gcc-2.7.2-linux.tar.gz
+download_kmc: $(KMC_FOLDER)/gcc
 
 clean:
 	$(RM) -rf $(BUILD_FOLDER)
@@ -61,6 +53,17 @@ $(BUILD_FOLDER)/%.o: %.s | $(BUILD_FOLDER)
 
 $(BUILD_FOLDER)/%.o: %.c | $(BUILD_FOLDER)
 	$(CC) -c $(CFLAGS) -o $@ $<
+
+
+$(KMC_FOLDER)/gcc:
+	$(RM) -rf $(KMC_FOLDER)
+	wget https://github.com/decompals/mips-binutils-2.6/releases/latest/download/binutils-2.6-linux.tar.gz
+	wget https://github.com/decompals/mips-gcc-2.7.2/releases/latest/download/gcc-2.7.2-linux.tar.gz
+	mkdir -p $(KMC_FOLDER)
+	tar -xvf binutils-2.6-linux.tar.gz -C $(KMC_FOLDER)
+	tar -xvf gcc-2.7.2-linux.tar.gz -C $(KMC_FOLDER)
+	$(RM) -rf binutils-2.6-linux.tar.gz
+	$(RM) -rf gcc-2.7.2-linux.tar.gz
 
 
 ## Folders to create

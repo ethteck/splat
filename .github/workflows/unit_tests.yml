@@ -11,16 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-
-      - name: Set up system dependencies
-        run: sudo apt-get install -y build-essential
-
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-
       - name: Run unit tests
-        run: sh run_tests.sh
+        run: |
+          docker build --tag splat-build:latest .
+          docker run --rm -v $(pwd):/splat -w /splat splat-build sh run_tests.sh
