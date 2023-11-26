@@ -10,7 +10,6 @@ SECTIONS
         header_DATA_START = .;
         header_s = .;
         build/split/asm/header.s.o(.data);
-        . = ALIGN(., 16);
         header_DATA_END = .;
         header_DATA_SIZE = ABSOLUTE(header_DATA_END - header_DATA_START);
     }

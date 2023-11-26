@@ -586,7 +586,7 @@ class LinkerWriter:
         section_start = get_segment_section_start(seg_name, cur_section)
         section_end = get_segment_section_end(seg_name, cur_section)
         section_size = get_segment_section_size(seg_name, cur_section)
-        if options.opts.ld_align_section_vram_end:
+        if options.opts.ld_align_section_vram_end and segment.align is not None:
             self._writeln(f". = ALIGN(., {segment.align});")
         self._write_symbol(section_end, ".")
         self._write_symbol(
