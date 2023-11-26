@@ -1,8 +1,15 @@
 # splat Release Notes
 
+### 0.19.6
+
+* The `*_END` linker symbol of every section for each segment is now aligned to the configured alignment by default.
+* New yaml option: `ld_align_section_vram_end`
+  * Allows to toggle aligning the `*_END` linker symbol of each section.
+  * Defaults to `True`.
+
 ### 0.19.5
 
-* The `*_VRAM_END` linker symbol is now aligned to the configured alignment by default.
+* The `*_VRAM_END` linker symbol for each segment is now aligned to the configured alignment by default.
 * New yaml option: `ld_align_segment_vram_end`
   * Allows to toggle aligning the `*_VRAM_END` linker symbol.
   * Defaults to `True`.
