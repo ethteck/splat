@@ -10,6 +10,7 @@ SECTIONS
         header_DATA_START = .;
         header_s = .;
         build/split/asm/header.s.o(.data);
+        . = ALIGN(., 16);
         header_DATA_END = .;
         header_DATA_SIZE = ABSOLUTE(header_DATA_END - header_DATA_START);
     }
@@ -25,6 +26,7 @@ SECTIONS
         dummy_ipl3_DATA_START = .;
         dummy_ipl3_bin = .;
         build/split/assets/dummy_ipl3.bin.o(.data);
+        . = ALIGN(., 16);
         dummy_ipl3_DATA_END = .;
         dummy_ipl3_DATA_SIZE = ABSOLUTE(dummy_ipl3_DATA_END - dummy_ipl3_DATA_START);
     }
@@ -42,15 +44,18 @@ SECTIONS
         boot_TEXT_START = .;
         build/split/src/main.c.o(.text);
         build/split/asm/handwritten.s.o(.text);
+        . = ALIGN(., 16);
         boot_TEXT_END = .;
         boot_TEXT_SIZE = ABSOLUTE(boot_TEXT_END - boot_TEXT_START);
         boot_DATA_START = .;
         main_data__s = .;
         build/split/asm/data/main.data.s.o(.data);
+        . = ALIGN(., 16);
         boot_DATA_END = .;
         boot_DATA_SIZE = ABSOLUTE(boot_DATA_END - boot_DATA_START);
         boot_RODATA_START = .;
         build/split/asm/data/main.rodata.s.o(.rodata);
+        . = ALIGN(., 16);
         boot_RODATA_END = .;
         boot_RODATA_SIZE = ABSOLUTE(boot_RODATA_END - boot_RODATA_START);
     }
@@ -60,6 +65,7 @@ SECTIONS
         FILL(0x00000000);
         boot_BSS_START = .;
         build/split/asm/data/main.bss.s.o(.bss);
+        . = ALIGN(., 16);
         boot_BSS_END = .;
         boot_BSS_SIZE = ABSOLUTE(boot_BSS_END - boot_BSS_START);
     }
