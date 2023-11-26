@@ -434,6 +434,15 @@ Setting this to `True` will make the `*_VRAM_END` to be aligned to the configure
 Defaults to `True`.
 
 
+### ld_align_section_vram_end
+
+Allows to toggle aligning the `*_VRAM_END` linker symbol of each section for every segment.
+
+Setting this to `True` will make the `*_END` linker symbol of every section to be aligned to the configured alignment of the segment.
+
+Defaults to `True`.
+
+
 ## C file options
 
 ### create_c_files

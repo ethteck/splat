@@ -285,7 +285,7 @@ class LinkerWriter:
             self._write_linker_entry(entry)
 
             if entry in last_seen_sections:
-                self._end_section(seg_name, entry.section_order_type)
+                self._end_section(seg_name, entry.section_order_type, segment)
 
             i += 1
 
@@ -303,7 +303,7 @@ class LinkerWriter:
                 self._write_linker_entry(entry)
 
                 if entry in last_seen_sections:
-                    self._end_section(seg_name, entry.section_order_type)
+                    self._end_section(seg_name, entry.section_order_type, segment)
 
         self._end_segment(segment, all_bss=False)
 
@@ -407,7 +407,7 @@ class LinkerWriter:
             for entry in entries:
                 self._write_linker_entry(entry)
 
-            self._end_section(seg_name, section_name)
+            self._end_section(seg_name, section_name, segment)
 
             self._end_partial_segment(section_name)
 
@@ -582,10 +582,12 @@ class LinkerWriter:
         section_start = get_segment_section_start(seg_name, cur_section)
         self._write_symbol(section_start, ".")
 
-    def _end_section(self, seg_name: str, cur_section: str) -> None:
+    def _end_section(self, seg_name: str, cur_section: str, segment: Segment) -> None:
         section_start = get_segment_section_start(seg_name, cur_section)
         section_end = get_segment_section_end(seg_name, cur_section)
         section_size = get_segment_section_size(seg_name, cur_section)
+        if options.opts.ld_align_section_vram_end and segment.align is not None:
+            self._writeln(f". = ALIGN(., {segment.align});")
         self._write_symbol(section_end, ".")
         self._write_symbol(
             section_size,
@@ -642,4 +644,4 @@ class LinkerWriter:
             self._begin_section(seg_name, section_name)
             for entry in entries:
                 self._write_linker_entry(entry)
-            self._end_section(seg_name, section_name)
+            self._end_section(seg_name, section_name, segment)
