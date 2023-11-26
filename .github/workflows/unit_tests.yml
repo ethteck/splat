@@ -17,7 +17,7 @@ jobs:
           python-version: 3.8
 
       - name: Set up system dependencies
-        run: sudo apt-get install -y build-essential
+        run: sudo apt-get install -y make build-essential
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
