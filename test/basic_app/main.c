@@ -10,7 +10,7 @@ unsigned long long bss_data[0x10];
 // .data
 volatile int switch_arg = 0;
 
-int do_switch()
+int do_switch(void)
 {
     switch(switch_arg)
     {
@@ -29,13 +29,13 @@ int do_switch()
         case 6:
         return 1;
         case 7:
-        return 0; 
+        return 0;
     }
     return 0;
 }
 
 // c
-void bootproc()
+void bootproc(void)
 {
     do_switch();
     for (;;)

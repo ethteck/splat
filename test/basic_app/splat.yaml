@@ -13,6 +13,7 @@ options:
   undefined_syms_auto_path:  split/undefined_syms_auto.txt
   asset_path: split/assets
   compiler: GCC
+  o_as_suffix: True
 segments:
   - name: header
     type: header
@@ -32,6 +33,6 @@ segments:
       - [0x1000, c, main]
       - [0x10F0, hasm, handwritten]
       - [0x1100, data, main]
-      - [0x1110, rodata, main]
-      - { type: bss, vram: 0x80000540, name: main }
+      - [0x1110, .rodata, main]
+      - { start: 0x1138, type: bss, vram: 0x80000540, name: main }
   - [0x1138]

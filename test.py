@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from spimdisasm.common import FileSectionType
 
 from split import *
