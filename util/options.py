@@ -133,7 +133,7 @@ class SplatOpts:
     ld_bss_is_noload: bool
     # Allows to toggle aligning the `*_VRAM_END` linker symbol for each segment.
     ld_align_segment_vram_end: bool
-    # Allows to toggle aligning the `*_END` linker symbol for each section of each segment.
+    # Allows to toggle aligning the `*_END` linker symbol for each section of each section.
     ld_align_section_vram_end: bool
 
     ################################################################################
