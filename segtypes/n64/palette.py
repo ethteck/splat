@@ -65,6 +65,9 @@ class N64SegPalette(N64Segment):
         return super().get_cname() + "_pal"
 
     def split(self, rom_bytes):
+        path = self.out_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+
         if self.raster is None:
             # TODO: output with no raster
             log.error(f"orphaned palette segment: {self.name} lacks ci4/ci8 sibling")
@@ -72,7 +75,7 @@ class N64SegPalette(N64Segment):
         assert self.raster is not None
         self.raster.n64img.palette = self.parse_palette(rom_bytes)  # type: ignore
 
-        self.raster.n64img.write(self.out_path())
+        self.raster.n64img.write(path)
         self.raster.extract = False
 
     def parse_palette(self, rom_bytes) -> List[Tuple[int, int, int, int]]:
