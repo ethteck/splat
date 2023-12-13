@@ -24,7 +24,7 @@ from segtypes.linker_entry import (
 from segtypes.segment import Segment
 from util import log, options, palettes, symbols, relocs
 
-VERSION = "0.19.6"
+VERSION = "0.19.7"
 
 parser = argparse.ArgumentParser(
     description="Split a rom given a rom, a config, and output directory"
@@ -482,7 +482,8 @@ def main(
             section_list = ""
             for segment in all_segments:
                 section_list += "." + segment.get_cname() + "\n"
-            with open(options.opts.elf_section_list_path, "w", newline="\n") as f:
+            options.opts.elf_section_list_path.parent.mkdir(parents=True, exist_ok=True)
+            with options.opts.elf_section_list_path.open("w", newline="\n") as f:
                 f.write(section_list)
 
     # Write undefined_funcs_auto.txt
@@ -494,7 +495,8 @@ def main(
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
-        with open(options.opts.undefined_funcs_auto_path, "w", newline="\n") as f:
+        options.opts.undefined_funcs_auto_path.parent.mkdir(parents=True, exist_ok=True)
+        with options.opts.undefined_funcs_auto_path.open("w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
@@ -509,7 +511,8 @@ def main(
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
-        with open(options.opts.undefined_syms_auto_path, "w", newline="\n") as f:
+        options.opts.undefined_syms_auto_path.parent.mkdir(parents=True, exist_ok=True)
+        with options.opts.undefined_syms_auto_path.open("w", newline="\n") as f:
             for symbol in to_write:
                 f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
@@ -532,12 +535,13 @@ def main(
     if cache != {} and use_cache:
         if verbose:
             log.write("Writing cache")
-        with open(options.opts.cache_path, "wb") as f4:
+        options.opts.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with options.opts.cache_path.open("wb") as f4:
             pickle.dump(cache, f4)
 
     if options.opts.dump_symbols and options.opts.is_mode_active("code"):
-        splat_hidden_folder = Path(".splat/")
-        splat_hidden_folder.mkdir(exist_ok=True)
+        splat_hidden_folder = options.opts.base_path / ".splat"
+        splat_hidden_folder.mkdir(parents=True, exist_ok=True)
 
         with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
             f.write(

@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.19.7
+
+* Ensure the directory exists when extracting a palette segment.
+* Ensure the directory exists when writing the undefined funcs/syms files.
+* Make `.splat` hidden folder to be relative to `base_path`
+
 ### 0.19.6
 
 * The `*_END` linker symbol of every section for each segment is now aligned to the configured alignment by default.
