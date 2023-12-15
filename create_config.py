@@ -281,7 +281,7 @@ segments:
     type: code
     start: 0x800
     vram: 0x{exe.destination_vram:X}
-    bss_size: 0x{exe.bss_size:X}
+    bss_size: 0x0
     subsegments:
 """
     text_offset = exe.text_offset
@@ -290,18 +290,13 @@ segments:
       - [0x800, rodata, 800]
 """
     segments += f"""\
-      - [0x{text_offset:X}, asm, {text_offset:X}]
+      - [0x{text_offset:X}, asm, {text_offset:X}] # estimated
 """
 
-    if exe.data_vram != 0 and exe.data_size != 0:
+    if exe.data_offset != 0:
         data_offset = exe.data_offset
         segments += f"""\
-      - [0x{data_offset:X}, data, {data_offset:X}]
-"""
-
-    if exe.bss_size != 0:
-        segments += f"""\
-      - {{ start: 0x{exe.size:X}, type: bss, name: {exe.bss_vram:X}, vram: 0x{exe.bss_vram:X} }}
+      - [0x{data_offset:X}, data, {data_offset:X}] # estimated
 """
 
     segments += f"""\
