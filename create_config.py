@@ -281,7 +281,7 @@ segments:
     type: code
     start: 0x800
     vram: 0x{exe.destination_vram:X}
-    bss_size: 0x0
+    # bss_size: Please fill out this value when you figure out the bss size
     subsegments:
 """
     text_offset = exe.text_offset
