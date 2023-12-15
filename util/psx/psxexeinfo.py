@@ -87,7 +87,9 @@ def is_valid(insn) -> bool:
     return True
 
 
-def try_find_text(rom_bytes, start_offset=PAYLOAD_OFFSET, valid_threshold=32) -> tuple[int, int]:
+def try_find_text(
+    rom_bytes, start_offset=PAYLOAD_OFFSET, valid_threshold=32
+) -> tuple[int, int]:
     start = end = 0
     good_count = valid_count = 0
 
