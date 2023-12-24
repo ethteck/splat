@@ -3,7 +3,7 @@ from typing import Optional, Any
 from ...util import log, options
 from ...util.n64.decompressor import Decompressor
 
-from ...segtypes.n64.segment import N64Segment
+from .segment import N64Segment
 
 
 class CommonSegDecompressor(N64Segment):
@@ -34,7 +34,7 @@ class CommonSegDecompressor(N64Segment):
         self.log(f"Wrote {self.name} to {out_path}")
 
     def get_linker_entries(self):
-        from ...segtypes.linker_entry import LinkerEntry
+        from ..linker_entry import LinkerEntry
 
         return [
             LinkerEntry(

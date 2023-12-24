@@ -7,7 +7,6 @@ from . import cpp as cpp
 from . import c as c
 from . import databin as databin
 from . import data as data
-from . import decompressor as decompressor
 from . import group as group
 from . import hasm as hasm
 from . import header as header

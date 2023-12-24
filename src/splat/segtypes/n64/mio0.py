@@ -1,6 +1,6 @@
 from ...util.n64.Mio0decompress import Mio0Decompressor
 
-from ...segtypes.common.decompressor import CommonSegDecompressor
+from .decompressor import CommonSegDecompressor
 
 
 class N64SegMio0(CommonSegDecompressor):

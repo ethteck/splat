@@ -1,7 +1,8 @@
 from . import asm as asm
+from . import ci as ci
 from . import ci4 as ci4
 from . import ci8 as ci8
-from . import ci as ci
+from . import decompressor as decompressor
 from . import gfx as gfx
 from . import hasm as hasm
 from . import header as header

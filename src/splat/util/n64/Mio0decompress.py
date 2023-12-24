@@ -3,7 +3,7 @@ import struct
 import sys
 
 try:
-    from ... import log
+    from ...util import log
     from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Miodecompress")

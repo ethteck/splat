@@ -4,10 +4,10 @@ from typing import Optional
 from ...util import log, options
 
 from ...segtypes.linker_entry import LinkerEntry
-from ...segtypes.n64.segment import N64Segment
+from ...segtypes.common.segment import Segment
 
 
-class CommonSegLib(N64Segment):
+class CommonSegLib(Segment):
     def __init__(
         self,
         rom_start: Optional[int],
