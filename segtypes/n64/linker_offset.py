@@ -4,6 +4,7 @@ from segtypes.n64.segment import N64Segment
 from segtypes.linker_entry import LinkerEntry, LinkerWriter
 from segtypes.segment import Segment
 
+
 class LinkerEntryOffset(LinkerEntry):
     def __init__(
         self,

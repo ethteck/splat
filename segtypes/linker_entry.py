@@ -148,10 +148,7 @@ class LinkerEntry:
 
     def emit_symbol_for_data(self, linker_writer: "LinkerWriter"):
         # TODO: option to turn this off?
-        if (
-            self.object_path
-            and self.section_link_type == ".data"
-        ):
+        if self.object_path and self.section_link_type == ".data":
             path_cname = re.sub(
                 r"[^0-9a-zA-Z_]",
                 "_",
@@ -161,14 +158,20 @@ class LinkerEntry:
             linker_writer._write_symbol(path_cname, ".")
 
     def emit_path(self, linker_writer: "LinkerWriter"):
-        assert self.object_path is not None, f"{self.segment.name}, {self.segment.rom_start}"
+        assert (
+            self.object_path is not None
+        ), f"{self.segment.name}, {self.segment.rom_start}"
 
         if self.noload and self.bss_contains_common:
-            linker_writer._write_object_path_section(self.object_path, ".bss COMMON .scommon")
+            linker_writer._write_object_path_section(
+                self.object_path, ".bss COMMON .scommon"
+            )
         else:
             wildcard = "*" if options.opts.ld_wildcard_sections else ""
 
-            linker_writer._write_object_path_section(self.object_path, f"{self.section_link}{wildcard}")
+            linker_writer._write_object_path_section(
+                self.object_path, f"{self.section_link}{wildcard}"
+            )
 
     def emit_entry(self, linker_writer: "LinkerWriter"):
         self.emit_symbol_for_data(linker_writer)

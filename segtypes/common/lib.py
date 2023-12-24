@@ -8,6 +8,7 @@ from segtypes.common.segment import CommonSegment
 
 from segtypes.segment import Segment
 
+
 class LinkerEntryLib(LinkerEntry):
     def __init__(
         self,
@@ -18,7 +19,9 @@ class LinkerEntryLib(LinkerEntry):
         section_link: str,
         noload: bool,
     ):
-        super().__init__(segment, src_paths, object_path, section_order, section_link, noload)
+        super().__init__(
+            segment, src_paths, object_path, section_order, section_link, noload
+        )
         self.object_path = object_path
 
     def emit_entry(self, linker_writer: LinkerWriter):
