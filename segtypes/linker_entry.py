@@ -113,7 +113,9 @@ def get_segment_section_size(segment_name: str, section_type: str) -> str:
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
     return get_segment_vram_end(segment.get_cname())
 
+
 regex_data_segment_normalizer = re.compile(r"[^0-9a-zA-Z_]")
+
 
 class LinkerEntry:
     def __init__(

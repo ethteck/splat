@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 from segtypes.common.segment import CommonSegment
 from segtypes.linker_entry import LinkerEntry, LinkerWriter
@@ -18,5 +19,5 @@ class LinkerEntryPad(LinkerEntry):
 
 
 class CommonSegPad(CommonSegment):
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> List[LinkerEntry]:
         return [LinkerEntryPad(self)]

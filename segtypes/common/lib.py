@@ -66,7 +66,7 @@ class CommonSegLib(CommonSegment):
     def get_linker_section(self) -> str:
         return self.section
 
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> List[LinkerEntry]:
         path = options.opts.lib_path / self.name
 
         object_path = Path(f"{path}.a:{self.object}.o")

@@ -450,7 +450,9 @@ def _parse_yaml(
         ld_bss_is_noload=p.parse_opt("ld_bss_is_noload", bool, True),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
-        ld_generate_symbol_per_data_segment=p.parse_opt("ld_generate_symbol_per_data_segment", bool, True),
+        ld_generate_symbol_per_data_segment=p.parse_opt(
+            "ld_generate_symbol_per_data_segment", bool, True
+        ),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True

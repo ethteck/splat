@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 from segtypes.n64.segment import N64Segment
 from segtypes.linker_entry import LinkerEntry, LinkerWriter
@@ -18,5 +19,5 @@ class LinkerEntryOffset(LinkerEntry):
 
 
 class N64SegLinker_offset(N64Segment):
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> List[LinkerEntry]:
         return [LinkerEntryOffset(self)]
