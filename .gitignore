@@ -3,7 +3,7 @@ venv/
 .vscode/
 __pycache__/
 .mypy_cache/
-util/n64/Yay0decompress
+src/splat/util/n64/Yay0decompress
 *.ld
 *.n64
 *.yaml
