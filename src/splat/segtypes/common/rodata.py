@@ -5,7 +5,7 @@ from util import log, options, symbols
 
 from segtypes.common.data import CommonSegData
 
-from disassembler_section import make_rodata_section
+from src.splat.disassembler.disassembler_section import make_rodata_section
 
 
 class CommonSegRodata(CommonSegData):

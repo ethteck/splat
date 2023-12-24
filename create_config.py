@@ -4,9 +4,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from util.gc import gcinfo
-from util.n64 import find_code_length, rominfo
-from util.psx import psxexeinfo
+from src.splat.util.gc import gcinfo
+from src.splat.util.n64 import find_code_length, rominfo
+from src.splat.util.psx import psxexeinfo
 
 parser = argparse.ArgumentParser(
     description="Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."

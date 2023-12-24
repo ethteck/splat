@@ -5,9 +5,9 @@ import hashlib
 import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from pathlib import Path
-from disassembler import disassembler_instance
-from util import progress_bar, vram_classes
+
+from src.splat.disassembler import disassembler_instance
+from src.splat.util import progress_bar, vram_classes
 
 # This unused import makes the yaml library faster. don't remove
 import pylibyaml  # pyright: ignore
@@ -17,12 +17,12 @@ from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
 import sys
 
-from segtypes.linker_entry import (
+from src.splat.segtypes.linker_entry import (
     LinkerWriter,
     get_segment_vram_end_symbol_name,
 )
-from segtypes.segment import Segment
-from util import log, options, palettes, symbols, relocs
+from src.splat.segtypes.segment import Segment
+from src.splat.util import log, options, palettes, symbols, relocs
 
 VERSION = "0.19.7"
 

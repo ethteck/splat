@@ -1,4 +1,4 @@
-UTIL_DIR := util
+UTIL_DIR := src/splat/util
 
 default: all
 

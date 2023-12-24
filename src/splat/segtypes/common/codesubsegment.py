@@ -10,7 +10,7 @@ from segtypes.common.code import CommonSegCode
 
 from segtypes.segment import Segment
 
-from disassembler_section import DisassemblerSection, make_text_section
+from src.splat.disassembler.disassembler_section import DisassemblerSection, make_text_section
 
 
 # abstract class for c, asm, data, etc

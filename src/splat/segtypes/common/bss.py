@@ -2,7 +2,7 @@ from util import options, symbols, log
 
 from segtypes.common.data import CommonSegData
 
-from disassembler_section import make_bss_section
+from src.splat.disassembler.disassembler_section import make_bss_section
 
 
 class CommonSegBss(CommonSegData):
