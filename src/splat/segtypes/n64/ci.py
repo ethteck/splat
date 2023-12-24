@@ -2,10 +2,10 @@ from typing import Optional, TYPE_CHECKING
 
 from ...util import log
 
-from ...segtypes.n64.img import N64SegImg
+from .img import N64SegImg
 
 if TYPE_CHECKING:
-    from ...segtypes.n64.palette import N64SegPalette
+    from .palette import N64SegPalette
 
 
 # Base class for CI4/CI8

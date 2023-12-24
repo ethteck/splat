@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from ...util import log
 
-from ...segtypes.common.segment import CommonSegment
-from ...segtypes.segment import Segment
+from .segment import CommonSegment
+from ..segment import Segment
 
 
 class CommonSegGroup(CommonSegment):

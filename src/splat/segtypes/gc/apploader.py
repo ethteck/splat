@@ -1,7 +1,7 @@
 import struct
 from pathlib import Path
 
-from ...segtypes.gc.segment import GCSegment
+from .segment import GCSegment
 
 
 class GcSegApploader(GCSegment):

@@ -1,4 +1,4 @@
-from ...segtypes.common.data import CommonSegData
+from .data import CommonSegData
 
 
 class CommonSegSbss(CommonSegData):

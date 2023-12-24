@@ -10,8 +10,8 @@ from ...util import log, options, symbols
 from ...util.compiler import GCC, SN64, IDO
 from ...util.symbols import Symbol
 
-from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
-from ...segtypes.common.rodata import CommonSegRodata
+from .codesubsegment import CommonSegCodeSubsegment
+from .rodata import CommonSegRodata
 
 
 STRIP_C_COMMENTS_RE = re.compile(

@@ -6,8 +6,8 @@ from ...util import log, options
 from ...util.range import Range
 from ...util.symbols import Symbol
 
-from ...segtypes.common.group import CommonSegGroup
-from ...segtypes.segment import Segment, parse_segment_align
+from .group import CommonSegGroup
+from ..segment import Segment, parse_segment_align
 
 
 def dotless_type(type: str) -> str:

@@ -1,4 +1,4 @@
-from ...segtypes.segment import Segment
+from ..segment import Segment
 
 
 class N64Segment(Segment):

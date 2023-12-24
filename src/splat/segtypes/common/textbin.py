@@ -3,7 +3,7 @@ from typing import Optional, TextIO
 
 from ...util import log, options
 
-from ...segtypes.common.segment import CommonSegment
+from .segment import CommonSegment
 
 
 class CommonSegTextbin(CommonSegment):

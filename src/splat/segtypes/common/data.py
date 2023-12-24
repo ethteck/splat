@@ -3,8 +3,8 @@ from typing import Optional
 
 from ...util import options, symbols, log
 
-from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
-from ...segtypes.common.group import CommonSegGroup
+from .codesubsegment import CommonSegCodeSubsegment
+from .group import CommonSegGroup
 
 from ...disassembler.disassembler_section import make_data_section
 

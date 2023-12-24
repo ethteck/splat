@@ -12,7 +12,7 @@ from pathlib import Path
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
 
-from ..util import log, options, progress_bar
+from . import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}

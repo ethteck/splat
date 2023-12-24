@@ -1,4 +1,4 @@
-from ...segtypes.common.rodata import CommonSegRodata
+from .rodata import CommonSegRodata
 
 
 class CommonSegRdata(CommonSegRodata):

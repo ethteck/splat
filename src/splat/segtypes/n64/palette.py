@@ -5,11 +5,11 @@ from typing import Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 from ...util import log, options
 from ...util.color import unpack_color
 
-from ...segtypes.n64.segment import N64Segment
+from .segment import N64Segment
 from ...util.symbols import to_cname
 
 if TYPE_CHECKING:
-    from ...segtypes.n64.ci import N64SegCi as Raster
+    from .ci import N64SegCi as Raster
 
 
 def iter_in_groups(iterable, n, fillvalue=None):
@@ -94,7 +94,7 @@ class N64SegPalette(N64Segment):
         return self.extract and options.opts.is_mode_active("img")
 
     def get_linker_entries(self):
-        from ...segtypes.linker_entry import LinkerEntry
+        from ..linker_entry import LinkerEntry
 
         return [
             LinkerEntry(

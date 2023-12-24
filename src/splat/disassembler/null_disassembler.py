@@ -1,4 +1,4 @@
-from ..disassembler import disassembler
+from . import disassembler
 from ..util.options import SplatOpts
 from typing import Set
 

@@ -1,4 +1,4 @@
-from ...segtypes.common.asm import CommonSegAsm
+from .asm import CommonSegAsm
 
 
 class CommonSegHasm(CommonSegAsm):

@@ -1,6 +1,6 @@
 from ...util import options
 
-from ...segtypes.common.asm import CommonSegAsm
+from ..common.asm import CommonSegAsm
 
 
 class N64SegAsm(CommonSegAsm):

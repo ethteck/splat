@@ -2,7 +2,7 @@ from pathlib import Path
 
 from ...util import options
 
-from ...segtypes.common.segment import CommonSegment
+from .segment import CommonSegment
 
 
 class CommonSegHeader(CommonSegment):

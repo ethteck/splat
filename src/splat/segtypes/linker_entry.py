@@ -6,7 +6,7 @@ from typing import Dict, List, OrderedDict, Set, Tuple, Union
 
 from ..util import options
 
-from ..segtypes.segment import Segment
+from .segment import Segment
 from ..util.symbols import to_cname
 
 

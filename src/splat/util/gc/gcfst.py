@@ -4,8 +4,8 @@ from typing import List, Optional
 
 from ...segtypes.gc.segment import GCSegment
 
-from ...util import options
-from ...util.gc.gcutil import read_string_from_bytes
+from .. import options
+from .gcutil import read_string_from_bytes
 
 
 # Represents the info for either a directory or a file within a GameCube disc image's file system.

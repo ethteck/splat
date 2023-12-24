@@ -1,6 +1,6 @@
 from ...util import options, symbols, log
 
-from ...segtypes.common.data import CommonSegData
+from .data import CommonSegData
 
 from ...disassembler.disassembler_section import make_bss_section
 

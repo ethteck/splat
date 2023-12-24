@@ -5,10 +5,9 @@ import rabbitizer
 
 from ...util import options, symbols, log
 
-from ...segtypes import segment
-from ...segtypes.common.code import CommonSegCode
+from .code import CommonSegCode
 
-from ...segtypes.segment import Segment
+from ..segment import Segment, parse_segment_vram
 
 from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
 
@@ -18,7 +17,7 @@ class CommonSegCodeSubsegment(Segment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        vram = segment.parse_segment_vram(self.yaml)
+        vram = parse_segment_vram(self.yaml)
         if vram is not None:
             self.vram_start = vram
 
@@ -131,7 +130,7 @@ class CommonSegCodeSubsegment(Segment):
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             if options.opts.platform == "ps2":
-                from ...segtypes.common.c import CommonSegC
+                from .c import CommonSegC
                 from rabbitizer import TrinaryValue
 
                 if isinstance(self, CommonSegC):

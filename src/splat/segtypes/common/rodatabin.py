@@ -3,7 +3,7 @@ from typing import Optional
 
 from ...util import log, options
 
-from ...segtypes.common.textbin import CommonSegTextbin
+from .textbin import CommonSegTextbin
 
 
 class CommonSegRodatabin(CommonSegTextbin):

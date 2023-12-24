@@ -1,9 +1,9 @@
 from typing import Optional, Set, Tuple
 import spimdisasm
-from ...segtypes.segment import Segment
+from ..segment import Segment
 from ...util import log, options, symbols
 
-from ...segtypes.common.data import CommonSegData
+from .data import CommonSegData
 
 from ...disassembler.disassembler_section import make_rodata_section
 

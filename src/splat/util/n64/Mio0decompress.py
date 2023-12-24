@@ -2,8 +2,9 @@ import argparse
 import struct
 import sys
 
+from .. import log
+
 try:
-    from ...util import log
     from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Miodecompress")

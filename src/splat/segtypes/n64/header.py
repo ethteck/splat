@@ -1,6 +1,6 @@
 from ...util import options
 
-from ...segtypes.common.header import CommonSegHeader
+from ..common.header import CommonSegHeader
 
 
 class N64SegHeader(CommonSegHeader):

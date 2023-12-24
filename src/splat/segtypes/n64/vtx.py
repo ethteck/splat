@@ -11,7 +11,7 @@ from typing import Optional
 
 from ...util import options, log
 
-from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from ..common.codesubsegment import CommonSegCodeSubsegment
 
 
 class N64SegVtx(CommonSegCodeSubsegment):

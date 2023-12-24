@@ -3,8 +3,8 @@ from typing import Optional
 
 from ...util import log, options
 
-from ...segtypes.linker_entry import LinkerEntry
-from ...segtypes.common.segment import Segment
+from ..linker_entry import LinkerEntry
+from ..segment import Segment
 
 
 class CommonSegLib(Segment):

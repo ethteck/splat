@@ -5,8 +5,9 @@ from ctypes import CDLL, Structure, byref, c_bool, c_uint32, c_uint8, cdll
 from struct import pack, unpack_from
 from typing import Literal, Optional
 
+from .. import log
+
 try:
-    from ...util import log
     from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Yay0decompress")

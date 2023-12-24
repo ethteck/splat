@@ -3,7 +3,7 @@ from typing import Optional
 
 from ...util import options
 
-from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from .codesubsegment import CommonSegCodeSubsegment
 
 
 class CommonSegAsm(CommonSegCodeSubsegment):

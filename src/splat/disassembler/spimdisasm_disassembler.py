@@ -1,4 +1,4 @@
-from ..disassembler import disassembler
+from . import disassembler
 import spimdisasm
 import rabbitizer
 from ..util import log, compiler
