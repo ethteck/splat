@@ -5,19 +5,50 @@ on:
   pull_request:
 
 jobs:
-  mypy_checks:
+  mypy_splat_checks:
     runs-on: ubuntu-latest
-    name: mypy
+    name: mypy splat
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
     - name: Set up Python 3.8
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+
     - name: Install Dependencies
       run: |
         pip install mypy
         pip install -r requirements.txt
         pip install types-PyYAML
-    - name: mypy
-      run: mypy --show-column-numbers --hide-error-context .
+
+    - name: mypy splat lib
+      run: mypy --show-column-numbers --hide-error-context src/splat
+
+  mypy_programs_checks:
+    runs-on: ubuntu-latest
+    name: mypy splat
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install Dependencies
+      run: |
+        pip install mypy
+        pip install -r requirements.txt
+        pip install types-PyYAML
+
+    - name: mypy split
+      run: mypy --show-column-numbers --hide-error-context split.py
+
+    - name: mypy create_config
+      run: mypy --show-column-numbers --hide-error-context create_config.py
+
+    - name: mypy test
+      run: mypy --show-column-numbers --hide-error-context test.py

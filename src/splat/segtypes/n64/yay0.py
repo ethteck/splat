@@ -1,4 +1,4 @@
-from .Yay0decompress import Yay0Decompressor
+from ...util.n64.Yay0decompress import Yay0Decompressor
 
 from .decompressor import CommonSegDecompressor
 
