@@ -9,12 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Run unit tests
-        run: sh run_tests.sh
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install -y build-essential make binutils-mips-linux-gnu python3 python3-pip wget
+
+      - name: Install Python dependencies
+        run: python3 -m pip install -U -r requirements.txt
+
+      - name: Build basic_app
+        run: |
+          make -C test/basic_app clean
+          make -C test/basic_app download_kmc
+          make -C test/basic_app all
+
+      - name: Run the test
+        run: python3 test.py

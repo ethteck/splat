@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from spimdisasm.common import FileSectionType
 
 from split import *
@@ -84,9 +86,9 @@ class Testing(unittest.TestCase):
             ):
                 print(line)
 
-        assert len(diff_files) == 0
-        assert len(left_only_files) == 0
-        assert len(right_only_files) == 0
+        assert len(diff_files) == 0, diff_files
+        assert len(left_only_files) == 0, left_only_files
+        assert len(right_only_files) == 0, right_only_files
 
 
 def test_init():
@@ -434,16 +436,16 @@ class InitializeSpimContext(unittest.TestCase):
         yaml = {
             "name": "boot",
             "type": "code",
-            "start": 4096,
-            "vram": 2147484672,
-            "bss_size": 128,
+            "start": 0x1000,
+            "vram": 0x80000400,
+            "bss_size": 0x80,
             "exclusive_ram_id": "overlay",
             "subsegments": [
-                [4096, "c", "main"],
-                [4336, "hasm", "handwritten"],
-                [4352, "data", "main"],
-                [4368, "rodata", "main"],
-                {"type": "bss", "vram": 2147484992, "name": "main"},
+                [0x1000, "c", "main"],
+                [0x10F0, "hasm", "handwritten"],
+                [0x1100, "data", "main"],
+                [0x1110, ".rodata", "main"],
+                {"start": 0x1140, "type": "bss", "vram": 0x80000540, "name": "main"},
             ],
         }
 
@@ -477,16 +479,16 @@ class InitializeSpimContext(unittest.TestCase):
         yaml = {
             "name": "boot",
             "type": "code",
-            "start": 4096,
-            "vram": 2147484672,
-            "bss_size": 128,
+            "start": 0x1000,
+            "vram": 0x80000400,
+            "bss_size": 0x80,
             "exclusive_ram_id": "overlay",
             "subsegments": [
-                [4096, "c", "main"],
-                [4336, "hasm", "handwritten"],
-                [4352, "data", "main"],
-                [4368, "rodata", "main"],
-                {"type": "bss", "vram": 2147484992, "name": "main"},
+                [0x1000, "c", "main"],
+                [0x10F0, "hasm", "handwritten"],
+                [0x1100, "data", "main"],
+                [0x1110, ".rodata", "main"],
+                {"start": 0x1140, "type": "bss", "vram": 0x80000540, "name": "main"},
             ],
         }
 
@@ -502,11 +504,11 @@ class InitializeSpimContext(unittest.TestCase):
             )
         ]
 
-        assert symbols.spim_context.globalSegment.vramStart == 2147483648
-        assert symbols.spim_context.globalSegment.vramEnd == 2147487744
+        assert symbols.spim_context.globalSegment.vramStart == 0x80000000
+        assert symbols.spim_context.globalSegment.vramEnd == 0x80001000
         symbols.initialize_spim_context(all_segments)
-        assert symbols.spim_context.globalSegment.vramStart == 256
-        assert symbols.spim_context.globalSegment.vramEnd == 896
+        assert symbols.spim_context.globalSegment.vramStart == 0x100
+        assert symbols.spim_context.globalSegment.vramEnd == 0x380
 
 
 if __name__ == "__main__":
