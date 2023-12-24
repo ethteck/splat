@@ -130,11 +130,7 @@ class LinkerEntry:
         self.section_link = section_link
         self.noload = noload
         self.bss_contains_common = segment.bss_contains_common
-        self.object_path: Optional[Path]
-        if self.segment.type == "lib":
-            self.object_path = object_path
-        else:
-            self.object_path = path_to_object_path(object_path)
+        self.object_path: Optional[Path] = path_to_object_path(object_path)
 
     @property
     def section_order_type(self) -> str:
@@ -155,7 +151,6 @@ class LinkerEntry:
         if (
             self.object_path
             and self.section_link_type == ".data"
-            and self.segment.type != "lib"
         ):
             path_cname = re.sub(
                 r"[^0-9a-zA-Z_]",

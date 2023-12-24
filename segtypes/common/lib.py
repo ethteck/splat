@@ -1,13 +1,31 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from util import log, options
 
-from segtypes.linker_entry import LinkerEntry
-from segtypes.n64.segment import N64Segment
+from segtypes.linker_entry import LinkerEntry, LinkerWriter
+from segtypes.common.segment import CommonSegment
+
+from segtypes.segment import Segment
+
+class LinkerEntryLib(LinkerEntry):
+    def __init__(
+        self,
+        segment: Segment,
+        src_paths: List[Path],
+        object_path: Path,
+        section_order: str,
+        section_link: str,
+        noload: bool,
+    ):
+        super().__init__(segment, src_paths, object_path, section_order, section_link, noload)
+        self.object_path = object_path
+
+    def emit_entry(self, linker_writer: LinkerWriter):
+        self.emit_path(linker_writer)
 
 
-class CommonSegLib(N64Segment):
+class CommonSegLib(CommonSegment):
     def __init__(
         self,
         rom_start: Optional[int],
@@ -51,7 +69,7 @@ class CommonSegLib(N64Segment):
         object_path = Path(f"{path}.a:{self.object}.o")
 
         return [
-            LinkerEntry(
+            LinkerEntryLib(
                 self,
                 [path],
                 object_path,
