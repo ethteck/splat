@@ -1,14 +1,21 @@
 from pathlib import Path
 
 from segtypes.n64.segment import N64Segment
+from segtypes.linker_entry import LinkerEntry, LinkerWriter
+from segtypes.segment import Segment
+
+class LinkerEntryOffset(LinkerEntry):
+    def __init__(
+        self,
+        segment: Segment,
+    ):
+        super().__init__(segment, [], Path(), "linker_offset", "linker_offset", False)
+        self.object_path = None
+
+    def emit_entry(self, linker_writer: LinkerWriter):
+        linker_writer._write_symbol(f"{self.segment.get_cname()}_OFFSET", ".")
 
 
 class N64SegLinker_offset(N64Segment):
     def get_linker_entries(self):
-        from segtypes.linker_entry import LinkerEntry
-
-        return [
-            LinkerEntry(
-                self, [], Path(self.name), "linker_offset", "linker_offset", False
-            )
-        ]
+        return [LinkerEntryOffset(self)]
