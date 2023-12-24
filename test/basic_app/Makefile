@@ -43,9 +43,9 @@ o_files: $(O_FILES)
 ## Rules
 
 %.bin: %.elf
-	$(OBJCOPY) $< -O binary $@ --pad-to=0x1140 --gap-fill=0xFF
+	$(OBJCOPY) $< -O binary $@ --pad-to=0x1140 --gap-fill=0x00
 
-$(BUILD_FOLDER)/%.elf: $(O_FILES) | $(BUILD_FOLDER)
+$(BUILD_FOLDER)/%.elf: $(O_FILES) %.ld | $(BUILD_FOLDER)
 	$(LD) -Map $(@:.elf=.map) -T $*.ld -o $@ $(O_FILES)
 
 $(BUILD_FOLDER)/%.o: %.s | $(BUILD_FOLDER)

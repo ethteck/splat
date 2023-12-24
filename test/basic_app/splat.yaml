@@ -34,5 +34,5 @@ segments:
       - [0x10F0, hasm, handwritten]
       - [0x1100, data, main]
       - [0x1110, .rodata, main]
-      - { start: 0x1138, type: bss, vram: 0x80000540, name: main }
-  - [0x1138]
+      - { start: 0x1140, type: bss, vram: 0x80000540, name: main }
+  - [0x1140]
