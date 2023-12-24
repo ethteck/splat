@@ -7,7 +7,7 @@ on:
 jobs:
   mypy_splat_checks:
     runs-on: ubuntu-latest
-    name: mypy splat
+    name: mypy splat lib
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
 
   mypy_programs_checks:
     runs-on: ubuntu-latest
-    name: mypy splat
+    name: mypy splat programs
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
