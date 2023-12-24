@@ -150,7 +150,7 @@ class LinkerEntry:
         else:
             return self.section_link
 
-    def emit_entry(self, linker_writer: "LinkerWriter"):
+    def emit_symbol_for_data(self, linker_writer: "LinkerWriter"):
         # TODO: option to turn this off?
         if (
             self.object_path
@@ -165,12 +165,19 @@ class LinkerEntry:
             )
             linker_writer._write_symbol(path_cname, ".")
 
+    def emit_path(self, linker_writer: "LinkerWriter"):
+        assert self.object_path is not None, f"{self.segment.name}, {self.segment.rom_start}"
+
         if self.noload and self.bss_contains_common:
-            linker_writer._writeln(f"{self.object_path}(.bss COMMON .scommon);")
+            linker_writer._write_object_path_section(self.object_path, ".bss COMMON .scommon")
         else:
             wildcard = "*" if options.opts.ld_wildcard_sections else ""
 
-            linker_writer._writeln(f"{self.object_path}({self.section_link}{wildcard});")
+            linker_writer._write_object_path_section(self.object_path, f"{self.section_link}{wildcard}")
+
+    def emit_entry(self, linker_writer: "LinkerWriter"):
+        self.emit_symbol_for_data(linker_writer)
+        self.emit_path(linker_writer)
 
 
 class LinkerWriter:
@@ -516,6 +523,9 @@ class LinkerWriter:
         self._writeln(f"{symbol} = {value};")
 
         self.header_symbols.add(symbol)
+
+    def _write_object_path_section(self, object_path: Path, section: str):
+        self._writeln(f"{object_path}({section});")
 
     def _begin_segment(
         self, segment: Segment, seg_name: str, noload: bool, is_first: bool
