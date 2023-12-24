@@ -320,7 +320,9 @@ def main(
 
     disassembler_instance.get_instance().configure(options.opts)
 
-    platform_module = importlib.import_module(f"src.splat.platforms.{options.opts.platform}")
+    platform_module = importlib.import_module(
+        f"src.splat.platforms.{options.opts.platform}"
+    )
     platform_init = getattr(platform_module, "init")
     platform_init(rom_bytes)
 

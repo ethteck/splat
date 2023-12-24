@@ -89,11 +89,15 @@ class Segment:
 
         # heirarchy is platform -> common -> fail
         try:
-            segmodule = importlib.import_module(f".segtypes.{platform}.{seg_type}", package=__package_name__)
+            segmodule = importlib.import_module(
+                f".segtypes.{platform}.{seg_type}", package=__package_name__
+            )
             is_platform_seg = True
         except ModuleNotFoundError:
             try:
-                segmodule = importlib.import_module(f".segtypes.common.{seg_type}", package=__package_name__)
+                segmodule = importlib.import_module(
+                    f".segtypes.common.{seg_type}", package=__package_name__
+                )
             except ModuleNotFoundError:
                 return None
 
@@ -113,7 +117,8 @@ class Segment:
 
         try:
             ext_spec = importlib.util.spec_from_file_location(
-                f"{__package_name__}.segtypes.{platform}.{seg_type}", ext_path / f"{seg_type}.py"
+                f"{__package_name__}.segtypes.{platform}.{seg_type}",
+                ext_path / f"{seg_type}.py",
             )
             assert ext_spec is not None
             ext_mod = importlib.util.module_from_spec(ext_spec)
