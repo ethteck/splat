@@ -113,7 +113,7 @@ class Segment:
 
         try:
             ext_spec = importlib.util.spec_from_file_location(
-                f"{platform}.segtypes.{seg_type}", ext_path / f"{seg_type}.py"
+                f"{__package_name__}.segtypes.{platform}.{seg_type}", ext_path / f"{seg_type}.py"
             )
             assert ext_spec is not None
             ext_mod = importlib.util.module_from_spec(ext_spec)
