@@ -11,6 +11,8 @@ from ..util.vram_classes import VramClass
 from ..util import log, options, symbols
 from ..util.symbols import Symbol, to_cname
 
+from .. import __package_name__
+
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
@@ -87,11 +89,11 @@ class Segment:
 
         # heirarchy is platform -> common -> fail
         try:
-            segmodule = importlib.import_module(f"segtypes.{platform}.{seg_type}")
+            segmodule = importlib.import_module(f".segtypes.{platform}.{seg_type}", package=__package_name__)
             is_platform_seg = True
         except ModuleNotFoundError:
             try:
-                segmodule = importlib.import_module(f"segtypes.common.{seg_type}")
+                segmodule = importlib.import_module(f".segtypes.common.{seg_type}", package=__package_name__)
             except ModuleNotFoundError:
                 return None
 
