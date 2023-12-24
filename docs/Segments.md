@@ -257,6 +257,20 @@ These segments will parse the image data and dump out a `png` file.
   flip_y: no
 ```
 
+## `pad`
+
+`pad` is a segment that represents a rom region that's filled with zeroes and decomping it doesn't have much value.
+
+This segment does not generate an assembly (`.s`) or binary (`.bin`) file, it simply increments the position of the linker script, avoding to build zero-filled files.
+
+While this kind of segment can be represented by other segment types ([`asm`](#asm), [`data`](#data), etc), it is better practice to use this segment instead to better reflect the contents of the file.
+
+**Example:**
+
+```yaml
+- [0x00B250, pad, nops_00B250]
+```
+
 ## General segment options
 
 All splat's segments can be passed extra options for finer configuration. Note that those extra options require to rewrite the entry using the dictionary yaml notation instead of the list one.
