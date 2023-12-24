@@ -113,6 +113,7 @@ def get_segment_section_size(segment_name: str, section_type: str) -> str:
 def get_segment_vram_end_symbol_name(segment: Segment) -> str:
     return get_segment_vram_end(segment.get_cname())
 
+regex_data_segment_normalizer = re.compile(r"[^0-9a-zA-Z_]")
 
 class LinkerEntry:
     def __init__(
@@ -147,10 +148,11 @@ class LinkerEntry:
             return self.section_link
 
     def emit_symbol_for_data(self, linker_writer: "LinkerWriter"):
-        # TODO: option to turn this off?
+        if not options.opts.ld_generate_symbol_per_data_segment:
+            return
+
         if self.object_path and self.section_link_type == ".data":
-            path_cname = re.sub(
-                r"[^0-9a-zA-Z_]",
+            path_cname = regex_data_segment_normalizer.sub(
                 "_",
                 str(self.segment.dir / self.segment.name)
                 + ".".join(self.object_path.suffixes[:-1]),
