@@ -49,10 +49,10 @@ $(BUILD_FOLDER)/%.elf: $(O_FILES) %.ld | $(BUILD_FOLDER)
 	$(LD) -Map $(@:.elf=.map) -T $*.ld -o $@ $(O_FILES)
 
 $(BUILD_FOLDER)/%.o: %.s | $(BUILD_FOLDER)
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -EB -c $(CFLAGS) -o $@ $<
 
 $(BUILD_FOLDER)/%.o: %.c | $(BUILD_FOLDER)
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -EB -c $(CFLAGS) -o $@ $<
 
 
 $(KMC_FOLDER)/gcc:
