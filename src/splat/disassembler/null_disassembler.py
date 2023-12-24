@@ -1,5 +1,5 @@
-from disassembler import disassembler
-from util.options import SplatOpts
+from ..disassembler import disassembler
+from ..util.options import SplatOpts
 from typing import Set
 
 

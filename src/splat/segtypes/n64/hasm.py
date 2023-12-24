@@ -1,6 +1,6 @@
-from util import options
+from ...util import options
 
-from segtypes.common.hasm import CommonSegHasm
+from ...segtypes.common.hasm import CommonSegHasm
 
 
 class N64SegHasm(CommonSegHasm):

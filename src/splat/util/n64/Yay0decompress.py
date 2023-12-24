@@ -6,7 +6,7 @@ from struct import pack, unpack_from
 from typing import Literal, Optional
 
 try:
-    from .. import log
+    from ...util import log
     from .decompressor import Decompressor
 except ImportError:
     print(f"Run as python3 -m util.n64.Yay0decompress")

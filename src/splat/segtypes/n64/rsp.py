@@ -1,6 +1,6 @@
 import rabbitizer
 
-from segtypes.common.hasm import CommonSegHasm
+from ...segtypes.common.hasm import CommonSegHasm
 
 
 class N64SegRsp(CommonSegHasm):

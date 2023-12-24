@@ -1,4 +1,4 @@
-from util.gc import gcfst
+from ..util.gc import gcfst
 
 
 def init(target_bytes: bytes):

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from util import options
+from ...util import options
 
-from segtypes.common.segment import CommonSegment
+from ...segtypes.common.segment import CommonSegment
 
 
 class CommonSegHeader(CommonSegment):

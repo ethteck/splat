@@ -2,12 +2,12 @@ import typing
 from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, Set
 
-from util import log, options
-from util.range import Range
-from util.symbols import Symbol
+from ...util import log, options
+from ...util.range import Range
+from ...util.symbols import Symbol
 
-from segtypes.common.group import CommonSegGroup
-from segtypes.segment import Segment, parse_segment_align
+from ...segtypes.common.group import CommonSegGroup
+from ...segtypes.segment import Segment, parse_segment_align
 
 
 def dotless_type(type: str) -> str:

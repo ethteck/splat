@@ -1,4 +1,4 @@
-from segtypes.common.data import CommonSegData
+from ...segtypes.common.data import CommonSegData
 
 
 class CommonSegSdata(CommonSegData):

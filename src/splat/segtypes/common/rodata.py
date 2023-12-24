@@ -1,11 +1,11 @@
 from typing import Optional, Set, Tuple
 import spimdisasm
-from segtypes.segment import Segment
-from util import log, options, symbols
+from ...segtypes.segment import Segment
+from ...util import log, options, symbols
 
-from segtypes.common.data import CommonSegData
+from ...segtypes.common.data import CommonSegData
 
-from src.splat.disassembler.disassembler_section import make_rodata_section
+from ...disassembler.disassembler_section import make_rodata_section
 
 
 class CommonSegRodata(CommonSegData):

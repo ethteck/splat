@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Optional
 
-from util import options, symbols, log
+from ...util import options, symbols, log
 
-from segtypes.common.codesubsegment import CommonSegCodeSubsegment
-from segtypes.common.group import CommonSegGroup
+from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from ...segtypes.common.group import CommonSegGroup
 
-from src.splat.disassembler.disassembler_section import make_data_section
+from ...disassembler.disassembler_section import make_data_section
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):

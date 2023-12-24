@@ -1,8 +1,8 @@
-from disassembler import disassembler
+from ..disassembler import disassembler
 import spimdisasm
 import rabbitizer
-from util import log, compiler
-from util.options import SplatOpts
+from ..util import log, compiler
+from ..util.options import SplatOpts
 from typing import Set
 
 

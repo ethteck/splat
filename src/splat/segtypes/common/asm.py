@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from util import options
+from ...util import options
 
-from segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
 
 class CommonSegAsm(CommonSegCodeSubsegment):

@@ -1,5 +1,5 @@
-from segtypes.common.code import CommonSegCode
-from segtypes.common.hasm import CommonSegHasm
+from ...segtypes.common.code import CommonSegCode
+from ...segtypes.common.hasm import CommonSegHasm
 
 
 class N64SegIpl3(CommonSegHasm):

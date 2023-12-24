@@ -1,4 +1,4 @@
-from segtypes.common.header import CommonSegHeader
+from ...segtypes.common.header import CommonSegHeader
 
 
 class PsxSegHeader(CommonSegHeader):

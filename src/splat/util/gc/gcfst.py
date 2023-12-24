@@ -2,10 +2,10 @@ import struct
 from pathlib import Path
 from typing import List, Optional
 
-from segtypes.gc.segment import GCSegment
+from ...segtypes.gc.segment import GCSegment
 
-from util import options
-from util.gc.gcutil import read_string_from_bytes
+from ...util import options
+from ...util.gc.gcutil import read_string_from_bytes
 
 
 # Represents the info for either a directory or a file within a GameCube disc image's file system.

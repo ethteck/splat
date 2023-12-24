@@ -1,6 +1,6 @@
 import n64img.image
 
-from segtypes.n64.img import N64SegImg
+from ...segtypes.n64.img import N64SegImg
 
 
 class N64SegRgba16(N64SegImg):

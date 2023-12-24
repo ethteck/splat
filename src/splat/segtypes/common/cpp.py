@@ -1,4 +1,4 @@
-from segtypes.common.c import CommonSegC
+from ...segtypes.common.c import CommonSegC
 
 
 class CommonSegCpp(CommonSegC):

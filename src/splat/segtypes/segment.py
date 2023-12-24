@@ -5,15 +5,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
 
 from intervaltree import Interval, IntervalTree
-from util import vram_classes
+from ..util import vram_classes
 
-from util.vram_classes import VramClass
-from util import log, options, symbols
-from util.symbols import Symbol, to_cname
+from ..util.vram_classes import VramClass
+from ..util import log, options, symbols
+from ..util.symbols import Symbol, to_cname
 
 # circular import
 if TYPE_CHECKING:
-    from segtypes.linker_entry import LinkerEntry
+    from ..segtypes.linker_entry import LinkerEntry
 
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
@@ -572,7 +572,7 @@ class Segment:
         return seg
 
     def get_linker_entries(self) -> "List[LinkerEntry]":
-        from segtypes.linker_entry import LinkerEntry
+        from ..segtypes.linker_entry import LinkerEntry
 
         if not self.has_linker_entry:
             return []

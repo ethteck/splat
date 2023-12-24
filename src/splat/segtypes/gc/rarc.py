@@ -4,11 +4,11 @@ from pathlib import Path
 
 from typing import List, Optional
 
-from util import options
-from util.gc.gcutil import read_string_from_bytes
-from util.n64.Yay0decompress import Yay0Decompressor
+from ...util import options
+from ...util.gc.gcutil import read_string_from_bytes
+from ...util.n64.Yay0decompress import Yay0Decompressor
 
-from segtypes.gc.segment import GCSegment
+from ...segtypes.gc.segment import GCSegment
 
 
 # Represents the RARC archive format used by first-party Nintendo games.

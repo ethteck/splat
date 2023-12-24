@@ -1,6 +1,6 @@
-from util.n64.Yay0decompress import Yay0Decompressor
+from ...util.n64.Yay0decompress import Yay0Decompressor
 
-from segtypes.common.decompressor import CommonSegDecompressor
+from ...segtypes.common.decompressor import CommonSegDecompressor
 
 
 class N64SegYay0(CommonSegDecompressor):

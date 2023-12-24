@@ -1,4 +1,4 @@
-from segtypes.segment import Segment
+from ...segtypes.segment import Segment
 
 
 class PsxSegment(Segment):

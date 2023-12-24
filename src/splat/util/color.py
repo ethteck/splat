@@ -1,6 +1,6 @@
 from math import ceil
 
-from util import options
+from ..util import options
 
 
 # RRRRRGGG GGBBBBBA

@@ -3,7 +3,7 @@ from typing import Optional
 
 import spimdisasm
 
-from util import options, symbols
+from ..util import options, symbols
 
 
 class DisassemblerSection(ABC):

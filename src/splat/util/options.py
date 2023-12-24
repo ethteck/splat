@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from typing import cast, Dict, List, Literal, Mapping, Optional, Set, Type, TypeVar
 
-from util import compiler
-from util.compiler import Compiler
+from ..util import compiler
+from ..util.compiler import Compiler
 
 
 @dataclass

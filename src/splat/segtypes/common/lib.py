@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Optional
 
-from util import log, options
+from ...util import log, options
 
-from segtypes.linker_entry import LinkerEntry
-from segtypes.n64.segment import N64Segment
+from ...segtypes.linker_entry import LinkerEntry
+from ...segtypes.n64.segment import N64Segment
 
 
 class CommonSegLib(N64Segment):

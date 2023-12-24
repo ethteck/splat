@@ -5,14 +5,14 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 import spimdisasm
 
 from intervaltree import IntervalTree
-from disassembler import disassembler_instance
+from ..disassembler import disassembler_instance
 from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
-    from segtypes.segment import Segment
+    from ..segtypes.segment import Segment
 
-from util import log, options, progress_bar
+from ..util import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
@@ -296,7 +296,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
 
     spim_context.bannedSymbols |= ignored_addresses
 
-    from segtypes.common.code import CommonSegCode
+    from ..segtypes.common.code import CommonSegCode
 
     for segment in all_segments:
         if not isinstance(segment, CommonSegCode):

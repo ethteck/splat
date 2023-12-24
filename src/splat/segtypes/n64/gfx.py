@@ -36,14 +36,14 @@ from pygfxd import (
     gfxd_f3dexb,
     gfxd_f3dex2,
 )
-from segtypes.segment import Segment
+from ...segtypes.segment import Segment
 
-from util import log, options
-from util.log import error
+from ...util import log, options
+from ...util.log import error
 
-from segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from ...segtypes.common.codesubsegment import CommonSegCodeSubsegment
 
-from util import symbols
+from ...util import symbols
 
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 

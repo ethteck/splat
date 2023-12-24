@@ -3,14 +3,14 @@ from typing import Optional
 import spimdisasm
 import rabbitizer
 
-from util import options, symbols, log
+from ...util import options, symbols, log
 
-from segtypes import segment
-from segtypes.common.code import CommonSegCode
+from ...segtypes import segment
+from ...segtypes.common.code import CommonSegCode
 
-from segtypes.segment import Segment
+from ...segtypes.segment import Segment
 
-from src.splat.disassembler.disassembler_section import DisassemblerSection, make_text_section
+from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
 
 
 # abstract class for c, asm, data, etc
@@ -131,7 +131,7 @@ class CommonSegCodeSubsegment(Segment):
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             if options.opts.platform == "ps2":
-                from segtypes.common.c import CommonSegC
+                from ...segtypes.common.c import CommonSegC
                 from rabbitizer import TrinaryValue
 
                 if isinstance(self, CommonSegC):

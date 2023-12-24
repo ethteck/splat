@@ -4,10 +4,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union
 
-from util import options
+from ..util import options
 
-from segtypes.segment import Segment
-from util.symbols import to_cname
+from ..segtypes.segment import Segment
+from ..util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'

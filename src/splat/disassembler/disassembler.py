@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from util.options import SplatOpts
+from ..util.options import SplatOpts
 from typing import Set
 
 

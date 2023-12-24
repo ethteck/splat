@@ -1,6 +1,6 @@
-from util import options
+from ...util import options
 
-from segtypes.common.asm import CommonSegAsm
+from ...segtypes.common.asm import CommonSegAsm
 
 
 class Ps2SegAsm(CommonSegAsm):
