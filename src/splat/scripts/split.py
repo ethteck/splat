@@ -542,7 +542,9 @@ def main(
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
-    parser.add_argument("config", help="path to a compatible config .yaml file", nargs="+")
+    parser.add_argument(
+        "config", help="path to a compatible config .yaml file", nargs="+"
+    )
     parser.add_argument("--modes", nargs="+", default="all")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     parser.add_argument(
@@ -562,6 +564,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         action="store_true",
     )
 
+
 def process_arguments(args: argparse.Namespace):
     main(
         args.config,
@@ -573,16 +576,19 @@ def process_arguments(args: argparse.Namespace):
         args.disassemble_all,
     )
 
+
 script_description = "Split a rom given a rom, a config, and output directory"
+
+
 def add_subparser(subparser: argparse._SubParsersAction):
-    parser = subparser.add_parser("split", help=script_description, description=script_description)
+    parser = subparser.add_parser(
+        "split", help=script_description, description=script_description
+    )
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)
 
 
-parser = argparse.ArgumentParser(
-    description=script_description
-)
+parser = argparse.ArgumentParser(description=script_description)
 add_arguments_to_parser(parser)
 
 if __name__ == "__main__":

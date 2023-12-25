@@ -302,23 +302,32 @@ segments:
         f.write(header)
         f.write(segments)
 
+
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image"
+        "file",
+        help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image",
     )
+
 
 def process_arguments(args: argparse.Namespace):
     main(Path(args.file))
 
-script_description = "Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
+
+script_description = (
+    "Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
+)
+
+
 def add_subparser(subparser: argparse._SubParsersAction):
-    parser = subparser.add_parser("create_config", help=script_description, description=script_description)
+    parser = subparser.add_parser(
+        "create_config", help=script_description, description=script_description
+    )
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)
 
-parser = argparse.ArgumentParser(
-    description=script_description
-)
+
+parser = argparse.ArgumentParser(description=script_description)
 add_arguments_to_parser(parser)
 
 if __name__ == "__main__":

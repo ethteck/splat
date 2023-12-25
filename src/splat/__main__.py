@@ -4,12 +4,20 @@ import argparse
 
 import splat
 
+
 def splat_main():
-    parser = argparse.ArgumentParser(description="A binary splitting tool to assist with decompilation and modding projects", prog="splat")
+    parser = argparse.ArgumentParser(
+        description="A binary splitting tool to assist with decompilation and modding projects",
+        prog="splat",
+    )
 
-    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {splat.__version__}")
+    parser.add_argument(
+        "-V", "--version", action="version", version=f"%(prog)s {splat.__version__}"
+    )
 
-    subparsers = parser.add_subparsers(description="action", help="The CLI utility to run", required=True)
+    subparsers = parser.add_subparsers(
+        description="action", help="The CLI utility to run", required=True
+    )
 
     splat.scripts.split.add_subparser(subparsers)
     splat.scripts.capy.add_subparser(subparsers)
