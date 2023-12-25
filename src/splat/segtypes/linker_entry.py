@@ -2,7 +2,7 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, OrderedDict, Set, Tuple, Union
+from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
 from ..util import options
 
@@ -114,6 +114,9 @@ def get_segment_vram_end_symbol_name(segment: Segment) -> str:
     return get_segment_vram_end(segment.get_cname())
 
 
+regex_data_segment_normalizer = re.compile(r"[^0-9a-zA-Z_]")
+
+
 class LinkerEntry:
     def __init__(
         self,
@@ -130,12 +133,7 @@ class LinkerEntry:
         self.section_link = section_link
         self.noload = noload
         self.bss_contains_common = segment.bss_contains_common
-        if self.section_link == "linker" or self.section_link == "linker_offset":
-            self.object_path = None
-        elif self.segment.type == "lib":
-            self.object_path = object_path
-        else:
-            self.object_path = path_to_object_path(object_path)
+        self.object_path: Optional[Path] = path_to_object_path(object_path)
 
     @property
     def section_order_type(self) -> str:
@@ -150,6 +148,38 @@ class LinkerEntry:
             return ".rodata"
         else:
             return self.section_link
+
+    def emit_symbol_for_data(self, linker_writer: "LinkerWriter"):
+        if not options.opts.ld_generate_symbol_per_data_segment:
+            return
+
+        if self.object_path and self.section_link_type == ".data":
+            path_cname = regex_data_segment_normalizer.sub(
+                "_",
+                str(self.segment.dir / self.segment.name)
+                + ".".join(self.object_path.suffixes[:-1]),
+            )
+            linker_writer._write_symbol(path_cname, ".")
+
+    def emit_path(self, linker_writer: "LinkerWriter"):
+        assert (
+            self.object_path is not None
+        ), f"{self.segment.name}, {self.segment.rom_start}"
+
+        if self.noload and self.bss_contains_common:
+            linker_writer._write_object_path_section(
+                self.object_path, ".bss COMMON .scommon"
+            )
+        else:
+            wildcard = "*" if options.opts.ld_wildcard_sections else ""
+
+            linker_writer._write_object_path_section(
+                self.object_path, f"{self.section_link}{wildcard}"
+            )
+
+    def emit_entry(self, linker_writer: "LinkerWriter"):
+        self.emit_symbol_for_data(linker_writer)
+        self.emit_path(linker_writer)
 
 
 class LinkerWriter:
@@ -282,7 +312,7 @@ class LinkerWriter:
                 self._begin_section(seg_name, entry.section_order_type)
                 started_sections[entry.section_order_type] = True
 
-            self._write_linker_entry(entry)
+            entry.emit_entry(self)
 
             if entry in last_seen_sections:
                 self._end_section(seg_name, entry.section_order_type, segment)
@@ -300,7 +330,7 @@ class LinkerWriter:
                     self._begin_section(seg_name, entry.section_order_type)
                     started_sections[entry.section_order_type] = True
 
-                self._write_linker_entry(entry)
+                entry.emit_entry(self)
 
                 if entry in last_seen_sections:
                     self._end_section(seg_name, entry.section_order_type, segment)
@@ -341,7 +371,7 @@ class LinkerWriter:
                     segment, [], segments_path / f"{seg_name}.o", l, l, noload=False
                 )
                 self.dependencies_entries.append(entry)
-                self._write_linker_entry(entry)
+                entry.emit_entry(self)
             is_first = False
 
         if any(e.noload for e in entries):
@@ -369,7 +399,7 @@ class LinkerWriter:
             )
             entry.bss_contains_common = bss_contains_common
             self.dependencies_entries.append(entry)
-            self._write_linker_entry(entry)
+            entry.emit_entry(self)
 
         self._end_segment(segment, all_bss=not any_load)
 
@@ -405,7 +435,7 @@ class LinkerWriter:
             self._begin_section(seg_name, section_name)
 
             for entry in entries:
-                self._write_linker_entry(entry)
+                entry.emit_entry(self)
 
             self._end_section(seg_name, section_name, segment)
 
@@ -495,6 +525,9 @@ class LinkerWriter:
         self._writeln(f"{symbol} = {value};")
 
         self.header_symbols.add(symbol)
+
+    def _write_object_path_section(self, object_path: Path, section: str):
+        self._writeln(f"{object_path}({section});")
 
     def _begin_segment(
         self, segment: Segment, seg_name: str, noload: bool, is_first: bool
@@ -594,32 +627,6 @@ class LinkerWriter:
             f"ABSOLUTE({section_end} - {section_start})",
         )
 
-    def _write_linker_entry(self, entry: LinkerEntry):
-        if entry.section_link_type == "linker_offset":
-            self._write_symbol(f"{entry.segment.get_cname()}_OFFSET", ".")
-            return
-
-        # TODO: option to turn this off?
-        if (
-            entry.object_path
-            and entry.section_link_type == ".data"
-            and entry.segment.type != "lib"
-        ):
-            path_cname = re.sub(
-                r"[^0-9a-zA-Z_]",
-                "_",
-                str(entry.segment.dir / entry.segment.name)
-                + ".".join(entry.object_path.suffixes[:-1]),
-            )
-            self._write_symbol(path_cname, ".")
-
-        if entry.noload and entry.bss_contains_common:
-            self._writeln(f"{entry.object_path}(.bss COMMON .scommon);")
-        else:
-            wildcard = "*" if options.opts.ld_wildcard_sections else ""
-
-            self._writeln(f"{entry.object_path}({entry.section_link}{wildcard});")
-
     def _write_segment_sections(
         self,
         segment: Segment,
@@ -643,5 +650,5 @@ class LinkerWriter:
 
             self._begin_section(seg_name, section_name)
             for entry in entries:
-                self._write_linker_entry(entry)
+                entry.emit_entry(self)
             self._end_section(seg_name, section_name, segment)

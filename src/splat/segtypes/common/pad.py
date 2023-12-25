@@ -1,23 +1,23 @@
 from pathlib import Path
 from typing import List
 
-from .segment import N64Segment
+from .segment import CommonSegment
 from ..linker_entry import LinkerEntry, LinkerWriter
 from ..segment import Segment
 
 
-class LinkerEntryOffset(LinkerEntry):
+class LinkerEntryPad(LinkerEntry):
     def __init__(
         self,
         segment: Segment,
     ):
-        super().__init__(segment, [], Path(), "linker_offset", "linker_offset", False)
+        super().__init__(segment, [], Path(), "pad", "pad", False)
         self.object_path = None
 
     def emit_entry(self, linker_writer: LinkerWriter):
-        linker_writer._write_symbol(f"{self.segment.get_cname()}_OFFSET", ".")
+        linker_writer._writeln(f". += 0x{self.segment.size:X};")
 
 
-class N64SegLinker_offset(N64Segment):
+class CommonSegPad(CommonSegment):
     def get_linker_entries(self) -> List[LinkerEntry]:
-        return [LinkerEntryOffset(self)]
+        return [LinkerEntryPad(self)]
