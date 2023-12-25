@@ -33,4 +33,4 @@ path = "src/splat/__init__.py"
 files = ["requirements.txt"]
 
 [project.scripts]
-splat = "splat.__main__:do_split"
+splat = "splat.__main__:splat_main"

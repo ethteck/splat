@@ -6,7 +6,7 @@ import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from .. import __package_name__
+from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
 from ..util import progress_bar, vram_classes
 
@@ -24,31 +24,6 @@ from ..segtypes.linker_entry import (
 )
 from ..segtypes.segment import Segment
 from ..util import log, options, palettes, symbols, relocs
-
-VERSION = "0.20.0"
-
-parser = argparse.ArgumentParser(
-    description="Split a rom given a rom, a config, and output directory"
-)
-parser.add_argument("config", help="path to a compatible config .yaml file", nargs="+")
-parser.add_argument("--modes", nargs="+", default="all")
-parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
-parser.add_argument(
-    "--use-cache", action="store_true", help="Only split changed segments in config"
-)
-parser.add_argument(
-    "--skip-version-check",
-    action="store_true",
-    help="Skips the disassembler's version check",
-)
-parser.add_argument(
-    "--stdout-only", help="Print all output to stdout", action="store_true"
-)
-parser.add_argument(
-    "--disassemble-all",
-    help="Disasemble matched functions and migrated data",
-    action="store_true",
-)
 
 linker_writer: LinkerWriter
 config: Dict[str, Any]
@@ -275,7 +250,7 @@ def main(
     options.initialize(config, config_path, modes, verbose, disassemble_all)
 
     disassembler_instance.create_disassembler_instance(options.opts.platform)
-    disassembler_instance.get_instance().check_version(skip_version_check, VERSION)
+    disassembler_instance.get_instance().check_version(skip_version_check, __version__)
 
     with options.opts.target_path.open("rb") as f2:
         rom_bytes = f2.read()
@@ -566,8 +541,28 @@ def main(
         symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 
 
-if __name__ == "__main__":
-    args = parser.parse_args()
+def add_arguments_to_parser(parser: argparse.ArgumentParser):
+    parser.add_argument("config", help="path to a compatible config .yaml file", nargs="+")
+    parser.add_argument("--modes", nargs="+", default="all")
+    parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--use-cache", action="store_true", help="Only split changed segments in config"
+    )
+    parser.add_argument(
+        "--skip-version-check",
+        action="store_true",
+        help="Skips the disassembler's version check",
+    )
+    parser.add_argument(
+        "--stdout-only", help="Print all output to stdout", action="store_true"
+    )
+    parser.add_argument(
+        "--disassemble-all",
+        help="Disasemble matched functions and migrated data",
+        action="store_true",
+    )
+
+def process_arguments(args: argparse.Namespace):
     main(
         args.config,
         args.modes,
@@ -577,3 +572,18 @@ if __name__ == "__main__":
         args.stdout_only,
         args.disassemble_all,
     )
+
+def add_subparser(subparser: argparse._SubParsersAction):
+    parser = subparser.add_parser("split", help="Split a rom given a rom, a config, and output directory")
+    add_arguments_to_parser(parser)
+    parser.set_defaults(func=process_arguments)
+
+
+parser = argparse.ArgumentParser(
+    description="Split a rom given a rom, a config, and output directory"
+)
+add_arguments_to_parser(parser)
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    process_arguments(args)
