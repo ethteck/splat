@@ -1,0 +1,20 @@
+name: Test splat lib
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test_splat_lib:
+    name: Test lib
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout reposistory
+      uses: actions/checkout@v4
+
+    - name: Install local splat
+      run: python3 -m pip install .
+
+    - name: Test
+      run: splat capy

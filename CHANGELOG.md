@@ -1,5 +1,57 @@
 # splat Release Notes
 
+### 0.21.0
+
+* BREAKING: Extension segments will need adjustments to continue to work.
+  * Due to splat working as a library now, absolute imports on extension segments no longer work.
+  * Here's an example on how to fix this. Before version 0.21.0 you would have something like this
+
+    ```py
+    from util import log, options
+
+    from segtypes.n64.segment import N64Segment
+    from segtypes.common.data import CommonSegData
+    ```
+
+    There are two ways to fix this, depending on how the user uses splat:
+    * Installing splat as a Python package:
+
+      If the user decides to use splat as a package instead of as a subrepo/submodule then fixing this issue becomes very easy, just prefix the imports with `splat.`:
+
+      ```py
+      from splat.util import log, options
+
+      from splat.segtypes.n64.segment import N64Segment
+      from splat.segtypes.common.data import CommonSegData
+      ```
+
+    * Using splat as a submodule/subrepo:
+
+      This option is a bit more complex since it requires relative imports, as if the extension segment were part of splat.
+
+      splat will load extension segment as if it were in `segtypes/{PLATFORM}/{EXTENSION}.py`, so imports should be relative to that folder.
+
+      Assuming the extension is for an `n64` project, the fixed version would look like this:
+
+      ```py
+      from ...util import log, options
+
+      from .segment import N64Segment
+      from ..common.data import CommonSegData
+      ```
+
+* splat has been librarified!
+  * splat can now be installed as a Python package and used as a library.
+  * The normal way of invoking `./split.py` still works as usual.
+* Installing the splat package allows to use it as a cli tool besides using it as a library.
+  * Check `python3 -m splat --help` (or simply `splat --help`) to the options.
+  * `splat split` has the same functionality as the plain `./split.py` script.
+  * `splat create_config` has the same functionality as the plain `./create_config.py` script.
+  * `splat capy`.
+* DO NOT use splat as both an installed Python package and a submodule/subrepo.
+  * This may be very problematic if the version of both splats go out of sync.
+  * This warning is mainly for users that want use their own extension segments or use splat as a library.
+
 ### 0.20.0
 
 * Add a pad segment that advances the linker script instead of dumping a binary / generating an assembly file.
