@@ -27,9 +27,6 @@ Changelog = "https://github.com/ethteck/splat/blob/master/CHANGELOG.md"
 requires = ["hatchling", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
-[tool.hatch.version]
-path = "src/splat/__init__.py"
-
 [tool.hatch.metadata.hooks.requirements_txt]
 files = ["requirements.txt"]
 
