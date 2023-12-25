@@ -442,6 +442,11 @@ Setting this to `True` will make the `*_END` linker symbol of every section to b
 
 Defaults to `True`.
 
+### ld_generate_symbol_per_data_segment
+
+If enabled, the generated linker script will have a linker symbol for each data file.
+
+Defaults to `True`.
 
 ## C file options
 

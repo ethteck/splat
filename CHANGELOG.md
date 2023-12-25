@@ -1,5 +1,15 @@
 # splat Release Notes
 
+### 0.20.0
+
+* Add a pad segment that advances the linker script instead of dumping a binary / generating an assembly file.
+* Move the logic of writing the entry to the linker script from `LinkerWriter` to `LinkerEntry`
+  * This allows to have custom behavior for an entry without needing to hardcode extra checks on `LinkerWriter`.
+  * Extension segments can make a subclass of `LinkerEntry` and override its methods to have custom linker script behavior.
+* New yaml option: `ld_generate_symbol_per_data_segment`
+  * If enabled, the generated linker script will have a linker symbol for each data file.
+  * Defaults to `True`.
+
 ### 0.19.7
 
 * Ensure the directory exists when extracting a palette segment.
