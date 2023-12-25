@@ -573,15 +573,15 @@ def process_arguments(args: argparse.Namespace):
         args.disassemble_all,
     )
 
+script_description = "Split a rom given a rom, a config, and output directory"
 def add_subparser(subparser: argparse._SubParsersAction):
-    description = "Split a rom given a rom, a config, and output directory"
-    parser = subparser.add_parser("split", help=description, description=description)
+    parser = subparser.add_parser("split", help=script_description, description=script_description)
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)
 
 
 parser = argparse.ArgumentParser(
-    description="Split a rom given a rom, a config, and output directory"
+    description=script_description
 )
 add_arguments_to_parser(parser)
 

@@ -2,7 +2,7 @@
 
 from spimdisasm.common import FileSectionType
 
-from split import *
+from src.splat.scripts.split import *
 import unittest
 import io
 import filecmp

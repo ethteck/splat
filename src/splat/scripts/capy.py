@@ -32,7 +32,7 @@ def print_capybara():
 def process_arguments(args: argparse.Namespace):
     print_capybara()
 
+script_description = "Capybara"
 def add_subparser(subparser: argparse._SubParsersAction):
-    description = "Capybara"
-    parser = subparser.add_parser("capy", help=description, description=description)
+    parser = subparser.add_parser("capy", help=script_description, description=script_description)
     parser.set_defaults(func=process_arguments)

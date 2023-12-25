@@ -13,6 +13,7 @@ def splat_main():
 
     splat.scripts.split.add_subparser(subparsers)
     splat.scripts.capy.add_subparser(subparsers)
+    splat.scripts.create_config.add_subparser(subparsers)
 
     args = parser.parse_args()
     args.func(args)
