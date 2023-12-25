@@ -574,7 +574,8 @@ def process_arguments(args: argparse.Namespace):
     )
 
 def add_subparser(subparser: argparse._SubParsersAction):
-    parser = subparser.add_parser("split", help="Split a rom given a rom, a config, and output directory")
+    description = "Split a rom given a rom, a config, and output directory"
+    parser = subparser.add_parser("split", help=description, description=description)
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)
 
