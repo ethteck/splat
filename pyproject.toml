@@ -1,5 +1,5 @@
 [project]
-name = "splat"
+name = "splat64"
 # Should be synced with src/splat/__init__.py
 version = "0.21.0"
 description = "A binary splitting tool to assist with decompilation and modding projects"
@@ -23,6 +23,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.metadata.hooks.requirements_txt]
 files = ["requirements.txt"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/splat"]
 
 [project.scripts]
 splat = "splat.__main__:splat_main"
