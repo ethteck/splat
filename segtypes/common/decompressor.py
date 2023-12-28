@@ -48,5 +48,5 @@ class CommonSegDecompressor(N64Segment):
 
     def decompress(self, compressed_bytes: bytes) -> bytes:
         log.error(
-            f"Segment {self.__class__.__name__} needs to define a compression type"
+            f"Segment {self.__class__.__name__} needs to define a decompression method"
         )
