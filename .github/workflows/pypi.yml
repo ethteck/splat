@@ -1,0 +1,44 @@
+name: Build and upload to PyPI
+
+# Build on every branch push, tag push, and pull request change:
+on: [push, pull_request]
+
+jobs:
+  build_wheel:
+    name: Build wheel
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install build module
+        run: pip install build
+
+      - name: Build wheel and source
+        run: python -m build --sdist --wheel --outdir dist/ .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+
+  upload_pypi:
+    name: Upload to PyPI
+    needs: [build_wheel]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    environment:
+      name: pypi
+      url: https://pypi.org/p/splat64
+    permissions:
+        id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PASSWORD }}
