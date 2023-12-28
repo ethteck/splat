@@ -1,14 +1,13 @@
 import struct
 from enum import IntEnum
 from pathlib import Path
-
 from typing import List, Optional
 
-from util import options
-from util.gc.gcutil import read_string_from_bytes
-from util.n64.Yay0decompress import Yay0Decompressor
+import crunch64
 
 from segtypes.gc.segment import GCSegment
+from util import options
+from util.gc.gcutil import read_string_from_bytes
 
 
 # Represents the RARC archive format used by first-party Nintendo games.
@@ -56,7 +55,7 @@ class GCRARCArchive:
         # Yay0
         elif compression_scheme == 0x59617930:
             self.compression = "yay0"
-            return Yay0Decompressor.decompress(file_bytes)
+            return crunch64.yay0.decompress(file_bytes)
         # Not compressed!
         else:
             return file_bytes
