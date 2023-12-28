@@ -2,16 +2,16 @@
 
 from spimdisasm.common import FileSectionType
 
-from split import *
+from src.splat.scripts.split import *
 import unittest
 import io
 import filecmp
-from util import symbols, options
+from src.splat.util import symbols, options
 import spimdisasm
-from segtypes.common.rodata import CommonSegRodata
-from segtypes.common.code import CommonSegCode
-from segtypes.common.c import CommonSegC
-from segtypes.common.bss import CommonSegBss
+from src.splat.segtypes.common.rodata import CommonSegRodata
+from src.splat.segtypes.common.code import CommonSegCode
+from src.splat.segtypes.common.c import CommonSegC
+from src.splat.segtypes.common.bss import CommonSegBss
 import difflib
 
 

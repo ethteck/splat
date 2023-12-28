@@ -4,16 +4,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.splat.util.gc import gcinfo
-from src.splat.util.n64 import find_code_length, rominfo
-from src.splat.util.psx import psxexeinfo
-
-parser = argparse.ArgumentParser(
-    description="Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
-)
-parser.add_argument(
-    "file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image"
-)
+from ..util.gc import gcinfo
+from ..util.n64 import find_code_length, rominfo
+from ..util.psx import psxexeinfo
 
 
 def main(file_path: Path):
@@ -310,6 +303,33 @@ segments:
         f.write(segments)
 
 
+def add_arguments_to_parser(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "file",
+        help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image",
+    )
+
+
+def process_arguments(args: argparse.Namespace):
+    main(Path(args.file))
+
+
+script_description = (
+    "Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
+)
+
+
+def add_subparser(subparser: argparse._SubParsersAction):
+    parser = subparser.add_parser(
+        "create_config", help=script_description, description=script_description
+    )
+    add_arguments_to_parser(parser)
+    parser.set_defaults(func=process_arguments)
+
+
+parser = argparse.ArgumentParser(description=script_description)
+add_arguments_to_parser(parser)
+
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(Path(args.file))
+    process_arguments(args)

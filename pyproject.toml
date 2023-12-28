@@ -1,0 +1,28 @@
+[project]
+name = "splat"
+# Should be synced with src/splat/__init__.py
+version = "0.21.0"
+description = "A binary splitting tool to assist with decompilation and modding projects"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Repository = "https://github.com/ethteck/splat"
+Issues = "https://github.com/ethteck/splat/issues"
+Changelog = "https://github.com/ethteck/splat/blob/master/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+[project.scripts]
+splat = "splat.__main__:splat_main"
