@@ -3,12 +3,6 @@ name = "splat"
 # Should be synced with src/splat/__init__.py
 version = "0.21.0"
 description = "A binary splitting tool to assist with decompilation and modding projects"
-authors = [
-    { name="Example Author", email="author@example.com" },
-]
-# Do we want a maintainers?
-# maintainers = = [
-# ]
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
