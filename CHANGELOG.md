@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.20.1
+
+* splat now uses [crunch64](https://github.com/decompals/crunch64) as a dependency for handling decompression of various formats, starting with Yay0 and MIO0
+* Changed compression_type (and thus file extension) for the Mio0 segment to "MIO0" from "Mio0", accurately reflecting its true name
+* Removed utility cli Yay0decompress.py and Mio0decompress.py scripts; see crunch64-cli for a much more performant (de)compression CLI tool
+
 ### 0.20.0
 
 * Add a pad segment that advances the linker script instead of dumping a binary / generating an assembly file.
