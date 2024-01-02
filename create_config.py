@@ -8,19 +8,12 @@ from src.splat.util.gc import gcinfo
 from src.splat.util.n64 import find_code_length, rominfo
 from src.splat.util.psx import psxexeinfo
 
-
-from collections import namedtuple
-from wasm_tob import ModuleHeader, Section, TypeSection, SEC_UNK, SEC_NAME, NameSubSection
-
-ModuleFragment = namedtuple('ModuleFragment', 'type data length')
-
 parser = argparse.ArgumentParser(
     description="Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
 )
 parser.add_argument(
     "file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image"
 )
-
 
 def main(file_path: Path):
     if not file_path.exists():
@@ -370,6 +363,11 @@ segments:
 
 
 def decode_wasm_module_with_length(module, decode_name_subsections=False):
+    from collections import namedtuple
+    from wasm_tob import ModuleHeader, Section, TypeSection, SEC_UNK, SEC_NAME, NameSubSection
+
+    ModuleFragment = namedtuple('ModuleFragment', 'type data length')
+
     module_wnd = memoryview(module)
 
     # Read & yield module header.
