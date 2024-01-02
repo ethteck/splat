@@ -1,6 +1,7 @@
 from .disassembler import Disassembler
 from .spimdisasm_disassembler import SpimdisasmDisassembler
 from .null_disassembler import NullDisassembler
+from .wasm_disassembler import WasmDisassembler
 
 __instance: Disassembler = NullDisassembler()
 __initialized = False
@@ -11,6 +12,11 @@ def create_disassembler_instance(platform: str):
     global __initialized
     if platform in ["n64", "psx", "ps2"]:
         __instance = SpimdisasmDisassembler()
+        __initialized = True
+        return
+
+    if platform == "wasm":
+        __instance = WasmDisassembler()
         __initialized = True
         return
 
