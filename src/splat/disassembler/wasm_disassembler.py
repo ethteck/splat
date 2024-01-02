@@ -12,4 +12,4 @@ class WasmDisassembler(disassembler.Disassembler):
         pass
 
     def known_types(self) -> Set[str]:
-        pass
+        return set()
