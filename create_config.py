@@ -345,23 +345,14 @@ segments:
     type: bin
     start: {hex(offset)}
 """
-
-    SECTION_MAP = {
-        TypeSection: 'bin',
-    }
  
     offset += wasm_header_len
 
-    print(wasm_header_data.get_decoder_meta())
-
     for cur_sec, cur_sec_data, cur_sec_len in mod_iter:
         sec_type = type(cur_sec_data.get_decoder_meta()['types']['payload'])
-        sec_type_str = SECTION_MAP[sec_type] if sec_type in SECTION_MAP else f'bin # unknown ({sec_type.__name__})'
-        print(cur_sec_data.get_decoder_meta()['types']['payload'])
-        print(f"Segment: {sec_type_str}")
 
         segments += f"""\
-  - type: {sec_type_str}
+  - type: asm # {sec_type.__name__}
     start: {hex(offset)}
 """
         offset += cur_sec_len
