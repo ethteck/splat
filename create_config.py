@@ -334,6 +334,7 @@ def create_wasm_config(file_path: Path):
 name: {basename}
 options:
   basename: {basename}
+  target_path: {file_path}
   base_path: .
   platform: wasm
 """
