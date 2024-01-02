@@ -366,6 +366,11 @@ segments:
 """
         offset += cur_sec_len
 
+
+    segments += f"""\
+  - [{hex(offset)}] # End marker
+"""
+
     out_file = f"{basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
         print(f"Writing config to {out_file}")
