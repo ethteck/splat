@@ -9,3 +9,5 @@ rabbitizer>=1.8.0
 pygfxd
 n64img>=0.1.4
 crunch64>=0.2.0
+# WASM support
+wasm-tob>=1.0.1
