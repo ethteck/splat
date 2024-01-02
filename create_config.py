@@ -39,6 +39,10 @@ def main(file_path: Path):
         create_psx_config(file_path, file_bytes)
         return
 
+    if file_bytes[0:4] == b"\x00asm":
+        print("WASM!")
+        return
+
 
 def create_n64_config(rom_path: Path):
     rom_bytes = rominfo.read_rom(rom_path)
