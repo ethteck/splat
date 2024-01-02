@@ -336,7 +336,7 @@ def _parse_yaml(
     p = OptParser(yaml)
 
     basename = p.parse_opt("basename", str)
-    platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2"])
+    platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2", "wasm"])
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(
