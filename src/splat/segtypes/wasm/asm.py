@@ -30,10 +30,3 @@ class WasmSegAsm(CommonSegBin):
 
             with open(out_path, "wb") as f:
                 f.write(raw)  # syke
-
-            for cur_insn in decode_bytecode(raw):
-                try:
-                    print(cur_insn)
-                    print(format_instruction(cur_insn))
-                except e:
-                    print(e)
