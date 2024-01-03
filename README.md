@@ -1,9 +1,30 @@
 # splat
+
+[![PyPI](https://img.shields.io/pypi/v/splat64)](https://pypi.org/project/splat64/)
+
 A binary splitting tool to assist with decompilation and modding projects
 
 Currently, only N64, PSX, and PS2 binaries are supported.
 
 Please check out the [wiki](https://github.com/ethteck/splat/wiki) for more information including [examples](https://github.com/ethteck/splat/wiki/Examples) of projects that use splat.
 
-### Requirements
-splat requires Python 3.8+. Package requirements can be installed via `pip3 install -U -r requirements.txt`
+## Installing
+
+The recommended way to install is using from the PyPi release, via `pip`:
+
+```bash
+python3 -m pip install -U splat64[mips]
+```
+
+The brackets corresponds to the optional dependencies to install while installing splat. Refer to [Optional dependencies](#optional-dependencies) to see the list of available groups.
+
+If you use a `requirements.txt` file in your repository, then you can add this library with the following line:
+
+```txt
+splat64[mips]>=0.21.0,<1.0.0
+```
+
+### Optional dependencies
+
+- `mips`: Required when using the N64, PSX or PS2 platforms.
+- `dev`: Installs all the available dependencies groups and other packages for development.

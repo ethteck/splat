@@ -27,9 +27,10 @@ mips = [
     "crunch64>=0.2.0,<1.0.0",
 ]
 dev = [
-  "splat64[mips]",
-  "mypy",
-  "black",
+    "splat64[mips]",
+    "mypy",
+    "black",
+    "types-PyYAML",
 ]
 
 [project.urls]
