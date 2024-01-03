@@ -15,6 +15,7 @@ parser.add_argument(
     "file", help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image"
 )
 
+
 def main(file_path: Path):
     if not file_path.exists():
         sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
@@ -312,17 +313,18 @@ segments:
         f.write(header)
         f.write(segments)
 
+
 def create_wasm_config(file_path: Path):
     basename = file_path.stem
 
-    with open(file_path, 'rb') as raw:
-        raw = raw.read()
+    with open(file_path, "rb") as f:
+        raw = f.read()
 
     offset = 0
 
     mod_iter = iter(decode_wasm_module_with_length(raw))
     wasm_header, wasm_header_data, wasm_header_len = next(mod_iter)
-   
+
     header = f"""\
 name: {basename}
 options:
@@ -338,18 +340,17 @@ segments:
     type: bin
     start: {hex(offset)}
 """
- 
+
     offset += wasm_header_len
 
     for cur_sec, cur_sec_data, cur_sec_len in mod_iter:
-        sec_type = type(cur_sec_data.get_decoder_meta()['types']['payload'])
+        sec_type = type(cur_sec_data.get_decoder_meta()["types"]["payload"])
 
         segments += f"""\
   - type: asm # {sec_type.__name__}
     start: {hex(offset)}
 """
         offset += cur_sec_len
-
 
     segments += f"""\
   - [{hex(offset)}] # End marker
@@ -364,9 +365,16 @@ segments:
 
 def decode_wasm_module_with_length(module, decode_name_subsections=False):
     from collections import namedtuple
-    from wasm_tob import ModuleHeader, Section, TypeSection, SEC_UNK, SEC_NAME, NameSubSection
+    from wasm_tob import (
+        ModuleHeader,
+        Section,
+        TypeSection,
+        SEC_UNK,
+        SEC_NAME,
+        NameSubSection,
+    )
 
-    ModuleFragment = namedtuple('ModuleFragment', 'type data length')
+    ModuleFragment = namedtuple("ModuleFragment", "type data length")
 
     module_wnd = memoryview(module)
 
@@ -383,9 +391,9 @@ def decode_wasm_module_with_length(module, decode_name_subsections=False):
 
         # If requested, decode name subsections when encountered.
         if (
-            decode_name_subsections and
-            sec_data.id == SEC_UNK and
-            sec_data.name == SEC_NAME
+            decode_name_subsections
+            and sec_data.id == SEC_UNK
+            and sec_data.name == SEC_NAME
         ):
             sec_wnd = sec_data.payload
             while sec_wnd:
