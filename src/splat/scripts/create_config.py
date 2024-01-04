@@ -332,11 +332,12 @@ options:
 
     segments = f"""\
 segments:
-  - type: header
+  - name: header
+    type: header
     start: {hex(offset)}
 """
 
-    SECTION_MAP = {
+    DEFAULT_SECTION_NAME = {
         TypeSection: "types",
         ImportSection: "imports",
         FunctionSection: "functions",
@@ -347,12 +348,21 @@ segments:
 
     for cur_sec, cur_sec_data, cur_sec_len in mod_iter:
         sec_type = type(cur_sec_data.get_decoder_meta()["types"]["payload"])
-        sec_type_str = SECTION_MAP[sec_type] if sec_type in SECTION_MAP else "bin"
+        sec_name = (
+            DEFAULT_SECTION_NAME[sec_type] if sec_type in DEFAULT_SECTION_NAME else None
+        )
         # print(cur_sec_data.get_decoder_meta()['types']['payload'])
         # print(f"Segment: {sec_type_str}")
 
-        segments += f"""\
-  - type: {sec_type_str} # {sec_type.__name__}
+        if sec_name is not None:
+            segments += f"""\
+  - name: {sec_name}
+    type: asm # {sec_type.__name__}
+    start: {hex(offset)}
+"""
+        else:
+            segments += f"""\
+  - type: asm # {sec_type.__name__}
     start: {hex(offset)}
 """
         offset += cur_sec_len

@@ -89,8 +89,8 @@ def export_section_to_wat(section: ExportSection) -> str:
 # (data (;3;) (i32.const 3633) "\08X\bf\bd\d1\d5\bf \f7\e0\d8\08\a5\1c\bd\00\00\00\00\00`\f6?")
 # (data (;4;) (i32.const 3665) "XE\17wv\d5\bfmP\b6\d5\a4b#\bd\00\00\00\00\00@\f6?")
 def data_section_to_wat(section: DataSection) -> str:
-
     return ""
+
 
 def init(target_bytes: bytes):
     pass

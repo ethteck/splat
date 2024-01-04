@@ -7,17 +7,25 @@ from wasm_tob import (
     INSN_ENTER_BLOCK,
     INSN_LEAVE_BLOCK,
     Section,
+    SEC_UNK,
     SEC_TYPE,
     SEC_IMPORT,
     SEC_FUNCTION,
-    SEC_EXPORT
+    SEC_TABLE,
+    SEC_MEMORY,
+    SEC_GLOBAL,
+    SEC_EXPORT,
+    SEC_START,
+    SEC_ELEMENT,
+    SEC_CODE,
+    SEC_DATA,
 )
 
-from ...util import options
+from ...util import options, log
 
 from ..common.bin import CommonSegBin
 from ...platforms.wasm import (
-    type_section_to_wat, 
+    type_section_to_wat,
     import_section_to_wat,
     function_section_to_wat,
     export_section_to_wat,
@@ -49,5 +57,26 @@ class WasmSegAsm(CommonSegBin):
                 SEC_EXPORT: export_section_to_wat,
             }
 
-            with open(out_path, "w") as f:
-                f.write(SECTION_TO_WAT[sec_data.id](sec_data.payload))
+            SECTION_TO_STR = {
+                SEC_UNK: "custom",
+                SEC_TYPE: "type",
+                SEC_IMPORT: "import",
+                SEC_FUNCTION: "function",
+                SEC_TABLE: "table",
+                SEC_MEMORY: "memory",
+                SEC_GLOBAL: "global",
+                SEC_EXPORT: "export",
+                SEC_START: "start",
+                SEC_ELEMENT: "element",
+                SEC_CODE: "code",
+                SEC_DATA: "data",
+            }
+
+            if sec_data.id not in SECTION_TO_WAT:
+                log.write(
+                    f"error: parsing for {SECTION_TO_STR[sec_data.id]} section is not done yet.",
+                    status="error",
+                )
+            else:
+                with open(out_path, "w") as f:
+                    f.write(SECTION_TO_WAT[sec_data.id](sec_data.payload))
