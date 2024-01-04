@@ -309,7 +309,7 @@ segments:
 
 
 def create_wasm_config(file_path: Path):
-    from wasm_tob import TypeSection, ImportSection
+    from wasm_tob import TypeSection, ImportSection, FunctionSection
 
     basename = file_path.stem
 
@@ -339,6 +339,7 @@ segments:
     SECTION_MAP = {
         TypeSection: "types",
         ImportSection: "imports",
+        FunctionSection: 'functions',
     }
 
     offset += wasm_header_len

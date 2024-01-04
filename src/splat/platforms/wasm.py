@@ -7,6 +7,7 @@ from wasm_tob import (
     format_lang_type,
     ImportSection,
     ImportEntry,
+    FunctionSection
 )
 
 def func_type_to_wat(index: int, func: FuncType) -> str:
@@ -58,6 +59,9 @@ def import_section_to_wat(section: ImportSection) -> str:
         import_entry_to_wat(index, entry) for index, entry in enumerate(section.entries)
     )
 
+def function_section_to_wat(section: FunctionSection) -> str:
+
+    return "TODO"
 
 def init(target_bytes: bytes):
     pass
