@@ -33,4 +33,4 @@ class WasmSegTypes(CommonSegBin):
 
             type_section: TypeSection = sec_data.payload
             with open(out_path, "w") as f:
-                f.write(type_section_to_wat(type_section))  # syke
+                f.write(type_section_to_wat(type_section))
