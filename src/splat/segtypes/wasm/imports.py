@@ -6,7 +6,8 @@ from ...util import options
 from ..common.bin import CommonSegBin
 
 from wasm_tob import Section, ImportSection
-from .wat import import_section_to_wat
+from ...platforms.wasm import import_section_to_wat
+
 
 class WasmSegImports(CommonSegBin):
     @staticmethod

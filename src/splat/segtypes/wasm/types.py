@@ -6,7 +6,7 @@ from ...util import options
 from ..common.bin import CommonSegBin
 
 from wasm_tob import Section, SEC_TYPE, TypeSection, FuncType
-from .wat import type_section_to_wat
+from ...platforms.wasm import type_section_to_wat
 
 
 class WasmSegTypes(CommonSegBin):
