@@ -315,6 +315,8 @@ segments:
 
 
 def create_wasm_config(file_path: Path):
+    from wasm_tob import TypeSection, ImportSection
+
     basename = file_path.stem
 
     with open(file_path, "rb") as f:
@@ -336,18 +338,25 @@ options:
 
     segments = f"""\
 segments:
-  - name: header
-    type: bin
+  - type: header
     start: {hex(offset)}
 """
+
+    SECTION_MAP = {
+        TypeSection: "types",
+        ImportSection: "imports",
+    }
 
     offset += wasm_header_len
 
     for cur_sec, cur_sec_data, cur_sec_len in mod_iter:
         sec_type = type(cur_sec_data.get_decoder_meta()["types"]["payload"])
+        sec_type_str = SECTION_MAP[sec_type] if sec_type in SECTION_MAP else "bin"
+        # print(cur_sec_data.get_decoder_meta()['types']['payload'])
+        # print(f"Segment: {sec_type_str}")
 
         segments += f"""\
-  - type: asm # {sec_type.__name__}
+  - type: {sec_type_str} # {sec_type.__name__}
     start: {hex(offset)}
 """
         offset += cur_sec_len
