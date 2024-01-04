@@ -1,3 +1,5 @@
+# Quickstart
+
 > **Note**: This quickstart is written with N64 ROMs in mind, and the assumption that you are using Ubuntu 20.04 either natively, via WSL2 or via Docker.
 
 For the purposes of this quickstart, we will assume that we are going to split a game called `mygame` and we have the ROM in `.z64` format named `baserom.z64`.
@@ -10,59 +12,37 @@ mkdir -p ${HOME}/mygame && cd ${HOME}/mygame
 
 Copy the `baserom.z64` file into the `mygame` directory inside your home directory.
 
-### System packages
+## System packages
 
-#### Python 3.8
+### Python 3.8
 
 Ensure you are have **Python 3.8** or higher installed:
 
 ```sh
-$ python3 --version
+python3 --version
 Python 3.8.10
 ```
 
 If you get `bash: python3: command not found` install it with the following command:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y python3 python3-pip
+sudo apt update && sudo apt install -y python3 python3-pip
 ```
 
-#### Git
+## Install splat
 
-Ensure you have **git**:
-
-```sh
-$ git --version
-```
-
-If you get `bash: git: command not found`, install it with the following command:
+We'll install `splat` using `pip` and enable its `mips` dependencies:
 
 ```sh
-sudo apt-get update && sudo apt-get install -y git
-```
-
-## Checkout the repository
-
-We will clone **splat** into a `tools` directory to keep things organised:
-
-```sh
-git clone https://github.com/ethteck/splat.git tools/splat
-```
-
-## Python packages
-
-Run the following to install the prerequisite Python packages:
-
-```sh
-python3 -m pip install -r ./tools/splat/requirements.txt
+python3 -m pip install -U splat64[mips]
 ```
 
 ## Create a config file for your baserom
 
-**splat** has a script that will generate a `yaml` file for your ROM.
+`splat` has a script that will generate a `yaml` file for your ROM.
 
 ```sh
-python3 tools/splat/create_config.py baserom.z64
+python3 -m splat create_config baserom.z64
 ```
 
 The `yaml` file generated will be named based upon the name of the ROM (taken from its header). The example below is for Super Mario 64:
@@ -110,11 +90,12 @@ This is a bare-bones configuration and there is a lot of work required to map ou
 ## Run splat with your configuration
 
 ```sh
-python3 tools/splat/split.py supermario64.yaml
+python3 -m splat split supermario64.yaml
 ```
 
 The output will look something like this:
-```
+
+```plain_text
 splat 0.7.10.1
 Loading and processing symbols
 Starting scan
@@ -139,10 +120,9 @@ Split 943 KB (11.24%) in defined segments
              unknown:     7 MB (88.76%) from unknown bin files
 ```
 
-Notice that **splat** has found some potential file splits (function start/end with 16 byte alignment padded with nops).
+Notice that `splat` has found some potential file splits (function start/end with 16 byte alignment padded with nops).
 
 It's up to you to figure out the layout of the ROM.
-
 
 ## Next Steps
 

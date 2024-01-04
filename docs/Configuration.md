@@ -32,12 +32,13 @@ target_path: path/to/target/binary
 Path to the final elf target
 
 #### Default
-Path to the binary that was used as the input to `create_config.py`
+Path to the binary that was used as the input to `python3 -m splat create_config`
 
 
 ### platform
 
-The target platform for the binary. Options are 
+The target platform for the binary. Options are:
+
 - `n64` (Nintendo 64)
 - `psx` (PlayStation 1)
 - `ps2` (PlayStation 2)
