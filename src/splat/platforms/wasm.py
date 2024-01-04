@@ -7,8 +7,20 @@ from wasm_tob import (
     format_lang_type,
     ImportSection,
     ImportEntry,
-    FunctionSection
+    FunctionSection,
+    ExportSection,
+    ExportEntry,
 )
+
+from enum import IntEnum
+
+
+class ExternalKind(IntEnum):
+    FUNC = 0x00
+    TABLE = 0x01
+    MEM = 0x02
+    GLOBAL = 0x03
+
 
 def func_type_to_wat(index: int, func: FuncType) -> str:
     params = (
@@ -30,20 +42,12 @@ def type_section_to_wat(section: TypeSection) -> str:
 
 
 def import_entry_to_wat(index: int, entry: ImportEntry) -> str:
-    from enum import IntEnum
-
-    class ImportKind(IntEnum):
-        FUNC = 0x00
-        TABLE = 0x01
-        MEM = 0x02
-        GLOBAL = 0x03
-
     module = entry.module_str.decode()
     field = entry.field_str.decode()
 
     wat = ""
     match entry.kind:
-        case ImportKind.FUNC:
+        case ExternalKind.FUNC:
             wat = f"(func (;{index};) (type {entry.type.type}))"
             pass
 
@@ -59,9 +63,30 @@ def import_section_to_wat(section: ImportSection) -> str:
         import_entry_to_wat(index, entry) for index, entry in enumerate(section.entries)
     )
 
-def function_section_to_wat(section: FunctionSection) -> str:
 
+def function_section_to_wat(section: FunctionSection) -> str:
     return "TODO"
+
+
+# https://webassembly.github.io/spec/core/text/modules.html#exports
+def export_entry_to_wat(entry: ExportEntry) -> str:
+    KIND_TO_STR = {
+        ExternalKind.FUNC: "func",
+        ExternalKind.TABLE: "table",
+        ExternalKind.MEM: "memory",
+        ExternalKind.GLOBAL: "global",
+    }
+
+    fmt = '(export "{field}" ({kind} {index}))'
+
+    return fmt.format(
+        field=entry.field_str.decode(), kind=KIND_TO_STR[entry.kind], index=entry.index
+    )
+
+
+def export_section_to_wat(section: ExportSection) -> str:
+    return "\n".join(export_entry_to_wat(entry) for entry in section.entries)
+
 
 def init(target_bytes: bytes):
     pass
