@@ -309,7 +309,13 @@ segments:
 
 
 def create_wasm_config(file_path: Path):
-    from wasm_tob import TypeSection, ImportSection, FunctionSection, ExportSection, DataSection
+    from wasm_tob import (
+        TypeSection,
+        ImportSection,
+        FunctionSection,
+        ExportSection,
+        DataSection,
+    )
 
     basename = file_path.stem
 
