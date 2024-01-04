@@ -5,8 +5,8 @@ from ...util import options
 
 from ..common.bin import CommonSegBin
 
-from wasm_tob import Section
-
+from wasm_tob import Section, ImportSection
+from .wat import import_section_to_wat
 
 class WasmSegImports(CommonSegBin):
     @staticmethod
@@ -26,7 +26,6 @@ class WasmSegImports(CommonSegBin):
             sec = Section()
             sec_len, sec_data, _ = sec.from_raw(None, raw)
 
-            print(f"{sec_len} {sec_data}")
-
-            with open(out_path, "wb") as f:
-                f.write(raw)  # syke
+            import_section: ImportSection = sec_data.payload
+            with open(out_path, "w") as f:
+                f.write(import_section_to_wat(import_section))
