@@ -45,15 +45,9 @@ def import_entry_to_wat(index: int, entry: ImportEntry) -> str:
     module = entry.module_str.decode()
     field = entry.field_str.decode()
 
-    wat = ""
-    match entry.kind:
-        case ExternalKind.FUNC:
-            wat = f"(func (;{index};) (type {entry.type.type}))"
-            pass
+    KIND_TO_FMT = {ExternalKind.FUNC: "(func (;{index};) (type {entry.type.type}))"}
 
-        case _:
-            # TODO: Support table, mem, global
-            wat = "() ;; TODO "
+    wat = KIND_TO_FMT[entry.kind].format(index=index, entry=entry)
 
     return f'(import "{module}" "{field}" {wat})'
 
