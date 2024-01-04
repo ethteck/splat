@@ -30,6 +30,7 @@ from ...platforms.wasm import (
     function_section_to_wat,
     export_section_to_wat,
     data_section_to_wat,
+    code_section_to_wat,
 )
 
 
@@ -57,6 +58,7 @@ class WasmSegAsm(CommonSegBin):
                 SEC_FUNCTION: function_section_to_wat,
                 SEC_EXPORT: export_section_to_wat,
                 SEC_DATA: data_section_to_wat,
+                SEC_CODE: code_section_to_wat,
             }
 
             SECTION_TO_STR = {

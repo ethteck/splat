@@ -1,5 +1,6 @@
 from wasm_tob import (
     format_instruction,
+    format_function,
     Section,
     SEC_TYPE,
     TypeSection,
@@ -13,6 +14,8 @@ from wasm_tob import (
     ExportEntry,
     DataSection,
     DataSegment,
+    CodeSection,
+    FunctionBody,
 )
 
 from enum import IntEnum
@@ -100,6 +103,19 @@ def data_section_to_wat(section: DataSection) -> str:
     return "\n".join(
         data_segment_to_wat(index, entry) for index, entry in enumerate(section.entries)
     )
+
+def function_body_to_wat(func: FunctionBody) -> str:
+    src = ""
+    
+    try:
+        src += "\n".join(format_function(func))
+    except:
+        pass
+
+    return f'{src}\n'
+
+def code_section_to_wat(section: CodeSection) -> str:
+    return "\n\n".join(map(function_body_to_wat, section.bodies))
 
 
 def init(target_bytes: bytes):
