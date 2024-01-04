@@ -26,7 +26,5 @@ class WasmSegHeader(CommonSegBin):
             hdr = ModuleHeader()
             hdr_len, hdr_data, _ = hdr.from_raw(None, raw)
 
-            print(f"Damn {hdr_len} {hdr_data}")
-
-            with open(out_path, "wb") as f:
-                f.write(raw)  # syke
+            with open(out_path, "w") as f:
+                f.write(f"(module ;; version: {hdr_data.version}")
