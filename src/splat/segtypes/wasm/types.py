@@ -5,7 +5,8 @@ from ...util import options
 
 from ..common.bin import CommonSegBin
 
-from wasm_tob import Section
+from wasm_tob import Section, SEC_TYPE, TypeSection, FuncType
+from .wat import type_section_to_wat
 
 
 class WasmSegTypes(CommonSegBin):
@@ -26,7 +27,10 @@ class WasmSegTypes(CommonSegBin):
             sec = Section()
             sec_len, sec_data, _ = sec.from_raw(None, raw)
 
-            print(f"{sec_len} {sec_data}")
+            if sec_data.id != SEC_TYPE:
+                # TODO: handle invalidly assigned sections.
+                pass
 
-            with open(out_path, "wb") as f:
-                f.write(raw)  # syke
+            type_section: TypeSection = sec_data.payload
+            with open(out_path, "w") as f:
+                f.write(type_section_to_wat(type_section))  # syke
