@@ -1,6 +1,5 @@
 from wasm_tob import (
     format_instruction,
-    format_function,
     Section,
     SEC_TYPE,
     TypeSection,
@@ -16,8 +15,9 @@ from wasm_tob import (
     DataSegment,
     CodeSection,
     FunctionBody,
-    INSN_LEAVE_BLOCK, INSN_ENTER_BLOCK,
-    decode_bytecode
+    INSN_LEAVE_BLOCK,
+    INSN_ENTER_BLOCK,
+    decode_bytecode,
 )
 
 from enum import IntEnum
@@ -107,6 +107,7 @@ def data_section_to_wat(section: DataSection) -> str:
         data_segment_to_wat(index, entry) for index, entry in enumerate(section.entries)
     )
 
+
 def format_function(
     fname: str,
     type_index: int,
@@ -119,40 +120,58 @@ def format_function(
 
     func_fmt = '(func "{name}" (type {type_index}){param_section}{result_section}'
 
-    param_section = ' (param {})'.format(' '.join(
-        map(format_lang_type, func_type.param_types)
-    )) if func_type.param_types else ''
-    result_section = ' (result {})'.format(
-        format_lang_type(func_type.return_type)
-    ) if func_type.return_type else ''
+    param_section = (
+        " (param {})".format(" ".join(map(format_lang_type, func_type.param_types)))
+        if func_type.param_types
+        else ""
+    )
+    result_section = (
+        " (result {})".format(format_lang_type(func_type.return_type))
+        if func_type.return_type
+        else ""
+    )
 
-    yield func_fmt.format(name=fname, type_index=type_index, param_section=param_section, result_section=result_section)
+    yield func_fmt.format(
+        name=fname,
+        type_index=type_index,
+        param_section=param_section,
+        result_section=result_section,
+    )
 
     if format_locals and func_body.locals:
-        yield ' ' * indent + '(local {})'.format(' '.join(itertools.chain.from_iterable(
-            itertools.repeat(format_lang_type(x.type), x.count)
-            for x in func_body.locals
-        )))
+        yield " " * indent + "(local {})".format(
+            " ".join(
+                itertools.chain.from_iterable(
+                    itertools.repeat(format_lang_type(x.type), x.count)
+                    for x in func_body.locals
+                )
+            )
+        )
 
     level = 1
     for cur_insn in decode_bytecode(func_body.code):
         if cur_insn.op.flags & INSN_LEAVE_BLOCK:
             level -= 1
-        yield ' ' * (level * indent) + format_instruction(cur_insn)
+        yield " " * (level * indent) + format_instruction(cur_insn)
         if cur_insn.op.flags & INSN_ENTER_BLOCK:
             level += 1
 
 
-def code_section_to_wat(code: CodeSection, funcs: FunctionSection, types: TypeSection) -> str:
-
+def code_section_to_wat(
+    code: CodeSection, funcs: FunctionSection, types: TypeSection
+) -> str:
     src = ""
     for index, body in enumerate(code.bodies):
         type_index = funcs.types[index]
 
         try:
-            src += "\n".join(format_function(f'func_{index:04d}', type_index, body, types.entries[type_index]))
+            src += "\n".join(
+                format_function(
+                    f"func_{index:04d}", type_index, body, types.entries[type_index]
+                )
+            )
         except Exception as e:
-            src += f';; Exception: {str(e)}'
+            src += f";; Exception: {str(e)}"
             pass
 
         src += "\n"

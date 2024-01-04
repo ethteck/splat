@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 from ...util import options
 
@@ -7,6 +7,7 @@ from ..common.group import CommonSegGroup
 
 from wasm_tob import (
     ModuleHeader,
+    Section,
     SEC_UNK,
     SEC_TYPE,
     SEC_IMPORT,
@@ -21,7 +22,8 @@ from wasm_tob import (
     SEC_DATA,
 )
 
-class WasmSegModule(CommonSegGroup):    
+
+class WasmSegModule(CommonSegGroup):
     def __init__(
         self,
         rom_start: Optional[int],
@@ -41,10 +43,7 @@ class WasmSegModule(CommonSegGroup):
             args=args,
             yaml=yaml,
         )
-        self.magic = None
-        self.version = None
-
-        self.sections = { }
+        self.sections: Dict[int, Section] = {}
 
     @staticmethod
     def is_text() -> bool:
@@ -69,7 +68,7 @@ class WasmSegModule(CommonSegGroup):
     @property
     def type_section(self):
         return self.get_section_payload(SEC_TYPE)
-    
+
     @property
     def import_section(self):
         return self.get_section_payload(SEC_IMPORT)

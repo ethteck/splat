@@ -33,6 +33,7 @@ from ...platforms.wasm import (
     code_section_to_wat,
 )
 
+from .module import WasmSegModule
 
 SECTION_TO_WAT = {
     SEC_TYPE: lambda mod: type_section_to_wat(mod.type_section),
@@ -40,7 +41,9 @@ SECTION_TO_WAT = {
     SEC_FUNCTION: lambda mod: function_section_to_wat(mod.function_section),
     SEC_EXPORT: lambda mod: export_section_to_wat(mod.export_section),
     SEC_DATA: lambda mod: data_section_to_wat(mod.data_section),
-    SEC_CODE: lambda mod: code_section_to_wat(mod.code_section, mod.function_section, mod.type_section),
+    SEC_CODE: lambda mod: code_section_to_wat(
+        mod.code_section, mod.function_section, mod.type_section
+    ),
 }
 
 SECTION_TO_STR = {
@@ -58,7 +61,10 @@ SECTION_TO_STR = {
     SEC_DATA: "data",
 }
 
+
 class WasmSegSection(CommonSegment):
+    parent: WasmSegModule
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -78,8 +84,8 @@ class WasmSegSection(CommonSegment):
             args=args,
             yaml=yaml,
         )
-        self.section = None
-        
+        self.section: Section = None
+
     @staticmethod
     def is_text() -> bool:
         return True
@@ -100,7 +106,7 @@ class WasmSegSection(CommonSegment):
             )
         else:
             self.parent.sections[self.section.id] = self.section
-        
+
         pass
 
     def split(self, rom_bytes: bytes):
@@ -110,6 +116,6 @@ class WasmSegSection(CommonSegment):
         out_path = self.out_path()
         if out_path:
             out_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             with open(out_path, "w") as f:
                 f.write(SECTION_TO_WAT[self.section.id](self.parent))
