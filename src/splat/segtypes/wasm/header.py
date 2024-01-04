@@ -14,7 +14,7 @@ class WasmSegHeader(CommonSegBin):
         return True
 
     def out_path(self) -> Optional[Path]:
-        return options.opts.asm_path / self.dir / f"{self.name}.header.wat"
+        return options.opts.asm_path / self.dir / f"{self.name}.wat"
 
     def split(self, rom_bytes: bytes):
         raw = rom_bytes[self.rom_start : self.rom_end]
