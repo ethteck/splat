@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import progress_bar, vram_classes, statistics
+from ..util import cache_handler, progress_bar, vram_classes, statistics
 
 # This unused import makes the yaml library faster. don't remove
 import pylibyaml  # pyright: ignore
@@ -205,39 +205,6 @@ def read_target_binary() -> bytes:
 
     return rom_bytes
 
-
-def initialize_cache(config: dict[str, Any], use_cache: bool, verbose: bool) -> Dict[str, Any]:
-    # Load cache
-    if use_cache:
-        try:
-            with options.opts.cache_path.open("rb") as f3:
-                cache = pickle.load(f3)
-
-            if verbose:
-                log.write(f"Loaded cache ({len(cache.keys())} items)")
-        except Exception:
-            cache = {}
-    else:
-        cache = {}
-
-    # invalidate entire cache if options change
-    if use_cache and cache.get("__options__") != config.get("options"):
-        if verbose:
-            log.write("Options changed, invalidating cache")
-
-        cache = {
-            "__options__": config.get("options"),
-        }
-
-    return cache
-
-def save_cache(cache: Dict[str, Any], use_cache: bool, verbose: bool):
-    if cache != {} and use_cache:
-        if verbose:
-            log.write("Writing cache")
-        options.opts.cache_path.parent.mkdir(parents=True, exist_ok=True)
-        with options.opts.cache_path.open("wb") as f4:
-            pickle.dump(cache, f4)
 
 def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
     vram_class_dependencies = calc_segment_dependences(all_segments)
@@ -451,7 +418,7 @@ def main(
 
     stats = statistics.Statistics()
 
-    cache = initialize_cache(config, use_cache, verbose)
+    cache = cache_handler.Cache(config, use_cache, verbose)
 
     disassembler_instance.get_instance().configure(options.opts)
 
@@ -492,9 +459,8 @@ def main(
 
         if segment.should_scan():
             # Check cache but don't write anything
-            if use_cache:
-                if segment.cache() == cache.get(segment.unique_id()):
-                    continue
+            if cache.check_cache_hit(segment, False):
+                continue
 
             segment.did_run = True
             segment.scan(rom_bytes)
@@ -508,18 +474,11 @@ def main(
     # Split
     split_bar = progress_bar.get_progress_bar(all_segments)
     for segment in split_bar:
+        assert isinstance(segment, Segment)
         split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
 
-        if use_cache:
-            cached = segment.cache()
-
-            if cached == cache.get(segment.unique_id()):
-                # Cache hit
-                stats.count_cached(segment.type)
-                continue
-            else:
-                # Cache miss; split
-                cache[segment.unique_id()] = cached
+        if cache.check_cache_hit(segment, True):
+            continue
 
         if segment.should_split():
             segment_bytes = rom_bytes
@@ -549,7 +508,7 @@ def main(
     stats.print_statistics(len(rom_bytes))
 
     # Save cache
-    save_cache(cache, use_cache, verbose)
+    cache.save(verbose)
 
     if options.opts.is_mode_active("code"):
         dump_symbols()

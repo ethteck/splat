@@ -1,3 +1,4 @@
+from . import cache_handler as cache_handler
 from . import color as color
 from . import compiler as compiler
 from . import floats as floats
