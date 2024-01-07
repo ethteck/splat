@@ -254,15 +254,13 @@ def handle_sym_addrs(
             if addr in all_symbols_dict:
                 items = all_symbols_dict[addr]
                 for item in items:
-                    if (
-                        sym.rom == item.rom
-                        or None in (sym.rom, item.rom)
-                        or sym.segment == item.segment
-                        or None in (sym.segment, item.rom)
-                    ):
+                    have_same_rom_addresses = sym.rom == item.rom
+                    same_segment = sym.segment == item.segment
+
+                    if have_same_rom_addresses and same_segment:
                         log.parsing_error_preamble(path, line_num, line)
                         log.error(
-                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}"
+                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
                         )
 
             seen_symbols[sym.name] = sym
