@@ -1,8 +1,7 @@
 from . import disassembler
 import spimdisasm
 import rabbitizer
-from ..util import log, compiler
-from ..util.options import opts
+from ..util import log, compiler, options
 from typing import Set
 
 
@@ -17,7 +16,7 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.TRUST_JAL_FUNCTIONS = True
         spimdisasm.common.GlobalConfig.GLABEL_ASM_COUNT = False
 
-        if opts.rom_address_padding:
+        if options.opts.rom_address_padding:
             spimdisasm.common.GlobalConfig.ASM_COMMENT_OFFSET_WIDTH = 6
         else:
             spimdisasm.common.GlobalConfig.ASM_COMMENT_OFFSET_WIDTH = 0
@@ -28,36 +27,36 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
 
         spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = False
 
-        if opts.rodata_string_guesser_level is not None:
+        if options.opts.rodata_string_guesser_level is not None:
             spimdisasm.common.GlobalConfig.RODATA_STRING_GUESSER_LEVEL = (
-                opts.rodata_string_guesser_level
+                options.opts.rodata_string_guesser_level
             )
 
-        if opts.data_string_guesser_level is not None:
+        if options.opts.data_string_guesser_level is not None:
             spimdisasm.common.GlobalConfig.DATA_STRING_GUESSER_LEVEL = (
-                opts.data_string_guesser_level
+                options.opts.data_string_guesser_level
             )
 
         rabbitizer.config.regNames_userFpcCsr = False
         rabbitizer.config.regNames_vr4300Cop0NamedRegisters = False
 
-        rabbitizer.config.misc_opcodeLJust = opts.mnemonic_ljust - 1
+        rabbitizer.config.misc_opcodeLJust = options.opts.mnemonic_ljust - 1
 
         rabbitizer.config.regNames_gprAbiNames = rabbitizer.Abi.fromStr(
-            opts.mips_abi_gpr
+            options.opts.mips_abi_gpr
         )
         rabbitizer.config.regNames_fprAbiNames = rabbitizer.Abi.fromStr(
-            opts.mips_abi_float_regs
+            options.opts.mips_abi_float_regs
         )
 
-        if opts.endianness == "big":
+        if options.opts.endianness == "big":
             spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.BIG
         else:
             spimdisasm.common.GlobalConfig.ENDIAN = spimdisasm.common.InputEndian.LITTLE
 
         rabbitizer.config.pseudos_pseudoMove = False
 
-        selected_compiler = opts.compiler
+        selected_compiler = options.opts.compiler
         if selected_compiler == compiler.SN64:
             rabbitizer.config.regNames_namedRegisters = False
             rabbitizer.config.toolchainTweaks_sn64DivFix = True
@@ -74,20 +73,24 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
 
         spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = (
-            opts.detect_redundant_function_end
+            options.opts.detect_redundant_function_end
         )
 
-        spimdisasm.common.GlobalConfig.GP_VALUE = opts.gp
+        spimdisasm.common.GlobalConfig.GP_VALUE = options.opts.gp
 
-        spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = opts.asm_function_macro
-        spimdisasm.common.GlobalConfig.ASM_TEXT_ALT_LABEL = opts.asm_function_alt_macro
-        spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = opts.asm_jtbl_label_macro
-        spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = opts.asm_data_macro
-        spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = opts.asm_end_label
+        spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL = options.opts.asm_function_macro
+        spimdisasm.common.GlobalConfig.ASM_TEXT_ALT_LABEL = (
+            options.opts.asm_function_alt_macro
+        )
+        spimdisasm.common.GlobalConfig.ASM_JTBL_LABEL = (
+            options.opts.asm_jtbl_label_macro
+        )
+        spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
+        spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
 
-        if opts.asm_emit_size_directive is not None:
+        if options.opts.asm_emit_size_directive is not None:
             spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = (
-                opts.asm_emit_size_directive
+                options.opts.asm_emit_size_directive
             )
 
         if spimdisasm.common.GlobalConfig.ASM_TEXT_LABEL == ".globl":
@@ -97,17 +100,17 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         if spimdisasm.common.GlobalConfig.ASM_DATA_LABEL == ".globl":
             spimdisasm.common.GlobalConfig.ASM_DATA_SYM_AS_LABEL = True
 
-        spimdisasm.common.GlobalConfig.LINE_ENDS = opts.c_newline
+        spimdisasm.common.GlobalConfig.LINE_ENDS = options.opts.c_newline
 
         spimdisasm.common.GlobalConfig.ALLOW_ALL_ADDENDS_ON_DATA = (
-            opts.allow_data_addends
+            options.opts.allow_data_addends
         )
 
         spimdisasm.common.GlobalConfig.DISASSEMBLE_UNKNOWN_INSTRUCTIONS = (
-            opts.disasm_unknown
+            options.opts.disasm_unknown
         )
 
-        if opts.compiler == compiler.GCC and opts.platform == "ps2":
+        if options.opts.compiler == compiler.GCC and options.opts.platform == "ps2":
             rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = False
 
     def check_version(self, skip_version_check: bool, splat_version: str):

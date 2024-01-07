@@ -6,7 +6,7 @@ from ..segtypes.common.segment import Segment
 
 
 class Cache:
-    def __init__(self, config: dict[str, Any], use_cache: bool, verbose: bool):
+    def __init__(self, config: Dict[str, Any], use_cache: bool, verbose: bool):
         self.use_cache: bool = use_cache
         self.cache: Dict[str, Any] = {}
 
