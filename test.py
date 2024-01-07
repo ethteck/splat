@@ -12,6 +12,7 @@ from src.splat.segtypes.common.rodata import CommonSegRodata
 from src.splat.segtypes.common.code import CommonSegCode
 from src.splat.segtypes.common.c import CommonSegC
 from src.splat.segtypes.common.bss import CommonSegBss
+from src.splat import __version__
 import difflib
 
 
@@ -50,7 +51,7 @@ class Testing(unittest.TestCase):
 
     def test_basic_app(self):
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
-        main(["test/basic_app/splat.yaml"], None, None)
+        main(["test/basic_app/splat.yaml"], None, False)
 
         comparison = filecmp.dircmp("test/basic_app/split", "test/basic_app/expected")
 
@@ -124,7 +125,8 @@ def test_init():
 
 class Symbols(unittest.TestCase):
     def test_check_valid_type(self):
-        disassembler_instance.create_disassembler_instance("n64")
+        options.opts.platform = "n64"
+        disassembler_instance.create_disassembler_instance(False, __version__)
 
         # first char is uppercase
         assert symbols.check_valid_type("Symbol")
