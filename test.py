@@ -102,6 +102,7 @@ def test_init():
     options_dict = {
         "options": {
             "platform": "n64",
+            "compiler": "GCC",
             "basename": "basic_app",
             "base_path": ".",
             "build_path": "build",
