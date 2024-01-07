@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from pathlib import Path
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
@@ -224,36 +225,8 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
-def main(
-    config_path,
-    modes,
-    verbose,
-    use_cache=True,
-    skip_version_check=False,
-    stdout_only=False,
-    disassemble_all=False,
-):
-    global config
-
-    if stdout_only:
-        progress_bar.out_file = sys.stdout
-
-    # Load config
-    config = {}
-    for entry in config_path:
-        with open(entry) as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        config = merge_configs(config, additional_config)
-
-    vram_classes.initialize(config.get("vram_classes"))
-
-    options.initialize(config, config_path, modes, verbose, disassemble_all)
-
-    disassembler_instance.create_disassembler_instance(options.opts.platform)
-    disassembler_instance.get_instance().check_version(skip_version_check, __version__)
-
-    with options.opts.target_path.open("rb") as f2:
-        rom_bytes = f2.read()
+def read_target_binary() -> bytes:
+    rom_bytes = options.opts.target_path.read_bytes()
 
     if "sha1" in config:
         sha1 = hashlib.sha1(rom_bytes).hexdigest()
@@ -263,15 +236,10 @@ def main(
     else:
         log.write("Warning: no sha1 in config")
 
-    # Create main output dir
-    options.opts.base_path.mkdir(parents=True, exist_ok=True)
+    return rom_bytes
 
-    processed_segments: List[Segment] = []
 
-    seg_sizes: Dict[str, int] = {}
-    seg_split: Dict[str, int] = {}
-    seg_cached: Dict[str, int] = {}
-
+def initialize_cache(config: dict[str, Any], use_cache: bool, verbose: bool) -> Dict[str, Any]:
     # Load cache
     if use_cache:
         try:
@@ -293,6 +261,232 @@ def main(
         cache = {
             "__options__": config.get("options"),
         }
+
+    return cache
+
+def save_cache(cache: Dict[str, Any], use_cache: bool, verbose: bool):
+    if cache != {} and use_cache:
+        if verbose:
+            log.write("Writing cache")
+        options.opts.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with options.opts.cache_path.open("wb") as f4:
+            pickle.dump(cache, f4)
+
+def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
+    vram_class_dependencies = calc_segment_dependences(all_segments)
+    vram_classes_to_search = set(vram_class_dependencies.keys())
+
+    max_vram_end_insertion_points: Dict[
+        Segment, List[Tuple[str, List[Segment]]]
+    ] = {}
+    for seg in reversed(all_segments):
+        if seg.vram_class in vram_classes_to_search:
+            assert seg.vram_class.vram_symbol is not None
+            if seg not in max_vram_end_insertion_points:
+                max_vram_end_insertion_points[seg] = []
+            max_vram_end_insertion_points[seg].append(
+                (
+                    seg.vram_class.vram_symbol,
+                    vram_class_dependencies[seg.vram_class],
+                )
+            )
+            vram_classes_to_search.remove(seg.vram_class)
+
+    linker_writer = LinkerWriter()
+    linker_bar = progress_bar.get_progress_bar(all_segments)
+
+    # Check options are valid
+    partial_linking = options.opts.ld_partial_linking
+    partial_scripts_path = options.opts.ld_partial_scripts_path
+    segments_path = options.opts.ld_partial_build_segments_path
+    if partial_linking:
+        if partial_scripts_path is None:
+            log.error(
+                "Partial linking is enabled but `ld_partial_scripts_path` has not been set"
+            )
+        if options.opts.ld_partial_build_segments_path is None:
+            log.error(
+                "Partial linking is enabled but `ld_partial_build_segments_path` has not been set"
+            )
+
+    for segment in linker_bar:
+        assert isinstance(segment, Segment)
+        linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
+        max_vram_syms = max_vram_end_insertion_points.get(segment, [])
+
+        if options.opts.ld_partial_linking:
+            linker_writer.add_referenced_partial_segment(segment, max_vram_syms)
+
+            # Create linker script for segment
+            sub_linker_writer = LinkerWriter(is_partial=True)
+            sub_linker_writer.add_partial_segment(segment)
+
+            assert partial_scripts_path is not None
+            assert segments_path is not None
+
+            seg_name = segment.get_cname()
+
+            sub_linker_writer.save_linker_script(
+                partial_scripts_path / f"{seg_name}.ld"
+            )
+            if options.opts.ld_dependencies:
+                sub_linker_writer.save_dependencies_file(
+                    partial_scripts_path / f"{seg_name}.d",
+                    segments_path / f"{seg_name}.o",
+                )
+        else:
+            linker_writer.add(segment, max_vram_syms)
+
+    linker_writer.save_linker_script(options.opts.ld_script_path)
+    linker_writer.save_symbol_header()
+
+    if options.opts.ld_dependencies:
+        elf_path = options.opts.elf_path
+        if elf_path is None:
+            log.error(
+                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
+            )
+        linker_writer.save_dependencies_file(
+            options.opts.ld_script_path.with_suffix(".d"), elf_path
+        )
+
+    return linker_writer
+
+def write_ld_dependencies(linker_writer: LinkerWriter):
+    if options.opts.ld_dependencies:
+        elf_path = options.opts.elf_path
+        if elf_path is None:
+            log.error(
+                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
+            )
+        linker_writer.save_dependencies_file(
+            options.opts.ld_script_path.with_suffix(".d"), elf_path
+        )
+
+def write_elf_sections_file(all_segments: List[Segment]):
+    # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
+    # that the elf combines into one section
+    if options.opts.elf_section_list_path:
+        section_list = ""
+        for segment in all_segments:
+            section_list += "." + segment.get_cname() + "\n"
+        options.opts.elf_section_list_path.parent.mkdir(parents=True, exist_ok=True)
+        with options.opts.elf_section_list_path.open("w", newline="\n") as f:
+            f.write(section_list)
+
+
+def write_undefined_auto(to_write: List[symbols.Symbol], file_path: Path):
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open("w", newline="\n") as f:
+        for symbol in to_write:
+            f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
+
+
+def write_undefined_funcs_auto():
+    if options.opts.create_undefined_funcs_auto:
+        to_write = [
+            s
+            for s in symbols.all_symbols
+            if s.referenced and not s.defined and s.type == "func"
+        ]
+        to_write.sort(key=lambda x: x.vram_start)
+
+        write_undefined_auto(to_write, options.opts.undefined_funcs_auto_path)
+
+def write_undefined_syms_auto():
+    if options.opts.create_undefined_syms_auto:
+        to_write = [
+            s
+            for s in symbols.all_symbols
+            if s.referenced
+            and not s.defined
+            and s.type not in {"func", "label", "jtbl_label"}
+        ]
+        to_write.sort(key=lambda x: x.vram_start)
+
+        write_undefined_auto(to_write, options.opts.undefined_syms_auto_path)
+
+def print_segment_warnings(all_segments: List[Segment]):
+    for segment in all_segments:
+        if len(segment.warnings) > 0:
+            log.write(
+                f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:"
+            )
+
+            for warn in segment.warnings:
+                log.write("warning: " + warn, status="warn")
+
+            log.write("")  # empty line
+
+
+def dump_symbols() -> None:
+    if not options.opts.dump_symbols:
+        return
+
+    splat_hidden_folder = options.opts.base_path / ".splat"
+    splat_hidden_folder.mkdir(parents=True, exist_ok=True)
+
+    with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
+        f.write(
+            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
+        )
+        for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
+            f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
+            if s.given_size is not None:
+                f.write(f"0x{s.given_size:X},")
+            else:
+                f.write("None,")
+            f.write(f"{s.size},")
+            if s.rom is not None:
+                f.write(f"0x{s.rom:X},")
+            else:
+                f.write("None,")
+            f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}\n")
+
+    symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
+
+
+
+def main(
+    config_path: List[str],
+    modes: Optional[List[str]],
+    verbose: bool,
+    use_cache: bool=True,
+    skip_version_check: bool=False,
+    stdout_only: bool=False,
+    disassemble_all: bool=False,
+):
+    global config
+
+    if stdout_only:
+        progress_bar.out_file = sys.stdout
+
+    # Load config
+    config = {}
+    for entry in config_path:
+        with open(entry) as f:
+            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+        config = merge_configs(config, additional_config)
+
+    vram_classes.initialize(config.get("vram_classes"))
+
+    options.initialize(config, config_path, modes, verbose, disassemble_all)
+
+    disassembler_instance.create_disassembler_instance(options.opts.platform)
+    disassembler_instance.get_instance().check_version(skip_version_check, __version__)
+
+    rom_bytes = read_target_binary()
+
+    # Create main output dir
+    options.opts.base_path.mkdir(parents=True, exist_ok=True)
+
+    processed_segments: List[Segment] = []
+
+    seg_sizes: Dict[str, int] = {}
+    seg_split: Dict[str, int] = {}
+    seg_cached: Dict[str, int] = {}
+
+    cache = initialize_cache(config, use_cache, verbose)
 
     disassembler_instance.get_instance().configure(options.opts)
 
@@ -378,167 +572,28 @@ def main(
     if (
         options.opts.is_mode_active("ld") and options.opts.platform != "gc"
     ):  # TODO move this to platform initialization when it gets implemented
-        vram_class_dependencies = calc_segment_dependences(all_segments)
-        vram_classes_to_search = set(vram_class_dependencies.keys())
-
-        max_vram_end_insertion_points: Dict[
-            Segment, List[Tuple[str, List[Segment]]]
-        ] = {}
-        for seg in reversed(all_segments):
-            if seg.vram_class in vram_classes_to_search:
-                assert seg.vram_class.vram_symbol is not None
-                if seg not in max_vram_end_insertion_points:
-                    max_vram_end_insertion_points[seg] = []
-                max_vram_end_insertion_points[seg].append(
-                    (
-                        seg.vram_class.vram_symbol,
-                        vram_class_dependencies[seg.vram_class],
-                    )
-                )
-                vram_classes_to_search.remove(seg.vram_class)
-
         global linker_writer
-        linker_writer = LinkerWriter()
-        linker_bar = progress_bar.get_progress_bar(all_segments)
-
-        partial_linking = options.opts.ld_partial_linking
-        partial_scripts_path = options.opts.ld_partial_scripts_path
-        segments_path = options.opts.ld_partial_build_segments_path
-        if partial_linking:
-            if partial_scripts_path is None:
-                log.error(
-                    "Partial linking is enabled but `ld_partial_scripts_path` has not been set"
-                )
-            if options.opts.ld_partial_build_segments_path is None:
-                log.error(
-                    "Partial linking is enabled but `ld_partial_build_segments_path` has not been set"
-                )
-
-        for segment in linker_bar:
-            assert isinstance(segment, Segment)
-            linker_bar.set_description(f"Linker script {brief_seg_name(segment, 20)}")
-            max_vram_syms = max_vram_end_insertion_points.get(segment, [])
-
-            if options.opts.ld_partial_linking:
-                linker_writer.add_referenced_partial_segment(segment, max_vram_syms)
-
-                # Create linker script for segment
-                sub_linker_writer = LinkerWriter(is_partial=True)
-                sub_linker_writer.add_partial_segment(segment)
-
-                assert partial_scripts_path is not None
-                assert segments_path is not None
-
-                seg_name = segment.get_cname()
-
-                sub_linker_writer.save_linker_script(
-                    partial_scripts_path / f"{seg_name}.ld"
-                )
-                if options.opts.ld_dependencies:
-                    sub_linker_writer.save_dependencies_file(
-                        partial_scripts_path / f"{seg_name}.d",
-                        segments_path / f"{seg_name}.o",
-                    )
-            else:
-                linker_writer.add(segment, max_vram_syms)
-
-        linker_writer.save_linker_script(options.opts.ld_script_path)
-        linker_writer.save_symbol_header()
-        if options.opts.ld_dependencies:
-            elf_path = options.opts.elf_path
-            if elf_path is None:
-                log.error(
-                    "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
-                )
-            linker_writer.save_dependencies_file(
-                options.opts.ld_script_path.with_suffix(".d"), elf_path
-            )
-
-        # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
-        # that the elf combines into one section
-        if options.opts.elf_section_list_path:
-            section_list = ""
-            for segment in all_segments:
-                section_list += "." + segment.get_cname() + "\n"
-            options.opts.elf_section_list_path.parent.mkdir(parents=True, exist_ok=True)
-            with options.opts.elf_section_list_path.open("w", newline="\n") as f:
-                f.write(section_list)
+        linker_writer = write_linker_script(all_segments)
+        write_ld_dependencies(linker_writer)
+        write_elf_sections_file(all_segments)
 
     # Write undefined_funcs_auto.txt
-    if options.opts.create_undefined_funcs_auto:
-        to_write = [
-            s
-            for s in symbols.all_symbols
-            if s.referenced and not s.defined and s.type == "func"
-        ]
-        to_write.sort(key=lambda x: x.vram_start)
-
-        options.opts.undefined_funcs_auto_path.parent.mkdir(parents=True, exist_ok=True)
-        with options.opts.undefined_funcs_auto_path.open("w", newline="\n") as f:
-            for symbol in to_write:
-                f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
+    write_undefined_funcs_auto()
 
     # write undefined_syms_auto.txt
-    if options.opts.create_undefined_syms_auto:
-        to_write = [
-            s
-            for s in symbols.all_symbols
-            if s.referenced
-            and not s.defined
-            and s.type not in {"func", "label", "jtbl_label"}
-        ]
-        to_write.sort(key=lambda x: x.vram_start)
-
-        options.opts.undefined_syms_auto_path.parent.mkdir(parents=True, exist_ok=True)
-        with options.opts.undefined_syms_auto_path.open("w", newline="\n") as f:
-            for symbol in to_write:
-                f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
+    write_undefined_syms_auto()
 
     # print warnings during split
-    for segment in all_segments:
-        if len(segment.warnings) > 0:
-            log.write(
-                f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:"
-            )
-
-            for warn in segment.warnings:
-                log.write("warning: " + warn, status="warn")
-
-            log.write("")  # empty line
+    print_segment_warnings(all_segments)
 
     # Statistics
     do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached)
 
     # Save cache
-    if cache != {} and use_cache:
-        if verbose:
-            log.write("Writing cache")
-        options.opts.cache_path.parent.mkdir(parents=True, exist_ok=True)
-        with options.opts.cache_path.open("wb") as f4:
-            pickle.dump(cache, f4)
+    save_cache(cache, use_cache, verbose)
 
-    if options.opts.dump_symbols and options.opts.is_mode_active("code"):
-        splat_hidden_folder = options.opts.base_path / ".splat"
-        splat_hidden_folder.mkdir(parents=True, exist_ok=True)
-
-        with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
-            f.write(
-                "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
-            )
-            for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
-                f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
-                if s.given_size is not None:
-                    f.write(f"0x{s.given_size:X},")
-                else:
-                    f.write("None,")
-                f.write(f"{s.size},")
-                if s.rom is not None:
-                    f.write(f"0x{s.rom:X},")
-                else:
-                    f.write("None,")
-                f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}\n")
-
-        symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
+    if options.opts.is_mode_active("code"):
+        dump_symbols()
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
