@@ -9,6 +9,8 @@
   * This allows to avoid installing dependencies for an architecture that won't be used.
   * The new syntax to be used with pip is `python3 -m pip install -U splat64[arch1, arch2, etc]`, for example, `splat64[mips]`
   * Currently the only architecture supported is `mips`.
+* The `main` function has been modularized and cleaned up.
+  * When using splat as a library, allows the user to call each individual step of split without having to pass by its full monolithic `main` function.
 
 ### 0.21.0
 
