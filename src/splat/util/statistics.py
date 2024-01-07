@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from . import log
 
+
 def fmt_size(size: int) -> str:
     if size > 1000000:
         return str(size // 1000000) + " MB"
@@ -10,6 +11,7 @@ def fmt_size(size: int) -> str:
         return str(size // 1000) + " KB"
     else:
         return str(size) + " B"
+
 
 class Statistics:
     def __init__(self):
@@ -43,7 +45,9 @@ class Statistics:
         known_ratio = rest_size / total_size
         unk_ratio = unk_size / total_size
 
-        log.write(f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments")
+        log.write(
+            f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments"
+        )
         for typ, size in self.seg_sizes.items():
             if typ != "unk":
                 tmp_ratio = size / total_size

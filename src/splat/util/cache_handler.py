@@ -4,6 +4,7 @@ from typing import Any, Dict
 from . import options, log
 from ..segtypes.common.segment import Segment
 
+
 class Cache:
     def __init__(self, config: dict[str, Any], use_cache: bool, verbose: bool):
         self.use_cache: bool = use_cache
@@ -18,7 +19,9 @@ class Cache:
                 if verbose:
                     log.write(f"Loaded cache ({len(self.cache.keys())} items)")
             except Exception:
-                log.write(f"Not able to load cache file. Discarding old cache", status="warn")
+                log.write(
+                    f"Not able to load cache file. Discarding old cache", status="warn"
+                )
 
         # invalidate entire cache if options change
         if use_cache and self.cache.get("__options__") != config.get("options"):

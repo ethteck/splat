@@ -33,7 +33,6 @@ segment_roms: IntervalTree = IntervalTree()
 segment_rams: IntervalTree = IntervalTree()
 
 
-
 def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     global segment_roms
     global segment_rams
@@ -192,8 +191,13 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
-def initialize_config(config_path: List[str], modes: Optional[List[str]], verbose: bool, disassemble_all: bool=False) -> Dict[str, Any]:
-    config = {}
+def initialize_config(
+    config_path: List[str],
+    modes: Optional[List[str]],
+    verbose: bool,
+    disassemble_all: bool = False,
+) -> Dict[str, Any]:
+    config: Dict[str, Any] = {}
     for entry in config_path:
         with open(entry) as f:
             additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
@@ -204,6 +208,7 @@ def initialize_config(config_path: List[str], modes: Optional[List[str]], verbos
     options.initialize(config, config_path, modes, verbose, disassemble_all)
 
     return config
+
 
 def read_target_binary() -> bytes:
     rom_bytes = options.opts.target_path.read_bytes()
@@ -218,6 +223,7 @@ def read_target_binary() -> bytes:
 
     return rom_bytes
 
+
 def initialize_platform(rom_bytes: bytes):
     platform_module = importlib.import_module(
         f"{__package_name__}.platforms.{options.opts.platform}"
@@ -226,6 +232,7 @@ def initialize_platform(rom_bytes: bytes):
     platform_init(rom_bytes)
 
     return platform_module
+
 
 def initialize_all_symbols(all_segments: List[Segment]):
     # Load and process symbols
@@ -239,7 +246,13 @@ def initialize_all_symbols(all_segments: List[Segment]):
         symbols.initialize_spim_context(all_segments)
         relocs.initialize_spim_context()
 
-def do_scan(all_segments: List[Segment], rom_bytes: bytes, stats: statistics.Statistics, cache: cache_handler.Cache):
+
+def do_scan(
+    all_segments: List[Segment],
+    rom_bytes: bytes,
+    stats: statistics.Statistics,
+    cache: cache_handler.Cache,
+):
     processed_segments: List[Segment] = []
 
     scan_bar = progress_bar.get_progress_bar(all_segments)
@@ -267,7 +280,13 @@ def do_scan(all_segments: List[Segment], rom_bytes: bytes, stats: statistics.Sta
     symbols.mark_c_funcs_as_defined()
     return processed_segments
 
-def do_split(all_segments: List[Segment], rom_bytes: bytes, stats: statistics.Statistics, cache: cache_handler.Cache):
+
+def do_split(
+    all_segments: List[Segment],
+    rom_bytes: bytes,
+    stats: statistics.Statistics,
+    cache: cache_handler.Cache,
+):
     split_bar = progress_bar.get_progress_bar(all_segments)
     for segment in split_bar:
         assert isinstance(segment, Segment)
@@ -289,9 +308,7 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
     vram_class_dependencies = calc_segment_dependences(all_segments)
     vram_classes_to_search = set(vram_class_dependencies.keys())
 
-    max_vram_end_insertion_points: Dict[
-        Segment, List[Tuple[str, List[Segment]]]
-    ] = {}
+    max_vram_end_insertion_points: Dict[Segment, List[Tuple[str, List[Segment]]]] = {}
     for seg in reversed(all_segments):
         if seg.vram_class in vram_classes_to_search:
             assert seg.vram_class.vram_symbol is not None
@@ -365,6 +382,7 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
 
     return linker_writer
 
+
 def write_ld_dependencies(linker_writer: LinkerWriter):
     if options.opts.ld_dependencies:
         elf_path = options.opts.elf_path
@@ -375,6 +393,7 @@ def write_ld_dependencies(linker_writer: LinkerWriter):
         linker_writer.save_dependencies_file(
             options.opts.ld_script_path.with_suffix(".d"), elf_path
         )
+
 
 def write_elf_sections_file(all_segments: List[Segment]):
     # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
@@ -406,6 +425,7 @@ def write_undefined_funcs_auto():
 
         write_undefined_auto(to_write, options.opts.undefined_funcs_auto_path)
 
+
 def write_undefined_syms_auto():
     if options.opts.create_undefined_syms_auto:
         to_write = [
@@ -418,6 +438,7 @@ def write_undefined_syms_auto():
         to_write.sort(key=lambda x: x.vram_start)
 
         write_undefined_auto(to_write, options.opts.undefined_syms_auto_path)
+
 
 def print_segment_warnings(all_segments: List[Segment]):
     for segment in all_segments:
@@ -459,15 +480,14 @@ def dump_symbols() -> None:
     symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 
 
-
 def main(
     config_path: List[str],
     modes: Optional[List[str]],
     verbose: bool,
-    use_cache: bool=True,
-    skip_version_check: bool=False,
-    stdout_only: bool=False,
-    disassemble_all: bool=False,
+    use_cache: bool = True,
+    skip_version_check: bool = False,
+    stdout_only: bool = False,
+    disassemble_all: bool = False,
 ):
     if stdout_only:
         progress_bar.out_file = sys.stdout
