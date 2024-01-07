@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import progress_bar, vram_classes
+from ..util import progress_bar, vram_classes, statistics
 
 # This unused import makes the yaml library faster. don't remove
 import pylibyaml  # pyright: ignore
@@ -32,14 +32,6 @@ config: Dict[str, Any]
 segment_roms: IntervalTree = IntervalTree()
 segment_rams: IntervalTree = IntervalTree()
 
-
-def fmt_size(size):
-    if size > 1000000:
-        return str(size // 1000000) + " MB"
-    elif size > 1000:
-        return str(size // 1000) + " KB"
-    else:
-        return str(size) + " B"
 
 
 def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
@@ -137,31 +129,6 @@ def assign_symbols_to_segments():
             for seg in segs:
                 if not seg.get_exclusive_ram_id():
                     seg.add_symbol(symbol)
-
-
-def do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached):
-    unk_size = seg_sizes.get("unk", 0)
-    rest_size = 0
-    total_size = len(rom_bytes)
-
-    for typ in seg_sizes:
-        if typ != "unk":
-            rest_size += seg_sizes[typ]
-
-    known_ratio = rest_size / total_size
-    unk_ratio = unk_size / total_size
-
-    log.write(f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments")
-    for typ in seg_sizes:
-        if typ != "unk":
-            tmp_size = seg_sizes[typ]
-            tmp_ratio = tmp_size / total_size
-            log.write(
-                f"{typ:>20}: {fmt_size(tmp_size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{seg_split[typ]} split{Style.RESET_ALL}, {Style.DIM}{seg_cached[typ]} cached"
-            )
-    log.write(
-        f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files"
-    )
 
 
 def merge_configs(main_config, additional_config):
@@ -482,9 +449,7 @@ def main(
 
     processed_segments: List[Segment] = []
 
-    seg_sizes: Dict[str, int] = {}
-    seg_split: Dict[str, int] = {}
-    seg_cached: Dict[str, int] = {}
+    stats = statistics.Statistics()
 
     cache = initialize_cache(config, use_cache, verbose)
 
@@ -523,11 +488,7 @@ def main(
         if segment.type == "bin" and segment.is_name_default():
             typ = "unk"
 
-        if typ not in seg_sizes:
-            seg_sizes[typ] = 0
-            seg_split[typ] = 0
-            seg_cached[typ] = 0
-        seg_sizes[typ] += 0 if segment.size is None else segment.size
+        stats.add_size(typ, segment.size)
 
         if segment.should_scan():
             # Check cache but don't write anything
@@ -540,7 +501,7 @@ def main(
 
             processed_segments.append(segment)
 
-            seg_split[typ] += 1
+            stats.count_split(typ)
 
     symbols.mark_c_funcs_as_defined()
 
@@ -554,9 +515,7 @@ def main(
 
             if cached == cache.get(segment.unique_id()):
                 # Cache hit
-                if segment.type not in seg_cached:
-                    seg_cached[segment.type] = 0
-                seg_cached[segment.type] += 1
+                stats.count_cached(segment.type)
                 continue
             else:
                 # Cache miss; split
@@ -587,7 +546,7 @@ def main(
     print_segment_warnings(all_segments)
 
     # Statistics
-    do_statistics(seg_sizes, rom_bytes, seg_split, seg_cached)
+    stats.print_statistics(len(rom_bytes))
 
     # Save cache
     save_cache(cache, use_cache, verbose)
