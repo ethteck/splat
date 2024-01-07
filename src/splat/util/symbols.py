@@ -260,7 +260,7 @@ def handle_sym_addrs(
                     if have_same_rom_addresses and same_segment:
                         log.parsing_error_preamble(path, line_num, line)
                         log.error(
-                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}"
+                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
                         )
 
             seen_symbols[sym.name] = sym

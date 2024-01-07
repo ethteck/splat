@@ -1,5 +1,15 @@
 # splat Release Notes
 
+### 0.21.1
+
+* Fix duplicated symbol resolution in symbol_addrs.txt file.
+  * To allow symbols with the same name or vram address, splat was expecting both `rom` and `segment` to be specified. This check was changes so either one of them is required to disambiguate the symbol.
+* Python dependencies per target architecture have been regrouped.
+  * splat now requires an architecture to be specified during installation through pip.
+  * This allows to avoid installing dependencies for an architecture that won't be used.
+  * The new syntax to be used with pip is `python3 -m pip install -U splat64[arch1, arch2, etc]`, for example, `splat64[mips]`
+  * Currently the only architecture supported is `mips`.
+
 ### 0.21.0
 
 * BREAKING: Extension segments will need adjustments to continue to work.
