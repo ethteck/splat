@@ -192,6 +192,19 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
+def initialize_config(config_path: List[str], modes: Optional[List[str]], verbose: bool, disassemble_all: bool=False) -> Dict[str, Any]:
+    config = {}
+    for entry in config_path:
+        with open(entry) as f:
+            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+        config = merge_configs(config, additional_config)
+
+    vram_classes.initialize(config.get("vram_classes"))
+
+    options.initialize(config, config_path, modes, verbose, disassemble_all)
+
+    return config
+
 def read_target_binary() -> bytes:
     rom_bytes = options.opts.target_path.read_bytes()
 
@@ -204,6 +217,72 @@ def read_target_binary() -> bytes:
         log.write("Warning: no sha1 in config")
 
     return rom_bytes
+
+def initialize_platform(rom_bytes: bytes):
+    platform_module = importlib.import_module(
+        f"{__package_name__}.platforms.{options.opts.platform}"
+    )
+    platform_init = getattr(platform_module, "init")
+    platform_init(rom_bytes)
+
+    return platform_module
+
+def initialize_all_symbols(all_segments: List[Segment]):
+    # Load and process symbols
+    symbols.initialize(all_segments)
+    relocs.initialize()
+
+    # Assign symbols to segments
+    assign_symbols_to_segments()
+
+    if options.opts.is_mode_active("code"):
+        symbols.initialize_spim_context(all_segments)
+        relocs.initialize_spim_context()
+
+def do_scan(all_segments: List[Segment], rom_bytes: bytes, stats: statistics.Statistics, cache: cache_handler.Cache):
+    processed_segments: List[Segment] = []
+
+    scan_bar = progress_bar.get_progress_bar(all_segments)
+    for segment in scan_bar:
+        assert isinstance(segment, Segment)
+        scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
+        typ = segment.type
+        if segment.type == "bin" and segment.is_name_default():
+            typ = "unk"
+
+        stats.add_size(typ, segment.size)
+
+        if segment.should_scan():
+            # Check cache but don't write anything
+            if cache.check_cache_hit(segment, False):
+                continue
+
+            segment.did_run = True
+            segment.scan(rom_bytes)
+
+            processed_segments.append(segment)
+
+            stats.count_split(typ)
+
+    symbols.mark_c_funcs_as_defined()
+    return processed_segments
+
+def do_split(all_segments: List[Segment], rom_bytes: bytes, stats: statistics.Statistics, cache: cache_handler.Cache):
+    split_bar = progress_bar.get_progress_bar(all_segments)
+    for segment in split_bar:
+        assert isinstance(segment, Segment)
+        split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
+
+        if cache.check_cache_hit(segment, True):
+            stats.count_cached(segment.type)
+            continue
+
+        if segment.should_split():
+            segment_bytes = rom_bytes
+            if segment.file_path:
+                with open(segment.file_path, "rb") as segment_input_file:
+                    segment_bytes = segment_input_file.read()
+            segment.split(segment_bytes)
 
 
 def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
@@ -390,102 +469,40 @@ def main(
     stdout_only: bool=False,
     disassemble_all: bool=False,
 ):
-    global config
-
     if stdout_only:
         progress_bar.out_file = sys.stdout
 
     # Load config
-    config = {}
-    for entry in config_path:
-        with open(entry) as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        config = merge_configs(config, additional_config)
+    global config
+    config = initialize_config(config_path, modes, verbose, disassemble_all)
 
-    vram_classes.initialize(config.get("vram_classes"))
-
-    options.initialize(config, config_path, modes, verbose, disassemble_all)
-
-    disassembler_instance.create_disassembler_instance(options.opts.platform)
-    disassembler_instance.get_instance().check_version(skip_version_check, __version__)
+    disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
 
     rom_bytes = read_target_binary()
 
     # Create main output dir
     options.opts.base_path.mkdir(parents=True, exist_ok=True)
 
-    processed_segments: List[Segment] = []
-
     stats = statistics.Statistics()
 
     cache = cache_handler.Cache(config, use_cache, verbose)
 
-    disassembler_instance.get_instance().configure(options.opts)
-
-    platform_module = importlib.import_module(
-        f"{__package_name__}.platforms.{options.opts.platform}"
-    )
-    platform_init = getattr(platform_module, "init")
-    platform_init(rom_bytes)
+    initialize_platform(rom_bytes)
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
 
-    # Load and process symbols
-    symbols.initialize(all_segments)
-    relocs.initialize()
-
-    # Assign symbols to segments
-    assign_symbols_to_segments()
-
-    if options.opts.is_mode_active("code"):
-        symbols.initialize_spim_context(all_segments)
-        relocs.initialize_spim_context()
+    initialize_all_symbols(all_segments)
 
     # Resolve raster/palette siblings
     if options.opts.is_mode_active("img"):
         palettes.initialize(all_segments)
 
     # Scan
-    scan_bar = progress_bar.get_progress_bar(all_segments)
-    for segment in scan_bar:
-        assert isinstance(segment, Segment)
-        scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
-        typ = segment.type
-        if segment.type == "bin" and segment.is_name_default():
-            typ = "unk"
-
-        stats.add_size(typ, segment.size)
-
-        if segment.should_scan():
-            # Check cache but don't write anything
-            if cache.check_cache_hit(segment, False):
-                continue
-
-            segment.did_run = True
-            segment.scan(rom_bytes)
-
-            processed_segments.append(segment)
-
-            stats.count_split(typ)
-
-    symbols.mark_c_funcs_as_defined()
+    do_scan(all_segments, rom_bytes, stats, cache)
 
     # Split
-    split_bar = progress_bar.get_progress_bar(all_segments)
-    for segment in split_bar:
-        assert isinstance(segment, Segment)
-        split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
-
-        if cache.check_cache_hit(segment, True):
-            continue
-
-        if segment.should_split():
-            segment_bytes = rom_bytes
-            if segment.file_path:
-                with open(segment.file_path, "rb") as segment_input_file:
-                    segment_bytes = segment_input_file.read()
-            segment.split(segment_bytes)
+    do_split(all_segments, rom_bytes, stats, cache)
 
     if (
         options.opts.is_mode_active("ld") and options.opts.platform != "gc"
