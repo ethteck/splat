@@ -53,12 +53,6 @@ class Testing(unittest.TestCase):
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
         main(["test/basic_app/splat.yaml"], None, False)
 
-        print(f"\n\n")
-        print(f"{options.opts.asm_emit_size_directive=}")
-        print(f"\n\n")
-        print(f"{spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE=}")
-        print(f"\n\n")
-
         comparison = filecmp.dircmp("test/basic_app/split", "test/basic_app/expected")
 
         diff_files: List[Tuple[str, str, str]] = []
