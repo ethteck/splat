@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from ..util.options import SplatOpts
 from typing import Set
 
 
 class Disassembler(ABC):
     @abstractmethod
-    def configure(self, options: SplatOpts):
+    def configure(self):
         raise NotImplementedError("configure")
 
     @abstractmethod

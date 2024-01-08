@@ -4,7 +4,7 @@ from typing import Set
 
 
 class NullDisassembler(disassembler.Disassembler):
-    def configure(self, opts: SplatOpts):
+    def configure(self):
         pass
 
     def check_version(self, skip_version_check: bool, splat_version: str):
