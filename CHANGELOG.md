@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.21.3
+* Updated version graphically
+
 ### 0.21.2
 * Fix bugs involving segments not having proper end rom positions if followed by segments with "auto" rom addresses; splat will now skip over these properly
 
