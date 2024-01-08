@@ -30,11 +30,15 @@ class CommonSegGroup(CommonSegment):
         self.subsegments: List[Segment] = self.parse_subsegments(yaml)
 
     def get_next_seg_start(self, i, subsegment_yamls):
-        return (
-            self.rom_end
-            if i == len(subsegment_yamls) - 1
-            else Segment.parse_segment_start(subsegment_yamls[i + 1])
-        )
+        j = i + 1
+        while j < len(subsegment_yamls):
+            ret = Segment.parse_segment_start(subsegment_yamls[j])
+            if ret is not None:
+                return ret
+            j += 1
+
+        # Fallback
+        return self.rom_end
 
     def parse_subsegments(self, yaml) -> List[Segment]:
         ret: List[Segment] = []

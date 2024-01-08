@@ -56,10 +56,16 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         this_start = Segment.parse_segment_start(seg_yaml)
 
-        if i == len(config_segments) - 1 and Segment.parse_segment_file_path(seg_yaml):
-            next_start: Optional[int] = 0
-        else:
-            next_start = Segment.parse_segment_start(config_segments[i + 1])
+        j = i + 1
+        while j < len(config_segments):
+            next_start = Segment.parse_segment_start(config_segments[j])
+            if next_start is not None:
+                break
+            j += 1
+        if next_start is None:
+            log.error(
+                "Next segment address could not be found. Segments list must end with a rom end pos marker ([0x10000000])"
+            )
 
         if segment_class.is_noload():
             # Pretend bss's rom address is after the last actual rom segment
