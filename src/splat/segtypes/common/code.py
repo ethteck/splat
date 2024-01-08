@@ -255,8 +255,6 @@ class CommonSegCode(CommonSegGroup):
 
             segment_class = Segment.get_class_for_type(typ)
 
-            end = self.get_next_seg_start(i, segment_yaml["subsegments"])
-
             if start is None:
                 # Attempt to infer the start address
                 if i == 0:
@@ -266,10 +264,18 @@ class CommonSegCode(CommonSegGroup):
                     # The start address is the end address of the previous segment
                     start = last_rom_end
 
+            # First, try to get the end address from the next segment's start address
+            # Second, try to get the end address from the estimated size of this segment
+            # Third, try to get the end address from the next segment with a start address
+            end: Optional[int] = None
+            if i < len(segment_yaml["subsegments"]) - 1:
+                end = Segment.parse_segment_start(segment_yaml["subsegments"][i + 1])
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
                 if est_size is not None:
                     end = start + est_size
+            if end is None:
+                end = self.get_next_seg_start(i, segment_yaml["subsegments"])
 
             if start is not None and prev_start is not None and start < prev_start:
                 log.error(
