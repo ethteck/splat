@@ -79,7 +79,16 @@ class CommonSegCode(CommonSegGroup):
         if rodata_section is not None:
             self.check_rodata_sym_impl(func_addr, sym, rodata_section)
 
-    def _generate_segment_from_all(self, rep_type: str, replace_class: type[Segment], rom_start: Optional[int], rom_end: Optional[int], vram_start: Optional[int], base_name: str, base_seg: Segment) -> Segment:
+    def _generate_segment_from_all(
+        self,
+        rep_type: str,
+        replace_class: type[Segment],
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        vram_start: Optional[int],
+        base_name: str,
+        base_seg: Segment,
+    ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
             rom_end=rom_end,
@@ -101,9 +110,18 @@ class CommonSegCode(CommonSegGroup):
             self.special_vram_segment = True
         return rep
 
-    def _insert_auto_section(self, rep_type: str, base_seg: Segment, ret: list[Segment], last_inserted_indices: Dict[str, int], sections_start_indices: Dict[str, int]) -> Segment:
+    def _insert_auto_section(
+        self,
+        rep_type: str,
+        base_seg: Segment,
+        ret: List[Segment],
+        last_inserted_indices: Dict[str, int],
+        sections_start_indices: Dict[str, int],
+    ) -> Segment:
         replace_class = Segment.get_class_for_type(rep_type)
-        rep = self._generate_segment_from_all(rep_type, replace_class, None,None, None, base_seg.name, base_seg)
+        rep = self._generate_segment_from_all(
+            rep_type, replace_class, None, None, None, base_seg.name, base_seg
+        )
 
         # Get where to insert this segment
         index_to_insert = last_inserted_indices.get(rep_type, -1)
@@ -113,7 +131,9 @@ class CommonSegCode(CommonSegGroup):
             index_to_insert = sections_start_indices.get(rep_type, -1)
         if index_to_insert < 0:
             # There aren't any subsegments of this type, so search in previous sections
-            for other_section in self.section_order[self.section_order.index(rep_type)-1::-1]:
+            for other_section in self.section_order[
+                self.section_order.index(rep_type) - 1 :: -1
+            ]:
                 index_to_insert = last_inserted_indices.get(other_section, -1)
                 if index_to_insert >= 0:
                     break
@@ -136,7 +156,12 @@ class CommonSegCode(CommonSegGroup):
         last_inserted_indices[rep_type] = index_to_insert
         return rep
 
-    def _insert_all_auto_sections(self, ret: List[Segment], base_segments: OrderedDict[str, Segment], sections_start_indices: Dict[str, int]):
+    def _insert_all_auto_sections(
+        self,
+        ret: List[Segment],
+        base_segments: OrderedDict[str, Segment],
+        sections_start_indices: Dict[str, int],
+    ):
         if len(options.opts.auto_all_sections) == 0:
             return
 
@@ -151,11 +176,12 @@ class CommonSegCode(CommonSegGroup):
 
                 sibling = seg.siblings.get(sect)
                 if sibling is None:
-                    seg.siblings[sect] = self._insert_auto_section(sect, seg, ret, last_inserted_indices, sections_start_indices)
+                    seg.siblings[sect] = self._insert_auto_section(
+                        sect, seg, ret, last_inserted_indices, sections_start_indices
+                    )
                 else:
                     # Preserve order
                     last_inserted_indices[sect] = ret.index(sibling)
-
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
         if "subsegments" not in segment_yaml:
@@ -249,7 +275,9 @@ class CommonSegCode(CommonSegGroup):
                     ".rodata"
                 ):
                     if segment.is_rodata():
-                        assert segment.sibling.rodata_sibling is None, segment.sibling.name
+                        assert (
+                            segment.sibling.rodata_sibling is None
+                        ), segment.sibling.name
                         segment.sibling.rodata_sibling = segment
                 else:
                     if segment.is_text() and segment.sibling.is_rodata():
@@ -261,7 +289,9 @@ class CommonSegCode(CommonSegGroup):
                     ".data"
                 ):
                     if segment.is_data():
-                        assert segment.sibling.data_sibling is None, segment.sibling.name
+                        assert (
+                            segment.sibling.data_sibling is None
+                        ), segment.sibling.name
                         segment.sibling.data_sibling = segment
                 else:
                     if segment.is_text() and segment.sibling.is_data():
@@ -269,9 +299,7 @@ class CommonSegCode(CommonSegGroup):
                         segment.data_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
-                if self.section_order.index(".text") < self.section_order.index(
-                    ".bss"
-                ):
+                if self.section_order.index(".text") < self.section_order.index(".bss"):
                     if segment.is_noload():
                         assert segment.sibling.bss_sibling is None, segment.sibling.name
                         segment.sibling.bss_sibling = segment
@@ -281,8 +309,12 @@ class CommonSegCode(CommonSegGroup):
                         segment.bss_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
-                segment.siblings[segment.sibling.get_linker_section_linksection()] = segment.sibling
-                segment.sibling.siblings[segment.get_linker_section_linksection()] = segment
+                segment.siblings[
+                    segment.sibling.get_linker_section_linksection()
+                ] = segment.sibling
+                segment.sibling.siblings[
+                    segment.get_linker_section_linksection()
+                ] = segment
 
             segment.parent = self
             if segment.special_vram_segment:
