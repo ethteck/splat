@@ -511,7 +511,6 @@ class CommonSegCode(CommonSegGroup):
                     # Preserve order
                     last_inserted_indices[".data"] = ret.index(seg.data_sibling)
 
-                """
                 if seg.rodata_sibling is None:
                     if ".rodata" in options.opts.auto_all_sections:
                         rep_type = ".rodata"
@@ -519,7 +518,6 @@ class CommonSegCode(CommonSegGroup):
                 else:
                     # Preserve order
                     last_inserted_indices[".rodata"] = ret.index(seg.rodata_sibling)
-                """
 
                 if seg.bss_sibling is None:
                     if ".bss" in options.opts.auto_all_sections:
