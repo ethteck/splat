@@ -259,6 +259,7 @@ class Segment:
         self.sibling: Optional[Segment] = None
         self.data_sibling: Optional[Segment] = None
         self.rodata_sibling: Optional[Segment] = None
+        self.bss_sibling: Optional[Segment] = None
         self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
