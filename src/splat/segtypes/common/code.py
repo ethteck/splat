@@ -78,6 +78,7 @@ class CommonSegCode(CommonSegGroup):
         if rodata_section is not None:
             self.check_rodata_sym_impl(func_addr, sym, rodata_section)
 
+    # Generates a placeholder segment for the auto_all_sections option
     def _generate_segment_from_all(
         self,
         rep_type: str,
@@ -152,6 +153,7 @@ class CommonSegCode(CommonSegGroup):
             if idx >= index_to_insert:
                 last_inserted_indices[s] += 1
 
+        # Update this section
         last_inserted_indices[rep_type] = index_to_insert
         return rep
 
@@ -175,6 +177,7 @@ class CommonSegCode(CommonSegGroup):
 
                 sibling = seg.siblings.get(sect)
                 if sibling is None:
+                    # If there's no sibling for this section type then we generate and insert it
                     seg.siblings[sect] = self._insert_auto_section(
                         sect, seg, ret, last_inserted_indices, sections_start_indices
                     )

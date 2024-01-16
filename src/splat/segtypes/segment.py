@@ -774,4 +774,5 @@ class Segment:
         return None
 
     def __repr__(self) -> str:
+        # Shows a nicer string on the debugging screen
         return f"{self.name} ({self.type})"
