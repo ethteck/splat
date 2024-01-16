@@ -101,7 +101,7 @@ class CommonSegCode(CommonSegGroup):
             self.special_vram_segment = True
         return rep
 
-    def _insert_auto_all_segment(self, rep_type: str, base_seg: Segment, ret: list[Segment], last_inserted_indices: Dict[str, int], sections_start_indices: Dict[str, int]) -> Segment:
+    def _insert_auto_section(self, rep_type: str, base_seg: Segment, ret: list[Segment], last_inserted_indices: Dict[str, int], sections_start_indices: Dict[str, int]) -> Segment:
         replace_class = Segment.get_class_for_type(rep_type)
         rep = self._generate_segment_from_all(rep_type, replace_class, None,None, None, base_seg.name, base_seg)
 
@@ -112,18 +112,18 @@ class CommonSegCode(CommonSegGroup):
             toph = 1
 
         # Get where to insert this segment
-        index_to_insert = last_inserted_indices[rep_type]
+        index_to_insert = last_inserted_indices.get(rep_type, -1)
 
         if index_to_insert < 0:
             # We haven't inserted anything of this type yet, so just insert it at the beginning of this section
-            index_to_insert = sections_start_indices[rep_type]
+            index_to_insert = sections_start_indices.get(rep_type, -1)
         if index_to_insert < 0:
             # There aren't any subsegments of this type, so search in previous sections
             for other_section in self.section_order[self.section_order.index(rep_type)-1::-1]:
-                index_to_insert = last_inserted_indices[other_section]
+                index_to_insert = last_inserted_indices.get(other_section, -1)
                 if index_to_insert >= 0:
                     break
-                index_to_insert = sections_start_indices[other_section]
+                index_to_insert = sections_start_indices.get(other_section, -1)
                 if index_to_insert >= 0:
                     break
 
@@ -142,6 +142,22 @@ class CommonSegCode(CommonSegGroup):
         last_inserted_indices[rep_type] = index_to_insert
         return rep
 
+    def _insert_all_auto_sections(self, ret: List[Segment], base_segments: OrderedDict[str, Segment], sections_start_indices: Dict[str, int]):
+        if len(options.opts.auto_all_sections) == 0:
+            return
+
+        # Track the index where we last inserted something per section type
+        last_inserted_indices = {x: -1 for x in options.opts.section_order}
+
+        for name, seg in base_segments.items():
+            for sect in options.opts.auto_all_sections:
+                sibling = seg.siblings.get(sect)
+                if sibling is None:
+                    print(f"    Inserting {sect}")
+                    seg.siblings[sect] = self._insert_auto_section(sect, seg, ret, last_inserted_indices, sections_start_indices)
+                else:
+                    # Preserve order
+                    last_inserted_indices[sect] = ret.index(sibling)
 
     def handle_alls(self, segs: List[Segment], base_segs: OrderedDict[str, Segment]) -> bool:
         # print(self.name)
@@ -432,6 +448,9 @@ class CommonSegCode(CommonSegGroup):
                         segment.bss_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
+                segment.siblings[segment.sibling.get_linker_section_linksection()] = segment.sibling
+                segment.sibling.siblings[segment.get_linker_section_linksection()] = segment
+
             segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
@@ -482,67 +501,7 @@ class CommonSegCode(CommonSegGroup):
             if end is not None:
                 last_rom_end = end
 
-        if len(auto_sections_list) > 0:
-            last_inserted_name: Optional[str] = None
-
-
-            last_inserted_indices = {x: -1 for x in options.opts.section_order}
-
-            if self.name == "boot":
-                toph = 1
-            print(f"")
-            print(f"{self.name}")
-
-            for name, seg in base_segments.items():
-                """
-                for sect_type, seg_list in auto_sections_list.items():
-                    found_other_seg = False
-                    for other_seg in seg_list:
-                        if other_seg.name == seg.name:
-                            found_other_seg = True
-                            break
-                    if found_other_seg:
-                        # Already has this section listed in the yaml, skip
-                        continue
-
-                    # There's no subsegment for this section type
-                    for idx, other_seg in enumerate(ret):
-                        pass
-                """
-                print(f"  {name}")
-
-                if seg.data_sibling is None:
-                    if ".data" in options.opts.auto_all_sections:
-                        rep_type = ".data"
-                        print(f"    Inserting {rep_type}")
-                        seg.data_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
-                else:
-                    print(f"    already had .data")
-                    # Preserve order
-                    last_inserted_indices[".data"] = ret.index(seg.data_sibling)
-
-                if seg.rodata_sibling is None:
-                    if ".rodata" in options.opts.auto_all_sections:
-                        rep_type = ".rodata"
-                        print(f"    Inserting {rep_type}")
-                        seg.rodata_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
-                else:
-                    print(f"    already had .rodata")
-                    # Preserve order
-                    last_inserted_indices[".rodata"] = ret.index(seg.rodata_sibling)
-
-                if seg.bss_sibling is None:
-                    if ".bss" in options.opts.auto_all_sections:
-                        rep_type = ".bss"
-                        print(f"    Inserting {rep_type}")
-                        seg.bss_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
-                else:
-                    print(f"    already had .bss")
-                    # Preserve order
-                    last_inserted_indices[".bss"] = ret.index(seg.bss_sibling)
-
-                last_inserted_name = seg.name
-            print(f"")
+        self._insert_all_auto_sections(ret, base_segments, sections_start_indices)
 
         """
         print(inserts)
