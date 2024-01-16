@@ -228,6 +228,19 @@ cache_path: path/to/splat/cache
 #### Default
 `.splat_cache`
 
+### hasm_in_src_path
+
+Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+
+#### Usage
+
+```yaml
+hasm_in_src_path: True
+```
+
+#### Default
+
+`False`
 
 ### create_undefined_funcs_auto
 If `True`, splat will generate an `undefined_funcs_auto.txt` file.
