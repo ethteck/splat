@@ -12,6 +12,10 @@ class CommonSegAsm(CommonSegCodeSubsegment):
         return True
 
     def out_path(self) -> Optional[Path]:
+        if options.opts.migrated_asm_in_src_path:
+            if self.type.startswith("."):
+                return options.opts.src_path / self.dir / f"{self.name}.s"
+
         return options.opts.asm_path / self.dir / f"{self.name}.s"
 
     def scan(self, rom_bytes: bytes):
