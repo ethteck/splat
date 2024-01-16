@@ -228,6 +228,20 @@ cache_path: path/to/splat/cache
 #### Default
 `.splat_cache`
 
+### migrated_asm_in_src_path
+
+By default migrated asm files (the ones starting with a dot) are considered relative to the `asm_path`.
+Enabling this feature will make those files relative to the `src_path` instead.
+
+#### Usage
+
+```yaml
+migrated_asm_in_src_path: True
+```
+
+#### Default
+
+`False`
 
 ### create_undefined_funcs_auto
 If `True`, splat will generate an `undefined_funcs_auto.txt` file.

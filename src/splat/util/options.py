@@ -64,7 +64,7 @@ class SplatOpts:
     # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
     # By default migrated asm files (the ones starting with a dot) are considered relative to the `asm_path`.
-    # Enabling this feature will make those files relative to the `src_path` instead
+    # Enabling this feature will make those files relative to the `src_path` instead.
     migrated_asm_in_src_path: bool
 
     # Determines whether to create an automatically-generated undefined functions file
