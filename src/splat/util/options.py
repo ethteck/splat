@@ -63,6 +63,8 @@ class SplatOpts:
     nonmatchings_path: Path
     # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
+    # Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+    hasm_in_src_path: bool
 
     # Determines whether to create an automatically-generated undefined functions file
     # this file stores all functions that are referenced in the code but are not defined as seen by splat
@@ -399,6 +401,7 @@ def _parse_yaml(
         data_path=p.parse_path(asm_path, "data_path", "data"),
         nonmatchings_path=p.parse_path(asm_path, "nonmatchings_path", "nonmatchings"),
         cache_path=p.parse_path(base_path, "cache_path", ".splache"),
+        hasm_in_src_path=p.parse_opt("hasm_in_src_path", bool, False),
         create_undefined_funcs_auto=p.parse_opt(
             "create_undefined_funcs_auto", bool, True
         ),
