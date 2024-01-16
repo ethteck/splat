@@ -18,10 +18,6 @@ class CommonSegTextbin(CommonSegment):
         return "ax"
 
     def out_path(self) -> Optional[Path]:
-        if options.opts.migrated_asm_in_src_path:
-            if self.type.startswith("."):
-                return options.opts.src_path / self.dir / f"{self.name}.s"
-
         return options.opts.data_path / self.dir / f"{self.name}.s"
 
     def bin_path(self) -> Path:

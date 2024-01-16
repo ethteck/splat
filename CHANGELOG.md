@@ -2,9 +2,8 @@
 
 ### 0.21.4
 
-* New yaml option: `migrated_asm_in_src_path`
-  * Tells splat to consider migrated assembly files (the ones starting with a dot) to be relative to `src_path` instead of `asm_path`.
-  * This affects `.asm`, `.hasm`, `.textbin`, `.databin`, `.rodatabin`
+* New yaml option: `hasm_in_src_path`
+  * Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
 
 ### 0.21.3
 

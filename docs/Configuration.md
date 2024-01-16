@@ -228,15 +228,14 @@ cache_path: path/to/splat/cache
 #### Default
 `.splat_cache`
 
-### migrated_asm_in_src_path
+### hasm_in_src_path
 
-By default migrated asm files (the ones starting with a dot) are considered relative to the `asm_path`.
-Enabling this feature will make those files relative to the `src_path` instead.
+Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
 
 #### Usage
 
 ```yaml
-migrated_asm_in_src_path: True
+hasm_in_src_path: True
 ```
 
 #### Default
