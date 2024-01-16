@@ -1,6 +1,5 @@
-import typing
 from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple, Set, Type
 
 from ...util import log, options
 from ...util.range import Range
@@ -82,7 +81,7 @@ class CommonSegCode(CommonSegGroup):
     def _generate_segment_from_all(
         self,
         rep_type: str,
-        replace_class: type[Segment],
+        replace_class: Type[Segment],
         rom_start: Optional[int],
         rom_end: Optional[int],
         vram_start: Optional[int],
@@ -200,7 +199,7 @@ class CommonSegCode(CommonSegGroup):
             (s_name, Range()) for s_name in options.opts.section_order
         )
 
-        sections_start_indices: dict[str, int] = dict()
+        sections_start_indices: Dict[str, int] = dict()
         for section_name in options.opts.auto_all_sections:
             sections_start_indices[section_name] = -1
 
