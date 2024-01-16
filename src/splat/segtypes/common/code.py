@@ -144,13 +144,13 @@ class CommonSegCode(CommonSegGroup):
 
 
     def handle_alls(self, segs: List[Segment], base_segs: OrderedDict[str, Segment]) -> bool:
-        print(self.name)
-        print("  segs:")
-        for x in segs:
-            print(f"    {x.name}: {x.type}")
-        print("  base segs:")
-        for k, v in base_segs.items():
-            print(f"    {k}")
+        # print(self.name)
+        # print("  segs:")
+        # for x in segs:
+        #     print(f"    {x.name}: {x.type}")
+        # print("  base segs:")
+        # for k, v in base_segs.items():
+        #     print(f"    {k}")
         for i, elem in enumerate(segs):
             if elem.type.startswith("all_"):
                 alls = []
@@ -400,9 +400,11 @@ class CommonSegCode(CommonSegGroup):
                     ".rodata"
                 ):
                     if segment.is_rodata():
+                        assert segment.sibling.rodata_sibling is None, segment.sibling.name
                         segment.sibling.rodata_sibling = segment
                 else:
                     if segment.is_text() and segment.sibling.is_rodata():
+                        assert segment.rodata_sibling is None, segment.name
                         segment.rodata_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
@@ -410,9 +412,11 @@ class CommonSegCode(CommonSegGroup):
                     ".data"
                 ):
                     if segment.is_data():
+                        assert segment.sibling.data_sibling is None, segment.sibling.name
                         segment.sibling.data_sibling = segment
                 else:
                     if segment.is_text() and segment.sibling.is_data():
+                        assert segment.data_sibling is None, segment.name
                         segment.data_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
@@ -420,9 +424,11 @@ class CommonSegCode(CommonSegGroup):
                     ".bss"
                 ):
                     if segment.is_noload():
+                        assert segment.sibling.bss_sibling is None, segment.sibling.name
                         segment.sibling.bss_sibling = segment
                 else:
                     if segment.is_text() and segment.sibling.is_noload():
+                        assert segment.bss_sibling is None, segment.name
                         segment.bss_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
@@ -480,11 +486,12 @@ class CommonSegCode(CommonSegGroup):
             last_inserted_name: Optional[str] = None
 
 
-            last_inserted_indices = {x: -1 for x in options.opts.auto_all_sections}
+            last_inserted_indices = {x: -1 for x in options.opts.section_order}
 
             if self.name == "boot":
                 toph = 1
-            
+            print(f"")
+            print(f"{self.name}")
 
             for name, seg in base_segments.items():
                 """
@@ -502,32 +509,40 @@ class CommonSegCode(CommonSegGroup):
                     for idx, other_seg in enumerate(ret):
                         pass
                 """
+                print(f"  {name}")
 
                 if seg.data_sibling is None:
                     if ".data" in options.opts.auto_all_sections:
                         rep_type = ".data"
+                        print(f"    Inserting {rep_type}")
                         seg.data_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
                 else:
+                    print(f"    already had .data")
                     # Preserve order
                     last_inserted_indices[".data"] = ret.index(seg.data_sibling)
 
                 if seg.rodata_sibling is None:
                     if ".rodata" in options.opts.auto_all_sections:
                         rep_type = ".rodata"
+                        print(f"    Inserting {rep_type}")
                         seg.rodata_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
                 else:
+                    print(f"    already had .rodata")
                     # Preserve order
                     last_inserted_indices[".rodata"] = ret.index(seg.rodata_sibling)
 
                 if seg.bss_sibling is None:
                     if ".bss" in options.opts.auto_all_sections:
                         rep_type = ".bss"
+                        print(f"    Inserting {rep_type}")
                         seg.bss_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
                 else:
+                    print(f"    already had .bss")
                     # Preserve order
                     last_inserted_indices[".bss"] = ret.index(seg.bss_sibling)
 
                 last_inserted_name = seg.name
+            print(f"")
 
         """
         print(inserts)

@@ -10,6 +10,10 @@ class CommonSegBss(CommonSegData):
         return ".bss"
 
     @staticmethod
+    def is_data() -> bool:
+        return False
+
+    @staticmethod
     def is_noload() -> bool:
         if not options.opts.ld_bss_is_noload:
             return False
