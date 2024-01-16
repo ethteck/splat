@@ -771,3 +771,6 @@ class Segment:
                     return sym
 
         return None
+
+    def __repr__(self) -> str:
+        return f"{self.name} ({self.type})"

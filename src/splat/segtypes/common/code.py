@@ -105,6 +105,12 @@ class CommonSegCode(CommonSegGroup):
         replace_class = Segment.get_class_for_type(rep_type)
         rep = self._generate_segment_from_all(rep_type, replace_class, None,None, None, base_seg.name, base_seg)
 
+        if base_seg.name == "boot/dmadata":
+            toph = 1
+
+        if base_seg.name == "boot/util":
+            toph = 1
+
         # Get where to insert this segment
         index_to_insert = last_inserted_indices[rep_type]
 
@@ -413,10 +419,10 @@ class CommonSegCode(CommonSegGroup):
                 if self.section_order.index(".text") < self.section_order.index(
                     ".bss"
                 ):
-                    if segment.is_data():
+                    if segment.is_noload():
                         segment.sibling.bss_sibling = segment
                 else:
-                    if segment.is_text() and segment.sibling.is_data():
+                    if segment.is_text() and segment.sibling.is_noload():
                         segment.bss_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
@@ -475,6 +481,10 @@ class CommonSegCode(CommonSegGroup):
 
 
             last_inserted_indices = {x: -1 for x in options.opts.auto_all_sections}
+
+            if self.name == "boot":
+                toph = 1
+            
 
             for name, seg in base_segments.items():
                 """
