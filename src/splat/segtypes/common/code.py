@@ -482,11 +482,12 @@ class CommonSegCode(CommonSegGroup):
                                     break
 
                         assert index_to_insert >= 0, name
+                        index_to_insert += 1
                         ret.insert(index_to_insert, rep)
-                        last_inserted_indices[".data"] = index_to_insert+1
+                        last_inserted_indices[".data"] = index_to_insert
                 else:
                     # Preserve order
-                    last_inserted_indices[".data"] = ret.index(seg.data_sibling)+1
+                    last_inserted_indices[".data"] = ret.index(seg.data_sibling)
 
                 last_inserted_name = seg.name
 
