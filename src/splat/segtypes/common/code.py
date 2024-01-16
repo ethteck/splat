@@ -101,6 +101,41 @@ class CommonSegCode(CommonSegGroup):
             self.special_vram_segment = True
         return rep
 
+    def _insert_auto_all_segment(self, rep_type: str, base_seg: Segment, ret: list[Segment], last_inserted_indices: Dict[str, int], sections_start_indices: Dict[str, int]) -> Segment:
+        replace_class = Segment.get_class_for_type(rep_type)
+        rep = self._generate_segment_from_all(rep_type, replace_class, None,None, None, base_seg.name, base_seg)
+
+        # Get where to insert this segment
+        index_to_insert = last_inserted_indices[rep_type]
+
+        if index_to_insert < 0:
+            # We haven't inserted anything of this type yet, so just insert it at the beginning of this section
+            index_to_insert = sections_start_indices[rep_type]
+        if index_to_insert < 0:
+            # There aren't any subsegments of this type, so search in previous sections
+            for other_section in self.section_order[self.section_order.index(rep_type)-1::-1]:
+                index_to_insert = last_inserted_indices[other_section]
+                if index_to_insert >= 0:
+                    break
+                index_to_insert = sections_start_indices[other_section]
+                if index_to_insert >= 0:
+                    break
+
+        assert index_to_insert >= 0, base_seg.name
+        index_to_insert += 1
+        ret.insert(index_to_insert, rep)
+
+        # Update all other indices
+        for s, idx in sections_start_indices.items():
+            if idx >= index_to_insert:
+                sections_start_indices[s] += 1
+        for s, idx in last_inserted_indices.items():
+            if idx >= index_to_insert:
+                last_inserted_indices[s] += 1
+
+        last_inserted_indices[rep_type] = index_to_insert
+        return rep
+
 
     def handle_alls(self, segs: List[Segment], base_segs: OrderedDict[str, Segment]) -> bool:
         print(self.name)
@@ -461,33 +496,28 @@ class CommonSegCode(CommonSegGroup):
                 if seg.data_sibling is None:
                     if ".data" in options.opts.auto_all_sections:
                         rep_type = ".data"
-                        replace_class = Segment.get_class_for_type(rep_type)
-                        rep = self._generate_segment_from_all(rep_type, replace_class, None,None, None, seg.name, seg)
-                        seg.data_sibling = rep
-
-                        # Get where to insert this segment
-                        index_to_insert = last_inserted_indices[rep_type]
-
-                        if index_to_insert < 0:
-                            # We haven't inserted anything of this type yet, so just insert it at the beginning of this section
-                            index_to_insert = sections_start_indices[rep_type]
-                        if index_to_insert < 0:
-                            # There aren't any subsegments of this type, so search in previous sections
-                            for other_section in self.section_order[self.section_order.index(rep_type)-1::-1]:
-                                index_to_insert = last_inserted_indices[other_section]
-                                if index_to_insert >= 0:
-                                    break
-                                index_to_insert = sections_start_indices[other_section]
-                                if index_to_insert >= 0:
-                                    break
-
-                        assert index_to_insert >= 0, name
-                        index_to_insert += 1
-                        ret.insert(index_to_insert, rep)
-                        last_inserted_indices[".data"] = index_to_insert
+                        seg.data_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
                 else:
                     # Preserve order
                     last_inserted_indices[".data"] = ret.index(seg.data_sibling)
+
+                """
+                if seg.rodata_sibling is None:
+                    if ".rodata" in options.opts.auto_all_sections:
+                        rep_type = ".rodata"
+                        seg.rodata_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
+                else:
+                    # Preserve order
+                    last_inserted_indices[".rodata"] = ret.index(seg.rodata_sibling)
+                """
+
+                if seg.bss_sibling is None:
+                    if ".bss" in options.opts.auto_all_sections:
+                        rep_type = ".bss"
+                        seg.bss_sibling = self._insert_auto_all_segment(rep_type, seg, ret, last_inserted_indices, sections_start_indices)
+                else:
+                    # Preserve order
+                    last_inserted_indices[".bss"] = ret.index(seg.bss_sibling)
 
                 last_inserted_name = seg.name
 
