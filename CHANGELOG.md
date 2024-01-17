@@ -4,6 +4,7 @@
 
 * New yaml option: `hasm_in_src_path`
   * Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+* Remove some dead code.
 * `auto_all_sections` is applied to all segments now.
   * Old behaviour was to only apply the auto sections only segments that only listed C/asm sections.
 

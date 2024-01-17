@@ -765,14 +765,6 @@ class Segment:
 
         return ret
 
-    def get_func_for_addr(self, addr) -> Optional[Symbol]:
-        for syms in self.seg_symbols.values():
-            for sym in syms:
-                if sym.type == "func" and sym.contains_vram(addr):
-                    return sym
-
-        return None
-
     def __repr__(self) -> str:
         # Shows a nicer string on the debugging screen
         return f"{self.name} ({self.type})"
