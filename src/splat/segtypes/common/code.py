@@ -264,30 +264,7 @@ class CommonSegCode(CommonSegGroup):
                         segment.rodata_sibling = segment.sibling
                         segment.sibling.sibling = segment
 
-                if self.section_order.index(".text") < self.section_order.index(
-                    ".data"
-                ):
-                    if segment.is_data():
-                        assert (
-                            segment.sibling.data_sibling is None
-                        ), segment.sibling.name
-                        segment.sibling.data_sibling = segment
-                else:
-                    if segment.is_text() and segment.sibling.is_data():
-                        assert segment.data_sibling is None, segment.name
-                        segment.data_sibling = segment.sibling
-                        segment.sibling.sibling = segment
-
-                if self.section_order.index(".text") < self.section_order.index(".bss"):
-                    if segment.is_noload():
-                        assert segment.sibling.bss_sibling is None, segment.sibling.name
-                        segment.sibling.bss_sibling = segment
-                else:
-                    if segment.is_text() and segment.sibling.is_noload():
-                        assert segment.bss_sibling is None, segment.name
-                        segment.bss_sibling = segment.sibling
-                        segment.sibling.sibling = segment
-
+                # Make siblings reference between them
                 segment.siblings[
                     segment.sibling.get_linker_section_linksection()
                 ] = segment.sibling

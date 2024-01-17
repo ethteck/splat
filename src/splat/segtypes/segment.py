@@ -257,9 +257,7 @@ class Segment:
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
-        self.data_sibling: Optional[Segment] = None
         self.rodata_sibling: Optional[Segment] = None
-        self.bss_sibling: Optional[Segment] = None
         self.siblings: Dict[str, Segment] = {}
         self.file_path: Optional[Path] = None
 

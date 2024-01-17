@@ -96,14 +96,18 @@ class CommonSegTextbin(CommonSegment):
 
             self.write_asm_contents(rom_bytes, f)
 
-            # We check against CommonSegTextbin instead of the specific type because the other incbins inherit from this class
-            if isinstance(self.data_sibling, CommonSegTextbin):
-                f.write("\n")
-                self.data_sibling.write_asm_contents(rom_bytes, f)
+            for sect in self.section_order:
+                if sect == self.get_linker_section_linksection():
+                    continue
 
-            if isinstance(self.rodata_sibling, CommonSegTextbin):
-                f.write("\n")
-                self.rodata_sibling.write_asm_contents(rom_bytes, f)
+                sibling = self.siblings.get(sect)
+                if sibling is None:
+                    continue
+
+                # We check against CommonSegTextbin instead of the specific type because the other incbins inherit from this class
+                if isinstance(sibling, CommonSegTextbin):
+                    f.write("\n")
+                    sibling.write_asm_contents(rom_bytes, f)
 
     def should_scan(self) -> bool:
         return self.rom_start is not None and self.rom_end is not None
