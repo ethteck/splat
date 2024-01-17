@@ -174,12 +174,13 @@ class CommonSegC(CommonSegCodeSubsegment):
                         rodata_sibling.get_linker_section_linksection()
                     )
 
-                    assert rodata_sibling.spim_section is not None
-                    assert isinstance(
-                        rodata_sibling.spim_section.get_section(),
-                        spimdisasm.mips.sections.SectionRodata,
-                    )
-                    rodata_spim_segment = rodata_sibling.spim_section.get_section()
+                    # rodata_sibling.spim_section may be None if said sibling is an auto inserted one
+                    if rodata_sibling.spim_section is not None:
+                        assert isinstance(
+                            rodata_sibling.spim_section.get_section(),
+                            spimdisasm.mips.sections.SectionRodata,
+                        )
+                        rodata_spim_segment = rodata_sibling.spim_section.get_section()
 
                     # Stop searching
                     break
