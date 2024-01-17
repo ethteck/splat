@@ -39,9 +39,6 @@ class CommonSegCode(CommonSegGroup):
         )
 
         self.reported_file_split = False
-        self.jtbl_glabels_to_add: Set[int] = set()
-        self.jumptables: Dict[int, Tuple[int, int]] = {}
-        self.rodata_syms: Dict[int, List[Symbol]] = {}
 
         self.align = parse_segment_align(yaml)
         if self.align is None:
@@ -57,27 +54,6 @@ class CommonSegCode(CommonSegGroup):
             return self.vram_start + self.size + self.bss_size
         else:
             return None
-
-    def check_rodata_sym_impl(self, func_addr: int, sym: Symbol, rodata_section: Range):
-        if rodata_section.is_complete():
-            assert rodata_section.start is not None
-            assert rodata_section.end is not None
-
-            rodata_start: int = rodata_section.start
-            rodata_end: int = rodata_section.end
-            if rodata_start <= sym.vram_start < rodata_end:
-                if func_addr not in self.rodata_syms:
-                    self.rodata_syms[func_addr] = []
-                self.rodata_syms[func_addr].append(sym)
-
-    # Prepare symbol for migration to the function
-    def check_rodata_sym(self, func_addr: int, sym: Symbol):
-        rodata_section = self.section_boundaries.get(".rodata")
-        if rodata_section is not None:
-            self.check_rodata_sym_impl(func_addr, sym, rodata_section)
-        rodata_section = self.section_boundaries.get(".rdata")
-        if rodata_section is not None:
-            self.check_rodata_sym_impl(func_addr, sym, rodata_section)
 
     def handle_alls(self, segs: List[Segment], base_segs) -> bool:
         for i, elem in enumerate(segs):
@@ -168,13 +144,10 @@ class CommonSegCode(CommonSegGroup):
             OrderedDict()
         )  # Used to manually add "all_" types for sections not otherwise defined in the yaml
 
-        self.section_boundaries = OrderedDict(
+        # Stores yaml index where a section was first found
+        found_sections = OrderedDict(
             (s_name, Range()) for s_name in options.opts.section_order
         )
-
-        found_sections = OrderedDict(
-            (s_name, Range()) for s_name in self.section_boundaries
-        )  # Stores yaml index where a section was first found
         found_sections.pop(".text")
 
         # Mark any manually added dot types
@@ -334,15 +307,6 @@ class CommonSegCode(CommonSegGroup):
             if segment.special_vram_segment:
                 self.special_vram_segment = True
 
-            for i, section in enumerate(self.section_order):
-                if not self.section_boundaries[section].has_start() and dotless_type(
-                    section
-                ) == dotless_type(segment.type):
-                    if i > 0:
-                        prev_section = self.section_order[i - 1]
-                        self.section_boundaries[prev_section].end = segment.vram_start
-                    self.section_boundaries[section].start = segment.vram_start
-
             segment.bss_contains_common = self.bss_contains_common
             ret.append(segment)
 
@@ -398,18 +362,6 @@ class CommonSegCode(CommonSegGroup):
         check = True
         while check:
             check = self.handle_alls(ret, base_segments)
-
-        # TODO why is this necessary?
-        rodata_section = self.section_boundaries.get(
-            ".rodata"
-        ) or self.section_boundaries.get(".rdata")
-        if (
-            rodata_section is not None
-            and rodata_section.has_start()
-            and not rodata_section.has_end()
-        ):
-            assert self.vram_end is not None
-            rodata_section.end = self.vram_end
 
         return ret
 

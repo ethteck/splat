@@ -4,6 +4,7 @@
 
 * New yaml option: `hasm_in_src_path`
   * Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+* Remove some dead code.
 
 ### 0.21.3
 

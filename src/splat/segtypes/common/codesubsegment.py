@@ -89,15 +89,6 @@ class CommonSegCodeSubsegment(Segment):
 
             self.process_insns(func)
 
-        # Process jumptable labels and pass them to spimdisasm
-        self.gather_jumptable_labels(rom_bytes)
-        for jtbl_label_vram in self.parent.jtbl_glabels_to_add:
-            sym = self.create_symbol(
-                jtbl_label_vram, True, type="jtbl_label", define=True
-            )
-            sym.type = "jtbl_label"
-            symbols.add_symbol_to_spim_section(self.spim_section.get_section(), sym)
-
     def process_insns(
         self,
         func_spim: spimdisasm.mips.symbols.SymbolFunction,
@@ -111,21 +102,6 @@ class CommonSegCodeSubsegment(Segment):
         symbols.create_symbol_from_spim_symbol(
             self.get_most_parent(), func_spim.contextSym
         )
-
-        # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referenced_vram in func_spim.instrAnalyzer.referencedVrams:
-            context_sym = self.spim_section.get_section().getSymbol(
-                referenced_vram, tryPlusOffset=False
-            )
-            if context_sym is not None:
-                if context_sym.type == spimdisasm.common.SymbolSpecialType.jumptable:
-                    self.parent.jumptables[referenced_vram] = (
-                        func_spim.vram,
-                        func_spim.vramEnd,
-                    )
-                symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym
-                )
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
@@ -149,12 +125,9 @@ class CommonSegCodeSubsegment(Segment):
                     sym_address, tryPlusOffset=False
                 )
                 if context_sym is not None:
-                    sym = symbols.create_symbol_from_spim_symbol(
+                    symbols.create_symbol_from_spim_symbol(
                         self.get_most_parent(), context_sym
                     )
-
-                    if self.parent:
-                        self.parent.check_rodata_sym(func_spim.vram, sym)
 
     def print_file_boundaries(self):
         if not self.show_file_boundaries or not self.spim_section:
@@ -186,29 +159,6 @@ class CommonSegCodeSubsegment(Segment):
                     "File split suggestions for this segment will follow in config yaml format:"
                 )
             print(f"      - [0x{self.rom_start+in_file_offset:X}, {self.type}]")
-
-    def gather_jumptable_labels(self, rom_bytes):
-        assert isinstance(self.rom_start, int)
-        assert isinstance(self.vram_start, int)
-
-        # TODO: use the seg_symbols for this
-        # jumptables = [j.type == "jtbl" for j in self.seg_symbols]
-        for jumptable in self.parent.jumptables:
-            start, end = self.parent.jumptables[jumptable]
-            rom_offset = self.rom_start + jumptable - self.vram_start
-
-            if rom_offset <= 0:
-                return
-
-            while rom_offset:
-                word = rom_bytes[rom_offset : rom_offset + 4]
-                word_int = int.from_bytes(word, options.opts.endianness)
-                if word_int >= start and word_int <= end:
-                    self.parent.jtbl_glabels_to_add.add(word_int)
-                else:
-                    break
-
-                rom_offset += 4
 
     def should_scan(self) -> bool:
         return (
