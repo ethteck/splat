@@ -250,20 +250,6 @@ class CommonSegCode(CommonSegGroup):
             segment.sibling = base_segments.get(segment.name, None)
 
             if segment.sibling is not None:
-                if self.section_order.index(".text") < self.section_order.index(
-                    ".rodata"
-                ):
-                    if segment.is_rodata():
-                        assert (
-                            segment.sibling.rodata_sibling is None
-                        ), segment.sibling.name
-                        segment.sibling.rodata_sibling = segment
-                else:
-                    if segment.is_text() and segment.sibling.is_rodata():
-                        assert segment.rodata_sibling is None, segment.name
-                        segment.rodata_sibling = segment.sibling
-                        segment.sibling.sibling = segment
-
                 # Make siblings reference between them
                 segment.siblings[
                     segment.sibling.get_linker_section_linksection()

@@ -86,6 +86,10 @@ class CommonSegTextbin(CommonSegment):
 
         s_path = self.out_path()
         assert s_path is not None
+
+        if s_path.exists():
+            return
+
         s_path.parent.mkdir(parents=True, exist_ok=True)
 
         with s_path.open("w") as f:

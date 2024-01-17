@@ -156,24 +156,33 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.spim_section.get_section(), spimdisasm.mips.sections.SectionText
             ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
 
+            # We want to know if this C section has a corresponding rodata section so we can migrate its rodata
             rodata_section_type = ""
             rodata_spim_segment: Optional[spimdisasm.mips.sections.SectionRodata] = None
-            if (
-                options.opts.migrate_rodata_to_functions
-                and self.rodata_sibling is not None
-            ):
-                assert isinstance(
-                    self.rodata_sibling, CommonSegRodata
-                ), self.rodata_sibling.type
-                rodata_section_type = (
-                    self.rodata_sibling.get_linker_section_linksection()
-                )
-                if self.rodata_sibling.spim_section is not None:
+            if options.opts.migrate_rodata_to_functions:
+                # We don't know if the rodata section is .rodata or .rdata, so we need to check both
+                for sect in [".rodata", ".rdata"]:
+                    rodata_sibling = self.siblings.get(sect)
+                    if rodata_sibling is None:
+                        continue
+
                     assert isinstance(
-                        self.rodata_sibling.spim_section.get_section(),
+                        rodata_sibling, CommonSegRodata
+                    ), rodata_sibling.type
+
+                    rodata_section_type = (
+                        rodata_sibling.get_linker_section_linksection()
+                    )
+
+                    assert rodata_sibling.spim_section is not None
+                    assert isinstance(
+                        rodata_sibling.spim_section.get_section(),
                         spimdisasm.mips.sections.SectionRodata,
                     )
-                    rodata_spim_segment = self.rodata_sibling.spim_section.get_section()
+                    rodata_spim_segment = rodata_sibling.spim_section.get_section()
+
+                    # Stop searching
+                    break
 
             # Precompute function-rodata pairings
             symbols_entries = (
