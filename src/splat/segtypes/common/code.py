@@ -95,13 +95,19 @@ class CommonSegCode(CommonSegGroup):
         if len(options.opts.auto_all_sections) == 0:
             return ret
 
-        # print()
-        last_inserted_index = 0
+        print()
+        last_inserted_index = len(ret)
+
+        for sect in reversed(options.opts.auto_all_sections):
+            for i, (name, seg) in enumerate(base_segments.items()):
+                if seg.get_linker_section_linksection() == sect:
+                    last_inserted_index = i
+                    break
 
         for sect in options.opts.auto_all_sections:
-            # print(sect)
+            print(sect)
             for name, seg in base_segments.items():
-                # print(f"    {name}")
+                print(f"    {name}")
                 if seg.get_linker_section_linksection() == sect:
                     # Avoid duplicating current section
                     last_inserted_index = ret.index(seg)
@@ -109,20 +115,19 @@ class CommonSegCode(CommonSegGroup):
 
                 sibling = seg.siblings.get(sect)
                 if sibling is None:
-                    # print(f"        Inserting {name} {sect}")
                     replace_class = Segment.get_class_for_type(sect)
-                    new_seg = self._generate_segment_from_all(
+                    sibling = self._generate_segment_from_all(
                         sect, replace_class, seg.name, seg
                     )
-                    seg.siblings[sect] = new_seg
+                    seg.siblings[sect] = sibling
                     last_inserted_index += 1
-                    ret.insert(last_inserted_index, new_seg)
+                    print(f"        Current index: {ret.index(seg)}")
+                    print(f"        Inserting {name} {sect} at index {last_inserted_index}")
+                    ret.insert(last_inserted_index, sibling)
 
-                else:
-                    # Preserve order
-                    last_inserted_index = ret.index(sibling)
+                last_inserted_index = ret.index(sibling)
 
-        # print()
+        print()
 
         return ret
 
