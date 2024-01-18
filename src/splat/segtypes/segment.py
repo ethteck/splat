@@ -285,6 +285,9 @@ class Segment:
             yaml, options.opts.ld_fill_value
         )
 
+        # True if this segment was generated based on auto_all_sections
+        self.is_auto_all: bool = False
+
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
                 log.error(

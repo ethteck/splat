@@ -59,11 +59,11 @@ class CommonSegCode(CommonSegGroup):
         self,
         rep_type: str,
         replace_class: Type[Segment],
-        rom_start: Optional[int],
-        rom_end: Optional[int],
-        vram_start: Optional[int],
         base_name: str,
         base_seg: Segment,
+        rom_start: Optional[int]=None,
+        rom_end: Optional[int]=None,
+        vram_start: Optional[int]=None,
     ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
@@ -82,84 +82,47 @@ class CommonSegCode(CommonSegGroup):
         rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
         rep.sibling = base_seg
         rep.parent = self
+        rep.is_auto_all = True
         if rep.special_vram_segment:
             self.special_vram_segment = True
-        return rep
-
-    def _insert_auto_section(
-        self,
-        rep_type: str,
-        base_seg: Segment,
-        ret: List[Segment],
-        last_inserted_indices: Dict[str, int],
-        sections_start_indices: Dict[str, int],
-    ) -> Segment:
-        replace_class = Segment.get_class_for_type(rep_type)
-        rep = self._generate_segment_from_all(
-            rep_type, replace_class, None, None, None, base_seg.name, base_seg
-        )
-
-        # Get where to insert this segment
-        index_to_insert = last_inserted_indices.get(rep_type, -1)
-
-        if index_to_insert < 0:
-            # We haven't inserted anything of this type yet, so just insert it at the beginning of this section
-            index_to_insert = sections_start_indices.get(rep_type, -1)
-        if index_to_insert < 0:
-            # There aren't any subsegments of this type, so search in previous sections
-            for other_section in self.section_order[
-                self.section_order.index(rep_type) - 1 :: -1
-            ]:
-                index_to_insert = last_inserted_indices.get(other_section, -1)
-                if index_to_insert >= 0:
-                    break
-                index_to_insert = sections_start_indices.get(other_section, -1)
-                if index_to_insert >= 0:
-                    break
-
-        assert index_to_insert >= 0, base_seg.name
-        index_to_insert += 1
-        ret.insert(index_to_insert, rep)
-
-        # Update all other indices
-        for s, idx in sections_start_indices.items():
-            if idx >= index_to_insert:
-                sections_start_indices[s] += 1
-        for s, idx in last_inserted_indices.items():
-            if idx >= index_to_insert:
-                last_inserted_indices[s] += 1
-
-        # Update this section
-        last_inserted_indices[rep_type] = index_to_insert
         return rep
 
     def _insert_all_auto_sections(
         self,
         ret: List[Segment],
         base_segments: OrderedDict[str, Segment],
-        sections_start_indices: Dict[str, int],
-    ):
+    ) -> List[Segment]:
         if len(options.opts.auto_all_sections) == 0:
-            return
+            return ret
 
-        # Track the index where we last inserted something per section type
-        last_inserted_indices = {x: -1 for x in options.opts.section_order}
+        # print()
+        last_inserted_index = 0
 
-        for name, seg in base_segments.items():
-            for sect in options.opts.auto_all_sections:
+        for sect in options.opts.auto_all_sections:
+            # print(sect)
+            for name, seg in base_segments.items():
+                # print(f"    {name}")
                 if seg.get_linker_section_linksection() == sect:
                     # Avoid duplicating current section
+                    last_inserted_index = ret.index(seg)
                     continue
 
                 sibling = seg.siblings.get(sect)
                 if sibling is None:
-                    # If there's no sibling for this section type then we generate and insert it
-                    seg.siblings[sect] = self._insert_auto_section(
-                        sect, seg, ret, last_inserted_indices, sections_start_indices
-                    )
+                    # print(f"        Inserting {name} {sect}")
+                    replace_class = Segment.get_class_for_type(sect)
+                    new_seg = self._generate_segment_from_all(sect, replace_class, seg.name, seg)
+                    seg.siblings[sect] = new_seg
+                    last_inserted_index += 1
+                    ret.insert(last_inserted_index, new_seg)
+
                 else:
                     # Preserve order
-                    last_inserted_indices[sect] = ret.index(sibling)
+                    last_inserted_index = ret.index(sibling)
+
+        # print()
+
+        return ret
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
         if "subsegments" not in segment_yaml:
@@ -173,15 +136,6 @@ class CommonSegCode(CommonSegGroup):
         ret: List[Segment] = []
         prev_start: Optional[int] = -1
         prev_vram: Optional[int] = -1
-
-        # Stores yaml index where a section was first found
-        found_sections = OrderedDict(
-            (s_name, Range()) for s_name in options.opts.section_order
-        )
-
-        sections_start_indices: Dict[str, int] = dict()
-        for section_name in options.opts.auto_all_sections:
-            sections_start_indices[section_name] = -1
 
         last_rom_end = None
 
@@ -265,23 +219,19 @@ class CommonSegCode(CommonSegGroup):
             segment.bss_contains_common = self.bss_contains_common
             ret.append(segment)
 
-            if segment.is_text():
+            if segment.is_text() or segment.name not in base_segments:
                 base_segments[segment.name] = segment
 
             if self.section_order.index(".rodata") < self.section_order.index(".text"):
                 if segment.is_rodata() and segment.sibling is None:
                     base_segments[segment.name] = segment
 
-            section_type = segment.get_linker_section_linksection()
-            if sections_start_indices.get(section_type, -1) < 0:
-                sections_start_indices[section_type] = i
-
             prev_start = start
             prev_vram = segment.vram_start
             if end is not None:
                 last_rom_end = end
 
-        self._insert_all_auto_sections(ret, base_segments, sections_start_indices)
+        ret = self._insert_all_auto_sections(ret, base_segments)
 
         return ret
 
