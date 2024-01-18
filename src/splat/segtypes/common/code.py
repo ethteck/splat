@@ -61,9 +61,9 @@ class CommonSegCode(CommonSegGroup):
         replace_class: Type[Segment],
         base_name: str,
         base_seg: Segment,
-        rom_start: Optional[int]=None,
-        rom_end: Optional[int]=None,
-        vram_start: Optional[int]=None,
+        rom_start: Optional[int] = None,
+        rom_end: Optional[int] = None,
+        vram_start: Optional[int] = None,
     ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
@@ -111,7 +111,9 @@ class CommonSegCode(CommonSegGroup):
                 if sibling is None:
                     # print(f"        Inserting {name} {sect}")
                     replace_class = Segment.get_class_for_type(sect)
-                    new_seg = self._generate_segment_from_all(sect, replace_class, seg.name, seg)
+                    new_seg = self._generate_segment_from_all(
+                        sect, replace_class, seg.name, seg
+                    )
                     seg.siblings[sect] = new_seg
                     last_inserted_index += 1
                     ret.insert(last_inserted_index, new_seg)
