@@ -28,21 +28,6 @@ SECTIONS
         . = ALIGN(., 16);
         dummy_ipl3_DATA_END = .;
         dummy_ipl3_DATA_SIZE = ABSOLUTE(dummy_ipl3_DATA_END - dummy_ipl3_DATA_START);
-        dummy_ipl3_RODATA_START = .;
-        build/split/assets/dummy_ipl3.o(.rodata);
-        . = ALIGN(., 16);
-        dummy_ipl3_RODATA_END = .;
-        dummy_ipl3_RODATA_SIZE = ABSOLUTE(dummy_ipl3_RODATA_END - dummy_ipl3_RODATA_START);
-    }
-    dummy_ipl3_bss_VRAM = ADDR(.dummy_ipl3_bss);
-    .dummy_ipl3_bss (NOLOAD) : SUBALIGN(16)
-    {
-        FILL(0x00000000);
-        dummy_ipl3_BSS_START = .;
-        build/split/assets/dummy_ipl3.o(.bss);
-        . = ALIGN(., 16);
-        dummy_ipl3_BSS_END = .;
-        dummy_ipl3_BSS_SIZE = ABSOLUTE(dummy_ipl3_BSS_END - dummy_ipl3_BSS_START);
     }
     __romPos += SIZEOF(.dummy_ipl3);
     __romPos = ALIGN(__romPos, 16);
