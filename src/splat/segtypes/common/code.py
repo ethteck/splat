@@ -98,11 +98,14 @@ class CommonSegCode(CommonSegGroup):
         print()
         last_inserted_index = len(ret)
 
-        for sect in reversed(options.opts.auto_all_sections):
+        print(f"{len(ret)=}")
+
+        # Determine what will be the min insertion index
+        for sect in reversed(self.section_order):
             for i, (name, seg) in enumerate(base_segments.items()):
                 if seg.get_linker_section_linksection() == sect:
-                    last_inserted_index = i
-                    break
+                    continue
+                last_inserted_index = i
 
         for sect in options.opts.auto_all_sections:
             print(sect)
@@ -121,11 +124,22 @@ class CommonSegCode(CommonSegGroup):
                     )
                     seg.siblings[sect] = sibling
                     last_inserted_index += 1
-                    print(f"        Current index: {ret.index(seg)}")
-                    print(f"        Inserting {name} {sect} at index {last_inserted_index}")
+                    current_index = ret.index(seg)
+                    print(f"        Current index: {current_index}")
+                    print(
+                        f"        Inserting {name} {sect} at index {last_inserted_index}"
+                    )
+                    if last_inserted_index - current_index < 7:
+                        print(f"        segments in between: ")
+                        sub_i = current_index
+                        for between in ret[current_index : last_inserted_index + 1]:
+                            print(f"            - {sub_i}: {between}")
+                            sub_i += 1
                     ret.insert(last_inserted_index, sibling)
 
                 last_inserted_index = ret.index(sibling)
+
+        print(f"{len(ret)=}")
 
         print()
 
@@ -226,7 +240,7 @@ class CommonSegCode(CommonSegGroup):
             segment.bss_contains_common = self.bss_contains_common
             ret.append(segment)
 
-            if segment.is_text() or segment.name not in base_segments:
+            if segment.is_text():
                 base_segments[segment.name] = segment
 
             if self.section_order.index(".rodata") < self.section_order.index(".text"):
