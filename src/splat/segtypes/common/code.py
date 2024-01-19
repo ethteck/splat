@@ -95,12 +95,8 @@ class CommonSegCode(CommonSegGroup):
         if len(options.opts.auto_all_sections) == 0:
             return ret
 
-        print()
-        last_inserted_index = len(ret)
-
-        print(f"{len(ret)=}")
-
         # Determine what will be the min insertion index
+        last_inserted_index = len(ret)
         for sect in reversed(self.section_order):
             for i, (name, seg) in enumerate(base_segments.items()):
                 if seg.get_linker_section_linksection() == sect:
@@ -108,9 +104,7 @@ class CommonSegCode(CommonSegGroup):
                 last_inserted_index = i
 
         for sect in options.opts.auto_all_sections:
-            print(sect)
             for name, seg in base_segments.items():
-                print(f"    {name}")
                 if seg.get_linker_section_linksection() == sect:
                     # Avoid duplicating current section
                     last_inserted_index = ret.index(seg)
@@ -124,24 +118,9 @@ class CommonSegCode(CommonSegGroup):
                     )
                     seg.siblings[sect] = sibling
                     last_inserted_index += 1
-                    current_index = ret.index(seg)
-                    print(f"        Current index: {current_index}")
-                    print(
-                        f"        Inserting {name} {sect} at index {last_inserted_index}"
-                    )
-                    if last_inserted_index - current_index < 7:
-                        print(f"        segments in between: ")
-                        sub_i = current_index
-                        for between in ret[current_index : last_inserted_index + 1]:
-                            print(f"            - {sub_i}: {between}")
-                            sub_i += 1
                     ret.insert(last_inserted_index, sibling)
 
                 last_inserted_index = ret.index(sibling)
-
-        print(f"{len(ret)=}")
-
-        print()
 
         return ret
 
