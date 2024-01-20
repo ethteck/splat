@@ -257,8 +257,7 @@ class Segment:
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
-        self.data_sibling: Optional[Segment] = None
-        self.rodata_sibling: Optional[Segment] = None
+        self.siblings: Dict[str, Segment] = {}
         self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
@@ -285,6 +284,9 @@ class Segment:
         self.ld_fill_value: Optional[int] = self.parse_ld_fill_value(
             yaml, options.opts.ld_fill_value
         )
+
+        # True if this segment was generated based on auto_all_sections
+        self.is_auto_all: bool = False
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
@@ -762,3 +764,7 @@ class Segment:
         assert ret is not None
 
         return ret
+
+    def __repr__(self) -> str:
+        # Shows a nicer string on the debugging screen
+        return f"{self.name} ({self.type})"

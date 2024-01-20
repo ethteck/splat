@@ -1,6 +1,5 @@
-import typing
 from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple, Set, Type
 
 from ...util import log, options
 from ...util.range import Range
@@ -55,76 +54,75 @@ class CommonSegCode(CommonSegGroup):
         else:
             return None
 
-    def handle_alls(self, segs: List[Segment], base_segs) -> bool:
-        for i, elem in enumerate(segs):
-            if elem.type.startswith("all_"):
-                alls = []
+    # Generates a placeholder segment for the auto_all_sections option
+    def _generate_segment_from_all(
+        self,
+        rep_type: str,
+        replace_class: Type[Segment],
+        base_name: str,
+        base_seg: Segment,
+        rom_start: Optional[int] = None,
+        rom_end: Optional[int] = None,
+        vram_start: Optional[int] = None,
+    ) -> Segment:
+        rep: Segment = replace_class(
+            rom_start=rom_start,
+            rom_end=rom_end,
+            type=rep_type,
+            name=base_name,
+            vram_start=vram_start,
+            args=[],
+            yaml={},
+        )
+        rep.extract = False
+        rep.given_subalign = self.given_subalign
+        rep.exclusive_ram_id = self.get_exclusive_ram_id()
+        rep.given_dir = self.given_dir
+        rep.given_symbol_name_format = self.symbol_name_format
+        rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
+        rep.sibling = base_seg
+        rep.parent = self
+        rep.is_auto_all = True
+        if rep.special_vram_segment:
+            self.special_vram_segment = True
+        return rep
 
-                rep_type = f"{elem.type[4:]}"
-                replace_class = Segment.get_class_for_type(rep_type)
+    def _insert_all_auto_sections(
+        self,
+        ret: List[Segment],
+        base_segments: OrderedDict[str, Segment],
+    ) -> List[Segment]:
+        if len(options.opts.auto_all_sections) == 0:
+            return ret
 
-                for base in base_segs.items():
-                    if isinstance(elem.rom_start, int) and isinstance(
-                        self.rom_start, int
-                    ):
-                        # Shoddy rom to ram
-                        assert self.vram_start is not None, self.vram_start
-                        vram_start = elem.rom_start - self.rom_start + self.vram_start
-                    else:
-                        vram_start = None
-                    rep: Segment = replace_class(
-                        rom_start=elem.rom_start,
-                        rom_end=elem.rom_end,
-                        type=rep_type,
-                        name=base[0],
-                        vram_start=vram_start,
-                        args=[],
-                        yaml={},
+        # Determine what will be the min insertion index
+        last_inserted_index = len(ret)
+        for sect in reversed(self.section_order):
+            for i, (name, seg) in enumerate(base_segments.items()):
+                if seg.get_linker_section_linksection() == sect:
+                    continue
+                last_inserted_index = i
+
+        for sect in options.opts.auto_all_sections:
+            for name, seg in base_segments.items():
+                if seg.get_linker_section_linksection() == sect:
+                    # Avoid duplicating current section
+                    last_inserted_index = ret.index(seg)
+                    continue
+
+                sibling = seg.siblings.get(sect)
+                if sibling is None:
+                    replace_class = Segment.get_class_for_type(sect)
+                    sibling = self._generate_segment_from_all(
+                        sect, replace_class, seg.name, seg
                     )
-                    rep.extract = False
-                    rep.given_subalign = self.given_subalign
-                    rep.exclusive_ram_id = self.get_exclusive_ram_id()
-                    rep.given_dir = self.given_dir
-                    rep.given_symbol_name_format = self.symbol_name_format
-                    rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
-                    rep.sibling = base[1]
-                    rep.parent = self
-                    if rep.special_vram_segment:
-                        self.special_vram_segment = True
-                    alls.append(rep)
+                    seg.siblings[sect] = sibling
+                    last_inserted_index += 1
+                    ret.insert(last_inserted_index, sibling)
 
-                # Insert alls into segs at i
-                del segs[i]
-                segs[i:i] = alls
-                return True
-        return False
+                last_inserted_index = ret.index(sibling)
 
-    # Find places we should automatically add "all_data" / "all_rodata" / "all_bss"
-    def find_inserts(
-        self, found_sections: typing.OrderedDict[str, Range]
-    ) -> "OrderedDict[str, int]":
-        inserts: OrderedDict[str, int] = OrderedDict()
-
-        section_order = self.section_order.copy()
-        section_order.remove(".text")
-
-        for i, section in enumerate(section_order):
-            if section not in options.opts.auto_all_sections:
-                continue
-
-            if not found_sections[section].has_start():
-                search_done = False
-                for j in range(i - 1, -1, -1):
-                    end = found_sections[section_order[j]].end
-                    if end is not None:
-                        inserts[section] = end
-                        search_done = True
-                        break
-                if not search_done:
-                    inserts[section] = -1
-                    pass
-
-        return inserts
+        return ret
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
         if "subsegments" not in segment_yaml:
@@ -135,65 +133,9 @@ class CommonSegCode(CommonSegGroup):
             return []
 
         base_segments: OrderedDict[str, Segment] = OrderedDict()
-        ret = []
+        ret: List[Segment] = []
         prev_start: Optional[int] = -1
         prev_vram: Optional[int] = -1
-        inserts: OrderedDict[
-            str, int
-        ] = (
-            OrderedDict()
-        )  # Used to manually add "all_" types for sections not otherwise defined in the yaml
-
-        # Stores yaml index where a section was first found
-        found_sections = OrderedDict(
-            (s_name, Range()) for s_name in options.opts.section_order
-        )
-        found_sections.pop(".text")
-
-        # Mark any manually added dot types
-        cur_section = None
-
-        for i, subsegment_yaml in enumerate(segment_yaml["subsegments"]):
-            # endpos marker
-            if isinstance(subsegment_yaml, list) and len(subsegment_yaml) == 1:
-                continue
-
-            typ = Segment.parse_segment_type(subsegment_yaml)
-            if typ.startswith("all_"):
-                typ = typ[4:]
-            if not typ.startswith("."):
-                typ = f".{typ}"
-
-            if typ in found_sections:
-                if cur_section is None:
-                    # Starting point
-                    found_sections[typ].start = i
-                    cur_section = typ
-                else:
-                    if cur_section != typ:
-                        # We're changing sections
-
-                        if options.opts.check_consecutive_segment_types:
-                            if found_sections[cur_section].has_end():
-                                log.error(
-                                    f"Section {cur_section} end encountered but was already ended earlier!"
-                                )
-                            if found_sections[typ].has_start():
-                                log.error(
-                                    f"Section {typ} start encounted but has already started earlier!"
-                                )
-
-                        # End the current section
-                        found_sections[cur_section].end = i
-
-                        # Start the next section
-                        found_sections[typ].start = i
-                        cur_section = typ
-
-        if cur_section is not None:
-            found_sections[cur_section].end = -1
-
-        inserts = self.find_inserts(found_sections)
 
         last_rom_end = None
 
@@ -204,27 +146,6 @@ class CommonSegCode(CommonSegGroup):
 
             typ = Segment.parse_segment_type(subsegment_yaml)
             start = Segment.parse_segment_start(subsegment_yaml)
-
-            # Add dummy segments to be expanded later
-            if typ.startswith("all_"):
-                dummy_seg = Segment(
-                    rom_start=start,
-                    rom_end=None,
-                    type=typ,
-                    name="",
-                    vram_start=None,
-                    args=[],
-                    yaml={},
-                )
-                dummy_seg.given_subalign = self.given_subalign
-                dummy_seg.exclusive_ram_id = self.exclusive_ram_id
-                dummy_seg.given_dir = self.given_dir
-                dummy_seg.given_symbol_name_format = self.symbol_name_format
-                dummy_seg.given_symbol_name_format_no_rom = (
-                    self.symbol_name_format_no_rom
-                )
-                ret.append(dummy_seg)
-                continue
 
             segment_class = Segment.get_class_for_type(typ)
 
@@ -283,25 +204,13 @@ class CommonSegCode(CommonSegGroup):
             segment.sibling = base_segments.get(segment.name, None)
 
             if segment.sibling is not None:
-                if self.section_order.index(".text") < self.section_order.index(
-                    ".rodata"
-                ):
-                    if segment.is_rodata():
-                        segment.sibling.rodata_sibling = segment
-                else:
-                    if segment.is_text() and segment.sibling.is_rodata():
-                        segment.rodata_sibling = segment.sibling
-                        segment.sibling.sibling = segment
-
-                if self.section_order.index(".text") < self.section_order.index(
-                    ".data"
-                ):
-                    if segment.is_data():
-                        segment.sibling.data_sibling = segment
-                else:
-                    if segment.is_text() and segment.sibling.is_data():
-                        segment.data_sibling = segment.sibling
-                        segment.sibling.sibling = segment
+                # Make siblings reference between them
+                segment.siblings[
+                    segment.sibling.get_linker_section_linksection()
+                ] = segment.sibling
+                segment.sibling.siblings[
+                    segment.get_linker_section_linksection()
+                ] = segment
 
             segment.parent = self
             if segment.special_vram_segment:
@@ -322,46 +231,7 @@ class CommonSegCode(CommonSegGroup):
             if end is not None:
                 last_rom_end = end
 
-        # Add the automatic all_ sections
-        orig_len = len(ret)
-        for section in reversed(inserts):
-            idx = inserts[section]
-
-            if idx == -1:
-                idx = orig_len
-
-            # bss hack TODO maybe rethink
-            if (
-                section == "bss"
-                and self.vram_start is not None
-                and self.rom_end is not None
-                and self.rom_start is not None
-            ):
-                rom_start = self.rom_end
-                vram_start = self.vram_start + self.rom_end - self.rom_start
-            else:
-                rom_start = None
-                vram_start = None
-
-            new_seg = Segment(
-                rom_start=rom_start,
-                rom_end=None,
-                type="all_" + section,
-                name="",
-                vram_start=vram_start,
-                args=[],
-                yaml={},
-            )
-            new_seg.given_subalign = self.given_subalign
-            new_seg.exclusive_ram_id = self.exclusive_ram_id
-            new_seg.given_dir = self.given_dir
-            new_seg.given_symbol_name_format = self.symbol_name_format
-            new_seg.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
-            ret.insert(idx, new_seg)
-
-        check = True
-        while check:
-            check = self.handle_alls(ret, base_segments)
+        ret = self._insert_all_auto_sections(ret, base_segments)
 
         return ret
 

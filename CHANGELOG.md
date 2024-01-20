@@ -5,6 +5,8 @@
 * New yaml option: `hasm_in_src_path`
   * Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
 * Remove some dead code.
+* `auto_all_sections` is even more "auto" now, creating automatic entries for all .text segments.
+  * Before, this feature did not function for a given type if you had one or more of that type manually specified elsewhere. Now, the automatic entries are still populated, even if you have manual ones as well.
 
 ### 0.21.3
 
