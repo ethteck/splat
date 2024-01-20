@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.5
+
+* Fixed issue with Python 3.8 compatibility (oops)
+
 ### 0.21.4
 
 * New yaml option: `hasm_in_src_path`

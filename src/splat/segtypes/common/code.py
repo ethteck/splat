@@ -1,9 +1,7 @@
 from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple, Set, Type
+from typing import OrderedDict, List, Optional, Type
 
 from ...util import log, options
-from ...util.range import Range
-from ...util.symbols import Symbol
 
 from .group import CommonSegGroup
 from ..segment import Segment, parse_segment_align
