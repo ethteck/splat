@@ -187,7 +187,9 @@ class Segment:
         return None
 
     @staticmethod
-    def parse_segment_bss_contains_common(segment: Union[dict, list], default: bool) -> bool:
+    def parse_segment_bss_contains_common(
+        segment: Union[dict, list], default: bool
+    ) -> bool:
         if isinstance(segment, dict) and "bss_contains_common" in segment:
             return bool(segment["bss_contains_common"])
         return default
@@ -271,7 +273,9 @@ class Segment:
 
         self.warnings: List[str] = []
         self.did_run = False
-        self.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml, options.opts.ld_bss_contains_common)
+        self.bss_contains_common = Segment.parse_segment_bss_contains_common(
+            yaml, options.opts.ld_bss_contains_common
+        )
 
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
         self.special_vram_segment: bool = False
@@ -340,7 +344,9 @@ class Segment:
         )
         ret.file_path = Segment.parse_segment_file_path(yaml)
 
-        ret.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml, options.opts.ld_bss_contains_common)
+        ret.bss_contains_common = Segment.parse_segment_bss_contains_common(
+            yaml, options.opts.ld_bss_contains_common
+        )
 
         ret.given_follows_vram = parse_segment_follows_vram(yaml)
         ret.given_vram_symbol = parse_segment_vram_symbol(yaml)
