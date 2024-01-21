@@ -139,6 +139,8 @@ class SplatOpts:
     ld_align_section_vram_end: bool
     # If enabled, the generated linker script will have a linker symbol for each data file
     ld_generate_symbol_per_data_segment: bool
+    # Sets the default option for the `bss_contains_common` attribute of all segments.
+    ld_bss_contains_common: bool
 
     ################################################################################
     # C file options
@@ -456,6 +458,7 @@ def _parse_yaml(
         ld_generate_symbol_per_data_segment=p.parse_opt(
             "ld_generate_symbol_per_data_segment", bool, True
         ),
+        ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True
