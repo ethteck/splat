@@ -83,6 +83,7 @@ class CommonSegCode(CommonSegGroup):
         rep.is_auto_all = True
         if rep.special_vram_segment:
             self.special_vram_segment = True
+        rep.bss_contains_common = self.bss_contains_common
         return rep
 
     def _insert_all_auto_sections(

@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.21.6
+
+* Fix `bss_contains_common` option not being passed to "auto all" inserted sections.
+* New yaml option: `ld_bss_contains_common`
+  * Sets the default option for the `bss_contains_common` attribute of all segments.
+
 ### 0.21.5
 
 * Fixed issue with Python 3.8 compatibility (oops)

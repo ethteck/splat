@@ -462,6 +462,12 @@ If enabled, the generated linker script will have a linker symbol for each data 
 
 Defaults to `True`.
 
+### ld_bss_contains_common
+
+Sets the default option for the `bss_contains_common` attribute of all segments.
+
+Defaults to `False`.
+
 ## C file options
 
 ### create_c_files
