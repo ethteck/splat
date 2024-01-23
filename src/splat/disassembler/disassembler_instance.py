@@ -3,16 +3,21 @@ from .spimdisasm_disassembler import SpimdisasmDisassembler
 from .null_disassembler import NullDisassembler
 from .wasm_disassembler import WasmDisassembler
 
+from ..util import options
+
 __instance: Disassembler = NullDisassembler()
 __initialized = False
 
 
-def create_disassembler_instance(platform: str):
+def create_disassembler_instance(skip_version_check: bool, splat_version: str):
     global __instance
     global __initialized
-    if platform in ["n64", "psx", "ps2"]:
+    if options.opts.platform in ["n64", "psx", "ps2"]:
         __instance = SpimdisasmDisassembler()
         __initialized = True
+
+        __instance.check_version(skip_version_check, splat_version)
+        __instance.configure()
         return
 
     if platform == "wasm":

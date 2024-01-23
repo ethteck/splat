@@ -1,5 +1,43 @@
 # splat Release Notes
 
+### 0.21.6
+
+* Fix `bss_contains_common` option not being passed to "auto all" inserted sections.
+* New yaml option: `ld_bss_contains_common`
+  * Sets the default option for the `bss_contains_common` attribute of all segments.
+
+### 0.21.5
+
+* Fixed issue with Python 3.8 compatibility (oops)
+
+### 0.21.4
+
+* New yaml option: `hasm_in_src_path`
+  * Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+* Remove some dead code.
+* `auto_all_sections` is even more "auto" now, creating automatic entries for all .text segments.
+  * Before, this feature did not function for a given type if you had one or more of that type manually specified elsewhere. Now, the automatic entries are still populated, even if you have manual ones as well.
+
+### 0.21.3
+
+* Updated version graphically
+
+### 0.21.2
+
+* Fix bugs involving segments not having proper end rom positions if followed by segments with "auto" rom addresses; splat will now skip over these properly
+
+### 0.21.1
+
+* Fix duplicated symbol resolution in symbol_addrs.txt file.
+  * To allow symbols with the same name or vram address, splat was expecting both `rom` and `segment` to be specified. This check was changes so either one of them is required to disambiguate the symbol.
+* Python dependencies per target architecture have been regrouped.
+  * splat now requires an architecture to be specified during installation through pip.
+  * This allows to avoid installing dependencies for an architecture that won't be used.
+  * The new syntax to be used with pip is `python3 -m pip install -U splat64[arch1, arch2, etc]`, for example, `splat64[mips]`
+  * Currently the only architecture supported is `mips`.
+* The `main` function has been modularized and cleaned up.
+  * When using splat as a library, allows the user to call each individual step of split without having to pass by its full monolithic `main` function.
+
 ### 0.21.0
 
 * BREAKING: Extension segments will need adjustments to continue to work.

@@ -49,11 +49,14 @@ SECTIONS
         boot_DATA_START = .;
         main_data = .;
         build/split/asm/data/main.data.o(.data);
+        handwritten = .;
+        build/split/asm/handwritten.o(.data);
         . = ALIGN(., 16);
         boot_DATA_END = .;
         boot_DATA_SIZE = ABSOLUTE(boot_DATA_END - boot_DATA_START);
         boot_RODATA_START = .;
         build/split/src/main.o(.rodata);
+        build/split/asm/handwritten.o(.rodata);
         . = ALIGN(., 16);
         boot_RODATA_END = .;
         boot_RODATA_SIZE = ABSOLUTE(boot_RODATA_END - boot_RODATA_START);
@@ -64,6 +67,7 @@ SECTIONS
         FILL(0x00000000);
         boot_BSS_START = .;
         build/split/asm/data/main.bss.o(.bss);
+        build/split/asm/handwritten.o(.bss);
         . = ALIGN(., 16);
         boot_BSS_END = .;
         boot_BSS_SIZE = ABSOLUTE(boot_BSS_END - boot_BSS_START);

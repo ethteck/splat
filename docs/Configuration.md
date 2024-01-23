@@ -228,6 +228,19 @@ cache_path: path/to/splat/cache
 #### Default
 `.splat_cache`
 
+### hasm_in_src_path
+
+Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+
+#### Usage
+
+```yaml
+hasm_in_src_path: True
+```
+
+#### Default
+
+`False`
 
 ### create_undefined_funcs_auto
 If `True`, splat will generate an `undefined_funcs_auto.txt` file.
@@ -448,6 +461,12 @@ Defaults to `True`.
 If enabled, the generated linker script will have a linker symbol for each data file.
 
 Defaults to `True`.
+
+### ld_bss_contains_common
+
+Sets the default option for the `bss_contains_common` attribute of all segments.
+
+Defaults to `False`.
 
 ## C file options
 

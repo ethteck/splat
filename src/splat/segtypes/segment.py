@@ -187,11 +187,12 @@ class Segment:
         return None
 
     @staticmethod
-    def parse_segment_bss_contains_common(segment: Union[dict, list]) -> bool:
+    def parse_segment_bss_contains_common(
+        segment: Union[dict, list], default: bool
+    ) -> bool:
         if isinstance(segment, dict) and "bss_contains_common" in segment:
             return bool(segment["bss_contains_common"])
-        else:
-            return False
+        return default
 
     @staticmethod
     def parse_linker_section_order(yaml: Union[dict, list]) -> Optional[str]:
@@ -257,8 +258,7 @@ class Segment:
 
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
-        self.data_sibling: Optional[Segment] = None
-        self.rodata_sibling: Optional[Segment] = None
+        self.siblings: Dict[str, Segment] = {}
         self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
@@ -273,7 +273,9 @@ class Segment:
 
         self.warnings: List[str] = []
         self.did_run = False
-        self.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
+        self.bss_contains_common = Segment.parse_segment_bss_contains_common(
+            yaml, options.opts.ld_bss_contains_common
+        )
 
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
         self.special_vram_segment: bool = False
@@ -285,6 +287,9 @@ class Segment:
         self.ld_fill_value: Optional[int] = self.parse_ld_fill_value(
             yaml, options.opts.ld_fill_value
         )
+
+        # True if this segment was generated based on auto_all_sections
+        self.is_auto_all: bool = False
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
@@ -339,7 +344,9 @@ class Segment:
         )
         ret.file_path = Segment.parse_segment_file_path(yaml)
 
-        ret.bss_contains_common = Segment.parse_segment_bss_contains_common(yaml)
+        ret.bss_contains_common = Segment.parse_segment_bss_contains_common(
+            yaml, options.opts.ld_bss_contains_common
+        )
 
         ret.given_follows_vram = parse_segment_follows_vram(yaml)
         ret.given_vram_symbol = parse_segment_vram_symbol(yaml)
@@ -763,10 +770,6 @@ class Segment:
 
         return ret
 
-    def get_func_for_addr(self, addr) -> Optional[Symbol]:
-        for syms in self.seg_symbols.values():
-            for sym in syms:
-                if sym.type == "func" and sym.contains_vram(addr):
-                    return sym
-
-        return None
+    def __repr__(self) -> str:
+        # Shows a nicer string on the debugging screen
+        return f"{self.name} ({self.type})"

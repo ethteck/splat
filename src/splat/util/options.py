@@ -63,6 +63,8 @@ class SplatOpts:
     nonmatchings_path: Path
     # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
+    # Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
+    hasm_in_src_path: bool
 
     # Determines whether to create an automatically-generated undefined functions file
     # this file stores all functions that are referenced in the code but are not defined as seen by splat
@@ -137,6 +139,8 @@ class SplatOpts:
     ld_align_section_vram_end: bool
     # If enabled, the generated linker script will have a linker symbol for each data file
     ld_generate_symbol_per_data_segment: bool
+    # Sets the default option for the `bss_contains_common` attribute of all segments.
+    ld_bss_contains_common: bool
 
     ################################################################################
     # C file options
@@ -399,6 +403,7 @@ def _parse_yaml(
         data_path=p.parse_path(asm_path, "data_path", "data"),
         nonmatchings_path=p.parse_path(asm_path, "nonmatchings_path", "nonmatchings"),
         cache_path=p.parse_path(base_path, "cache_path", ".splache"),
+        hasm_in_src_path=p.parse_opt("hasm_in_src_path", bool, False),
         create_undefined_funcs_auto=p.parse_opt(
             "create_undefined_funcs_auto", bool, True
         ),
@@ -453,6 +458,7 @@ def _parse_yaml(
         ld_generate_symbol_per_data_segment=p.parse_opt(
             "ld_generate_symbol_per_data_segment", bool, True
         ),
+        ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True
