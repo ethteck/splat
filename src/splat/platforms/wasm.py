@@ -164,17 +164,11 @@ def code_section_to_wat(
     for index, body in enumerate(code.bodies):
         type_index = funcs.types[index]
 
-        try:
-            src += "\n".join(
-                format_function(
-                    f"func_{index:04d}", type_index, body, types.entries[type_index]
-                )
+        src += "\n".join(
+            format_function(
+                f"func_{index:04d}", type_index, body, types.entries[type_index]
             )
-        except Exception as e:
-            src += f";; Exception: {str(e)}"
-            pass
-
-        src += "\n"
+        ) + "\n"
 
     # zip(code.bodies, types.entries[idx] for idx in func
 
