@@ -1,6 +1,7 @@
 from .disassembler import Disassembler
 from .spimdisasm_disassembler import SpimdisasmDisassembler
 from .null_disassembler import NullDisassembler
+from .wasm_disassembler import WasmDisassembler
 
 from ..util import options
 
@@ -17,6 +18,11 @@ def create_disassembler_instance(skip_version_check: bool, splat_version: str):
 
         __instance.check_version(skip_version_check, splat_version)
         __instance.configure()
+        return
+
+    if platform == "wasm":
+        __instance = WasmDisassembler()
+        __initialized = True
         return
 
     raise NotImplementedError("No disassembler for requested platform")

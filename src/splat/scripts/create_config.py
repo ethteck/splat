@@ -32,6 +32,11 @@ def main(file_path: Path):
         create_psx_config(file_path, file_bytes)
         return
 
+    # Check for WebAssembly module
+    if file_bytes[0:4] == b"\x00asm":
+        create_wasm_config(file_path)
+        return
+
 
 def create_n64_config(rom_path: Path):
     rom_bytes = rominfo.read_rom(rom_path)
@@ -301,6 +306,127 @@ segments:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
+
+
+def create_wasm_config(file_path: Path):
+    from wasm_tob import (
+        TypeSection,
+        ImportSection,
+        FunctionSection,
+        ExportSection,
+        DataSection,
+    )
+
+    basename = file_path.stem
+
+    with open(file_path, "rb") as f:
+        raw = f.read()
+
+    offset = 0
+
+    mod_iter = iter(decode_wasm_module_with_length(raw))
+    wasm_header, wasm_header_data, wasm_header_len = next(mod_iter)
+
+    header = f"""\
+name: {basename}
+options:
+  basename: {basename}
+  target_path: {file_path}
+  base_path: .
+  platform: wasm
+"""
+
+    segments = f"""\
+segments:
+  - name: header
+    type: header
+    start: {hex(offset)}
+"""
+
+    DEFAULT_SECTION_NAME = {
+        TypeSection: "types",
+        ImportSection: "imports",
+        FunctionSection: "functions",
+        ExportSection: "exports",
+        DataSection: "data",
+    }
+
+    offset += wasm_header_len
+
+    for cur_sec, cur_sec_data, cur_sec_len in mod_iter:
+        sec_type = type(cur_sec_data.get_decoder_meta()["types"]["payload"])
+        sec_name = (
+            DEFAULT_SECTION_NAME[sec_type] if sec_type in DEFAULT_SECTION_NAME else None
+        )
+        # print(cur_sec_data.get_decoder_meta()['types']['payload'])
+        # print(f"Segment: {sec_type_str}")
+
+        if sec_name is not None:
+            segments += f"""\
+  - name: {sec_name}
+    type: asm # {sec_type.__name__}
+    start: {hex(offset)}
+"""
+        else:
+            segments += f"""\
+  - type: asm # {sec_type.__name__}
+    start: {hex(offset)}
+"""
+        offset += cur_sec_len
+
+    segments += f"""\
+  - [{hex(offset)}] # End marker
+"""
+
+    out_file = f"{basename}.yaml"
+    with open(out_file, "w", newline="\n") as f:
+        print(f"Writing config to {out_file}")
+        f.write(header)
+        f.write(segments)
+
+
+def decode_wasm_module_with_length(module, decode_name_subsections=False):
+    from collections import namedtuple
+    from wasm_tob import (
+        ModuleHeader,
+        Section,
+        TypeSection,
+        SEC_UNK,
+        SEC_NAME,
+        NameSubSection,
+    )
+
+    ModuleFragment = namedtuple("ModuleFragment", "type data length")
+
+    module_wnd = memoryview(module)
+
+    # Read & yield module header.
+    hdr = ModuleHeader()
+    hdr_len, hdr_data, _ = hdr.from_raw(None, module_wnd)
+    yield ModuleFragment(hdr, hdr_data, hdr_len)
+    module_wnd = module_wnd[hdr_len:]
+
+    # Read & yield sections.
+    while module_wnd:
+        sec = Section()
+        sec_len, sec_data, _ = sec.from_raw(None, module_wnd)
+
+        # If requested, decode name subsections when encountered.
+        if (
+            decode_name_subsections
+            and sec_data.id == SEC_UNK
+            and sec_data.name == SEC_NAME
+        ):
+            sec_wnd = sec_data.payload
+            while sec_wnd:
+                subsec = NameSubSection()
+                subsec_len, subsec_data, _ = subsec.from_raw(None, sec_wnd)
+                yield ModuleFragment(subsec, subsec_data, subsec_len)
+                sec_wnd = sec_wnd[subsec_len:]
+        else:
+            yield ModuleFragment(sec, sec_data, sec_len)
+
+        module_wnd = module_wnd[sec_len:]
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
