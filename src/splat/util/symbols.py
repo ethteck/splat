@@ -226,6 +226,9 @@ def handle_sym_addrs(
                             if attr_name == "dont_allow_addend":
                                 sym.dont_allow_addend = tf_val
                                 continue
+                            if attr_name == "allow_duplicated":
+                                sym.allow_duplicated = True
+                                continue
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -246,10 +249,11 @@ def handle_sym_addrs(
             sym.user_declared = True
 
             if sym.name in seen_symbols:
-                log.parsing_error_preamble(path, line_num, line)
-                log.error(
-                    f"Duplicate symbol detected! {sym.name} has already been defined at 0x{seen_symbols[sym.name].vram_start:X}"
-                )
+                if not sym.allow_duplicated or not seen_symbols[sym.name].allow_duplicated:
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.error(
+                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{seen_symbols[sym.name].vram_start:X}"
+                    )
 
             if addr in all_symbols_dict:
                 items = all_symbols_dict[addr]
@@ -258,10 +262,11 @@ def handle_sym_addrs(
                     same_segment = sym.segment == item.segment
 
                     if have_same_rom_addresses and same_segment:
-                        log.parsing_error_preamble(path, line_num, line)
-                        log.error(
-                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
-                        )
+                        if not sym.allow_duplicated or not item.allow_duplicated:
+                            log.parsing_error_preamble(path, line_num, line)
+                            log.error(
+                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                            )
 
             seen_symbols[sym.name] = sym
 
@@ -569,6 +574,8 @@ class Symbol:
     dont_allow_addend: bool = False
 
     linker_section: Optional[str] = None
+
+    allow_duplicated: bool = False
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
