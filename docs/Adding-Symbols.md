@@ -141,6 +141,8 @@ Tells splat that a symbol is allowed to have its vram/name duplicated with anoth
 
 This attribute has to be specified on all symbols that share the same vram or name.
 
+**Warning**: Take in mind that using this feature for assembly symbols may produce errors on the build, like duplicated symbol errors on the linker. Use with caution.
+
 **Example**
 ```ini
 obj_fallCA1_tex_rgb_ia8 = 0x06013118; // allow_duplicated:True
