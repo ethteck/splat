@@ -193,9 +193,7 @@ def handle_sym_addrs(
                         tf_val = (
                             True
                             if is_truey(attr_val)
-                            else False
-                            if is_falsey(attr_val)
-                            else None
+                            else False if is_falsey(attr_val) else None
                         )
                         if tf_val is None:
                             log.parsing_error_preamble(path, line_num, line)
@@ -249,10 +247,11 @@ def handle_sym_addrs(
             sym.user_declared = True
 
             if sym.name in seen_symbols:
-                if not sym.allow_duplicated or not seen_symbols[sym.name].allow_duplicated:
+                item = seen_symbols[sym.name]
+                if not sym.allow_duplicated or not item.allow_duplicated:
                     log.parsing_error_preamble(path, line_num, line)
                     log.error(
-                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{seen_symbols[sym.name].vram_start:08X}"
+                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
                     )
 
             if addr in all_symbols_dict:
