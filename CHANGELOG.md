@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.21.7
+
+* New attribute for symbols: `allow_duplicated`
+  * Allows to lift the duplicated symbol restriction for the specified symbols, allowing to have specific symbols that are not checked for shared vrams or names but keeping the check for everything else.
+
 ### 0.21.6
 
 * Fix `bss_contains_common` option not being passed to "auto all" inserted sections.

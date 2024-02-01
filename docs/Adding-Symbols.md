@@ -134,3 +134,16 @@ This attribute overrides the global `allow_data_addends` option.
 ```ini
 aspMainTextStart = 0x80084760; // dont_allow_addend:True
 ```
+
+### `allow_duplicated`
+
+Tells splat that a symbol is allowed to have its vram/name duplicated with another symbol.
+
+This attribute has to be specified on all symbols that share the same vram or name.
+
+**Example**
+```ini
+obj_fallCA1_tex_rgb_ia8 = 0x06013118; // allow_duplicated:True
+// ...
+obj_fallCA1_tex_rgb_ia8 = 0x060140A8; // allow_duplicated:True
+```

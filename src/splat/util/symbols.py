@@ -252,7 +252,7 @@ def handle_sym_addrs(
                 if not sym.allow_duplicated or not seen_symbols[sym.name].allow_duplicated:
                     log.parsing_error_preamble(path, line_num, line)
                     log.error(
-                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{seen_symbols[sym.name].vram_start:X}"
+                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{seen_symbols[sym.name].vram_start:08X}"
                     )
 
             if addr in all_symbols_dict:
@@ -265,7 +265,7 @@ def handle_sym_addrs(
                         if not sym.allow_duplicated or not item.allow_duplicated:
                             log.parsing_error_preamble(path, line_num, line)
                             log.error(
-                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
                             )
 
             seen_symbols[sym.name] = sym
@@ -370,13 +370,13 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         for ovl_segment in overlay_segments:
             assert (
                 ovl_segment.vramStart <= ovl_segment.vramEnd
-            ), f"{ovl_segment.vramStart:X} {ovl_segment.vramEnd:X}"
+            ), f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
             if (
                 ovl_segment.vramEnd > global_vram_start
                 and global_vram_end > ovl_segment.vramStart
             ):
                 log.write(
-                    f"Warning: the vram range ([0x{ovl_segment.vramStart:X}, 0x{ovl_segment.vramEnd:X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:X}, 0x{global_vram_end:X}])",
+                    f"Warning: the vram range ([0x{ovl_segment.vramStart:08X}, 0x{ovl_segment.vramEnd:08X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
                     status="warn",
                 )
 
@@ -600,7 +600,7 @@ class Symbol:
         if "$ROM" in ret:
             if not isinstance(self.rom, int):
                 log.error(
-                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:X} typed {self.type}"
+                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:08X} typed {self.type}"
                 )
             ret = ret.replace("$ROM", f"{self.rom:X}")
 
