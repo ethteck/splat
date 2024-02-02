@@ -193,9 +193,7 @@ def handle_sym_addrs(
                         tf_val = (
                             True
                             if is_truey(attr_val)
-                            else False
-                            if is_falsey(attr_val)
-                            else None
+                            else False if is_falsey(attr_val) else None
                         )
                         if tf_val is None:
                             log.parsing_error_preamble(path, line_num, line)
@@ -226,6 +224,9 @@ def handle_sym_addrs(
                             if attr_name == "dont_allow_addend":
                                 sym.dont_allow_addend = tf_val
                                 continue
+                            if attr_name == "allow_duplicated":
+                                sym.allow_duplicated = True
+                                continue
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -246,10 +247,12 @@ def handle_sym_addrs(
             sym.user_declared = True
 
             if sym.name in seen_symbols:
-                log.parsing_error_preamble(path, line_num, line)
-                log.error(
-                    f"Duplicate symbol detected! {sym.name} has already been defined at 0x{seen_symbols[sym.name].vram_start:X}"
-                )
+                item = seen_symbols[sym.name]
+                if not sym.allow_duplicated or not item.allow_duplicated:
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.error(
+                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                    )
 
             if addr in all_symbols_dict:
                 items = all_symbols_dict[addr]
@@ -258,10 +261,11 @@ def handle_sym_addrs(
                     same_segment = sym.segment == item.segment
 
                     if have_same_rom_addresses and same_segment:
-                        log.parsing_error_preamble(path, line_num, line)
-                        log.error(
-                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at 0x{addr:X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
-                        )
+                        if not sym.allow_duplicated or not item.allow_duplicated:
+                            log.parsing_error_preamble(path, line_num, line)
+                            log.error(
+                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                            )
 
             seen_symbols[sym.name] = sym
 
@@ -365,13 +369,13 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         for ovl_segment in overlay_segments:
             assert (
                 ovl_segment.vramStart <= ovl_segment.vramEnd
-            ), f"{ovl_segment.vramStart:X} {ovl_segment.vramEnd:X}"
+            ), f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
             if (
                 ovl_segment.vramEnd > global_vram_start
                 and global_vram_end > ovl_segment.vramStart
             ):
                 log.write(
-                    f"Warning: the vram range ([0x{ovl_segment.vramStart:X}, 0x{ovl_segment.vramEnd:X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:X}, 0x{global_vram_end:X}])",
+                    f"Warning: the vram range ([0x{ovl_segment.vramStart:08X}, 0x{ovl_segment.vramEnd:08X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
                     status="warn",
                 )
 
@@ -570,6 +574,8 @@ class Symbol:
 
     linker_section: Optional[str] = None
 
+    allow_duplicated: bool = False
+
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
 
@@ -593,7 +599,7 @@ class Symbol:
         if "$ROM" in ret:
             if not isinstance(self.rom, int):
                 log.error(
-                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:X} typed {self.type}"
+                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:08X} typed {self.type}"
                 )
             ret = ret.replace("$ROM", f"{self.rom:X}")
 

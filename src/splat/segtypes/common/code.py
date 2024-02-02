@@ -204,12 +204,12 @@ class CommonSegCode(CommonSegGroup):
 
             if segment.sibling is not None:
                 # Make siblings reference between them
-                segment.siblings[
-                    segment.sibling.get_linker_section_linksection()
-                ] = segment.sibling
-                segment.sibling.siblings[
-                    segment.get_linker_section_linksection()
-                ] = segment
+                segment.siblings[segment.sibling.get_linker_section_linksection()] = (
+                    segment.sibling
+                )
+                segment.sibling.siblings[segment.get_linker_section_linksection()] = (
+                    segment
+                )
 
             segment.parent = self
             if segment.special_vram_segment:
