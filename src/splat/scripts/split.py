@@ -136,22 +136,10 @@ def assign_symbols_to_segments():
                     seg.add_symbol(symbol)
 
 
-# Merge a list of segments into another list of segments
-def merge_segment_list(main_list, additional_list):
-    for seg in additional_list:
-        if seg not in main_list:
-            # Append new segments
-            main_list.append(seg)
-        else:
-            # Merge segments with the same name
-            merge_configs(main_list[main_list.index(seg)], seg)
-
-
 def merge_configs(main_config, additional_config):
-    # Merge rules:
+    # Merge rules are simple
     # For each key in the dictionary
     # - If list then append to list
-    # --- If a list of segments then merge segments
     # - If a dictionary then repeat merge on sub dictionary entries
     # - Else assume string or number and replace entry
 
@@ -163,10 +151,7 @@ def merge_configs(main_config, additional_config):
         else:
             # keys exist and match, see if a list to append
             if type(main_config[curkey]) == list:
-                if curkey in ["segments", "subsegments"]:
-                    merge_segment_list(main_config[curkey], additional_config[curkey])
-                else:
-                    main_config[curkey] += additional_config[curkey]
+                main_config[curkey] += additional_config[curkey]
             elif type(main_config[curkey]) == dict:
                 # need to merge sub areas
                 main_config[curkey] = merge_configs(
