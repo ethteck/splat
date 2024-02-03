@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.9
+
+* Removed gc code in favor of decomp-toolkit, which is now linked-to from this project.
+
 ### 0.21.8
 
 * `gfx` and `vtx` segments now support an optional `length` parameter, allowing splat to know their size

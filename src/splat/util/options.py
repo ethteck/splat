@@ -235,12 +235,6 @@ class SplatOpts:
     hardware_regs: bool
 
     ################################################################################
-    # Gamecube-specific options
-    ################################################################################
-    # Path where the iso's filesystem will be extracted to
-    filesystem_path: Optional[Path]
-
-    ################################################################################
     # Compiler-specific options
     ################################################################################
     # Determines whether to use a legacy INCLUDE_ASM macro format in c files
@@ -340,7 +334,7 @@ def _parse_yaml(
     p = OptParser(yaml)
 
     basename = p.parse_opt("basename", str)
-    platform = p.parse_opt_within("platform", str, ["n64", "psx", "gc", "ps2"])
+    platform = p.parse_opt_within("platform", str, ["n64", "psx", "ps2"])
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(
@@ -527,7 +521,6 @@ def _parse_yaml(
         ique_symbols=p.parse_opt("ique_symbols", bool, False),
         hardware_regs=p.parse_opt("hardware_regs", bool, False),
         use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, True),
-        filesystem_path=p.parse_optional_path(base_path, "filesystem_path"),
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True

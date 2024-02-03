@@ -4,7 +4,6 @@ import argparse
 import sys
 from pathlib import Path
 
-from ..util.gc import gcinfo
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
 
@@ -21,11 +20,6 @@ def main(file_path: Path):
         return
 
     file_bytes = file_path.read_bytes()
-
-    # Check for GC disc image
-    if int.from_bytes(file_bytes[0x1C:0x20], byteorder="big") == 0xC2339F3D:
-        create_gc_config(file_path, file_bytes)
-        return
 
     # Check for PSX executable
     if file_bytes[0:8] == b"PS-X EXE":
@@ -155,63 +149,6 @@ segments:
         f.write(segments)
 
 
-def create_gc_config(iso_path: Path, iso_bytes: bytes):
-    gc = gcinfo.get_info(iso_path, iso_bytes)
-    basename = gc.system_code + gc.game_code + gc.region_code + gc.publisher_code
-
-    header = f"""\
-name: \"{gc.name.title()} ({gc.get_region_name()})\"
-system_code: {gc.system_code}
-game_code: {gc.game_code}
-region_code: {gc.region_code}
-publisher_code: {gc.publisher_code}
-sha1: {gc.sha1}
-options:
-  filesystem_path: filesystem
-  basename: {basename}
-  target_path: {iso_path.with_suffix(".iso")}
-  base_path: .
-  compiler: {gc.compiler}
-  platform: gc
-  # undefined_funcs_auto: True
-  # undefined_funcs_auto_path: undefined_funcs_auto.txt
-  # undefined_syms_auto: True
-  # undefined_syms_auto_path: undefined_syms_auto.txt
-  # symbol_addrs_path: symbol_addrs.txt
-  # asm_path: asm
-  # src_path: src
-  # build_path: build
-  # extensions_path: tools/splat_ext
-  # section_order: [".text", ".data", ".rodata", ".bss"]
-  # auto_all_sections: [".data", ".rodata", ".bss"]
-"""
-
-    segments = f"""\
-segments:
-  - name: filesystem
-    type: fst
-    path: filesystem/sys/fst.bin
-  - name: bootinfo
-    type: bootinfo
-    path: filesystem/sys/boot.bin
-  - name: bi2
-    type: bi2
-    path: filesystem/sys/bi2.bin
-  - name: apploader
-    type: apploader
-    path: filesystem/sys/apploader.img
-  - name: main
-    type: dol
-    path: filesystem/sys/main.dol
-"""
-
-    out_file = f"{basename}.yaml"
-    with open(out_file, "w", newline="\n") as f:
-        print(f"Writing config to {out_file}")
-        f.write(header)
-        f.write(segments)
-
-
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
     exe = psxexeinfo.PsxExe.get_info(exe_path, exe_bytes)
     basename = exe_path.name.replace(" ", "").lower()
@@ -306,7 +243,7 @@ segments:
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "file",
-        help="Path to a .z64/.n64 ROM, PSX executable, or .iso/.gcm GameCube image",
+        help="Path to a .z64/.n64 ROM or PSX executable",
     )
 
 
@@ -314,9 +251,7 @@ def process_arguments(args: argparse.Namespace):
     main(Path(args.file))
 
 
-script_description = (
-    "Create a splat config from an N64 ROM, PSX executable, or a GameCube disc image."
-)
+script_description = "Create a splat config from an N64 ROM or PSX executable."
 
 
 def add_subparser(subparser: argparse._SubParsersAction):

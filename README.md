@@ -4,7 +4,7 @@
 
 A binary splitting tool to assist with decompilation and modding projects
 
-Currently, only N64, PSX, and PS2 binaries are supported.
+Currently, only N64, PSX, and PS2 binaries are supported. More platforms may come in the future.
 
 Please check out the [wiki](https://github.com/ethteck/splat/wiki) for more information including [examples](https://github.com/ethteck/splat/wiki/Examples) of projects that use splat.
 
@@ -28,3 +28,7 @@ splat64[mips]>=0.21.8,<1.0.0
 
 - `mips`: Required when using the N64, PSX or PS2 platforms.
 - `dev`: Installs all the available dependencies groups and other packages for development.
+
+### Gamecube / Wii
+
+For Gamecube / Wii projects, see [decomp-toolkit](https://github.com/encounter/decomp-toolkit)!

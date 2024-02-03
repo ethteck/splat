@@ -530,8 +530,8 @@ def main(
     # Split
     do_split(all_segments, rom_bytes, stats, cache)
 
-    if (
-        options.opts.is_mode_active("ld") and options.opts.platform != "gc"
+    if options.opts.is_mode_active(
+        "ld"
     ):  # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = write_linker_script(all_segments)
