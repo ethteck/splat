@@ -4,7 +4,7 @@ Dumps out Gfx[] as a .inc.c file.
 """
 
 import re
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
 from pathlib import Path
 
@@ -275,3 +275,9 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def should_split(self) -> bool:
         return self.extract and options.opts.is_mode_active("gfx")
+
+    @staticmethod
+    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
+        if isinstance(yaml, dict) and "length" in yaml:
+            return yaml["length"] * 0x10
+        return None

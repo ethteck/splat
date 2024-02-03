@@ -7,7 +7,7 @@ Originally written by Mark Street (https://github.com/mkst)
 
 import struct
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
 from ...util import options, log
 
@@ -100,3 +100,9 @@ class N64SegVtx(CommonSegCodeSubsegment):
 
     def should_split(self) -> bool:
         return self.extract and options.opts.is_mode_active("vtx")
+
+    @staticmethod
+    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
+        if isinstance(yaml, dict) and "length" in yaml:
+            return yaml["length"] * 0x10
+        return None
