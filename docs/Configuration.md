@@ -42,7 +42,6 @@ The target platform for the binary. Options are:
 - `n64` (Nintendo 64)
 - `psx` (PlayStation 1)
 - `ps2` (PlayStation 2)
-- `gc` (GameCube)
 
 #### Usage
 ```yaml
@@ -646,13 +645,6 @@ Use named libultra symbols by default. Those will need to be added to a linker s
 ### hardware_regs
 
 Use named hardware register symbols by default. Those will need to be added to a linker script manually by the user
-
-
-## Gamecube-specific options
-
-### filesystem_path
-
-Path where the iso's filesystem will be extracted to
 
 ## Compiler-specific options
 
