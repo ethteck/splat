@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.8
+
+* `gfx` and `vtx` segments now support an optional `length` parameter, allowing splat to know their size
+
 ### 0.21.7
 
 * New attribute for symbols: `allow_duplicated`
