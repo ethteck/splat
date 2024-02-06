@@ -324,3 +324,19 @@ It must be either an integer, which will be used as the parameter for the `FILL`
 If not set, then the global configuration is used. See [ld_fill_value](Configuration.md#ld_fill_value) on the Configuration section.
 
 Defaults to the value of the global option.
+
+### `subalign`
+
+Sub-alignment (in bytes) of sections.
+
+Only works on top-level segments
+
+`subalign` can be `null` to not force any specific alignment and use the built section's declared alignment instead.
+
+**Example:**
+
+```yaml
+    subalign: 4
+```
+
+Defaults to the global `subalign` option.

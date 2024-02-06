@@ -326,6 +326,8 @@ elf_section_list_path: path/to/elf_sections
 
 Sub-alignment (in bytes) of sections.
 
+`subalign` can be `null` to not force any specific alignment and use the built section's declared alignment instead.
+
 #### Usage
 ```yaml
 subalign: 4
