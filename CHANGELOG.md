@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.10
+
+* Allow the global `subalign` option to take `null` values
+
 ### 0.21.9
 
 * Removed gc code in favor of decomp-toolkit, which is now linked-to from this project.
