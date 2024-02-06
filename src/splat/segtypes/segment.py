@@ -55,7 +55,7 @@ def parse_segment_subalign(segment: Union[dict, list]) -> Optional[int]:
     if isinstance(segment, dict):
         subalign = segment.get("subalign", default)
         if subalign != None:
-            subalign = int(subalign, 0)
+            subalign = int(subalign)
         return subalign
     return default
 
