@@ -50,12 +50,12 @@ def parse_segment_align(segment: Union[dict, list]) -> Optional[int]:
     return None
 
 
-def parse_segment_subalign(segment: Union[dict, list]) -> int:
+def parse_segment_subalign(segment: Union[dict, list]) -> Optional[int]:
     default = options.opts.subalign
     if isinstance(segment, dict):
         subalign = segment.get("subalign", default)
         if subalign != None:
-            subalign = int(subalign)
+            subalign = int(subalign, 0)
         return subalign
     return default
 
@@ -231,7 +231,7 @@ class Segment:
         self.vram_start: Optional[int] = vram_start
 
         self.align: Optional[int] = None
-        self.given_subalign: int = options.opts.subalign
+        self.given_subalign: Optional[int] = options.opts.subalign
         self.exclusive_ram_id: Optional[str] = None
         self.given_dir: Path = Path()
 
@@ -422,7 +422,7 @@ class Segment:
         return self.given_symbol_name_format_no_rom
 
     @property
-    def subalign(self) -> int:
+    def subalign(self) -> Optional[int]:
         if self.parent:
             return self.parent.subalign
         else:
