@@ -89,7 +89,7 @@ class SplatOpts:
 
     # Linker script
     # Determines the default subalign value to be specified in the generated linker script
-    subalign: int
+    subalign: Optional[int]
     # The following option determines whether to automatically configure the linker script to link against
     # specified sections for all "base" (asm/c) files when the yaml doesn't have manual configurations
     # for these sections.
@@ -413,7 +413,7 @@ def _parse_yaml(
         extensions_path=p.parse_optional_path(base_path, "extensions_path"),
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
-        subalign=p.parse_opt("subalign", int, 16),
+        subalign=p.parse_optional_opt_with_default("subalign", int, 16),
         auto_all_sections=p.parse_opt(
             "auto_all_sections", list, [".data", ".rodata", ".bss"]
         ),
