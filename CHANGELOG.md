@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.11
+
+* Fix writting duplicated CI textures.
+
 ### 0.21.10
 
 * Allow the global `subalign` option to take `null` values
