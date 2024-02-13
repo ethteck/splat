@@ -40,8 +40,8 @@ class N64SegPalette(N64Segment):
                         f"Error: {self.name} (0x{actual_len:X} bytes) is not a valid palette size ({', '.join(hex(s) for s in VALID_SIZES)})\n{hint_msg}"
                     )
 
-        self.pal_id: Optional[str] = (
-            self.yaml.get("id") if isinstance(self.yaml, dict) else None
+        self.global_id: Optional[str] = (
+            self.yaml.get("global_id") if isinstance(self.yaml, dict) else None
         )
 
     def get_cname(self) -> str:

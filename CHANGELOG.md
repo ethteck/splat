@@ -4,7 +4,8 @@
 
 * The N64 ci/palette system has been rewritten to be more versatile and support a larger variety of configurations.
   * ci segments now have a "palettes:" argument, which can be a list of palettes or a single palette to be linked to the ci for extraction. Each palette linked to a ci will result in a separate png
-  * palette segments can provide a "pal_id" field, which serves as a globally searchable palette id. This can be used for cross-segment ci/palette linking.
+  * the "raster_name" field on palettes no longer exists. Instead, rasters point to palettes via the `palettes:` property of the ci segment (or the final argument after width and height, if using list format).
+  * palette segments can provide a "global_id" field, which serves as a globally searchable palette id. This can be used for cross-segment ci/palette linking.
   * For more information, see the docs! TODO
 * `spimdisasm` 1.21.0 or above is now required.
 
