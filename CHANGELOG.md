@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.22.0: Palette Revamp
+
+* The N64 ci/palette system has been rewritten to be more versatile and support a larger variety of configurations.
+  * ci segments now have a "palettes:" argument, which can be a list of palettes or a single palette to be linked to the ci for extraction. Each palette linked to a ci will result in a separate png
+  * For more information, see the docs! TODO
+
 ### 0.21.10
 
 * Allow the global `subalign` option to take `null` values
