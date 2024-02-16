@@ -33,6 +33,9 @@ class N64SegCi(N64SegImg):
         self.n64img.data = rom_bytes[self.rom_start : self.rom_end]
 
     def out_path_pal(self, pal_name) -> Path:
+        type_extension = (
+            ("." + self.n64img.type) if options.opts.png_type_in_extension else ""
+        )
         if len(self.palettes) == 1:
             # If there's only one palette, use the ci name
             out_name = self.name
@@ -43,7 +46,7 @@ class N64SegCi(N64SegImg):
             # Otherwise, just append the palette name to the ci name
             out_name = f"{self.name}_{pal_name}"
 
-        return options.opts.asset_path / self.dir / f"{out_name}.png"
+        return options.opts.asset_path / self.dir / f"{out_name}{type_extension}.png"
 
     def split(self, rom_bytes):
         assert self.palettes is not None

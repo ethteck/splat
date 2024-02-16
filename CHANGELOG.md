@@ -6,6 +6,7 @@
   * ci segments now have a "palettes:" argument, which can be a list of palettes or a single palette to be linked to the ci for extraction. Each palette linked to a ci will result in a separate png
   * the "raster_name" field on palettes no longer exists. Instead, rasters point to palettes via the `palettes:` property of the ci segment (or the final argument after width and height, if using list format).
   * palette segments can provide a "global_id" field, which serves as a globally searchable palette id. This can be used for cross-segment ci/palette linking.
+  * added option stuff TODO
   * For more information, see the docs! TODO
 * `spimdisasm` 1.21.0 or above is now required.
 
