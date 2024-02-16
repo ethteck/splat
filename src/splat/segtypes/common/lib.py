@@ -6,7 +6,7 @@ from ...util import log, options
 from ..linker_entry import LinkerEntry, LinkerWriter
 from .segment import CommonSegment
 
-from ..segment import Segment
+from ..segment import Segment, parse_segment_vram
 
 
 class LinkerEntryLib(LinkerEntry):
@@ -48,6 +48,10 @@ class CommonSegLib(CommonSegment):
             args=args,
             yaml=yaml,
         )
+
+        vram = parse_segment_vram(self.yaml)
+        if vram is not None:
+            self.vram_start = vram
 
         if isinstance(yaml, dict):
             self.object = yaml.get('object', None)
