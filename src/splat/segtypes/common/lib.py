@@ -54,8 +54,8 @@ class CommonSegLib(CommonSegment):
             self.vram_start = vram
 
         if isinstance(yaml, dict):
-            self.object = yaml.get('object', None)
-            self.section = yaml.get('section', '.text')
+            self.object = yaml.get("object", None)
+            self.section = yaml.get("section", ".text")
 
             if self.object is None:
                 log.error(f"Error: {self.name} is missing object file")
