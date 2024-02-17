@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
+from ..util import log
 
 
 def main(file_path: Path):
@@ -25,6 +26,8 @@ def main(file_path: Path):
     if file_bytes[0:8] == b"PS-X EXE":
         create_psx_config(file_path, file_bytes)
         return
+
+    log.error(f"create_config does not support the file format of '{file_path}'")
 
 
 def create_n64_config(rom_path: Path):
