@@ -3,6 +3,8 @@
 ### 0.21.11
 
 * Show an error on `create_config` if the format is not supported.
+* Allow lib segment to be a dictionary with `object` and `section` options
+* Allow lib segment to use `vram` option
 
 ### 0.21.10
 

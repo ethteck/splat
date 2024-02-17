@@ -6,7 +6,7 @@ from ...util import log, options
 from ..linker_entry import LinkerEntry, LinkerWriter
 from .segment import CommonSegment
 
-from ..segment import Segment
+from ..segment import Segment, parse_segment_vram
 
 
 class LinkerEntryLib(LinkerEntry):
@@ -49,19 +49,26 @@ class CommonSegLib(CommonSegment):
             yaml=yaml,
         )
 
+        vram = parse_segment_vram(self.yaml)
+        if vram is not None:
+            self.vram_start = vram
+
         if isinstance(yaml, dict):
-            log.error("Error: 'dict' not currently supported for 'lib' segment")
-            return
-        if len(args) < 1:
-            log.error(f"Error: {self.name} is missing object file")
-            return
+            self.object = yaml.get("object", None)
+            self.section = yaml.get("section", ".text")
+
+            if self.object is None:
+                log.error(f"Error: {self.name} is missing object file")
+        else:
+            if len(args) < 1:
+                log.error(f"Error: {self.name} is missing object file")
+
+            if len(args) > 1:
+                self.object, self.section = args[0], args[1]
+            else:
+                self.object, self.section = args[0], ".text"
 
         self.extract = False
-
-        if len(args) > 1:
-            self.object, self.section = args[0], args[1]
-        else:
-            self.object, self.section = args[0], ".text"
 
     def get_linker_section(self) -> str:
         return self.section
