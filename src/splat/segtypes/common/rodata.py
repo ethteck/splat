@@ -118,11 +118,15 @@ class CommonSegRodata(CommonSegData):
                         # Each time the this remainder changes means there's a new file split
                         last_jumptable_addr_remainder = vram_diff % 8
 
-                        misaligned_jumptable_offsets.append(self.rom_start+vram_diff)
+                        misaligned_jumptable_offsets.append(self.rom_start + vram_diff)
 
         if len(misaligned_jumptable_offsets) > 0:
-            print(f"\nThe rodata segment '{self.name}' has jumptables that are not aligned properly file-wise, indicating one or more likely file split.")
-            print("File split suggestions for this segment will follow in config yaml format:")
+            print(
+                f"\nThe rodata segment '{self.name}' has jumptables that are not aligned properly file-wise, indicating one or more likely file split."
+            )
+            print(
+                "File split suggestions for this segment will follow in config yaml format:"
+            )
             for offset in misaligned_jumptable_offsets:
                 print(f"      - [0x{offset:X}, {self.type}]")
             print()
