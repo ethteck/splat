@@ -3,6 +3,8 @@
 ### 0.21.12
 
 * Fixed issue that prevented symbols from being added to undefined_funcs_auto
+* Add rodata file split suggestions for PSX.
+  * This works by inspecting the expected alignment of jumptables. If a jumptable is not 8-aligned file-wise means there's a file split.
 
 ### 0.21.11
 
