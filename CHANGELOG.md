@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.21.12
+
+* Fixed issue that prevented symbols from being added to undefined_funcs_auto
+
 ### 0.21.11
 
 * Show an error on `create_config` if the format is not supported.
