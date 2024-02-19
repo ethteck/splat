@@ -7,7 +7,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt
-    SPIMDISASM_MIN = (1, 18, 0)
+    SPIMDISASM_MIN = (1, 21, 0)
 
     def configure(self):
         # Configure spimdisasm

@@ -1,5 +1,14 @@
 # splat Release Notes
 
+### 0.22.0: Palette Revamp
+
+* The N64 ci/palette system has been rewritten to be more versatile and support a larger variety of configurations.
+  * ci segments now have a "palettes:" argument, which can be a list of palettes or a single palette to be linked to the ci for extraction. The implicit value of `palettes:` is a one-element list containing the name of the ci, meaning palettes whose names match a ci will automatically be linked to the ci. Each palette linked to a ci will result in a separate png.
+  * the `raster_name` field on palettes and the `palette` field on rasters no longer exist. Instead, rasters point to palettes via the `palettes:` property of the ci segment (or the final argument after width and height, if using list format).
+  * palette segments can provide a `global_id` field, which serves as a globally searchable palette id. This can be used for cross-segment ci/palette linking.
+  * added option `image_type_in_extension`, which puts the type of an image in the file extension. For example, with the setting enabled, an image named `texture` would export with filename `texture.ci4.png`. 
+* `spimdisasm` 1.21.0 or above is now required.
+
 ### 0.21.12
 
 * Fixed issue that prevented symbols from being added to undefined_funcs_auto

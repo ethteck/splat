@@ -66,7 +66,9 @@ class N64SegImg(N64Segment):
             )
 
     def out_path(self) -> Path:
-        return options.opts.asset_path / self.dir / f"{self.name}.png"
+        type_extension = f".{self.type}" if options.opts.image_type_in_extension else ""
+
+        return options.opts.asset_path / self.dir / f"{self.name}{type_extension}.png"
 
     def should_split(self) -> bool:
         return options.opts.is_mode_active("img")

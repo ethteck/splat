@@ -648,6 +648,10 @@ Use named libultra symbols by default. Those will need to be added to a linker s
 
 Use named hardware register symbols by default. Those will need to be added to a linker script manually by the user
 
+### image_type_in_extension
+
+Append the type of an image to its file extension. For example, when enabled, a ci4 named `texture` would export with filename `texture.ci4.png`.
+
 ## Compiler-specific options
 
 ### use_legacy_include_asm

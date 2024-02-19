@@ -7,7 +7,6 @@ from . import options as options
 from . import palettes as palettes
 from . import progress_bar as progress_bar
 from . import psx as psx
-from . import range as range
 from . import relocs as relocs
 from . import statistics as statistics
 from . import symbols as symbols
