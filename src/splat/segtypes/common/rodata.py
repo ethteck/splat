@@ -1,4 +1,4 @@
-from typing import Optional, Set, Tuple
+from typing import Optional, Set, Tuple, List
 import spimdisasm
 from ..segment import Segment
 from ...util import log, options, symbols
@@ -87,6 +87,9 @@ class CommonSegRodata(CommonSegData):
 
         possible_text_segments: Set[Segment] = set()
 
+        last_jumptable_addr_remainder = 0
+        misaligned_jumptable_offsets: List[int] = []
+
         for symbol in self.spim_section.get_section().symbolList:
             generated_symbol = symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym
@@ -104,3 +107,26 @@ class CommonSegRodata(CommonSegData):
                         f"    Based on the usage from the function {refenceeFunction.getName()} to the symbol {symbol.getName()}"
                     )
                     possible_text_segments.add(text_segment)
+
+            if options.opts.platform == "psx":
+                if generated_symbol.type == "jtbl":
+                    # GCC aligns jumptables to 8, but it doesn't impose alignment restrictions for sections themselves on PSX.
+                    # This means a jumptable may be aligned file-wise, but it may not end up 8-aligned binary-wise.
+                    # We can use this as a way to find file splits on PSX
+                    vram_diff = generated_symbol.vram_start - self.vram_start
+                    if vram_diff % 8 != last_jumptable_addr_remainder:
+                        # Each time the this remainder changes means there's a new file split
+                        last_jumptable_addr_remainder = vram_diff % 8
+
+                        misaligned_jumptable_offsets.append(self.rom_start + vram_diff)
+
+        if len(misaligned_jumptable_offsets) > 0:
+            print(
+                f"\nThe rodata segment '{self.name}' has jumptables that are not aligned properly file-wise, indicating one or more likely file split."
+            )
+            print(
+                "File split suggestions for this segment will follow in config yaml format:"
+            )
+            for offset in misaligned_jumptable_offsets:
+                print(f"      - [0x{offset:X}, {self.type}]")
+            print()
