@@ -66,9 +66,7 @@ class N64SegImg(N64Segment):
             )
 
     def out_path(self) -> Path:
-        type_extension = (
-            ("." + self.type) if options.opts.image_type_in_extension else ""
-        )
+        type_extension = f".{self.type}" if options.opts.image_type_in_extension else ""
 
         return options.opts.asset_path / self.dir / f"{self.name}{type_extension}.png"
 
