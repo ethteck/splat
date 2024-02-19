@@ -49,7 +49,12 @@ def initialize(all_segments):
                         palettes_seen.discard(pal_name)
                         raster.palettes.append(pal)
                     else:
-                        log.error("Could not find pal")
+                        log.error(
+                            "Could not find palette: "
+                            + pal_name
+                            + ", referenced by raster: "
+                            + raster.name
+                        )
 
             # Resolve "." palette links
             for pal_name in palette_map:
