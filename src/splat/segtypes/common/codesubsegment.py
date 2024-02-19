@@ -103,6 +103,16 @@ class CommonSegCodeSubsegment(Segment):
             self.get_most_parent(), func_spim.contextSym
         )
 
+        # Gather symbols found by spimdisasm and create those symbols in splat's side
+        for referenced_vram in func_spim.instrAnalyzer.referencedVrams:
+            context_sym = self.spim_section.get_section().getSymbol(
+                referenced_vram, tryPlusOffset=False
+            )
+            if context_sym is not None:
+                symbols.create_symbol_from_spim_symbol(
+                    self.get_most_parent(), context_sym
+                )
+
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             if options.opts.platform == "ps2":

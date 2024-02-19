@@ -34,7 +34,7 @@ class N64SegCi(N64SegImg):
 
     def out_path_pal(self, pal_name) -> Path:
         type_extension = (
-            ("." + self.n64img.type) if options.opts.png_type_in_extension else ""
+            ("." + self.n64img.type) if options.opts.image_type_in_extension else ""
         )
         if len(self.palettes) == 1:
             # If there's only one palette, use the ci name
