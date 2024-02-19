@@ -40,7 +40,7 @@ def initialize(all_segments):
             for pal_name in raster.palette_names:
                 pal = global_ids.get(pal_name, None)
                 if pal is not None:
-                    global_ids.discard(pal_name)
+                    global_ids_not_seen.discard(pal_name)
                     raster.palettes.append(pal)
                 else:
                     pal = palette_map.get(pal_name, None)
