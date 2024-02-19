@@ -257,6 +257,10 @@ These segments will parse the image data and dump out a `png` file.
   flip_y: no
 ```
 
+`ci` (paletted) segments have a `palettes: []` setting that represents the list of palettes that should be linked to the `ci`. For each linked palette, an image will be exported. The implicit value of `palettes` is a one-element list containing the name of the raster, which means palettes and rasters with the same name will automatically be linked.
+
+Palette segments can specify a `global_id`, which can be referred to from a `ci`'s `palettes` list. The `global_id` space is searched first, and this allows cross-segment links between palettes and rasters.
+
 ## `pad`
 
 `pad` is a segment that represents a rom region that's filled with zeroes and decomping it doesn't have much value.
