@@ -41,6 +41,7 @@ def initialize(all_segments):
                 pal = global_ids.get(pal_name, None)
                 if pal is not None:
                     global_ids_not_seen.discard(pal_name)
+                    palettes_seen.discard(pal_name)
                     raster.palettes.append(pal)
                 else:
                     pal = palette_map.get(pal_name, None)
@@ -66,10 +67,10 @@ def initialize(all_segments):
             if len(raster.palettes) == 0:
                 log.error(f"Raster {raster.name} has no linked palettes")
 
-        if len(palettes_seen) > 0:
-            log.error(
-                f"Found no ci links to palettes with names: {', '.join(palettes_seen)}"
-            )
+        for pal_name in palettes_seen:
+            pal = palette_map[pal_name]
+            if pal.global_id is None:
+                log.error(f"Palette {pal.name} has no linked rasters")
 
     global global_ids
     global_ids = {}

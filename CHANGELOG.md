@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.22.1
+
+* Fixed a bug where palettes with `global_id`s were reporing errors too eagerly
+
 ### 0.22.0: Palette Revamp
 
 * The N64 ci/palette system has been rewritten to be more versatile and support a larger variety of configurations.
