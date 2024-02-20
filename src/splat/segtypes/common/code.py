@@ -94,17 +94,26 @@ class CommonSegCode(CommonSegGroup):
         if len(options.opts.auto_all_sections) == 0:
             return ret
 
+        base_segments_list: list[tuple[str, Segment]] = list(base_segments.items())
+
+        print()
+
         # Determine what will be the min insertion index
         last_inserted_index = len(ret)
         for sect in reversed(self.section_order):
-            for i, (name, seg) in enumerate(base_segments.items()):
-                if seg.get_linker_section_linksection() == sect:
-                    continue
-                last_inserted_index = i
+            print()
 
-        for sect in options.opts.auto_all_sections:
-            for name, seg in base_segments.items():
-                if seg.get_linker_section_linksection() == sect:
+            print(sect)
+            for i, (name, seg) in enumerate(base_segments_list):
+                if seg.get_linker_section_order() == sect:
+                    continue
+                # print(f"    picking up {i} {seg}")
+                last_inserted_index = i
+        last_inserted_index = len(base_segments_list) - 1
+
+        for i, sect in enumerate(options.opts.auto_all_sections):
+            for name, seg in base_segments_list:
+                if seg.get_linker_section_order() == sect:
                     # Avoid duplicating current section
                     last_inserted_index = ret.index(seg)
                     continue
@@ -117,9 +126,16 @@ class CommonSegCode(CommonSegGroup):
                     )
                     seg.siblings[sect] = sibling
                     last_inserted_index += 1
+                    print(f" Inserting into {last_inserted_index}: {sibling}, between {ret[last_inserted_index-1:last_inserted_index+1]}")
                     ret.insert(last_inserted_index, sibling)
 
                 last_inserted_index = ret.index(sibling)
+
+            while last_inserted_index < len(ret):
+                if ret[last_inserted_index].get_linker_section_order() not in options.opts.auto_all_sections[:i+1]:
+                    last_inserted_index -= 1
+                    break
+                last_inserted_index += 1
 
         return ret
 
