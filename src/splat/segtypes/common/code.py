@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import OrderedDict, List, Optional, Type
+from typing import OrderedDict, List, Optional, Type, Tuple
 
 from ...util import log, options
 
@@ -94,7 +94,7 @@ class CommonSegCode(CommonSegGroup):
         if len(options.opts.auto_all_sections) == 0:
             return ret
 
-        base_segments_list: list[tuple[str, Segment]] = list(base_segments.items())
+        base_segments_list: List[Tuple[str, Segment]] = list(base_segments.items())
 
         # Determine what will be the min insertion index
         last_inserted_index = len(base_segments_list) - 1
