@@ -19,5 +19,11 @@ class LinkerEntryOffset(LinkerEntry):
 
 
 class N64SegLinker_offset(N64Segment):
+    def get_linker_section_order(self) -> str:
+        return ""
+
+    def get_linker_section_linksection(self) -> str:
+        return ""
+
     def get_linker_entries(self) -> List[LinkerEntry]:
         return [LinkerEntryOffset(self)]

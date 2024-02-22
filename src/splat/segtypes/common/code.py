@@ -96,12 +96,23 @@ class CommonSegCode(CommonSegGroup):
 
         base_segments_list: list[tuple[str, Segment]] = list(base_segments.items())
 
+        # Determine what will be the min insertion index
         last_inserted_index = len(base_segments_list) - 1
+        for i, seg in enumerate(ret):
+            if seg.is_text():
+                last_inserted_index = i
+
+            elif self.section_order.index(".rodata") < self.section_order.index(".text"):
+                if seg.is_rodata():
+                    last_inserted_index = i
+
 
         for i, sect in enumerate(options.opts.auto_all_sections):
             for name, seg in base_segments_list:
-                if seg.get_linker_section_order() == sect:
+                link_section = seg.get_linker_section_order()
+                if link_section == sect or link_section == "":
                     # Avoid duplicating current section
+                    # and advance over files without explicit sections (like linker_offset)
                     last_inserted_index = ret.index(seg)
                     continue
 
@@ -119,7 +130,8 @@ class CommonSegCode(CommonSegGroup):
 
             # Advance last_inserted_index for any segment of a type that we have already seen
             while last_inserted_index < len(ret):
-                if ret[last_inserted_index].get_linker_section_order() not in options.opts.auto_all_sections[:i+1]:
+                link_section = ret[last_inserted_index].get_linker_section_order()
+                if link_section != "" and link_section not in options.opts.auto_all_sections[:i+1]:
                     last_inserted_index -= 1
                     break
                 last_inserted_index += 1
