@@ -102,10 +102,11 @@ class CommonSegCode(CommonSegGroup):
             if seg.is_text():
                 last_inserted_index = i
 
-            elif self.section_order.index(".rodata") < self.section_order.index(".text"):
+            elif self.section_order.index(".rodata") < self.section_order.index(
+                ".text"
+            ):
                 if seg.is_rodata():
                     last_inserted_index = i
-
 
         for i, sect in enumerate(options.opts.auto_all_sections):
             for name, seg in base_segments_list:
@@ -131,7 +132,10 @@ class CommonSegCode(CommonSegGroup):
             # Advance last_inserted_index for any segment of a type that we have already seen
             while last_inserted_index < len(ret):
                 link_section = ret[last_inserted_index].get_linker_section_order()
-                if link_section != "" and link_section not in options.opts.auto_all_sections[:i+1]:
+                if (
+                    link_section != ""
+                    and link_section not in options.opts.auto_all_sections[: i + 1]
+                ):
                     last_inserted_index -= 1
                     break
                 last_inserted_index += 1
