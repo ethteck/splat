@@ -2,7 +2,7 @@
 
 ### 0.22.2
 
-* Allow for `image_type_in_extension` to be overridden by custom segments or subsegments.
+* Allow for `image_type_in_extension` to be overridden by subclasses of N64SegImg
 
 ### 0.22.1
 
