@@ -108,11 +108,11 @@ class CommonSegRodata(CommonSegData):
                     )
                     possible_text_segments.add(text_segment)
 
-            if options.opts.platform == "psx":
+            if options.opts.platform in ("psx", "ps2"):
                 if generated_symbol.type == "jtbl":
-                    # GCC aligns jumptables to 8, but it doesn't impose alignment restrictions for sections themselves on PSX.
+                    # GCC aligns jumptables to 8, but it doesn't impose alignment restrictions for sections themselves on PSX/PS2.
                     # This means a jumptable may be aligned file-wise, but it may not end up 8-aligned binary-wise.
-                    # We can use this as a way to find file splits on PSX
+                    # We can use this as a way to find file splits on PSX/PS2
                     vram_diff = generated_symbol.vram_start - self.vram_start
                     if vram_diff % 8 != last_jumptable_addr_remainder:
                         # Each time the this remainder changes means there's a new file split

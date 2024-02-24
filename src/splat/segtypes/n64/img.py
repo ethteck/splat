@@ -54,6 +54,8 @@ class N64SegImg(N64Segment):
 
         self.check_len()
 
+        self.image_type_in_extension = options.opts.image_type_in_extension
+
     def check_len(self) -> None:
         expected_len = int(self.n64img.size())
         assert isinstance(self.rom_start, int)
@@ -66,7 +68,7 @@ class N64SegImg(N64Segment):
             )
 
     def out_path(self) -> Path:
-        type_extension = f".{self.type}" if options.opts.image_type_in_extension else ""
+        type_extension = f".{self.type}" if self.image_type_in_extension else ""
 
         return options.opts.asset_path / self.dir / f"{self.name}{type_extension}.png"
 

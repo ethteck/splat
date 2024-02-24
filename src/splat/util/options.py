@@ -491,13 +491,13 @@ def _parse_yaml(
         mips_abi_gpr=p.parse_opt_within(
             "mips_abi_gpr",
             str,
-            ["numeric", "o32", "n32", "n64"],
+            ["numeric", "32", "o32", "n32", "n64"],
             "o32",
         ),
         mips_abi_float_regs=p.parse_opt_within(
             "mips_abi_float_regs",
             str,
-            ["numeric", "o32", "n32", "n64"],
+            ["numeric", "32", "o32", "n32", "n64"],
             "numeric",
         ),
         named_regs_for_c_funcs=p.parse_opt("named_regs_for_c_funcs", bool, True),
