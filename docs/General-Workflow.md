@@ -1,3 +1,5 @@
+# General workflow
+
 This describes an example of how to iteratively edit the splat segments config in order to maximise code and data migration from the binary.
 
 # 1 Initial configuration
@@ -34,7 +36,7 @@ It's good practice to start pairing `rodata` sections with `asm` sections _befor
 
 These messages are output when splitting and look like:
 
-```
+```plain_text
 Rodata segment '3EE10' may belong to the text segment 'energy_orb_wave'
     Based on the usage from the function func_0xXXXXXXXX to the symbol D_800AEA10
 ```
@@ -122,6 +124,90 @@ For a GCC example, see the [include.h](https://github.com/AngheloAlf/drmario64/b
 
 For IDO, you will need to use [asm-processor](https://github.com/simonlindholm/asm-processor) in order to include assembly code within the c files.
 
+## Assembly macros
+
+splat relies on some assembly macros for the asm generation. They usually live on the `include/macro.inc` file. Without these macros then an assembler would not be able to build our disassemblies.
+
+Those macros usually look like this:
+
+```mips
+.macro glabel label
+    .global \label
+    .type \label, @function
+    \label:
+.endm
+
+.macro dlabel label
+    .global \label
+    \label:
+.endm
+
+.macro jlabel label
+    .global \label
+    \label:
+.endm
+```
+
+Where `glabel` is used for functions, `dlabel` is used for data, rodata and bss variables and `jlabel` is used for branch labels used by jumptables.
+
+Asm differ tools can sometimes struggle to show diffs with `jlabel`s when combined with certain compilers. A workaround for this issue is to mark the `jlabel` as a function, like this:
+
+```mips
+.macro jlabel label
+    .global \label
+    .type \label, @function
+    \label:
+.endm
+```
+
+### Float assembly macros
+
+Additionally splat recommends using the o32 abi names for float registers, which gives proper names to the float registers.
+
+For a proper explanation on what those abi names are and why they are recommended check this: <https://gist.github.com/EllipticEllipsis/27eef11205c7a59d8ea85632bc49224d>
+
+Some compilers/assemblers have support for them but others do not, if your compiler doesn't support them then but does support having custom register aliases (like the modern `mips-linux-gnu-as` and similar assemblers) then it is recommended to add the following to your `macro.inc` file:
+
+```mips
+# Float register aliases (o32 ABI, odd ones are rarely used)
+
+.set $fv0,          $f0
+.set $fv0f,         $f1
+.set $fv1,          $f2
+.set $fv1f,         $f3
+.set $ft0,          $f4
+.set $ft0f,         $f5
+.set $ft1,          $f6
+.set $ft1f,         $f7
+.set $ft2,          $f8
+.set $ft2f,         $f9
+.set $ft3,          $f10
+.set $ft3f,         $f11
+.set $fa0,          $f12
+.set $fa0f,         $f13
+.set $fa1,          $f14
+.set $fa1f,         $f15
+.set $ft4,          $f16
+.set $ft4f,         $f17
+.set $ft5,          $f18
+.set $ft5f,         $f19
+.set $fs0,          $f20
+.set $fs0f,         $f21
+.set $fs1,          $f22
+.set $fs1f,         $f23
+.set $fs2,          $f24
+.set $fs2f,         $f25
+.set $fs3,          $f26
+.set $fs3f,         $f27
+.set $fs4,          $f28
+.set $fs4f,         $f29
+.set $fs5,          $f30
+.set $fs5f,         $f31
+```
+
+If even this doesn't work on your assembler then you would need to disable those abi names by setting the `mips_abi_float_regs` option in your yaml to `numeric`.
+
+Old GCC builds (like KMC) can struggle with register aliases, a workaround is to split the macro labels and the aliases in two different files. You can follow the example from Dr. Mario: [`labels.inc`](https://github.com/AngheloAlf/drmario64/blob/master/include/labels.inc) and [`macro.inc`](https://github.com/AngheloAlf/drmario64/blob/master/include/macro.inc)
 
 # 3 Decompile text
 

@@ -142,7 +142,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 if symbol.contextSym.isJumpTable():
                     rodata_encountered = True
                     print(
-                        f"Data segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here."
+                        f"\n\nData segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here."
                     )
                     print(
                         "Please note the real start of the rodata section may be way before this point."

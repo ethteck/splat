@@ -54,34 +54,80 @@ sha1: 9bef1128717f958171a4afac3ed78ee2bb4e86ce
 options:
   basename: supermario64
   target_path: baserom.z64
+  elf_path: build/supermario64.elf
   base_path: .
+  platform: n64
   compiler: IDO
-  find_file_boundaries: True
-  # platform: n64
-  # undefined_funcs_auto_path: undefined_funcs_auto.txt
-  # undefined_syms_auto_path: undefined_syms_auto.txt
-  # symbol_addrs_path: symbol_addrs.txt
-  # undefined_syms_path: undefined_syms.txt
+
   # asm_path: asm
   # src_path: src
   # build_path: build
-  # extensions_path: tools/splat_ext
-  # auto_all_sections: True
+  # create_asm_dependencies: True
+
+  ld_script_path: supermario64.ld
+  ld_dependencies: True
+
+  find_file_boundaries: True
+  header_encoding: ASCII
+
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  mips_abi_float_regs: o32
+
+  asm_function_macro: glabel
+  asm_jtbl_label_macro: jlabel
+  asm_data_macro: dlabel
+
+  # section_order: [".text", ".data", ".rodata", ".bss"]
+  # auto_all_sections: [".data", ".rodata", ".bss"]
+
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+
+  # undefined_funcs_auto_path: undefined_funcs_auto.txt
+  # undefined_syms_auto_path: undefined_syms_auto.txt
+
+  extensions_path: tools/splat_ext
+
+  # string_encoding: ASCII
+  # data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+  # libultra_symbols: True
+  # hardware_regs: True
+  # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 segments:
   - name: header
     type: header
     start: 0x0
+
   - name: boot
     type: bin
     start: 0x40
-  - name: main
+
+  - name: entry
     type: code
     start: 0x1000
     vram: 0x80246000
     subsegments:
-      - [0x1000, asm]
+      - [0x1000, hasm]
+
+  - name: main
+    type: code
+    start: 0x1050
+    vram: 0x80246050
+    follows_vram: entry
+    bss_size: 0x2CEE0
+    subsegments:
+      - [0x1050, asm]
+      - [0xE6430, data]
+      - { start: 0xF5580, type: bss, vram: 0x8033A580 }
+
   - type: bin
-    start: 0xE6430
+    start: 0xF5580
+    follows_vram: main
   - [0x800000]
 ```
 
@@ -96,10 +142,15 @@ python3 -m splat split supermario64.yaml
 The output will look something like this:
 
 ```plain_text
-splat 0.7.10.1
-Loading and processing symbols
-Starting scan
-..Segment 1000, function at vram 80246DF8 ends with extra nops, indicating a likely file split.
+splat 0.22.1 (powered by spimdisasm 1.21.0)
+Scanning main:   0%|                                | 0/5 [00:00<?, ?it/s]
+
+Data segment E6430, symbol at vram 80335B60 is a jumptable, indicating the start of the rodata section _may_ be near here.
+Please note the real start of the rodata section may be way before this point.
+      - [0xF0B60, rodata]
+Scanning F5580: 100%|███████████████████████| 5/5 [00:04<00:00,  1.06it/s]
+Splitting main:   0%|                               | 0/5 [00:00<?, ?it/s]
+Segment 1050, symbol at vram 80246DF8 ends with extra nops, indicating a likely file split.
 File split suggestions for this segment will follow in config yaml format:
       - [0x1E70, asm]
       - [0x3C40, asm]
@@ -110,17 +161,16 @@ File split suggestions for this segment will follow in config yaml format:
       - [0xE61F0, asm]
       - [0xE6200, asm]
       - [0xE6260, asm]
-..
-Starting split
-....
-Split 943 KB (11.24%) in defined segments
+Splitting F5580: 100%|██████████████████████| 5/5 [00:03<00:00,  1.58it/s]
+Linker script F5580: 100%|████████████████| 5/5 [00:00<00:00, 1580.25it/s]
+Split 1 MB (11.98%) in defined segments
               header:     64 B (0.00%) 1 split, 0 cached
                  bin:     4 KB (0.05%) 1 split, 0 cached
-                code:   939 KB (11.19%) 1 split, 0 cached
-             unknown:     7 MB (88.76%) from unknown bin files
+                code:     1 MB (11.93%) 2 split, 0 cached
+             unknown:     7 MB (88.02%) from unknown bin files
 ```
 
-Notice that `splat` has found some potential file splits (function start/end with 16 byte alignment padded with nops).
+Notice that `splat` has found some potential file splits (function start/end with 16 byte alignment padded with nops) and it also suggested where the start of rodata may be.
 
 It's up to you to figure out the layout of the ROM.
 
