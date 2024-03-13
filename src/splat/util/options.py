@@ -87,6 +87,9 @@ class SplatOpts:
     # TODO document
     elf_section_list_path: Optional[Path]
 
+    # TODO document
+    use_windows_filename_restrictions: bool
+
     # Linker script
     # Determines the default subalign value to be specified in the generated linker script
     subalign: Optional[int]
@@ -415,6 +418,9 @@ def _parse_yaml(
         extensions_path=p.parse_optional_path(base_path, "extensions_path"),
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
+        use_windows_filename_restrictions=p.parse_opt(
+            "use_windows_filename_restrictions", bool, False
+        ),
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
         auto_all_sections=p.parse_opt(
             "auto_all_sections", list, [".data", ".rodata", ".bss"]

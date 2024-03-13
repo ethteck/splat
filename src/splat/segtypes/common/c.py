@@ -25,6 +25,8 @@ C_FUNC_RE = re.compile(
 
 C_GLOBAL_ASM_IDO_RE = re.compile(r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)", re.MULTILINE)
 
+ILLEGAL_FILENAME_CHARS = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
+
 
 class CommonSegC(CommonSegCodeSubsegment):
     def __init__(self, *args, **kwargs):
@@ -278,7 +280,12 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_dir: Path,
         func_sym: Symbol,
     ):
-        outpath = out_dir / self.name / (func_sym.name + ".s")
+        name = func_sym.name
+        if options.opts.use_windows_filename_restrictions:
+            if any(c in ILLEGAL_FILENAME_CHARS for c in name) or len(name) >= 256:
+                name = func_sym.default_name
+
+        outpath = out_dir / self.name / (name + ".s")
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not func_sym.extract:
@@ -308,7 +315,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     func_rodata_entry.function, func_rodata_entry.lateRodataSyms
                 )
 
-        self.log(f"Disassembled {func_sym.name} to {outpath}")
+        self.log(f"Disassembled {name} to {outpath}")
 
     def create_unmigrated_rodata_file(
         self,
@@ -316,7 +323,12 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_dir: Path,
         rodata_sym: Symbol,
     ):
-        outpath = out_dir / self.name / (rodata_sym.name + ".s")
+        name = rodata_sym.name
+        if options.opts.use_windows_filename_restrictions:
+            if any(c in ILLEGAL_FILENAME_CHARS for c in name) or len(name) >= 256:
+                name = rodata_sym.default_name
+
+        outpath = out_dir / self.name / (name + ".s")
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not rodata_sym.extract:
@@ -330,11 +342,11 @@ class CommonSegC(CommonSegCodeSubsegment):
             preamble = options.opts.generated_s_preamble
             if preamble:
                 f.write(preamble + "\n")
-            assert rodata_sym.linker_section is not None, rodata_sym.name
+            assert rodata_sym.linker_section is not None, name
             f.write(f".section {rodata_sym.linker_section}\n\n")
             f.write(spim_rodata_sym.disassemble())
 
-        self.log(f"Disassembled {rodata_sym.name} to {outpath}")
+        self.log(f"Disassembled {name} to {outpath}")
 
     def get_c_line_include_macro(
         self,
@@ -342,19 +354,27 @@ class CommonSegC(CommonSegCodeSubsegment):
         asm_out_dir: Path,
         macro_name: str,
     ) -> str:
+        name_comment = ""
+        name = spim_sym.getName()
+        if options.opts.use_windows_filename_restrictions:
+            if any(c in ILLEGAL_FILENAME_CHARS for c in name) or len(name) >= 256:
+                name_comment += "/*" + name + "*/\n"
+                name = spim_sym.contextSym.getDefaultName()
+
         if options.opts.compiler == IDO:
             # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
-            asm_outpath = Path(
-                os.path.join(asm_out_dir, self.name, spim_sym.getName() + ".s")
-            )
+            asm_outpath = Path(os.path.join(asm_out_dir, self.name, name + ".s"))
             rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
-            return f'#pragma GLOBAL_ASM("{rel_asm_outpath}")'
+            return name_comment + f'#pragma GLOBAL_ASM("{rel_asm_outpath}")'
 
         if options.opts.use_legacy_include_asm:
             rel_asm_out_dir = asm_out_dir.relative_to(options.opts.nonmatchings_path)
-            return f'{macro_name}(const s32, "{rel_asm_out_dir / self.name}", {spim_sym.getName()});'
+            return (
+                name_comment
+                + f'{macro_name}(const s32, "{rel_asm_out_dir / self.name}", {name});'
+            )
 
-        return f'{macro_name}("{asm_out_dir / self.name}", {spim_sym.getName()});'
+        return name_comment + f'{macro_name}("{asm_out_dir / self.name}", {name});'
 
     def get_c_lines_for_function(
         self, func: spimdisasm.mips.symbols.SymbolFunction, asm_out_dir: Path
