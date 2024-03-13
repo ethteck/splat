@@ -1,6 +1,6 @@
-from .data import CommonSegData
+from .bss import CommonSegBss
 
 
-class CommonSegSbss(CommonSegData):
+class CommonSegSbss(CommonSegBss):
     def get_linker_section(self) -> str:
         return ".sbss"

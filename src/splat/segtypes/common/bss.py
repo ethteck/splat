@@ -4,6 +4,8 @@ from .data import CommonSegData
 
 from ...disassembler.disassembler_section import make_bss_section
 
+# If `options.opts.ld_bss_is_noload` is False, then this segment behaves like a `CommonSegData`
+
 
 class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
@@ -11,6 +13,8 @@ class CommonSegBss(CommonSegData):
 
     @staticmethod
     def is_data() -> bool:
+        if not options.opts.ld_bss_is_noload:
+            return True
         return False
 
     @staticmethod
@@ -20,6 +24,10 @@ class CommonSegBss(CommonSegData):
         return True
 
     def disassemble_data(self, rom_bytes: bytes):
+        if not options.opts.ld_bss_is_noload:
+            super().disassemble_data(rom_bytes)
+            return
+
         if not isinstance(self.rom_start, int):
             log.error(
                 f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
@@ -65,4 +73,6 @@ class CommonSegBss(CommonSegData):
             )
 
     def should_scan(self) -> bool:
+        if not options.opts.ld_bss_is_noload:
+            return super().should_scan()
         return options.opts.is_mode_active("code") and self.vram_start is not None
