@@ -3,7 +3,7 @@ from typing import Tuple
 __package_name__ = __name__
 
 # Should be synced with pyproject.toml
-__version__ = "0.22.3"
+__version__ = "0.22.4"
 __author__ = "ethteck"
 
 from . import util as util

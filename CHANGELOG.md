@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.22.4
+
+* Change `sbss` to properly work as a noload section.
+  * To make it not behave as noload then turn off `ld_bss_is_noload`.
+
 ### 0.22.3
 
 * Fix linker script generation not respecting other noload segments (like `.sbss`) when using `bss_contains_common`.
@@ -30,7 +35,7 @@
 ### 0.21.11
 
 * Show an error on `create_config` if the format is not supported.
-* Allow lib segment to be a dictionary with `object` and `section` options
+* Allow lib segment to be a dictionary with `objec t` and `section` options
 * Allow lib segment to use `vram` option
 
 ### 0.21.10
