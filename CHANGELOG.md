@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.22.3
+
+* Fix linker script generation not respecting other noload segments (like `.sbss`) when using `bss_contains_common`.
+
 ### 0.22.2
 
 * Allow for `image_type_in_extension` to be overridden by subclasses of N64SegImg
