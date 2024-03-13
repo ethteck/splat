@@ -452,7 +452,9 @@ def _parse_yaml(
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
         ld_fill_value=p.parse_optional_opt_with_default("ld_fill_value", int, 0),
-        ld_bss_is_noload=p.parse_opt("ld_bss_is_noload", bool, default_ld_bss_is_noload),
+        ld_bss_is_noload=p.parse_opt(
+            "ld_bss_is_noload", bool, default_ld_bss_is_noload
+        ),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
         ld_generate_symbol_per_data_segment=p.parse_opt(
