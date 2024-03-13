@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.22.4
+
+* Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
+
 ### 0.22.3
 
 * Fix linker script generation not respecting other noload segments (like `.sbss`) when using `bss_contains_common`.
