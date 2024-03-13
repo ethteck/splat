@@ -4,6 +4,7 @@
 
 * Change `sbss` to properly work as a noload section.
   * To make it not behave as noload then turn off `ld_bss_is_noload`.
+* `ld_bss_is_noload` is now `False` by default for `psx` projects.
 
 ### 0.22.3
 
