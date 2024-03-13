@@ -4,8 +4,7 @@ from ..common.hasm import CommonSegHasm
 
 
 class N64SegHasm(CommonSegHasm):
-    @staticmethod
-    def get_file_header():
+    def get_file_header(self):
         ret = []
 
         ret.append('.include "macro.inc"')
@@ -22,7 +21,12 @@ class N64SegHasm(CommonSegHasm):
         if preamble:
             ret.append(preamble)
             ret.append("")
-        ret.append('.section .text, "ax"')
+
+        line = f'.section {self.get_linker_section_linksection()}'
+        section_flags = self.get_section_flags()
+        if section_flags:
+            line += f', "{section_flags}"'
+        ret.append(line)
         ret.append("")
 
         return ret

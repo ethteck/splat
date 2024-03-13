@@ -45,6 +45,9 @@ class CommonSegCodeSubsegment(Segment):
     def get_linker_section(self) -> str:
         return ".text"
 
+    def get_section_flags(self) -> Optional[str]:
+        return "ax"
+
     def scan_code(self, rom_bytes, is_hasm=False):
         if not isinstance(self.rom_start, int):
             log.error(
