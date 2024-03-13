@@ -94,7 +94,7 @@ class CommonSegRodata(CommonSegData):
             generated_symbol = symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym
             )
-            generated_symbol.linker_section = self.get_linker_section()
+            generated_symbol.linker_section = self.get_linker_section_linksection()
 
             possible_text = self.get_possible_text_subsegment_for_symbol(symbol)
             if possible_text is not None:

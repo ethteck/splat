@@ -47,7 +47,7 @@ class CommonSegTextbin(CommonSegment):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
 
-        f.write(f".section {self.get_linker_section()}")
+        f.write(f".section {self.get_linker_section_linksection()}")
         section_flags = self.get_section_flags()
         if section_flags:
             f.write(f', "{section_flags}"')

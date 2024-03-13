@@ -60,7 +60,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             if preamble:
                 f.write(preamble + "\n")
 
-            f.write(f".section {self.get_linker_section()}")
+            f.write(f".section {self.get_linker_section_linksection()}")
             section_flags = self.get_section_flags()
             if section_flags:
                 f.write(f', "{section_flags}"')
