@@ -278,11 +278,11 @@ def handle_sym_addrs(
                     # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
                     # Other lines have two spaces to make identation nicer and consistent
                     f"Ilegal symbol filename detected!\n"
-                    f"  The symbol \n"
+                    f"  The symbol\n"
                     f"    {sym.name}\n"
                     f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
                     f"  which will be a problem when writing the symbol to its own file.\n"
-                    f"  To fix this specify a `filename` for this symbol, like `filename:some_alt_name`.\n"
+                    f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
                     f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
                     f"    {ILLEGAL_FILENAME_CHARS}"
                 )

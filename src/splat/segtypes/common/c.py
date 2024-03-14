@@ -134,7 +134,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         ):
             path = self.out_path()
             if path:
-                if options.opts.do_c_func_detection and os.path.exists(path):
+                if options.opts.do_c_func_detection and path.exists():
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
