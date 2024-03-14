@@ -355,7 +355,10 @@ class CommonSegC(CommonSegCodeSubsegment):
         return f'{macro_name}("{asm_out_dir / self.name}", {sym.filename});'
 
     def get_c_lines_for_function(
-        self, sym: Symbol, spim_sym: spimdisasm.mips.symbols.SymbolFunction, asm_out_dir: Path
+        self,
+        sym: Symbol,
+        spim_sym: spimdisasm.mips.symbols.SymbolFunction,
+        asm_out_dir: Path,
     ) -> List[str]:
         c_lines = []
 
@@ -375,12 +378,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         c_lines.append("")
         return c_lines
 
-    def get_c_lines_for_rodata_sym(
-        self, sym: Symbol, asm_out_dir: Path
-    ):
-        c_lines = [
-            self.get_c_line_include_macro(sym, asm_out_dir, "INCLUDE_RODATA")
-        ]
+    def get_c_lines_for_rodata_sym(self, sym: Symbol, asm_out_dir: Path):
+        c_lines = [self.get_c_line_include_macro(sym, asm_out_dir, "INCLUDE_RODATA")]
         c_lines.append("")
         return c_lines
 
@@ -402,7 +401,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                 )
                 assert func_sym is not None
 
-                c_lines += self.get_c_lines_for_function(func_sym, entry.function, asm_out_dir)
+                c_lines += self.get_c_lines_for_function(
+                    func_sym, entry.function, asm_out_dir
+                )
             else:
                 for spim_rodata_sym in entry.rodataSyms:
                     rodata_sym = self.get_symbol(
