@@ -149,3 +149,17 @@ obj_fallCA1_tex_rgb_ia8 = 0x06013118; // allow_duplicated:True
 // ...
 obj_fallCA1_tex_rgb_ia8 = 0x060140A8; // allow_duplicated:True
 ```
+
+### `filename`
+
+Allows specifying a different filename than the default (the symbol's name) when writing the symbol to its own file.
+
+Useful when the symbol name has invalid characters for a filename or it exceeds the OS filename limit.
+
+**Example**
+
+```ini
+__opPCc__Q23std34_RefCountedPtr<c,Q23std9_Array<c>>CFv = 0x00202850; // filename:func_00202850
+```
+
+Gets written to `func_00202850.s`
