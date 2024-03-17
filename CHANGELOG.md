@@ -3,7 +3,7 @@
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
   * This is checked because functions are written to their own files and the symbol name is used as the filepath.
   * There are two checks in place:
-    * The resulting filepath should not exceed 255 bytes, since most OSes impose that restriction.
+    * The resulting filename should not exceed 255 bytes, since most OSes impose that restriction.
     * It should not contain any of the following characters: `"<", ">", ":", '"', "/", "\\", "|", "?", "*"`
   * It is possible to specify a different filename and retain the symbol name by using the `filename` attribute for each symbol on the `symbol_addrs` file.
     * Make sure that the new specified `filename` does fit the listed requirements.
