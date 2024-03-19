@@ -18,6 +18,7 @@
 * New ps2-specific segments:
   * `lit4` and `lit8`: "Literal" sections that only contain `float`s and `double`s respectively.
   * `ctor`: Data pointing to C++ global data initialization functions.
+  * `vtables`: C++ vtables
 * `spimdisasm` 1.23.0 or above is now required.
 
 ### 0.22.3

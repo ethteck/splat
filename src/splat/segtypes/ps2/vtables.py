@@ -6,11 +6,11 @@ from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class PS2SegCtor(CommonSegData):
-    """Segment that contains pointers to C++ global data initialization functions"""
+class PS2SegVtables(CommonSegData):
+    """Segment that contains a pointer to C++ vtables"""
 
     def get_linker_section(self) -> str:
-        return ".ctor"
+        return ".vtables"
 
     def get_section_flags(self) -> Optional[str]:
         return "a"
