@@ -28,4 +28,3 @@ class Ps2SegVtables(CommonSegData):
         # We use s32 to make sure spimdisasm disassembles the data from this section as words/references to other symbols
         section.enableStringGuessing = False
         section.typeForOwnedSymbols = "s32"
-        section.sizeForOwnedSymbols = 4
