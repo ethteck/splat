@@ -134,7 +134,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         ):
             path = self.out_path()
             if path:
-                if options.opts.do_c_func_detection and os.path.exists(path):
+                if options.opts.do_c_func_detection and path.exists():
                     # TODO run cpp?
                     self.defined_funcs = self.get_funcs_defined_in_c(path)
                     self.global_asm_funcs = self.get_global_asm_funcs(path)
@@ -278,7 +278,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_dir: Path,
         func_sym: Symbol,
     ):
-        outpath = out_dir / self.name / (func_sym.name + ".s")
+        outpath = out_dir / self.name / f"{func_sym.filename}.s"
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not func_sym.extract:
@@ -308,7 +308,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     func_rodata_entry.function, func_rodata_entry.lateRodataSyms
                 )
 
-        self.log(f"Disassembled {func_sym.name} to {outpath}")
+        self.log(f"Disassembled {func_sym.filename} to {outpath}")
 
     def create_unmigrated_rodata_file(
         self,
@@ -316,7 +316,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         out_dir: Path,
         rodata_sym: Symbol,
     ):
-        outpath = out_dir / self.name / (rodata_sym.name + ".s")
+        outpath = out_dir / self.name / f"{rodata_sym.filename}.s"
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
         if outpath.exists() and not rodata_sym.extract:
@@ -334,55 +334,52 @@ class CommonSegC(CommonSegCodeSubsegment):
             f.write(f".section {rodata_sym.linker_section}\n\n")
             f.write(spim_rodata_sym.disassemble())
 
-        self.log(f"Disassembled {rodata_sym.name} to {outpath}")
+        self.log(f"Disassembled {rodata_sym.filename} to {outpath}")
 
     def get_c_line_include_macro(
         self,
-        spim_sym: spimdisasm.mips.symbols.SymbolBase,
+        sym: Symbol,
         asm_out_dir: Path,
         macro_name: str,
     ) -> str:
         if options.opts.compiler == IDO:
             # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
-            asm_outpath = Path(
-                os.path.join(asm_out_dir, self.name, spim_sym.getName() + ".s")
-            )
+            asm_outpath = asm_out_dir / self.name / f"{sym.filename}.s"
             rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
             return f'#pragma GLOBAL_ASM("{rel_asm_outpath}")'
 
         if options.opts.use_legacy_include_asm:
             rel_asm_out_dir = asm_out_dir.relative_to(options.opts.nonmatchings_path)
-            return f'{macro_name}(const s32, "{rel_asm_out_dir / self.name}", {spim_sym.getName()});'
+            return f'{macro_name}(const s32, "{rel_asm_out_dir / self.name}", {sym.filename});'
 
-        return f'{macro_name}("{asm_out_dir / self.name}", {spim_sym.getName()});'
+        return f'{macro_name}("{asm_out_dir / self.name}", {sym.filename});'
 
     def get_c_lines_for_function(
-        self, func: spimdisasm.mips.symbols.SymbolFunction, asm_out_dir: Path
+        self,
+        sym: Symbol,
+        spim_sym: spimdisasm.mips.symbols.SymbolFunction,
+        asm_out_dir: Path,
     ) -> List[str]:
         c_lines = []
 
         # Terrible hack to "auto-decompile" empty functions
         if (
             options.opts.auto_decompile_empty_functions
-            and len(func.instructions) == 2
-            and func.instructions[0].isReturn()
-            and func.instructions[1].isNop()
+            and len(spim_sym.instructions) == 2
+            and spim_sym.instructions[0].isReturn()
+            and spim_sym.instructions[1].isNop()
         ):
-            c_lines.append("void " + func.getName() + "(void) {")
+            c_lines.append(f"void {spim_sym.getName()}(void) {{")
             c_lines.append("}")
         else:
             c_lines.append(
-                self.get_c_line_include_macro(func, asm_out_dir, "INCLUDE_ASM")
+                self.get_c_line_include_macro(sym, asm_out_dir, "INCLUDE_ASM")
             )
         c_lines.append("")
         return c_lines
 
-    def get_c_lines_for_rodata_sym(
-        self, rodata_sym: spimdisasm.mips.symbols.SymbolBase, asm_out_dir: Path
-    ):
-        c_lines = [
-            self.get_c_line_include_macro(rodata_sym, asm_out_dir, "INCLUDE_RODATA")
-        ]
+    def get_c_lines_for_rodata_sym(self, sym: Symbol, asm_out_dir: Path):
+        c_lines = [self.get_c_line_include_macro(sym, asm_out_dir, "INCLUDE_RODATA")]
         c_lines.append("")
         return c_lines
 
@@ -396,9 +393,24 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         for entry in symbols_entries:
             if entry.function is not None:
-                c_lines += self.get_c_lines_for_function(entry.function, asm_out_dir)
+                func_sym = self.get_symbol(
+                    entry.function.vram,
+                    in_segment=True,
+                    type="func",
+                    local_only=True,
+                )
+                assert func_sym is not None
+
+                c_lines += self.get_c_lines_for_function(
+                    func_sym, entry.function, asm_out_dir
+                )
             else:
-                for rodata_sym in entry.rodataSyms:
+                for spim_rodata_sym in entry.rodataSyms:
+                    rodata_sym = self.get_symbol(
+                        spim_rodata_sym.vram, in_segment=True, local_only=True
+                    )
+                    assert rodata_sym is not None
+
                     c_lines += self.get_c_lines_for_rodata_sym(rodata_sym, asm_out_dir)
 
         c_path.parent.mkdir(parents=True, exist_ok=True)

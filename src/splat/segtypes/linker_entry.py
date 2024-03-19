@@ -168,7 +168,7 @@ class LinkerEntry:
 
         if self.noload and self.bss_contains_common:
             linker_writer._write_object_path_section(
-                self.object_path, ".bss COMMON .scommon"
+                self.object_path, f"{self.section_link} COMMON .scommon"
             )
         else:
             wildcard = "*" if options.opts.ld_wildcard_sections else ""

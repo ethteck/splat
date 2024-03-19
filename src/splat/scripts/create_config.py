@@ -60,6 +60,7 @@ options:
 
   o_as_suffix: True
   use_legacy_include_asm: False
+  mips_abi_float_regs: o32
 
   asm_function_macro: glabel
   asm_jtbl_label_macro: jlabel
