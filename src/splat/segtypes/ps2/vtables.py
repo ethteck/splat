@@ -6,7 +6,7 @@ from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class PS2SegVtables(CommonSegData):
+class Ps2SegVtables(CommonSegData):
     """Segment that contains a pointer to C++ vtables"""
 
     def get_linker_section(self) -> str:

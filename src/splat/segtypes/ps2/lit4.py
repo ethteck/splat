@@ -6,7 +6,7 @@ from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class PS2SegLit4(CommonSegData):
+class Ps2SegLit4(CommonSegData):
     """Segment that only contains single-precision floats"""
 
     def get_linker_section(self) -> str:

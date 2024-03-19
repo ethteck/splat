@@ -6,7 +6,7 @@ from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class PS2SegCtor(CommonSegData):
+class Ps2SegCtor(CommonSegData):
     """Segment that contains pointers to C++ global data initialization functions"""
 
     def get_linker_section(self) -> str:
