@@ -15,6 +15,8 @@
 * Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
 * Allow configuring the `spimdisasm` section on extension segments (that inherit from `asm`, `data`, `rodata` or `bss` segments) before running the analisys on it.
   * This is done by overriding the `configure_disassembler_section` method.
+* New ps2-specific segments:
+  * `lit4` and `lit8`: Literal sections that only contain `float`s and `double`s respectively.
 * `spimdisasm` 1.23.0 or above is now required.
 
 ### 0.22.3
