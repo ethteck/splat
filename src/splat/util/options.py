@@ -105,8 +105,6 @@ class SplatOpts:
     ld_sections_allowlist: List[str]
     # A list of sections to discard during link time. It can be useful to avoid using the wildcard discard. Note that this option does not turn off `ld_discard_section`
     ld_sections_denylist: List[str]
-    # Determines the list of section labels that are to be added to the linker script
-    ld_section_labels: List[str]
     # Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
     ld_wildcard_sections: bool
     # Determines whether to use `follows_vram` (segment option) and
@@ -428,11 +426,6 @@ def _parse_yaml(
         ld_discard_section=p.parse_opt("ld_discard_section", bool, True),
         ld_sections_allowlist=p.parse_opt("ld_sections_allowlist", list, []),
         ld_sections_denylist=p.parse_opt("ld_sections_denylist", list, []),
-        ld_section_labels=p.parse_opt(
-            "ld_section_labels",
-            list,
-            [".text", ".data", ".rodata", ".bss"],
-        ),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
         ld_use_symbolic_vram_addresses=p.parse_opt(
             "ld_use_symbolic_vram_addresses", bool, True

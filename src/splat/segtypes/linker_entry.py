@@ -236,7 +236,7 @@ class LinkerWriter:
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for l in segment.section_order:
-            if l in options.opts.ld_section_labels:
+            if l in options.opts.section_order:
                 section_entries[l] = []
 
         # Add all entries to section_entries
@@ -244,7 +244,7 @@ class LinkerWriter:
         for entry in entries:
             if entry.section_order_type in section_entries:
                 # Search for the very first section type
-                # This is required in case the very first entry is a type that's not listed on ld_section_labels (like linker_offset) because it would be dropped
+                # This is required in case the very first entry is a type that's not listed on section_order (like linker_offset) because it would be dropped
                 prev_entry = entry.section_order_type
                 break
 
@@ -254,7 +254,7 @@ class LinkerWriter:
             if entry.section_order_type in section_entries:
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
-                # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
+                # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
             any_load = any_load or not entry.noload
             any_noload = any_noload or entry.noload
@@ -285,14 +285,14 @@ class LinkerWriter:
 
         # To keep track which sections has been started
         started_sections: Dict[str, bool] = {
-            l: False for l in options.opts.ld_section_labels
+            l: False for l in options.opts.section_order
         }
 
         # Find where sections are last seen
         last_seen_sections: Dict[LinkerEntry, str] = {}
         for entry in reversed(entries):
             if (
-                entry.section_order_type in options.opts.ld_section_labels
+                entry.section_order_type in options.opts.section_order
                 and entry.section_order_type not in last_seen_sections.values()
             ):
                 last_seen_sections[entry] = entry.section_order_type
@@ -362,7 +362,7 @@ class LinkerWriter:
             self._begin_segment(segment, seg_name, noload=False, is_first=is_first)
 
             for l in segment.section_order:
-                if l not in options.opts.ld_section_labels:
+                if l not in options.opts.section_order:
                     continue
                 if l == ".bss":
                     continue
@@ -412,7 +412,7 @@ class LinkerWriter:
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for l in segment.section_order:
-            if l in options.opts.ld_section_labels:
+            if l in options.opts.section_order:
                 section_entries[l] = []
 
         # Add all entries to section_entries
@@ -421,7 +421,7 @@ class LinkerWriter:
             if entry.section_order_type in section_entries:
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
-                # If this section is not present in section_order or ld_section_labels then pretend it is part of the last seen section, mainly for handling linker_offset
+                # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
                 section_entries[prev_entry].append(entry)
             prev_entry = entry.section_order_type
 
