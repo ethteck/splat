@@ -369,10 +369,6 @@ ld_symbol_header_path: path/to/linker_symbol_header
 
 Determines whether to add a discard section to the linker script
 
-### ld_section_labels
-
-Determines the list of section labels that are to be added to the linker script
-
 ### ld_wildcard_sections
 
 Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
