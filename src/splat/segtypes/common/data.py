@@ -84,7 +84,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def get_linker_entries(self):
         return CommonSegCodeSubsegment.get_linker_entries(self)
 
-    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()

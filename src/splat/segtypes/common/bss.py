@@ -23,7 +23,9 @@ class CommonSegBss(CommonSegData):
             return False
         return True
 
-    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
         "Allows to configure the section before running the analysis on it"
 
         pass

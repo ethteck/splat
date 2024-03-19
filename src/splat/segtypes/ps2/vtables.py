@@ -15,7 +15,9 @@ class PS2SegVtables(CommonSegData):
     def get_section_flags(self) -> Optional[str]:
         return "a"
 
-    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
         "Allows to configure the section before running the analysis on it"
 
         super().configure_disassembler_section(disassembler_section)

@@ -47,7 +47,9 @@ class CommonSegCodeSubsegment(Segment):
     def get_linker_section(self) -> str:
         return ".text"
 
-    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
@@ -56,7 +58,6 @@ class CommonSegCodeSubsegment(Segment):
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category
         section.detectRedundantFunctionEnd = self.detect_redundant_function_end
-
 
     def scan_code(self, rom_bytes, is_hasm=False):
         self.is_hasm = is_hasm

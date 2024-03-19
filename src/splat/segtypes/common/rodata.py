@@ -5,7 +5,10 @@ from ...util import log, options, symbols
 
 from .data import CommonSegData
 
-from ...disassembler.disassembler_section import DisassemblerSection, make_rodata_section
+from ...disassembler.disassembler_section import (
+    DisassemblerSection,
+    make_rodata_section,
+)
 
 
 class CommonSegRodata(CommonSegData):
@@ -41,7 +44,9 @@ class CommonSegRodata(CommonSegData):
             return None
         return text_segment, func
 
-    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
