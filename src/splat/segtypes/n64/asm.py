@@ -22,11 +22,7 @@ class N64SegAsm(CommonSegAsm):
             ret.append(preamble)
             ret.append("")
 
-        line = f".section {self.get_linker_section_linksection()}"
-        section_flags = self.get_section_flags()
-        if section_flags:
-            line += f', "{section_flags}"'
-        ret.append(line)
+        ret.append(self.get_section_asm_line())
         ret.append("")
 
         return ret
