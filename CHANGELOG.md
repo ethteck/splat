@@ -1,5 +1,6 @@
 # splat Release Notes
 
+### 0.22.4
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
   * This is checked because functions are written to their own files and the symbol name is used as the filepath.
   * There are two checks in place:
@@ -7,6 +8,9 @@
     * It should not contain any of the following characters: `"<", ">", ":", '"', "/", "\\", "|", "?", "*"`
   * It is possible to specify a different filename and retain the symbol name by using the `filename` attribute for each symbol on the `symbol_addrs` file.
     * Make sure that the new specified `filename` does fit the listed requirements.
+* Change `sbss` to properly work as a noload section.
+  * To make it not behave as noload then turn off `ld_bss_is_noload`.
+* `ld_bss_is_noload` is now `False` by default for `psx` projects.
 
 ### 0.22.3
 
