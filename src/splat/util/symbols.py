@@ -28,6 +28,8 @@ FALSEY_VALS = ["false", "off", "no", "n"]
 
 splat_sym_types = {"func", "jtbl", "jtbl_label", "label"}
 
+ILLEGAL_FILENAME_CHARS = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
+
 
 def check_valid_type(typename: str) -> bool:
     if typename[0].isupper():
@@ -181,6 +183,9 @@ def handle_sym_addrs(
                             if attr_name == "name_end":
                                 sym.given_name_end = attr_val
                                 continue
+                            if attr_name == "filename":
+                                sym.given_filename = attr_val
+                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -266,6 +271,23 @@ def handle_sym_addrs(
                             log.error(
                                 f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
                             )
+
+            if len(sym.filename) > 253 or any(
+                c in ILLEGAL_FILENAME_CHARS for c in sym.filename
+            ):
+                log.parsing_error_preamble(path, line_num, line)
+                log.error(
+                    # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
+                    # Other lines have two spaces to make identation nicer and consistent
+                    f"Ilegal symbol filename detected!\n"
+                    f"  The symbol\n"
+                    f"    {sym.name}\n"
+                    f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
+                    f"  which will be a problem when writing the symbol to its own file.\n"
+                    f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
+                    f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
+                    f"    {ILLEGAL_FILENAME_CHARS}"
+                )
 
             seen_symbols[sym.name] = sym
 
@@ -576,6 +598,8 @@ class Symbol:
 
     allow_duplicated: bool = False
 
+    given_filename: Optional[str] = None
+
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
 
@@ -659,6 +683,12 @@ class Symbol:
         if self.given_size is not None:
             return self.given_size
         return 4
+
+    @property
+    def filename(self) -> str:
+        if self.given_filename is not None:
+            return self.given_filename
+        return self.name
 
     def contains_vram(self, offset):
         return offset >= self.vram_start and offset < self.vram_end
