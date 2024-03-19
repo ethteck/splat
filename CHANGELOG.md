@@ -13,6 +13,7 @@
   * To make it not behave as noload then turn off `ld_bss_is_noload`.
 * `ld_bss_is_noload` is now `False` by default for `psx` projects.
 * Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
+* Fix disassembling segments that only have bss.
 
 ### 0.22.3
 

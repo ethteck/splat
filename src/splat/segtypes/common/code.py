@@ -180,7 +180,7 @@ class CommonSegCode(CommonSegGroup):
                 assert isinstance(start, int)
                 vram = self.get_most_parent().rom_to_ram(start)
 
-            if segment_class.is_noload():
+            if segment_class.is_noload() and last_rom_end is not None:
                 # Pretend bss's rom address is after the last actual rom segment
                 start = last_rom_end
                 # and it has a rom size of zero
