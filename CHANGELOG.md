@@ -1,6 +1,6 @@
 # splat Release Notes
 
-### 0.22.4
+### 0.23.0
 
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
   * This is checked because functions are written to their own files and the symbol name is used as the filepath.
