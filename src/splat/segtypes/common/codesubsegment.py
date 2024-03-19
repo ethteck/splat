@@ -38,6 +38,8 @@ class CommonSegCodeSubsegment(Segment):
             else None
         )
 
+        self.is_hasm = False
+
     @property
     def needs_symbols(self) -> bool:
         return True
@@ -45,7 +47,20 @@ class CommonSegCodeSubsegment(Segment):
     def get_linker_section(self) -> str:
         return ".text"
 
+    def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
+        "Allows to configure the section before running the analysis on it"
+
+        section = disassembler_section.get_section()
+        assert isinstance(section, spimdisasm.mips.sections.SectionText)
+
+        section.isHandwritten = self.is_hasm
+        section.instrCat = self.instr_category
+        section.detectRedundantFunctionEnd = self.detect_redundant_function_end
+
+
     def scan_code(self, rom_bytes, is_hasm=False):
+        self.is_hasm = is_hasm
+
         if not isinstance(self.rom_start, int):
             log.error(
                 f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
@@ -75,11 +90,7 @@ class CommonSegCodeSubsegment(Segment):
 
         assert self.spim_section is not None
 
-        self.spim_section.get_section().isHandwritten = is_hasm
-        self.spim_section.get_section().instrCat = self.instr_category
-        self.spim_section.get_section().detectRedundantFunctionEnd = (
-            self.detect_redundant_function_end
-        )
+        self.configure_disassembler_section(self.spim_section)
 
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
