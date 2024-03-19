@@ -6,14 +6,14 @@ from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class PS2SegLit8(CommonSegData):
-    """Segment that only contains double-precision floats"""
+class PS2SegCtor(CommonSegData):
+    """Segment that only contains a pointer to C++ global data initialization functions"""
 
     def get_linker_section(self) -> str:
-        return ".lit8"
+        return ".ctor"
 
     def get_section_flags(self) -> Optional[str]:
-        return "wa"
+        return "a"
 
     def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
         "Allows to configure the section before running the analysis on it"
@@ -23,7 +23,6 @@ class PS2SegLit8(CommonSegData):
         section = disassembler_section.get_section()
         assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
-        # Tell spimdisasm this section only contains doubles
         section.enableStringGuessing = False
-        section.typeForOwnedSymbols = "f64"
-        section.sizeForOwnedSymbols = 8
+        section.typeForOwnedSymbols = "s32"
+        section.sizeForOwnedSymbols = 4

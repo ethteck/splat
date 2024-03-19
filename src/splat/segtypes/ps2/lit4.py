@@ -18,9 +18,12 @@ class PS2SegLit4(CommonSegData):
     def configure_disassembler_section(self, disassembler_section: DisassemblerSection) -> None:
         "Allows to configure the section before running the analysis on it"
 
+        super().configure_disassembler_section(disassembler_section)
+
         section = disassembler_section.get_section()
         assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
         # Tell spimdisasm this section only contains floats
+        section.enableStringGuessing = False
         section.typeForOwnedSymbols = "f32"
         section.sizeForOwnedSymbols = 4
