@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
-from ..util import options
+from ..util import options, log
 
 from .segment import Segment
 from ..util.symbols import to_cname
@@ -252,9 +252,13 @@ class LinkerWriter:
         any_noload = False
         for entry in entries:
             if entry.section_order_type in section_entries:
+                if entry.section_order_type not in section_entries:
+                    log.error(f"Error on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options.")
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
+                if prev_entry not in section_entries:
+                    log.error(f"Error on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options.")
                 section_entries[prev_entry].append(entry)
             any_load = any_load or not entry.noload
             any_noload = any_noload or entry.noload
@@ -419,9 +423,13 @@ class LinkerWriter:
         prev_entry = None
         for entry in entries:
             if entry.section_order_type in section_entries:
+                if entry.section_order_type not in section_entries:
+                    log.error(f"Error on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options.")
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
+                if prev_entry not in section_entries:
+                    log.error(f"Error on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options.")
                 section_entries[prev_entry].append(entry)
             prev_entry = entry.section_order_type
 
