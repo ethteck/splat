@@ -1,8 +1,5 @@
 from pathlib import Path
 from typing import Optional
-
-import spimdisasm
-
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -90,7 +87,6 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
-        assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
         # Set data string encoding
         # First check the global configuration

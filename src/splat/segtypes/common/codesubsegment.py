@@ -53,7 +53,6 @@ class CommonSegCodeSubsegment(Segment):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
-        assert isinstance(section, spimdisasm.mips.sections.SectionText)
 
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category

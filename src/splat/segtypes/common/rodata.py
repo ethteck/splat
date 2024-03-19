@@ -50,7 +50,6 @@ class CommonSegRodata(CommonSegData):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
-        assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
         # Set rodata string encoding
         # First check the global configuration

@@ -1,7 +1,5 @@
 from typing import Optional
 
-import spimdisasm
-
 from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
@@ -23,7 +21,6 @@ class Ps2SegCtor(CommonSegData):
         super().configure_disassembler_section(disassembler_section)
 
         section = disassembler_section.get_section()
-        assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
         # We use s32 to make sure spimdisasm disassembles the data from this section as words/references to other symbols
         section.enableStringGuessing = False

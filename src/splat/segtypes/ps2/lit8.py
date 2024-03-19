@@ -1,7 +1,5 @@
 from typing import Optional
 
-import spimdisasm
-
 from ..common.data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
@@ -23,7 +21,6 @@ class Ps2SegLit8(CommonSegData):
         super().configure_disassembler_section(disassembler_section)
 
         section = disassembler_section.get_section()
-        assert isinstance(section, spimdisasm.mips.sections.SectionBase)
 
         # Tell spimdisasm this section only contains doubles
         section.enableStringGuessing = False
