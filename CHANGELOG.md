@@ -14,6 +14,8 @@
 * `ld_bss_is_noload` is now `False` by default for `psx` projects.
 * Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
 * Fix disassembling segments that only have bss.
+* `ld_section_labels` was removed since it was a redundant list to `section_order`.
+* Give a proper error message for missing sections on `section_order` during linker script generation.
 
 ### 0.22.3
 
