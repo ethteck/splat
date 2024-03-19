@@ -21,6 +21,7 @@
 ### 0.22.2
 
 * Allow for `image_type_in_extension` to be overridden by subclasses of N64SegImg
+* Fixed a bug where auto segments insertion may not respect the proper ordering if there are linker_offset segments present.
 
 ### 0.22.1
 

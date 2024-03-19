@@ -19,5 +19,11 @@ class LinkerEntryPad(LinkerEntry):
 
 
 class CommonSegPad(CommonSegment):
+    def get_linker_section_order(self) -> str:
+        return ""
+
+    def get_linker_section_linksection(self) -> str:
+        return ""
+
     def get_linker_entries(self) -> List[LinkerEntry]:
         return [LinkerEntryPad(self)]
