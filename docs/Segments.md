@@ -275,6 +275,32 @@ While this kind of segment can be represented by other segment types ([`asm`](#a
 - [0x00B250, pad, nops_00B250]
 ```
 
+## PS2 exclusive segments
+
+### `lit4`
+
+`lit4` is a segment that only contains single-precision floats.
+
+splat will try to disassemble all the data from this segment as individual floats whenever possible.
+
+### `lit8`
+
+`lit8` is a segment that only contains double-precision floats.
+
+splat will try to disassemble all the data from this segment as individual doubles whenever possible.
+
+### `ctor`
+
+`ctor` is used by certain compilers (like MWCC) to store pointers to functions that initialize C++ global data objects.
+
+The disassembly of this section is tweaked to avoid confusing its data with other types of data, this is because the disassembler can sometimes get confused and disassemble a pointer as a float, string, etc.
+
+### `vtables`
+
+`vtables` is used by certain compilers (like MWCC) to store the virtual tables of C++ classes
+
+The disassembly of this section is tweaked to avoid confusing its data with other types of data, this is because the disassembler can sometimes get confused and disassemble a pointer as a float, string, etc.
+
 ## General segment options
 
 All splat's segments can be passed extra options for finer configuration. Note that those extra options require to rewrite the entry using the dictionary yaml notation instead of the list one.

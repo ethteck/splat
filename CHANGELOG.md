@@ -16,6 +16,13 @@
 * Fix disassembling segments that only have bss.
 * `ld_section_labels` was removed since it was a redundant list to `section_order`.
 * Give a proper error message for missing sections on `section_order` during linker script generation.
+* Allow configuring the `spimdisasm` section on extension segments (that inherit from `asm`, `data`, `rodata` or `bss` segments) before running the analisys on it.
+  * This is done by overriding the `configure_disassembler_section` method.
+* New ps2-specific segments:
+  * `lit4` and `lit8`: "Literal" sections that only contain `float`s and `double`s respectively.
+  * `ctor`: Data pointing to C++ global data initialization functions.
+  * `vtables`: C++ vtables
+* `spimdisasm` 1.23.0 or above is now required.
 
 ### 0.22.3
 
