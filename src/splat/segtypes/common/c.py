@@ -123,6 +123,9 @@ class CommonSegC(CommonSegCodeSubsegment):
     def is_text() -> bool:
         return True
 
+    def get_section_flags(self) -> Optional[str]:
+        return "ax"
+
     def out_path(self) -> Optional[Path]:
         return options.opts.src_path / self.dir / f"{self.name}.{self.file_extension}"
 

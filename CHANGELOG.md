@@ -1,6 +1,7 @@
 # splat Release Notes
 
 ### 0.22.4
+
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
   * This is checked because functions are written to their own files and the symbol name is used as the filepath.
   * There are two checks in place:
@@ -11,6 +12,7 @@
 * Change `sbss` to properly work as a noload section.
   * To make it not behave as noload then turn off `ld_bss_is_noload`.
 * `ld_bss_is_noload` is now `False` by default for `psx` projects.
+* Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
 
 ### 0.22.3
 
