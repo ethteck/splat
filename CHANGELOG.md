@@ -4,7 +4,7 @@
 
 * New `EEGCC` compiler option.
   * Provide specific adjustments for the GCC compiler used for the PS2 platform.
-* `spimdisasm` 1.24.1 or above is now required.
+* `spimdisasm` 1.24.2 or above is now required.
 
 ### 0.23.0
 
