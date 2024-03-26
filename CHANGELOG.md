@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.23.1
+
+* New `EEGCC` compiler option.
+  * Provide specific adjustments for the GCC compiler used for the PS2 platform.
+* `spimdisasm` 1.24.1 or above is now required.
+
 ### 0.23.0
 
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
