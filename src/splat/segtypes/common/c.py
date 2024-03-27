@@ -7,7 +7,7 @@ import rabbitizer
 import spimdisasm
 
 from ...util import log, options, symbols
-from ...util.compiler import GCC, SN64, IDO
+from ...util.compiler import IDO
 from ...util.symbols import Symbol
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -105,19 +105,19 @@ class CommonSegC(CommonSegCodeSubsegment):
     def get_global_asm_funcs(c_file: Path) -> Set[str]:
         with c_file.open() as f:
             text = CommonSegC.strip_c_comments(f.read())
-        if options.opts.compiler in [GCC, SN64]:
-            return set(CommonSegC.find_include_asm(text))
-        else:
+        if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
+        else:
+            return set(CommonSegC.find_include_asm(text))
 
     @staticmethod
     def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
         with c_file.open() as f:
             text = CommonSegC.strip_c_comments(f.read())
-        if options.opts.compiler in [GCC, SN64]:
-            return set(CommonSegC.find_include_rodata(text))
-        else:
+        if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
+        else:
+            return set(CommonSegC.find_include_rodata(text))
 
     @staticmethod
     def is_text() -> bool:

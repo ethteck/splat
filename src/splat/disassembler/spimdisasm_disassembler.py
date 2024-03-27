@@ -7,7 +7,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
-    SPIMDISASM_MIN = (1, 23, 0)
+    SPIMDISASM_MIN = (1, 24, 2)
 
     def configure(self):
         # Configure spimdisasm
@@ -71,6 +71,8 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.GCC
         elif selected_compiler == compiler.IDO:
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
+        elif selected_compiler == compiler.EEGCC:
+            spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.EEGCC
 
         spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = (
             options.opts.detect_redundant_function_end
