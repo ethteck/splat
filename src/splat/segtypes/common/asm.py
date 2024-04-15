@@ -11,6 +11,9 @@ class CommonSegAsm(CommonSegCodeSubsegment):
     def is_text() -> bool:
         return True
 
+    def get_section_flags(self) -> Optional[str]:
+        return "ax"
+
     def out_path(self) -> Optional[Path]:
         return options.opts.asm_path / self.dir / f"{self.name}.s"
 

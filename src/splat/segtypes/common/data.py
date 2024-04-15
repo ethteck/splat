@@ -1,12 +1,11 @@
 from pathlib import Path
 from typing import Optional
-
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
 from .group import CommonSegGroup
 
-from ...disassembler.disassembler_section import make_data_section
+from ...disassembler.disassembler_section import DisassemblerSection, make_data_section
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
@@ -60,11 +59,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             if preamble:
                 f.write(preamble + "\n")
 
-            f.write(f".section {self.get_linker_section()}")
-            section_flags = self.get_section_flags()
-            if section_flags:
-                f.write(f', "{section_flags}"')
-            f.write("\n\n")
+            f.write(f"{self.get_section_asm_line()}\n\n")
 
             f.write(self.spim_section.disassemble())
 
@@ -85,6 +80,22 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
     def get_linker_entries(self):
         return CommonSegCodeSubsegment.get_linker_entries(self)
+
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
+        "Allows to configure the section before running the analysis on it"
+
+        section = disassembler_section.get_section()
+
+        # Set data string encoding
+        # First check the global configuration
+        if options.opts.data_string_encoding is not None:
+            section.stringEncoding = options.opts.data_string_encoding
+
+        # Then check the per-segment configuration in case we want to override the global one
+        if self.str_encoding is not None:
+            section.stringEncoding = self.str_encoding
 
     def disassemble_data(self, rom_bytes):
         if not isinstance(self.rom_start, int):
@@ -116,16 +127,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         assert self.spim_section is not None
 
-        # Set rodata string encoding
-        # First check the global configuration
-        if options.opts.data_string_encoding is not None:
-            self.spim_section.get_section().stringEncoding = (
-                options.opts.data_string_encoding
-            )
-
-        # Then check the per-segment configuration in case we want to override the global one
-        if self.str_encoding is not None:
-            self.spim_section.get_section().stringEncoding = self.str_encoding
+        self.configure_disassembler_section(self.spim_section)
 
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)

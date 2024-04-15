@@ -5,7 +5,10 @@ from ...util import log, options, symbols
 
 from .data import CommonSegData
 
-from ...disassembler.disassembler_section import make_rodata_section
+from ...disassembler.disassembler_section import (
+    DisassemblerSection,
+    make_rodata_section,
+)
 
 
 class CommonSegRodata(CommonSegData):
@@ -41,6 +44,22 @@ class CommonSegRodata(CommonSegData):
             return None
         return text_segment, func
 
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
+        "Allows to configure the section before running the analysis on it"
+
+        section = disassembler_section.get_section()
+
+        # Set rodata string encoding
+        # First check the global configuration
+        if options.opts.string_encoding is not None:
+            section.stringEncoding = options.opts.string_encoding
+
+        # Then check the per-segment configuration in case we want to override the global one
+        if self.str_encoding is not None:
+            section.stringEncoding = self.str_encoding
+
     def disassemble_data(self, rom_bytes):
         if not isinstance(self.rom_start, int):
             log.error(
@@ -71,16 +90,7 @@ class CommonSegRodata(CommonSegData):
 
         assert self.spim_section is not None
 
-        # Set rodata string encoding
-        # First check the global configuration
-        if options.opts.string_encoding is not None:
-            self.spim_section.get_section().stringEncoding = (
-                options.opts.string_encoding
-            )
-
-        # Then check the per-segment configuration in case we want to override the global one
-        if self.str_encoding is not None:
-            self.spim_section.get_section().stringEncoding = self.str_encoding
+        self.configure_disassembler_section(self.spim_section)
 
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
@@ -94,7 +104,7 @@ class CommonSegRodata(CommonSegData):
             generated_symbol = symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym
             )
-            generated_symbol.linker_section = self.get_linker_section()
+            generated_symbol.linker_section = self.get_linker_section_linksection()
 
             possible_text = self.get_possible_text_subsegment_for_symbol(symbol)
             if possible_text is not None:

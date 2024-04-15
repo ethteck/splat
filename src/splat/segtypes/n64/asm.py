@@ -4,8 +4,7 @@ from ..common.asm import CommonSegAsm
 
 
 class N64SegAsm(CommonSegAsm):
-    @staticmethod
-    def get_file_header():
+    def get_file_header(self):
         ret = []
 
         ret.append('.include "macro.inc"')
@@ -22,7 +21,8 @@ class N64SegAsm(CommonSegAsm):
         if preamble:
             ret.append(preamble)
             ret.append("")
-        ret.append('.section .text, "ax"')
+
+        ret.append(self.get_section_asm_line())
         ret.append("")
 
         return ret

@@ -2,7 +2,7 @@ from ...util import options, symbols, log
 
 from .data import CommonSegData
 
-from ...disassembler.disassembler_section import make_bss_section
+from ...disassembler.disassembler_section import DisassemblerSection, make_bss_section
 
 # If `options.opts.ld_bss_is_noload` is False, then this segment behaves like a `CommonSegData`
 
@@ -22,6 +22,13 @@ class CommonSegBss(CommonSegData):
         if not options.opts.ld_bss_is_noload:
             return False
         return True
+
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
+        "Allows to configure the section before running the analysis on it"
+
+        pass
 
     def disassemble_data(self, rom_bytes: bytes):
         if not options.opts.ld_bss_is_noload:
@@ -63,6 +70,8 @@ class CommonSegBss(CommonSegData):
         )
 
         assert self.spim_section is not None
+
+        self.configure_disassembler_section(self.spim_section)
 
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)

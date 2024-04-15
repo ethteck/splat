@@ -1,6 +1,13 @@
 # splat Release Notes
 
-### 0.22.4
+### 0.23.1
+
+* New `EEGCC` compiler option.
+  * Provide specific adjustments for the GCC compiler used for the PS2 platform.
+* `spimdisasm` 1.24.2 or above is now required.
+
+### 0.23.0
+
 * splat now checks if symbol names can be valid filepaths and produce an error if not.
   * This is checked because functions are written to their own files and the symbol name is used as the filepath.
   * There are two checks in place:
@@ -11,6 +18,17 @@
 * Change `sbss` to properly work as a noload section.
   * To make it not behave as noload then turn off `ld_bss_is_noload`.
 * `ld_bss_is_noload` is now `False` by default for `psx` projects.
+* Allow to properly override `get_linker_section` and `get_section_flags` in `asm` and `hasm` files.
+* Fix disassembling segments that only have bss.
+* `ld_section_labels` was removed since it was a redundant list to `section_order`.
+* Give a proper error message for missing sections on `section_order` during linker script generation.
+* Allow configuring the `spimdisasm` section on extension segments (that inherit from `asm`, `data`, `rodata` or `bss` segments) before running the analisys on it.
+  * This is done by overriding the `configure_disassembler_section` method.
+* New ps2-specific segments:
+  * `lit4` and `lit8`: "Literal" sections that only contain `float`s and `double`s respectively.
+  * `ctor`: Data pointing to C++ global data initialization functions.
+  * `vtables`: C++ vtables
+* `spimdisasm` 1.23.0 or above is now required.
 
 ### 0.22.3
 

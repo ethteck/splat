@@ -34,7 +34,9 @@ SN64 = Compiler(
 
 IDO = Compiler("IDO", include_macro_inc=False, asm_emit_size_directive=False)
 
-compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO}
+EEGCC = Compiler("EEGCC")
+
+compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO, "EEGCC": EEGCC}
 
 
 def for_name(name: str) -> Compiler:

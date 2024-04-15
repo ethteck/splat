@@ -6,8 +6,8 @@ from typing import Set
 
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
-    # This value should be kept in sync with the version listed on requirements.txt
-    SPIMDISASM_MIN = (1, 21, 0)
+    # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
+    SPIMDISASM_MIN = (1, 24, 2)
 
     def configure(self):
         # Configure spimdisasm
@@ -71,6 +71,8 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.GCC
         elif selected_compiler == compiler.IDO:
             spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.IDO
+        elif selected_compiler == compiler.EEGCC:
+            spimdisasm.common.GlobalConfig.COMPILER = spimdisasm.common.Compiler.EEGCC
 
         spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = (
             options.opts.detect_redundant_function_end
@@ -109,9 +111,6 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         spimdisasm.common.GlobalConfig.DISASSEMBLE_UNKNOWN_INSTRUCTIONS = (
             options.opts.disasm_unknown
         )
-
-        if options.opts.compiler == compiler.GCC and options.opts.platform == "ps2":
-            rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = False
 
     def check_version(self, skip_version_check: bool, splat_version: str):
         if not skip_version_check and spimdisasm.__version_info__ < self.SPIMDISASM_MIN:

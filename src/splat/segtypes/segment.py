@@ -574,6 +574,13 @@ class Segment:
         """
         return None
 
+    def get_section_asm_line(self) -> str:
+        line = f".section {self.get_linker_section_linksection()}"
+        section_flags = self.get_section_flags()
+        if section_flags:
+            line += f', "{section_flags}"'
+        return line
+
     def out_path(self) -> Optional[Path]:
         return None
 
