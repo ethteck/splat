@@ -11,7 +11,7 @@ __initialized = False
 def create_disassembler_instance(skip_version_check: bool, splat_version: str):
     global __instance
     global __initialized
-    if options.opts.platform in ["n64", "psx", "ps2"]:
+    if options.opts.platform in ["n64", "psx", "ps2", "psp"]:
         __instance = SpimdisasmDisassembler()
         __initialized = True
 

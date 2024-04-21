@@ -181,7 +181,7 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
 
 
 def make_disassembler_section() -> Optional[SpimdisasmDisassemberSection]:
-    if options.opts.platform in ["n64", "psx", "ps2"]:
+    if options.opts.platform in ["n64", "psx", "ps2", "psp"]:
         return SpimdisasmDisassemberSection()
 
     raise NotImplementedError("No disassembler section for requested platform")
