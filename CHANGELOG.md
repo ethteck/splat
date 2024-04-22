@@ -3,7 +3,8 @@
 ### 0.24.0
 
 * Added PSP as a new platform.
-* `rabbitizer` 1.X.Y or above is now required
+* `spimdisasm` 1.25.0 or above is now required
+* `rabbitizer` 1.10.0 or above is now required
 
 ### 0.23.2
 

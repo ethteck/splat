@@ -4,8 +4,8 @@ tqdm
 intervaltree
 colorama
 # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py and pyproject.toml
-spimdisasm>=1.24.2
-rabbitizer>=1.8.0
+spimdisasm>=1.25.0
+rabbitizer>=1.10.0
 pygfxd
 n64img>=0.1.4
 crunch64>=0.2.0
