@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.24.0
+
+* Added PSP as a new platform.
+* `spimdisasm` 1.25.0 or above is now required
+* `rabbitizer` 1.10.0 or above is now required
+
 ### 0.23.2
 
 * Fixed a bug where auto segments insertion may not respect the proper ordering if there are linker_offset segments present.

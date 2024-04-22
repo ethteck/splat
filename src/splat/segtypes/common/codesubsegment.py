@@ -31,6 +31,8 @@ class CommonSegCodeSubsegment(Segment):
             self.instr_category = rabbitizer.InstrCategory.R5900
         elif options.opts.platform == "psx":
             self.instr_category = rabbitizer.InstrCategory.R3000GTE
+        elif options.opts.platform == "psp":
+            self.instr_category = rabbitizer.InstrCategory.R4000ALLEGREX
 
         self.detect_redundant_function_end: Optional[bool] = (
             self.yaml.get("detect_redundant_function_end", None)

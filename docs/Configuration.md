@@ -42,6 +42,7 @@ The target platform for the binary. Options are:
 - `n64` (Nintendo 64)
 - `psx` (PlayStation 1)
 - `ps2` (PlayStation 2)
+- `psp` (PlayStation Portable)
 
 #### Usage
 ```yaml
