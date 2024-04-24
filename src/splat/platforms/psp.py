@@ -1,2 +1,5 @@
+import rabbitizer
+
+
 def init(target_bytes: bytes):
-    pass
+    rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = False
