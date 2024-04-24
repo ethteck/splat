@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.24.1
+
+* Tweak the disassembler's configuration for PSP platform to improve assembly analysis.
+  * Should improve function start/end detection.
+
 ### 0.24.0
 
 * Added PSP as a new platform.
