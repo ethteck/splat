@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.24.2
+
+* Fixed create_config to replace "/" in detected binary names with "_"
+
 ### 0.24.1
 
 * Tweak the disassembler's configuration for PSP platform to improve assembly analysis.
