@@ -9,6 +9,3 @@ def init(target_bytes: bytes):
 
     spimdisasm.common.GlobalConfig.ABI = spimdisasm.common.Abi.EABI64
     spimdisasm.common.GlobalConfig.SYMBOL_ALIGNMENT_REQUIRES_ALIGNED_SECTION = True
-
-    spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTER_LOW_ADDRESSES = False
-    spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTER_HIGH_ADDRESSES = False

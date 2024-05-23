@@ -314,8 +314,8 @@ def initialize(all_segments: "List[Segment]"):
 def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_start = None
     global_vrom_end = None
-    global_vram_start = None
-    global_vram_end = None
+    global_vram_start = options.opts.global_vram_start
+    global_vram_end = options.opts.global_vram_end
     overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
 
     spim_context.bannedSymbols |= ignored_addresses
