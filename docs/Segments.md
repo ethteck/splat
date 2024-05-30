@@ -355,6 +355,14 @@ If not set, then the global configuration is used. See [ld_fill_value](Configura
 
 Defaults to the value of the global option.
 
+### `ld_align_segment_start`
+
+Specify the current segment should be aligned before starting it.
+
+This option specifies the desired alignment value, or `null` if no aligment should be imposed on the segment start.
+
+If not set, then the global configuration is used. See [ld_align_segment_start](Configuration.md#ld_align_segment_start) on the Configuration section.
+
 ### `subalign`
 
 Sub-alignment (in bytes) of sections.

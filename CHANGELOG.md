@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.24.3
+
+* New yaml option: `ld_align_segment_start`
+  * Allows specifying an alignment for the start of all the segments.
+  * The alignment can be overriden or disabled per segment too.
+
 ### 0.24.2
 
 * Fixed create_config to replace "/" in detected binary names with "_"
