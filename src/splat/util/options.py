@@ -131,6 +131,8 @@ class SplatOpts:
     ld_fill_value: Optional[int]
     # Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
     ld_bss_is_noload: bool
+    # Aligns the start of the segment to the given value
+    ld_align_segment_start: Optional[int]
     # Allows to toggle aligning the `*_VRAM_END` linker symbol for each segment.
     ld_align_segment_vram_end: bool
     # Allows to toggle aligning the `*_END` linker symbol for each section of each section.
@@ -448,6 +450,7 @@ def _parse_yaml(
         ld_bss_is_noload=p.parse_opt(
             "ld_bss_is_noload", bool, default_ld_bss_is_noload
         ),
+        ld_align_segment_start=p.parse_optional_opt_with_default("ld_align_segment_start", int, None),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
         ld_generate_symbol_per_data_segment=p.parse_opt(
