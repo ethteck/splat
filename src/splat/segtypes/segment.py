@@ -294,7 +294,9 @@ class Segment:
             yaml, options.opts.ld_fill_value
         )
 
-        self.ld_align_segment_start: Optional[int] = self.parse_ld_align_segment_start(yaml)
+        self.ld_align_segment_start: Optional[int] = self.parse_ld_align_segment_start(
+            yaml
+        )
 
         # True if this segment was generated based on auto_all_sections
         self.is_auto_all: bool = False
