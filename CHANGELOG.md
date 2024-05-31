@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.24.3
+
+* Add `visibility` attribute to symbols.
+  * Allows to specify if a symbol should be declared as `local`, `weak`, etc in the disassembly.
+* `spimdisasm` 1.26.0 or above is now required
+
 ### 0.24.2
 
 * Fixed create_config to replace "/" in detected binary names with "_"
