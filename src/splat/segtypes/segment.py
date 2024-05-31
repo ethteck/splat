@@ -214,6 +214,12 @@ class Segment:
             return yaml["ld_fill_value"]
         return default
 
+    @staticmethod
+    def parse_ld_align_segment_start(yaml: Union[dict, list]) -> Optional[int]:
+        if isinstance(yaml, dict) and "ld_align_segment_start" in yaml:
+            return yaml["ld_align_segment_start"]
+        return options.opts.ld_align_segment_start
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -286,6 +292,10 @@ class Segment:
         # If not defined on the segment then default to the global option
         self.ld_fill_value: Optional[int] = self.parse_ld_fill_value(
             yaml, options.opts.ld_fill_value
+        )
+
+        self.ld_align_segment_start: Optional[int] = self.parse_ld_align_segment_start(
+            yaml
         )
 
         # True if this segment was generated based on auto_all_sections
