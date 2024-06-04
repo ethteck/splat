@@ -228,10 +228,15 @@ class CommonSegC(CommonSegCodeSubsegment):
                         )
                         assert func_sym is not None
 
-                        if entry.function.getName() in self.global_asm_funcs or is_new_c_file:
+                        if (
+                            entry.function.getName() in self.global_asm_funcs
+                            or is_new_c_file
+                        ):
                             self.create_c_asm_file(entry, asm_out_dir, func_sym)
                         else:
-                            self.create_c_asm_file(entry, matching_asm_out_dir, func_sym)
+                            self.create_c_asm_file(
+                                entry, matching_asm_out_dir, func_sym
+                            )
                 else:
                     for spim_rodata_sym in entry.rodataSyms:
                         if (
