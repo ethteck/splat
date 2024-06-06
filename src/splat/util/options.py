@@ -61,6 +61,8 @@ class SplatOpts:
     data_path: Path
     # Determines the path to the asm nonmatchings directory
     nonmatchings_path: Path
+    # Determines the path to the asm matchings directory (used alongside `disassemble_all` to organize matching functions from nonmatching functions)
+    matchings_path: Path
     # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
     # Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
@@ -402,6 +404,7 @@ def _parse_yaml(
         asm_path=asm_path,
         data_path=p.parse_path(asm_path, "data_path", "data"),
         nonmatchings_path=p.parse_path(asm_path, "nonmatchings_path", "nonmatchings"),
+        matchings_path=p.parse_path(asm_path, "matchings_path", "matchings"),
         cache_path=p.parse_path(base_path, "cache_path", ".splache"),
         hasm_in_src_path=p.parse_opt("hasm_in_src_path", bool, False),
         create_undefined_funcs_auto=p.parse_opt(

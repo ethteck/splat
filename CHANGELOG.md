@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.24.4
+
+* New yaml option: `matchings_path`
+  * Determines the path to the asm matchings directory
+  * This is used alongside `disassemble_all` to organize matching functions from nonmatching functions
+
 ### 0.24.3
 
 * New yaml option: `ld_align_segment_start`

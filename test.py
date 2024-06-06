@@ -53,7 +53,9 @@ class Testing(unittest.TestCase):
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
         main(["test/basic_app/splat.yaml"], None, False)
 
-        comparison = filecmp.dircmp("test/basic_app/split", "test/basic_app/expected")
+        comparison = filecmp.dircmp(
+            "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
+        )
 
         diff_files: List[Tuple[str, str, str]] = []
         self.get_diff_files(comparison, diff_files)

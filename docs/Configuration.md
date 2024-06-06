@@ -216,6 +216,9 @@ Determines the path to the asm data directory
 
 Determines the path to the asm nonmatchings directory
 
+### matchings_path
+
+Determines the path to the asm matchings directory (used alongside `disassemble_all` to organize matching functions from nonmatching functions)
 
 ### cache_path
 Path to splat cache
