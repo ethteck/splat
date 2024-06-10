@@ -31,3 +31,4 @@ The following is a list of projects known to be using **splat** along with the c
 ## PS2 Projects
 
 - [Kingdom Hearts](https://github.com/ethteck/kh1) TBD
+- [PaRappa the Rapper 2](https://github.com/polybiusproxy/parappa2) `ee-gcc2.9-991111-01`
