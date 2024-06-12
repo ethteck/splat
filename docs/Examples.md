@@ -25,8 +25,10 @@ The following is a list of projects known to be using **splat** along with the c
 
 - [Evo's Space Adventures](https://github.com/mkst/esa) `psyq 4.6 (gcc2.95)`
 - [Final Fantasy 7](https://github.com/Drahsid/ffvii) `psyq <= 4.1 (gcc2.7.2)`
+- [Legacy of Kain: Soul Reaver](https://github.com/FedericoMilesi/soul-re) `psyq 4.3 (gcc2.8.1)`
 - [Silent Hill](https://github.com/Vatuu/silent-hill-decomp) `psyq <= 4.1 (gcc2.7.2) TBD`
 
 ## PS2 Projects
 
 - [Kingdom Hearts](https://github.com/ethteck/kh1) TBD
+- [PaRappa the Rapper 2](https://github.com/polybiusproxy/parappa2) `ee-gcc2.9-991111-01`

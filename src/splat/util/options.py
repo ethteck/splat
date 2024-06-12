@@ -61,6 +61,8 @@ class SplatOpts:
     data_path: Path
     # Determines the path to the asm nonmatchings directory
     nonmatchings_path: Path
+    # Determines the path to the asm matchings directory (used alongside `disassemble_all` to organize matching functions from nonmatching functions)
+    matchings_path: Path
     # Determines the path to the cache file (used when supplied --use-cache via the CLI)
     cache_path: Path
     # Tells splat to consider `hasm` files to be relative to `src_path` instead of `asm_path`.
@@ -131,6 +133,8 @@ class SplatOpts:
     ld_fill_value: Optional[int]
     # Allows to control if `bss` sections (and derivatived sections) will be put on a `NOLOAD` segment on the generated linker script or not.
     ld_bss_is_noload: bool
+    # Aligns the start of the segment to the given value
+    ld_align_segment_start: Optional[int]
     # Allows to toggle aligning the `*_VRAM_END` linker symbol for each segment.
     ld_align_segment_vram_end: bool
     # Allows to toggle aligning the `*_END` linker symbol for each section of each section.
@@ -404,6 +408,7 @@ def _parse_yaml(
         asm_path=asm_path,
         data_path=p.parse_path(asm_path, "data_path", "data"),
         nonmatchings_path=p.parse_path(asm_path, "nonmatchings_path", "nonmatchings"),
+        matchings_path=p.parse_path(asm_path, "matchings_path", "matchings"),
         cache_path=p.parse_path(base_path, "cache_path", ".splache"),
         hasm_in_src_path=p.parse_opt("hasm_in_src_path", bool, False),
         create_undefined_funcs_auto=p.parse_opt(
@@ -451,6 +456,9 @@ def _parse_yaml(
         ld_fill_value=p.parse_optional_opt_with_default("ld_fill_value", int, 0),
         ld_bss_is_noload=p.parse_opt(
             "ld_bss_is_noload", bool, default_ld_bss_is_noload
+        ),
+        ld_align_segment_start=p.parse_optional_opt_with_default(
+            "ld_align_segment_start", int, None
         ),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),

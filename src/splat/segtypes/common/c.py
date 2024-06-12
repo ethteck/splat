@@ -151,7 +151,9 @@ class CommonSegC(CommonSegCodeSubsegment):
     def split(self, rom_bytes: bytes):
         if self.rom_start != self.rom_end:
             asm_out_dir = options.opts.nonmatchings_path / self.dir
+            matching_asm_out_dir = options.opts.matchings_path / self.dir
             asm_out_dir.mkdir(parents=True, exist_ok=True)
+            matching_asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             self.print_file_boundaries()
 
@@ -226,7 +228,17 @@ class CommonSegC(CommonSegCodeSubsegment):
                         )
                         assert func_sym is not None
 
-                        self.create_c_asm_file(entry, asm_out_dir, func_sym)
+                        if (
+                            not entry.function.getName() in self.global_asm_funcs
+                            and options.opts.disassemble_all
+                            and not is_new_c_file
+                        ):
+                            self.create_c_asm_file(
+                                entry, matching_asm_out_dir, func_sym
+                            )
+                        else:
+                            self.create_c_asm_file(entry, asm_out_dir, func_sym)
+
                 else:
                     for spim_rodata_sym in entry.rodataSyms:
                         if (

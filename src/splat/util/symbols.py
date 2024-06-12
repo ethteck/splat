@@ -186,6 +186,9 @@ def handle_sym_addrs(
                             if attr_name == "filename":
                                 sym.given_filename = attr_val
                                 continue
+                            if attr_name == "visibility":
+                                sym.given_visibility = attr_val
+                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -461,6 +464,8 @@ def add_symbol_to_spim_segment(
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
+    if sym.given_visibility:
+        context_sym.visibility = sym.given_visibility
 
     return context_sym
 
@@ -506,6 +511,8 @@ def add_symbol_to_spim_section(
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
+    if sym.given_visibility:
+        context_sym.visibility = sym.given_visibility
 
     return context_sym
 
@@ -599,6 +606,7 @@ class Symbol:
     allow_duplicated: bool = False
 
     given_filename: Optional[str] = None
+    given_visibility: Optional[str] = None
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
