@@ -26,7 +26,7 @@ splat64[mips]>=0.24.5,<1.0.0
 
 ### Optional dependencies
 
-- `mips`: Required when using the N64, PSX, PS2 or PSp platforms.
+- `mips`: Required when using the N64, PSX, PS2 or PSP platforms.
 - `dev`: Installs all the available dependencies groups and other packages for development.
 
 ### Gamecube / Wii
