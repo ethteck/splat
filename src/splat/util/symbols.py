@@ -418,6 +418,19 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
             for sym in symbols_list:
                 add_symbol_to_spim_segment(spim_context.globalSegment, sym)
 
+    if global_vram_start and global_vram_end:
+        # Pass global symbols to spimdisasm that are not part of any segment on the binary we are splitting (for psx and psp)
+        for sym in all_symbols:
+            if sym.segment is not None:
+                # We already handled this symbol somewhere else
+                continue
+
+            if sym.vram_start < global_vram_start or sym.vram_end > global_vram_end:
+                # Not global
+                continue
+
+            add_symbol_to_spim_segment(spim_context.globalSegment, sym)
+
 
 def add_symbol_to_spim_segment(
     segment: spimdisasm.common.SymbolsSegment, sym: "Symbol"
