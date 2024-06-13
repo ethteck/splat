@@ -21,12 +21,12 @@ The brackets corresponds to the optional dependencies to install while installin
 If you use a `requirements.txt` file in your repository, then you can add this library with the following line:
 
 ```txt
-splat64[mips]>=0.24.4,<1.0.0
+splat64[mips]>=0.24.5,<1.0.0
 ```
 
 ### Optional dependencies
 
-- `mips`: Required when using the N64, PSX, PS2 or PSp platforms.
+- `mips`: Required when using the N64, PSX, PS2 or PSP platforms.
 - `dev`: Installs all the available dependencies groups and other packages for development.
 
 ### Gamecube / Wii
