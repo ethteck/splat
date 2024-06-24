@@ -26,7 +26,9 @@ class CommonSegTextbin(CommonSegment):
             args=args,
             yaml=yaml,
         )
-        self.use_src_path: bool = isinstance(yaml, dict) and yaml.get("use_src_path", False)
+        self.use_src_path: bool = isinstance(yaml, dict) and yaml.get(
+            "use_src_path", False
+        )
 
     @staticmethod
     def is_text() -> bool:
