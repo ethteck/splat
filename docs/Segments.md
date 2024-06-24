@@ -289,8 +289,10 @@ Curretly there are 3 types of incbins, `textbin`, `databin` and `rodatabin`, whi
 
 If a `textbin` section has a corresponding `databin` and/or `rodatabin` section with the same name then those will be included in the same generated assembly file.
 
+By default the generated assembly file will be written relative to the configured [`data_path`](docs/Configuration.md#data_path). The per segment `use_src_path` option allows to tell splat that a given incbin should be relative to the [`src_path`](docs/Configuration.md#src_path) instead. This behavior can be useful to allow committing those assembly files to the repo since splat will not override them if they already exist, and still extract the binary blobs.
+
 ```yaml
-- [0x06C4B0, textbin, rsp/rspboot]
+- { start: 0x06C4B0, type: textbin, use_src_path: True, name: rsp/rspboot }
 - [0x06C580, textbin, rsp/aspMain]
 
 # ...
