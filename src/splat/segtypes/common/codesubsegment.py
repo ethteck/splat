@@ -144,9 +144,7 @@ class CommonSegCodeSubsegment(Segment):
             if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
                 sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
 
-                context_sym = self.spim_section.get_section().getSymbol(
-                    sym_address, tryPlusOffset=False
-                )
+                context_sym = self.spim_section.get_section().getSymbol(sym_address)
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
                         self.get_most_parent(), context_sym

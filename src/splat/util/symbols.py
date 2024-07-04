@@ -317,8 +317,8 @@ def initialize(all_segments: "List[Segment]"):
 def initialize_spim_context(all_segments: "List[Segment]") -> None:
     global_vrom_start = None
     global_vrom_end = None
-    global_vram_start = None
-    global_vram_end = None
+    global_vram_start = options.opts.global_vram_start
+    global_vram_end = options.opts.global_vram_end
     overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
 
     spim_context.bannedSymbols |= ignored_addresses
@@ -417,6 +417,19 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         for symbols_list in segment.seg_symbols.values():
             for sym in symbols_list:
                 add_symbol_to_spim_segment(spim_context.globalSegment, sym)
+
+    if global_vram_start and global_vram_end:
+        # Pass global symbols to spimdisasm that are not part of any segment on the binary we are splitting (for psx and psp)
+        for sym in all_symbols:
+            if sym.segment is not None:
+                # We already handled this symbol somewhere else
+                continue
+
+            if sym.vram_start < global_vram_start or sym.vram_end > global_vram_end:
+                # Not global
+                continue
+
+            add_symbol_to_spim_segment(spim_context.globalSegment, sym)
 
 
 def add_symbol_to_spim_segment(

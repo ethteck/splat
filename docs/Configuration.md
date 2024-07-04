@@ -623,6 +623,11 @@ Tries to detect redundant and unreferenced functions ends and merge them togethe
 
 Don't skip disassembling already matched functions and migrated sections
 
+### global_vram_start and global_vram_end
+
+Allow specifying that the global memory range may be larger than what was automatically detected.
+
+Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files, like in PSX and PSP projects.
 
 ## N64-specific options
 
