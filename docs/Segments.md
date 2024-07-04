@@ -281,7 +281,7 @@ incbin segments correpond to a family of segments used for extracting binary blo
 
 Their main advantage over the [`bin`](#bin) segment is the incbins allows to specify a specific section type instead of defaulting to simply `.data`. This is done by generating an assembly file that uses the `.incbin` asm directive to include the binary blob.
 
-Generating assembly files for better customization of these binaries, like allowing different sections or to define a symbol for the binary blob.
+Generating assembly files enables better customization of these binaries, like allowing different sections or to define a symbol for the binary blob.
 
 If a known symbol (via a symbol_addrs file) matches the vram of a incbin segment then it will be emitted accordingly at the top. If the symbol contains a [`name_end`](Adding-Symbols.md#name_end) property then it will be emitted after the `.incbin` (useful for Nintendo64's RSP ucodes).
 
