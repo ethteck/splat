@@ -7,6 +7,29 @@ from .segment import CommonSegment
 
 
 class CommonSegTextbin(CommonSegment):
+    def __init__(
+        self,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
+        yaml,
+    ):
+        super().__init__(
+            rom_start,
+            rom_end,
+            type,
+            name,
+            vram_start,
+            args=args,
+            yaml=yaml,
+        )
+        self.use_src_path: bool = isinstance(yaml, dict) and yaml.get(
+            "use_src_path", False
+        )
+
     @staticmethod
     def is_text() -> bool:
         return True
@@ -18,6 +41,9 @@ class CommonSegTextbin(CommonSegment):
         return "ax"
 
     def out_path(self) -> Optional[Path]:
+        if self.use_src_path:
+            return options.opts.src_path / self.dir / f"{self.name}.s"
+
         return options.opts.data_path / self.dir / f"{self.name}.s"
 
     def bin_path(self) -> Path:

@@ -2,6 +2,8 @@
 
 ### 0.24.5
 
+* New `use_src_path` option for incbins segments.
+  * Allows to make the generated assembly files relative to the `src_path` directory instead of the default `data_path`.
 * New yaml option: `global_vram_start` and `global_vram_end`.
   * Allow specifying that the global memory range may be larger than what was automatically detected.
   * Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files (like in PSX and PSP projects).
