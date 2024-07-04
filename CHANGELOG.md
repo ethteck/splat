@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.24.5
+
+* New `use_src_path` option for incbins segments.
+  * Allows to make the generated assembly files relative to the `src_path` directory instead of the default `data_path`.
+
 ### 0.24.4
 
 * New yaml option: `matchings_path`
