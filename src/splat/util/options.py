@@ -220,7 +220,7 @@ class SplatOpts:
     detect_redundant_function_end: bool
     # Don't skip disassembling already matched functions and migrated sections
     disassemble_all: bool
-    # Allow specifying that the global segment may be larger than what was automatically detected.
+    # Allow specifying that the global memory range may be larger than what was automatically detected.
     # Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files.
     global_vram_start: Optional[int]
     global_vram_end: Optional[int]
