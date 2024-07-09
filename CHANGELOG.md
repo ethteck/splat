@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.24.6
+
+* Handle PS-X EXE header that includes .text/.data vram address
+
 ### 0.24.5
 
 * New `use_src_path` option for incbins segments.

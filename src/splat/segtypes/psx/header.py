@@ -10,8 +10,12 @@ class PsxSegHeader(CommonSegHeader):
         header_lines.append(
             self.get_line("ascii", rom_bytes[0x00:0x08], "Magic number")
         )
-        header_lines.append(self.get_line("word", rom_bytes[0x08:0x0C], "Zerofilled"))
-        header_lines.append(self.get_line("word", rom_bytes[0x0C:0x10], "Zerofilled"))
+        header_lines.append(
+            self.get_line("word", rom_bytes[0x08:0x0C][::-1], ".text vram address")
+        )
+        header_lines.append(
+            self.get_line("word", rom_bytes[0x0C:0x10][::-1], ".data vram address")
+        )
         header_lines.append(
             self.get_line("word", rom_bytes[0x10:0x14][::-1], "Initial PC")
         )
