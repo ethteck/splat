@@ -300,6 +300,18 @@ By default the generated assembly file will be written relative to the configure
 - [0x093D60, databin, rsp/aspMain]
 ```
 
+## `gcc_except_table`
+
+Used by certain compilers (like GCC) to store the Exception Handler Table (`ehtable`), used for implementing C++ exceptions.
+
+This table contains references to addresses within functions, which normally the disassembler would automatically reject as being valid addresses. This special section bypasses that restriction by generating special labels within the functions in question. The macro used for these labels can be changed with the [`asm_ehtable_label_macro`](Configuration.md#asm_ehtable_label_macro) option.
+
+## `eh_frame`
+
+Used by certain compilers (like GCC) to store the Exception Handler Frame, used for implementing C++ exceptions.
+
+This frame contains more metadata used by exceptions at runtime.
+
 ## PS2 exclusive segments
 
 ### `lit4`
