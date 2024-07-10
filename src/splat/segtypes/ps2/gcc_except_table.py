@@ -1,17 +1,30 @@
 from __future__ import annotations
 
-from splat.segtypes.common.data import CommonSegData
-from splat.util import log
+from ..common.data import CommonSegData
+from ...util import log
 
-from splat.disassembler.disassembler_section import make_gcc_except_table_section
+from ...disassembler.disassembler_section import DisassemblerSection, make_gcc_except_table_section
 
 
 class PS2SegGcc_except_table(CommonSegData):
+    """Segment containing the GCC Except Table (aka ehtable), used for implementing C++ exceptions"""
+
     def get_linker_section(self) -> str:
         return ".gcc_except_table"
 
     def get_section_flags(self) -> str|None:
         return "aw"
+
+    def configure_disassembler_section(
+        self, disassembler_section: DisassemblerSection
+    ) -> None:
+        "Allows to configure the section before running the analysis on it"
+
+        super().configure_disassembler_section(disassembler_section)
+
+        section = disassembler_section.get_section()
+
+        section.enableStringGuessing = False
 
     def disassemble_data(self, rom_bytes):
         if not isinstance(self.rom_start, int):
