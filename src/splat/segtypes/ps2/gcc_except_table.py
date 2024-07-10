@@ -1,9 +1,12 @@
-from __future__ import annotations
+from typing import Optional
 
 from ..common.data import CommonSegData
 from ...util import log
 
-from ...disassembler.disassembler_section import DisassemblerSection, make_gcc_except_table_section
+from ...disassembler.disassembler_section import (
+    DisassemblerSection,
+    make_gcc_except_table_section,
+)
 
 
 class PS2SegGcc_except_table(CommonSegData):
@@ -12,7 +15,7 @@ class PS2SegGcc_except_table(CommonSegData):
     def get_linker_section(self) -> str:
         return ".gcc_except_table"
 
-    def get_section_flags(self) -> str|None:
+    def get_section_flags(self) -> Optional[str]:
         return "aw"
 
     def configure_disassembler_section(
