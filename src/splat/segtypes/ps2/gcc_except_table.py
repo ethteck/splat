@@ -1,43 +1,9 @@
 from __future__ import annotations
 
 from splat.segtypes.common.data import CommonSegData
-from splat.util import log, options, symbols
+from splat.util import log
 
-import spimdisasm
-
-from splat.disassembler.disassembler_section import DisassemblerSection, make_disassembler_section
-
-def make_gcc_except_table_section(
-    rom_start: int,
-    rom_end: int,
-    vram_start: int,
-    name: str,
-    rom_bytes: bytes,
-    segment_rom_start: int,
-    exclusive_ram_id,
-) -> DisassemblerSection:
-    section = make_disassembler_section()
-    assert section is not None
-    # section.make_rodata_section(
-    #     rom_start,
-    #     rom_end,
-    #     vram_start,
-    #     name,
-    #     rom_bytes,
-    #     segment_rom_start,
-    #     exclusive_ram_id,
-    # )
-    section.spim_section = spimdisasm.mips.sections.SectionGccExceptTable(
-            symbols.spim_context,
-            rom_start,
-            rom_end,
-            vram_start,
-            name,
-            rom_bytes,
-            segment_rom_start,
-            exclusive_ram_id,
-    )
-    return section
+from splat.disassembler.disassembler_section import make_gcc_except_table_section
 
 
 class PS2SegGcc_except_table(CommonSegData):
