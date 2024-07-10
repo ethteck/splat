@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.24.7
+
+* Two new types of segments: `gcc_except_table` and `eh_frame`.
+  * Used by GCC to handle C++ exceptions.
+
 ### 0.24.6
 
 * Handle PS-X EXE header that includes .text/.data vram address
