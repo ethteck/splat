@@ -9,7 +9,7 @@ from ...disassembler.disassembler_section import (
 )
 
 
-class PS2SegGcc_except_table(CommonSegData):
+class Ps2SegGcc_except_table(CommonSegData):
     """Segment containing the GCC Except Table (aka ehtable), used for implementing C++ exceptions"""
 
     def get_linker_section(self) -> str:
