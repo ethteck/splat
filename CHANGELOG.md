@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.24.7
+* splat no longer creates unnecessary directories for asm
+
 ### 0.24.6
 
 * Handle PS-X EXE header that includes .text/.data vram address
