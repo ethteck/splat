@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.25.0
+* Changed the default value of `use_legacy_include_asm` to false
+
 ### 0.24.7
 * splat no longer creates unnecessary directories for asm
 
