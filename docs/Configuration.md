@@ -512,7 +512,7 @@ Same as `symbol_name_format` but for symbols with no rom address
 
 Determines whether to detect and hint to the user about likely file splits when disassembling.
 
-This setting can also be set on a per segment basis, if you'd like to enable or disable detection for specific segments. This could be useful when you are confident you identified all subsegments in a segment, yet `splat` still hints that subsegments could be split.  
+This setting can also be set on a per segment basis, if you'd like to enable or disable detection for specific segments. This could be useful when you are confident you identified all subsegments in a segment, yet `splat` still hints that subsegments could be split.
 
 ### pair_rodata_to_text
 
@@ -676,12 +676,14 @@ Append the type of an image to its file extension. For example, when enabled, a 
 ## Compiler-specific options
 
 ### use_legacy_include_asm
-If `True`, generate c files using the longer `INCLUDE_ASM` macro. This is defaulted to `True` to by-default support projects using the longer macro.
+If `True`, generate c files using the longer old `INCLUDE_ASM` macro. The non-legacy `INCLUDE_ASM` macro is highly recommended, and the legacy version is only supported for compatibility reasons.
+
+For more information on these macros, see [macros](https://github.com/ethteck/splat/wiki/General-Workflow#macros).
 
 #### Usage
 ```yaml
-use_legacy_include_asm: False
+use_legacy_include_asm: True
 ```
 
 #### Default
-`True`
+`False`

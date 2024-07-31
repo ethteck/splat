@@ -539,7 +539,7 @@ def _parse_yaml(
         ique_symbols=p.parse_opt("ique_symbols", bool, False),
         hardware_regs=p.parse_opt("hardware_regs", bool, False),
         image_type_in_extension=p.parse_opt("image_type_in_extension", bool, False),
-        use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, True),
+        use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, False),
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True

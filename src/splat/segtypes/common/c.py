@@ -152,8 +152,6 @@ class CommonSegC(CommonSegCodeSubsegment):
         if self.rom_start != self.rom_end:
             asm_out_dir = options.opts.nonmatchings_path / self.dir
             matching_asm_out_dir = options.opts.matchings_path / self.dir
-            asm_out_dir.mkdir(parents=True, exist_ok=True)
-            matching_asm_out_dir.mkdir(parents=True, exist_ok=True)
 
             self.print_file_boundaries()
 
@@ -466,6 +464,8 @@ class CommonSegC(CommonSegCodeSubsegment):
 
                     if func_name in self.global_asm_funcs or is_new_c_file:
                         outpath = asm_out_dir / self.name / (func_name + ".s")
+                        outpath.parent.mkdir(parents=True, exist_ok=True)
+
                         depend_list.append(outpath)
                         f.write(f" \\\n    {outpath}")
                 else:
@@ -474,6 +474,8 @@ class CommonSegC(CommonSegCodeSubsegment):
 
                         if rodata_name in self.global_asm_rodata_syms or is_new_c_file:
                             outpath = asm_out_dir / self.name / (rodata_name + ".s")
+                            outpath.parent.mkdir(parents=True, exist_ok=True)
+
                             depend_list.append(outpath)
                             f.write(f" \\\n    {outpath}")
 
