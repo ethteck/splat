@@ -179,6 +179,27 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
             exclusive_ram_id,
         )
 
+    def make_gcc_except_table_section(
+        self,
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        name: str,
+        rom_bytes: bytes,
+        segment_rom_start: int,
+        exclusive_ram_id,
+    ):
+        self.spim_section = spimdisasm.mips.sections.SectionGccExceptTable(
+            symbols.spim_context,
+            rom_start,
+            rom_end,
+            vram_start,
+            name,
+            rom_bytes,
+            segment_rom_start,
+            exclusive_ram_id,
+        )
+
 
 def make_disassembler_section() -> Optional[SpimdisasmDisassemberSection]:
     if options.opts.platform in ["n64", "psx", "ps2", "psp"]:
@@ -274,6 +295,29 @@ def make_bss_section(
         vram_start,
         bss_end,
         name,
+        segment_rom_start,
+        exclusive_ram_id,
+    )
+    return section
+
+
+def make_gcc_except_table_section(
+    rom_start: int,
+    rom_end: int,
+    vram_start: int,
+    name: str,
+    rom_bytes: bytes,
+    segment_rom_start: int,
+    exclusive_ram_id,
+) -> DisassemblerSection:
+    section = make_disassembler_section()
+    assert section is not None
+    section.make_gcc_except_table_section(
+        rom_start,
+        rom_end,
+        vram_start,
+        name,
+        rom_bytes,
         segment_rom_start,
         exclusive_ram_id,
     )

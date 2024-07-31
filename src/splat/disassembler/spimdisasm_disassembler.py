@@ -7,7 +7,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
-    SPIMDISASM_MIN = (1, 26, 0)
+    SPIMDISASM_MIN = (1, 27, 0)
 
     def configure(self):
         # Configure spimdisasm
@@ -89,6 +89,9 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         )
         spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
         spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
+        spimdisasm.common.GlobalConfig.ASM_EHTBL_LABEL = (
+            options.opts.asm_ehtable_label_macro
+        )
 
         if options.opts.asm_emit_size_directive is not None:
             spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = (

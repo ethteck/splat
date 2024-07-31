@@ -10,6 +10,7 @@ class Compiler:
     asm_jtbl_label_macro: str = "glabel"
     asm_data_macro: str = "glabel"
     asm_end_label: str = ""
+    asm_ehtable_label_macro: str = "ehlabel"
     c_newline: str = "\n"
     asm_inc_header: str = ""
     include_macro_inc: bool = True

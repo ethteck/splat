@@ -183,6 +183,8 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
+    # Determines the macro used to declare data symbols in asm files
+    asm_ehtable_label_macro: str
     # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
     # Determines including the macro.inc file on non-migrated rodata variables
@@ -493,6 +495,9 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
+        asm_ehtable_label_macro=p.parse_opt(
+            "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
+        ),
         asm_emit_size_directive=asm_emit_size_directive,
         include_macro_inc=p.parse_opt(
             "include_macro_inc", bool, comp.include_macro_inc
