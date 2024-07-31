@@ -1,10 +1,10 @@
 from typing import Optional
 
-from ..common.data import CommonSegData
+from .data import CommonSegData
 from ...disassembler.disassembler_section import DisassemblerSection
 
 
-class Ps2SegEh_frame(CommonSegData):
+class CommonSegEh_frame(CommonSegData):
     """Segment containing an Error Handler Frame, used for C++ exceptions"""
 
     def get_linker_section(self) -> str:

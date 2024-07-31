@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ..common.data import CommonSegData
+from .data import CommonSegData
 from ...util import log
 
 from ...disassembler.disassembler_section import (
@@ -9,7 +9,7 @@ from ...disassembler.disassembler_section import (
 )
 
 
-class Ps2SegGcc_except_table(CommonSegData):
+class CommonSegGcc_except_table(CommonSegData):
     """Segment containing the GCC Except Table (aka ehtable), used for implementing C++ exceptions"""
 
     def get_linker_section(self) -> str:
