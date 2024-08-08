@@ -36,6 +36,8 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         self.file_extension = "c"
 
+        self.use_gp_rel_macro = options.opts.use_gp_rel_macro_nonmatching
+
     @staticmethod
     def strip_c_comments(text):
         def replacer(match):

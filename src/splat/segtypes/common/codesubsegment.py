@@ -41,6 +41,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         self.is_hasm = False
+        self.use_gp_rel_macro = options.opts.use_gp_rel_macro
 
     @property
     def needs_symbols(self) -> bool:
@@ -59,6 +60,7 @@ class CommonSegCodeSubsegment(Segment):
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category
         section.detectRedundantFunctionEnd = self.detect_redundant_function_end
+        section.gpRelHack = not self.use_gp_rel_macro
 
     def scan_code(self, rom_bytes, is_hasm=False):
         self.is_hasm = is_hasm

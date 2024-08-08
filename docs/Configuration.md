@@ -635,6 +635,18 @@ Allow specifying that the global memory range may be larger than what was automa
 
 Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files, like in PSX and PSP projects.
 
+### use_gp_rel_macro
+
+TODO
+
+Defaults to `True`
+
+### use_gp_rel_macro_nonmatching
+
+TODO
+
+Defaults to `True`
+
 ## N64-specific options
 
 ### header_encoding

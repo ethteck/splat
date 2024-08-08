@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.25.2
+
+* TODO
+
 ### 0.25.1
 
 * Added two new segment types: `gcc_except_table` and `eh_frame`.
