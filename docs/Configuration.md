@@ -635,6 +635,26 @@ Allow specifying that the global memory range may be larger than what was automa
 
 Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files, like in PSX and PSP projects.
 
+### use_gp_rel_macro_nonmatching
+
+If True then use the `%gp_rel` explicit relocation parameter on instructions that use the $gp register, otherwise strip the `%gp_rel` parameter entirely
+and convert those instructions into macro instructions that may not assemble to the original bytes.
+
+In the latter case, it is the user's responsability to provide the symbol's information to the assembler so it can assemble the instruction with the
+proper relocation, for example by declaring the required symbol on the corresponding `.c` or `.cpp` file.
+
+Turning off this setting may be useful for projects with old assemblers that do not support `%gp_rel`, like PS2 and PSP projects.
+
+This setting is applied exclusively to `c` segments (functions under the nonmatchings folder).
+
+Defaults to `True`
+
+### use_gp_rel_macro
+
+Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `asm` and `hasm` segments.
+
+Defaults to `True`
+
 ## N64-specific options
 
 ### header_encoding

@@ -183,7 +183,7 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
-    # Determines the macro used to declare data symbols in asm files
+    # Determines the macro used to declare ehtable labels in asm files
     asm_ehtable_label_macro: str
     # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
@@ -226,6 +226,14 @@ class SplatOpts:
     # Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files.
     global_vram_start: Optional[int]
     global_vram_end: Optional[int]
+    # For `c` segments (functions under the nonmatchings folder).
+    # If True then use the `%gp_rel` explicit relocation parameter on instructions that use the $gp register,
+    # otherwise strip the `%gp_rel` parameter entirely and convert those instructions into macro instructions that may not assemble to the original
+    # bytes. In the latter case, it is the user's responsability to provide the symbol's information to the assembler so it can assemble the
+    # instruction with the proper relocation.
+    use_gp_rel_macro_nonmatching: bool
+    # Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `asm` and `hasm` segments.
+    use_gp_rel_macro: bool
 
     ################################################################################
     # N64-specific options
@@ -550,6 +558,10 @@ def _parse_yaml(
         ),
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
+        use_gp_rel_macro_nonmatching=p.parse_opt(
+            "use_gp_rel_macro_nonmatching", bool, True
+        ),
+        use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
     )
     p.check_no_unread_opts()
     return ret
