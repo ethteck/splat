@@ -558,7 +558,9 @@ def _parse_yaml(
         ),
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
-        use_gp_rel_macro_nonmatching=p.parse_opt("use_gp_rel_macro_nonmatching", bool, True),
+        use_gp_rel_macro_nonmatching=p.parse_opt(
+            "use_gp_rel_macro_nonmatching", bool, True
+        ),
         use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
     )
     p.check_no_unread_opts()
