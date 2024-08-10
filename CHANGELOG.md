@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.25.3
+
+* Fix incorrect calculation for `$gp` value in create_config.py for PSX when immediate value is negative.
+
 ### 0.25.2
 
 * Two new yaml options: `use_gp_rel_macro_nonmatching` and `use_gp_rel_macro`
