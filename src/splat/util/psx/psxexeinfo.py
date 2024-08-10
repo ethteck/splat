@@ -138,7 +138,8 @@ def try_get_gp(rom_bytes, start_offset, max_instructions=50) -> int:
         if insn.getOpcodeName() == "lui" and insn.rt.name == "gp":
             gp = insn.getImmediate() << 16
         elif insn.getOpcodeName() == "addiu" and insn.rt.name == "gp":
-            gp += insn.getImmediate()
+            (imm,) = struct.unpack(">h", struct.pack(">H",insn.getImmediate()))
+            gp += imm
             break
     return gp
 
