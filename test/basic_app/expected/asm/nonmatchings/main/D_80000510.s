@@ -1,5 +1,3 @@
-.include "macro.inc"
-
 .section .rodata
 
 glabel D_80000510
