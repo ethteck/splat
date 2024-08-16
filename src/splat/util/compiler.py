@@ -13,7 +13,6 @@ class Compiler:
     asm_ehtable_label_macro: str = "ehlabel"
     c_newline: str = "\n"
     asm_inc_header: str = ""
-    include_macro_inc: bool = True
     asm_emit_size_directive: Optional[bool] = None
 
 
@@ -29,11 +28,10 @@ SN64 = Compiler(
     asm_data_macro=".globl",
     asm_end_label=".end",
     c_newline="\r\n",
-    include_macro_inc=False,
     asm_emit_size_directive=False,
 )
 
-IDO = Compiler("IDO", include_macro_inc=False, asm_emit_size_directive=False)
+IDO = Compiler("IDO", asm_emit_size_directive=False)
 
 EEGCC = Compiler("EEGCC")
 
