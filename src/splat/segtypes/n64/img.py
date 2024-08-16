@@ -52,8 +52,6 @@ class N64SegImg(N64Segment):
         self.n64img.width = self.width
         self.n64img.height = self.height
 
-        self.check_len()
-
         self.image_type_in_extension = options.opts.image_type_in_extension
 
     def check_len(self) -> None:
@@ -61,6 +59,7 @@ class N64SegImg(N64Segment):
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
         assert isinstance(self.subalign, int)
+
         actual_len = self.rom_end - self.rom_start
         if actual_len > expected_len and actual_len - expected_len > self.subalign:
             log.error(
@@ -76,11 +75,10 @@ class N64SegImg(N64Segment):
         return options.opts.is_mode_active("img")
 
     def split(self, rom_bytes):
+        self.check_len()
+
         path = self.out_path()
         path.parent.mkdir(parents=True, exist_ok=True)
-
-        assert isinstance(self.rom_start, int)
-        assert isinstance(self.rom_end, int)
 
         if self.n64img.data == b"":
             self.n64img.data = rom_bytes[self.rom_start : self.rom_end]
