@@ -4,6 +4,7 @@
 
 * Fixed the `subalign` segment property logic to be more straightforward
 * Updated required versions of rabbitizier, n64img, and crunch64
+* Removed `include_macro_inc` option, as it was never required and often detrimental
 
 ### 0.25.3
 

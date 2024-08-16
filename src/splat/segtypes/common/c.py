@@ -340,8 +340,6 @@ class CommonSegC(CommonSegCodeSubsegment):
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
         with outpath.open("w", newline="\n") as f:
-            if options.opts.include_macro_inc:
-                f.write('.include "macro.inc"\n\n')
             preamble = options.opts.generated_s_preamble
             if preamble:
                 f.write(preamble + "\n")

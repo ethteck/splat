@@ -187,8 +187,6 @@ class SplatOpts:
     asm_ehtable_label_macro: str
     # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
-    # Determines including the macro.inc file on non-migrated rodata variables
-    include_macro_inc: bool
     # Determines the number of characters to left align before the TODO finish documenting
     mnemonic_ljust: int
     # Determines whether to pad the rom address
@@ -507,9 +505,6 @@ def _parse_yaml(
             "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
         ),
         asm_emit_size_directive=asm_emit_size_directive,
-        include_macro_inc=p.parse_opt(
-            "include_macro_inc", bool, comp.include_macro_inc
-        ),
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
         rom_address_padding=p.parse_opt("rom_address_padding", bool, False),
         mips_abi_gpr=p.parse_opt_within(

@@ -556,10 +556,6 @@ Defaults to `ehlabel`
 
 Toggles the .size directive emitted by the disassembler
 
-### include_macro_inc
-
-Determines including the macro.inc file on non-migrated rodata variables
-
 ### mnemonic_ljust
 
 Determines the number of characters to left align before the instruction
