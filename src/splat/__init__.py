@@ -1,9 +1,7 @@
-from typing import Tuple
-
 __package_name__ = __name__
 
 # Should be synced with pyproject.toml
-__version__ = "0.25.3"
+__version__ = "0.26.0"
 __author__ = "ethteck"
 
 from . import util as util

@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.26.0
+
+* Fixed the `subalign` segment property logic to be more straightforward
+* Removed the checking of the `subalign` property for n64 image segments
+* Updated required versions of rabbitizier, n64img, and crunch64
+
 ### 0.25.3
 
 * Fix incorrect calculation for `$gp` value in create_config.py for PSX when immediate value is negative.
