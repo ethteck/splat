@@ -221,6 +221,29 @@ class CommonSegCode(CommonSegGroup):
                     + f"Detected when processing file '{segment.name}' of type '{segment.type}'"
                 )
 
+            ret.append(segment)
+
+            if segment.is_text():
+                base_segments[segment.name] = segment
+
+            if self.section_order.index(".rodata") < self.section_order.index(".text"):
+                if segment.is_rodata() and segment.sibling is None:
+                    base_segments[segment.name] = segment
+
+            segment.parent = self
+            if segment.special_vram_segment:
+                self.special_vram_segment = True
+
+            segment.bss_contains_common = self.bss_contains_common
+
+            prev_start = start
+            prev_vram = segment.vram_start
+            if end is not None:
+                last_rom_end = end
+
+        # We need base_segments to be fully constructed before start assigning siblings to segments,
+        # otherwise we may miss segments that are placed before any text segment
+        for segment in ret:
             segment.sibling = base_segments.get(segment.name, None)
 
             if segment.sibling is not None:
@@ -231,25 +254,6 @@ class CommonSegCode(CommonSegGroup):
                 segment.sibling.siblings[segment.get_linker_section_linksection()] = (
                     segment
                 )
-
-            segment.parent = self
-            if segment.special_vram_segment:
-                self.special_vram_segment = True
-
-            segment.bss_contains_common = self.bss_contains_common
-            ret.append(segment)
-
-            if segment.is_text():
-                base_segments[segment.name] = segment
-
-            if self.section_order.index(".rodata") < self.section_order.index(".text"):
-                if segment.is_rodata() and segment.sibling is None:
-                    base_segments[segment.name] = segment
-
-            prev_start = start
-            prev_vram = segment.vram_start
-            if end is not None:
-                last_rom_end = end
 
         ret = self._insert_all_auto_sections(ret, base_segments)
 
