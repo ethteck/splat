@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.26.1
+
+* Fix pairing text to other sections on cases where text is not be the first section.
+
 ### 0.26.0
 
 * Fixed the `subalign` segment property logic to be more straightforward
