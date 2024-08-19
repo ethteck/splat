@@ -179,12 +179,16 @@ class CommonSegC(CommonSegCodeSubsegment):
                     ), f"{rodata_sibling}, {rodata_sibling.type}"
 
                     if not rodata_sibling.type.startswith("."):
+                        # Emit an error if we try to migrate the rodata symbols to functions if the rodata section is not prefixed with a dot
+                        # (ie `- [0x1234, rodata, some_file]` instead of `- [0x1234, .rodata, some_file]`).
+                        # Not prefixing the type with a dot would produce splat to both disassemble the rodata section to its own assembly file
+                        # and to migrate the symbols to the corresponding functions, generating link-time errors and many headaches.
                         log.write(
                             f"\nProblem detected with the `{rodata_sibling.type}` section of the `{rodata_sibling.name}` file during rodata migration.",
                             status="warn",
                         )
                         log.write(
-                            f"\t Since the `{rodata_sibling.type}` section was not prefixed with a dot, then it will be both disassembled to its own assembly file and it the contents will be migrated to the `{self.file_extension}` file, which will produce link-time errors."
+                            f"\t The `{rodata_sibling.type}` section was not prefixed with a dot, which is required for the rodata migration feature to work properly and avoid build errors due to duplicated symbols at link-time."
                         )
                         log.error(
                             f"\t To fix this, please prefix the section type with a dot (like `.{rodata_sibling.type}`)."

@@ -3,7 +3,11 @@
 ### 0.26.1
 
 * Fix pairing text to other sections on cases where text is not be the first section.
+* Fix some code that assumes that `.rodata` will always be present on the `sections_order` list.
 * Fix `.text`/`.rdata` section pairing (hopefully).
+* Emit an error if we try to migrate the rodata symbols to functions if the rodata section is not prefixed with a dot (ie `- [0x1234, rodata, some_file]` instead of `- [0x1234, .rodata, some_file]`)
+  * Not prefixing the type with a dot would produce splat to both disassemble the rodata section to its own assembly file and to migrate the symbols to the corresponding functions, generating link-time errors and many headaches.
+* Rewrite the `ld_legacy_generation` docs for clarity.
 
 ### 0.26.0
 
