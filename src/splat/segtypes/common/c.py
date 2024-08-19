@@ -171,21 +171,39 @@ class CommonSegC(CommonSegCodeSubsegment):
                     if rodata_sibling is None:
                         continue
 
+                    if rodata_sibling.is_auto_all:
+                        continue
+
                     assert isinstance(
                         rodata_sibling, CommonSegRodata
-                    ), rodata_sibling.type
+                    ), f"{rodata_sibling}, {rodata_sibling.type}"
+
+                    if not rodata_sibling.type.startswith("."):
+                        # Emit an error if we try to migrate the rodata symbols to functions if the rodata section is not prefixed with a dot
+                        # (ie `- [0x1234, rodata, some_file]` instead of `- [0x1234, .rodata, some_file]`).
+                        # Not prefixing the type with a dot would produce splat to both disassemble the rodata section to its own assembly file
+                        # and to migrate the symbols to the corresponding functions, generating link-time errors and many headaches.
+                        log.write(
+                            f"\nProblem detected with the `{rodata_sibling.type}` section of the `{rodata_sibling.name}` file during rodata migration.",
+                            status="warn",
+                        )
+                        log.write(
+                            f"\t The `{rodata_sibling.type}` section was not prefixed with a dot, which is required for the rodata migration feature to work properly and avoid build errors due to duplicated symbols at link-time."
+                        )
+                        log.error(
+                            f"\t To fix this, please prefix the section type with a dot (like `.{rodata_sibling.type}`)."
+                        )
 
                     rodata_section_type = (
                         rodata_sibling.get_linker_section_linksection()
                     )
 
-                    # rodata_sibling.spim_section may be None if said sibling is an auto inserted one
-                    if rodata_sibling.spim_section is not None:
-                        assert isinstance(
-                            rodata_sibling.spim_section.get_section(),
-                            spimdisasm.mips.sections.SectionRodata,
-                        )
-                        rodata_spim_segment = rodata_sibling.spim_section.get_section()
+                    assert rodata_sibling.spim_section is not None, f"{rodata_sibling}"
+                    assert isinstance(
+                        rodata_sibling.spim_section.get_section(),
+                        spimdisasm.mips.sections.SectionRodata,
+                    )
+                    rodata_spim_segment = rodata_sibling.spim_section.get_section()
 
                     # Stop searching
                     break
