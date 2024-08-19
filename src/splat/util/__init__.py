@@ -10,4 +10,5 @@ from . import psx as psx
 from . import relocs as relocs
 from . import statistics as statistics
 from . import symbols as symbols
+from . import utils as utils
 from . import vram_classes as vram_classes

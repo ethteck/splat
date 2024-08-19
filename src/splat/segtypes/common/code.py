@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from typing import OrderedDict, List, Optional, Type, Tuple
 
-from ...util import log, options
+from ...util import log, options, utils
 
 from .group import CommonSegGroup
 from ..segment import Segment, parse_segment_align
@@ -90,6 +90,7 @@ class CommonSegCode(CommonSegGroup):
         self,
         ret: List[Segment],
         base_segments: OrderedDict[str, Segment],
+        readonly_before: bool,
     ) -> List[Segment]:
         if len(options.opts.auto_all_sections) == 0:
             return ret
@@ -102,9 +103,7 @@ class CommonSegCode(CommonSegGroup):
             if seg.is_text():
                 last_inserted_index = i
 
-            elif self.section_order.index(".rodata") < self.section_order.index(
-                ".text"
-            ):
+            elif readonly_before:
                 if seg.is_rodata():
                     last_inserted_index = i
 
@@ -158,6 +157,18 @@ class CommonSegCode(CommonSegGroup):
         prev_vram: Optional[int] = -1
 
         last_rom_end = None
+
+        # Determine what comes first, either text or rodata/rdata
+        readonly_before = False
+        text_index = utils.list_index(self.section_order, ".text")
+        if text_index is not None:
+            rodata_index = utils.list_index(self.section_order, ".rodata")
+            if rodata_index is not None:
+                readonly_before = rodata_index < text_index
+            else:
+                rdata_index = utils.list_index(self.section_order, ".rdata")
+                if rdata_index is not None:
+                    readonly_before = rdata_index < text_index
 
         for i, subsegment_yaml in enumerate(segment_yaml["subsegments"]):
             # endpos marker
@@ -226,7 +237,7 @@ class CommonSegCode(CommonSegGroup):
             if segment.is_text():
                 base_segments[segment.name] = segment
 
-            if self.section_order.index(".rodata") < self.section_order.index(".text"):
+            if readonly_before:
                 if segment.is_rodata() and segment.sibling is None:
                     base_segments[segment.name] = segment
 
@@ -255,7 +266,7 @@ class CommonSegCode(CommonSegGroup):
                     segment
                 )
 
-        ret = self._insert_all_auto_sections(ret, base_segments)
+        ret = self._insert_all_auto_sections(ret, base_segments, readonly_before)
 
         return ret
 
