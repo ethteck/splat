@@ -178,6 +178,18 @@ class CommonSegC(CommonSegCodeSubsegment):
                         rodata_sibling, CommonSegRodata
                     ), f"{rodata_sibling}, {rodata_sibling.type}"
 
+                    if not rodata_sibling.type.startswith("."):
+                        log.write(
+                            f"\nProblem detected with the `{rodata_sibling.type}` section of the `{rodata_sibling.name}` file during rodata migration.",
+                            status="warn",
+                        )
+                        log.write(
+                            f"\t Since the `{rodata_sibling.type}` section was not prefixed with a dot, then it will be both disassembled to its own assembly file and it the contents will be migrated to the `{self.file_extension}` file, which will produce link-time errors."
+                        )
+                        log.error(
+                            f"\t To fix this, please prefix the section type with a dot (like `.{rodata_sibling.type}`)."
+                        )
+
                     rodata_section_type = (
                         rodata_sibling.get_linker_section_linksection()
                     )
