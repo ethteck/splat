@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.26.2
+
+Nothing yet c:
+
+* `spimdisasm` 1.28.1 or above is now required.
+
 ### 0.26.1
 
 * Fix pairing text to other sections on cases where text is not be the first section.
