@@ -400,7 +400,11 @@ Generate a dependency file for every linker script generated. Dependency files w
 
 ### ld_legacy_generation
 
-Legacy linker script generation does not impose the section_order specified in the yaml options or per-segment options.
+Currently splat imposes the given `section_order` when generating the linker script. But in some cases it may not be desirable to impose the section ordering because the ROM itself may not follow a logical section ordering.
+
+To disable this behavior then turn on the `ld_legacy_generation` option. This way splat will blindly follow the yaml order, allowing to interleave unrelated sections. This setting must be treated as a last resort, since most ROMs do follow a logical ordering. If some specific files have weird ordering on one of their sections then it is recommended to use the [`linker_section_order`](Segments.md#linker_section_order) attribute of a given file entry instead.
+
+This option defaults to `False`.
 
 ### segment_end_before_align
 
