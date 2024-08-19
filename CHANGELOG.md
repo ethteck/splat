@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.26.2
+
+Nothing yet c:
+
 ### 0.26.1
 
 * Fix pairing text to other sections on cases where text is not be the first section.
