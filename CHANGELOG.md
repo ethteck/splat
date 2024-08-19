@@ -3,6 +3,7 @@
 ### 0.26.1
 
 * Fix pairing text to other sections on cases where text is not be the first section.
+* Fix `.text`/`.rdata` section pairing (hopefully).
 
 ### 0.26.0
 
