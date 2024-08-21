@@ -2,8 +2,11 @@
 
 ### 0.26.2
 
-Nothing yet c:
-
+* Fixed not being able to disable the `subalign` directive for a given segment.
+* Removed bugged alignment check on image segments.
+* splat will now error out if any of the following attributes is specified in a non top-level segment.
+  * `subalign`
+  * `ld_fill_value`.
 * `spimdisasm` 1.28.1 or above is now required.
 
 ### 0.26.1
