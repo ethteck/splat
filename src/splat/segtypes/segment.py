@@ -51,13 +51,13 @@ def parse_segment_align(segment: Union[dict, list]) -> Optional[int]:
 
 
 def parse_segment_subalign(segment: Union[dict, list]) -> Optional[int]:
+    default = options.opts.subalign
     if isinstance(segment, dict):
-        subalign = segment.get("subalign")
+        subalign = segment.get("subalign", default)
         if subalign != None:
-            assert isinstance(subalign, int)
             subalign = int(subalign)
         return subalign
-    return None
+    return default
 
 
 def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
@@ -237,7 +237,7 @@ class Segment:
         self.vram_start: Optional[int] = vram_start
 
         self.align: Optional[int] = None
-        self.given_subalign: Optional[int] = None
+        self.given_subalign: Optional[int] = options.opts.subalign
         self.exclusive_ram_id: Optional[str] = None
         self.given_dir: Path = Path()
 
@@ -313,6 +313,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: Optional[int],
         rom_end: Optional[int],
+        parent: Optional["Segment"],
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
@@ -338,6 +339,18 @@ class Segment:
             args=args,
             yaml=yaml,
         )
+        if parent is not None:
+            if "subalign" in yaml:
+                log.error(
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments"
+                )
+            if "ld_fill_value" in yaml:
+                log.error(
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments"
+                )
+
+        ret.parent = parent
+
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
 
@@ -433,12 +446,10 @@ class Segment:
 
     @property
     def subalign(self) -> Optional[int]:
-        if self.given_subalign is not None:
-            return self.given_subalign
-        elif self.parent:
+        if self.parent:
             return self.parent.subalign
         else:
-            return options.opts.subalign
+            return self.given_subalign
 
     @property
     def vram_symbol(self) -> Optional[str]:

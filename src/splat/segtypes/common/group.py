@@ -102,9 +102,8 @@ class CommonSegGroup(CommonSegment):
                 end = last_rom_end
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, vram
+                segment_class, subsegment_yaml, start, end, self, vram
             )
-            segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
 

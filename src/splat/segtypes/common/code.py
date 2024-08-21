@@ -219,7 +219,7 @@ class CommonSegCode(CommonSegGroup):
                 end = last_rom_end
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, vram
+                segment_class, subsegment_yaml, start, end, self, vram
             )
 
             if (
@@ -241,7 +241,6 @@ class CommonSegCode(CommonSegGroup):
                 if segment.is_rodata() and segment.sibling is None:
                     base_segments[segment.name] = segment
 
-            segment.parent = self
             if segment.special_vram_segment:
                 self.special_vram_segment = True
 

@@ -58,10 +58,9 @@ class N64SegImg(N64Segment):
         expected_len = int(self.n64img.size())
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
-        assert isinstance(self.subalign, int)
 
         actual_len = self.rom_end - self.rom_start
-        if actual_len > expected_len and actual_len - expected_len > self.subalign:
+        if actual_len > expected_len:
             log.error(
                 f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)"
             )
