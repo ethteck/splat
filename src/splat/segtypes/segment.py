@@ -341,9 +341,13 @@ class Segment:
         )
         if not is_toplevel:
             if "subalign" in yaml:
-                log.error(f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments")
+                log.error(
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments"
+                )
             if "ld_fill_value" in yaml:
-                log.error(f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments")
+                log.error(
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments"
+                )
 
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
