@@ -313,6 +313,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: Optional[int],
         rom_end: Optional[int],
+        is_toplevel: bool,
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
@@ -339,6 +340,9 @@ class Segment:
             yaml=yaml,
         )
         ret.given_section_order = parse_segment_section_order(yaml)
+        if not is_toplevel:
+            if "subalign" in yaml:
+                log.error(f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments")
         ret.given_subalign = parse_segment_subalign(yaml)
 
         if isinstance(yaml, dict):

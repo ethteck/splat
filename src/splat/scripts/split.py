@@ -74,7 +74,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             next_start = last_rom_end
 
         segment: Segment = Segment.from_yaml(
-            segment_class, seg_yaml, this_start, next_start
+            segment_class, seg_yaml, this_start, next_start, True
         )
 
         if segment.require_unique_name:

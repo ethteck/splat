@@ -219,7 +219,7 @@ class CommonSegCode(CommonSegGroup):
                 end = last_rom_end
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, vram
+                segment_class, subsegment_yaml, start, end, False, vram
             )
 
             if (
