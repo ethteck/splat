@@ -313,7 +313,7 @@ class Segment:
         yaml: Union[dict, list],
         rom_start: Optional[int],
         rom_end: Optional[int],
-        is_toplevel: bool,
+        parent: Optional["Segment"],
         vram=None,
     ):
         type = Segment.parse_segment_type(yaml)
@@ -339,7 +339,7 @@ class Segment:
             args=args,
             yaml=yaml,
         )
-        if not is_toplevel:
+        if parent is not None:
             if "subalign" in yaml:
                 log.error(
                     f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments"
@@ -348,6 +348,8 @@ class Segment:
                 log.error(
                     f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments"
                 )
+
+        ret.parent = parent
 
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
