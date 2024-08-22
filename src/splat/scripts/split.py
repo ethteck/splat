@@ -110,7 +110,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             )
 
     if ret[-1].type == "pad":
-        log.error("Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad")
+        log.error(
+            "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
+        )
 
     return ret
 
