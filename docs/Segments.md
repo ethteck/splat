@@ -245,25 +245,24 @@ The `.sbss` segment behaves the same as the `.bss` segment but supports "small b
 
 ## `lib`
 
-The `lib` segment can be used to link to a section of an object in an existing library. It is purely used to configure the output linker script and does not do any extraction.
+The `lib` segment can be used to link to a section of an object in an existing library archive. It is purely used to configure the output linker script and does not do any extraction.
 
 It looks for libraries in the [`lib_path`](https://github.com/ethteck/splat/wiki/Configuration#lib_path) global option.
 
 **Example:**
 
-(link to .text of b_obj in a_lib)
 ```yaml
+# link to .text of b_obj in a_lib
 - [auto, lib, a_lib, b_obj]
 ```
 
-(link to .data of b_obj in a_lib)
 ```yaml
+# link to .data of b_obj in a_lib
 - [auto, lib, a_lib, b_obj, .data]
 ```
 
-(dict representation)
-(link to .text of b_obj in a_lib)
 ```yaml
+# link to .text of b_obj in a_lib (dict representation)
 - { type: lib, name: a_lib, object: b_obj, section: .text }
 ```
 
@@ -377,7 +376,7 @@ These segments support an optional `data_only` attribute, which is False by defa
 
 Example output with `data_only` off (default):
 
-```
+```c
 Gfx displayList[] = {
     gsDPPipeSync(),
     gsDPSetPrimColor(0, 0, 0x80, 0x80, 0x80, 0x80),
@@ -387,12 +386,12 @@ Gfx displayList[] = {
 ```
 
 to be used in a source c file like
-```
+```c
 #include "example.gfx.inc.c"
 ```
 
 Example output with `data_only` on:
-```
+```c
 gsDPPipeSync(),
 gsDPSetPrimColor(0, 0, 0x80, 0x80, 0x80, 0x80),
 gsDPSetEnvColor(0x80, 0x80, 0x80, 0x80),
@@ -400,8 +399,10 @@ gsSPEndDisplayList(),
 ```
 
 to be used in a source c file like
-```
-Gfx displayList[] = { #include "example.gfx.inc.c" };
+```c
+Gfx displayList[] = {
+  #include "example.gfx.inc.c"
+};
 ```
 
 Some may prefer to define symbol names in source c files, rather than having splat be responsible for naming these symbols, which is why this option is provided.
