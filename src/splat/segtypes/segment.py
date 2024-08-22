@@ -446,7 +446,9 @@ class Segment:
 
     @property
     def subalign(self) -> Optional[int]:
-        assert self.parent is None, f"subalign is not valid for non-top-level segments. ({self})"
+        assert (
+            self.parent is None
+        ), f"subalign is not valid for non-top-level segments. ({self})"
         return self.given_subalign
 
     @property
