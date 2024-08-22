@@ -19,6 +19,5 @@ from . import palette as palette
 from . import rgba16 as rgba16
 from . import rgba32 as rgba32
 from . import rsp as rsp
-from . import segment as segment
 from . import vtx as vtx
 from . import yay0 as yay0
