@@ -14,7 +14,6 @@ from . import ia4 as ia4
 from . import ia8 as ia8
 from . import img as img
 from . import ipl3 as ipl3
-from . import linker_offset as linker_offset
 from . import mio0 as mio0
 from . import palette as palette
 from . import rgba16 as rgba16

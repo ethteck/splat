@@ -1,9 +1,9 @@
 from ...util import log, options
 
-from .segment import N64Segment
+from ..segment import Segment
 
 
-class CommonSegDecompressor(N64Segment):
+class CommonSegDecompressor(Segment):
     def split(self, rom_bytes):
         out_dir = options.opts.asset_path / self.dir
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -33,7 +33,7 @@ class CommonSegDecompressor(N64Segment):
                 [options.opts.asset_path / self.dir / f"{self.name}.bin"],
                 options.opts.asset_path
                 / self.dir
-                / f"{self.name}.{self.compression_type}",  # "Mio0" -> filename.Mio0.o
+                / f"{self.name}.{self.compression_type}",  # "MIO0" -> filename.MIO0.o
                 self.get_linker_section_order(),
                 self.get_linker_section_linksection(),
                 self.is_noload(),

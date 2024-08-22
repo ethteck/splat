@@ -52,7 +52,7 @@ class CommonSegCode(CommonSegGroup):
         else:
             return None
 
-    # Generates a placeholder segment for the auto_all_sections option
+    # Generates a placeholder segment for the auto_link_sections option
     def _generate_segment_from_all(
         self,
         rep_type: str,
@@ -80,7 +80,7 @@ class CommonSegCode(CommonSegGroup):
         rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
         rep.sibling = base_seg
         rep.parent = self
-        rep.is_auto_all = True
+        rep.is_generated = True
         if rep.special_vram_segment:
             self.special_vram_segment = True
         rep.bss_contains_common = self.bss_contains_common
@@ -92,7 +92,7 @@ class CommonSegCode(CommonSegGroup):
         base_segments: OrderedDict[str, Segment],
         readonly_before: bool,
     ) -> List[Segment]:
-        if len(options.opts.auto_all_sections) == 0:
+        if len(options.opts.auto_link_sections) == 0:
             return ret
 
         base_segments_list: List[Tuple[str, Segment]] = list(base_segments.items())
@@ -107,7 +107,7 @@ class CommonSegCode(CommonSegGroup):
                 if seg.is_rodata():
                     last_inserted_index = i
 
-        for i, sect in enumerate(options.opts.auto_all_sections):
+        for i, sect in enumerate(options.opts.auto_link_sections):
             for name, seg in base_segments_list:
                 link_section = seg.get_linker_section_order()
                 if link_section == sect or link_section == "":
@@ -133,7 +133,7 @@ class CommonSegCode(CommonSegGroup):
                 link_section = ret[last_inserted_index].get_linker_section_order()
                 if (
                     link_section != ""
-                    and link_section not in options.opts.auto_all_sections[: i + 1]
+                    and link_section not in options.opts.auto_link_sections[: i + 1]
                 ):
                     last_inserted_index -= 1
                     if last_inserted_index < 0:

@@ -67,7 +67,7 @@ options:
   asm_data_macro: dlabel
 
   # section_order: [".text", ".data", ".rodata", ".bss"]
-  # auto_all_sections: [".data", ".rodata", ".bss"]
+  # auto_link_sections: [".data", ".rodata", ".bss"]
 
   symbol_addrs_path:
     - symbol_addrs.txt
@@ -184,7 +184,7 @@ options:
   asm_data_macro: dlabel
 
   section_order: [".rodata", ".text", ".data", ".bss"]
-  # auto_all_sections: [".data", ".rodata", ".bss"]
+  # auto_link_sections: [".data", ".rodata", ".bss"]
 
   symbol_addrs_path:
     - symbol_addrs.txt
