@@ -1,5 +1,14 @@
 # splat Release Notes
 
+### 0.27.0
+
+* BREAKING: Renamed `auto_all_sections` to `auto_link_sections` and documented its behavior.
+* BREAKING: Removed redundant `N64Segment`, `PSXSegment`, `PSPSegment` stub classes. Any references to these should be instead to the base `Segment`
+* Promoted `linker_offset` segment type to common, so it's now usable by all platforms.
+* Added documentation for the remaining undocumented segment types and did some general doc tidying.
+* Splat will now error when the last segment is `pad`, as this will not work as expected.
+* Attempting to retrieve the `subalign` property of a non-top-level segment will now return an error.
+
 ### 0.26.2
 
 * Fixed not being able to disable the `subalign` directive for a given segment.
@@ -223,7 +232,7 @@
     ```py
     from util import log, options
 
-    from segtypes.n64.segment import N64Segment
+    from segtypes.common.segment import Segment
     from segtypes.common.data import CommonSegData
     ```
 
@@ -235,7 +244,7 @@
       ```py
       from splat.util import log, options
 
-      from splat.segtypes.n64.segment import N64Segment
+      from splat.segtypes.common.segment import Segment
       from splat.segtypes.common.data import CommonSegData
       ```
 
@@ -250,7 +259,7 @@
       ```py
       from ...util import log, options
 
-      from .segment import N64Segment
+      from ..common.segment import Segment
       from ..common.data import CommonSegData
       ```
 

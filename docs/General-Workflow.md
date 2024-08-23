@@ -245,7 +245,7 @@ to:
 
 
 **NOTE:**
-If using `auto_all_section` and there are no other `data`/`.data`/`rodata`/`.rodata` in the subsegments in the code segment, the subsegments can also be changed to
+If using `auto_link_sections` and data is fully migrated, the subsegments can also be changed to the following and splat will add the appropriate entries into the linker script.
 
 ```yaml
 - [0x42100, c, energy_orb_wave]

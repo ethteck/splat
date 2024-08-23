@@ -121,6 +121,10 @@ This is platform specific; parses the data and interprets as a header for e.g. N
   start: 0xABC
 ```
 
+## `cpp`
+
+The `cpp` segment behaves the same as the `c` segment but uses the .cpp file extension (for C++ source files).
+
 ## `data`
 
 **Description:**
@@ -161,6 +165,10 @@ Data located in the ROM that is linked from a C file. Use the `.data` segment to
 
 **NOTE:** `splat` will not generate any `.data.s` files for these `.` (dot) sections.
 
+## `.sdata`
+
+The `.sdata` segment behaves the same as the `.data` segment but supports "small data" linker sections named `.sdata`.
+
 ## `rodata`
 
 **Description:**
@@ -199,6 +207,10 @@ Read-only data located in the ROM, linked to a C file. Use the `.rodata` segment
   start: 0xABC
 ```
 
+## `.rdata`
+
+The `.rdata` segment behaves the same as the `.rodata` segment but supports rodata linker sections that happened to be named `.rdata` rather than `.rodata`.
+
 **NOTE:** `splat` will not generate any `.rodata.s` files for these `.` (dot) sections.
 
 ## `bss`
@@ -227,39 +239,33 @@ Links the `.bss` section of the associated `c` file.
 - { start: 0x7D1AD0, type: .bss, name: filepath, vram: 0x803C0420 }
 ```
 
-## Images
+## `.sbss`
 
-**Description:**
+The `.sbss` segment behaves the same as the `.bss` segment but supports "small bss" linker sections named `.sbss`.
 
-**splat** supports most of the [N64 image formats](https://n64squid.com/homebrew/n64-sdk/textures/image-formats/):
+## `lib`
 
-- `i`, i.e. `i4` and `i8`
-- `ia`, i.e. `ia4`, `ia8`, and `ia16`
-- `ci`, i.e. `ci4` and `ci8`
-- `rgb`, i.e. `rgba32` and `rgba16`
+The `lib` segment can be used to link to a section of an object in an existing library archive. It is purely used to configure the output linker script and does not do any extraction.
 
-These segments will parse the image data and dump out a `png` file.
-
-**Note:** Using the dictionary syntax allows for richer configuration.
+It looks for libraries in the [`lib_path`](https://github.com/ethteck/splat/wiki/Configuration#lib_path) global option.
 
 **Example:**
 
 ```yaml
-# as list
-- [0xABC, i4, filename, width, height]
-# as a dictionary
-- name: filename
-  type: i4
-  start: 0xABC
-  width: 64
-  height: 64
-  flip_x: yes
-  flip_y: no
+# link to .text of b_obj in a_lib
+- [auto, lib, a_lib, b_obj]
 ```
 
-`ci` (paletted) segments have a `palettes: []` setting that represents the list of palettes that should be linked to the `ci`. For each linked palette, an image will be exported. The implicit value of `palettes` is a one-element list containing the name of the raster, which means palettes and rasters with the same name will automatically be linked.
+```yaml
+# link to .data of b_obj in a_lib
+- [auto, lib, a_lib, b_obj, .data]
+```
 
-Palette segments can specify a `global_id`, which can be referred to from a `ci`'s `palettes` list. The `global_id` space is searched first, and this allows cross-segment links between palettes and rasters.
+```yaml
+# link to .text of b_obj in a_lib (dict representation)
+- { type: lib, name: a_lib, object: b_obj, section: .text }
+```
+
 
 ## `pad`
 
@@ -274,6 +280,9 @@ While this kind of segment can be represented by other segment types ([`asm`](#a
 ```yaml
 - [0x00B250, pad, nops_00B250]
 ```
+
+**Warning:** `pad` cannot be the last segment in your yaml, as the way it is implemented requires a linked object to follow it.
+If the rom contains padding at the end, we recommend treating only the non-padded portion of the rom with splat and padding the rest during the build process.
 
 ## incbins
 
@@ -312,7 +321,120 @@ Used by certain compilers (like GCC) to store the Exception Handler Frame, used 
 
 This frame contains more metadata used by exceptions at runtime.
 
-## PS2 exclusive segments
+## `linker_offset`
+
+This segment adds a symbol into the linker script at its relative section position.
+
+A segment named "john" with type `linker_offset` will cause a generated symbol with the name `john_OFFSET` to be placed into the linker script.
+This can be useful for naming and referencing certain address locations from source code.
+
+# Platform-specific segments
+
+## N64
+
+### Images
+
+**Description:**
+
+**splat** supports most of the [N64 image formats](https://n64squid.com/homebrew/n64-sdk/textures/image-formats/):
+
+- `i`, i.e. `i4` and `i8`
+- `ia`, i.e. `ia4`, `ia8`, and `ia16`
+- `ci`, i.e. `ci4` and `ci8`
+- `rgb`, i.e. `rgba32` and `rgba16`
+
+These segments will parse the image data and dump out a `png` file.
+
+**Note:** Using the dictionary syntax allows for richer configuration.
+
+**Example:**
+
+```yaml
+# as list
+- [0xABC, i4, filename, width, height]
+# as a dictionary
+- name: filename
+  type: i4
+  start: 0xABC
+  width: 64
+  height: 64
+  flip_x: yes
+  flip_y: no
+```
+
+`ci` (paletted) segments have a `palettes: []` setting that represents the list of palettes that should be linked to the `ci`. For each linked palette, an image will be exported. The implicit value of `palettes` is a one-element list containing the name of the raster, which means palettes and rasters with the same name will automatically be linked.
+
+Palette segments can specify a `global_id`, which can be referred to from a `ci`'s `palettes` list. The `global_id` space is searched first, and this allows cross-segment links between palettes and rasters.
+
+We recommend using [pigment64](https://github.com/decompals/pigment64) to convert extracted images back into original formats.
+
+### `gfx`
+
+`gfx` can be used to extract static f3dex ["display lists"](https://hackmd.io/@Roman971/Hk01jRxRr#Static-Data) into a .gfx.inc.c file, which is meant to be `#include`d from a source c file.
+
+These segments support an optional `data_only` attribute, which is False by default. If enabled, the extracted file will contain only the data rather than the enclosing symbol definition.
+
+Example output with `data_only` off (default):
+
+```c
+Gfx displayList[] = {
+    gsDPPipeSync(),
+    gsDPSetPrimColor(0, 0, 0x80, 0x80, 0x80, 0x80),
+    gsDPSetEnvColor(0x80, 0x80, 0x80, 0x80),
+    gsSPEndDisplayList(),
+};
+```
+
+to be used in a source c file like
+```c
+#include "example.gfx.inc.c"
+```
+
+Example output with `data_only` on:
+```c
+gsDPPipeSync(),
+gsDPSetPrimColor(0, 0, 0x80, 0x80, 0x80, 0x80),
+gsDPSetEnvColor(0x80, 0x80, 0x80, 0x80),
+gsSPEndDisplayList(),
+```
+
+to be used in a source c file like
+```c
+Gfx displayList[] = {
+  #include "example.gfx.inc.c"
+};
+```
+
+Some may prefer to define symbol names in source c files, rather than having splat be responsible for naming these symbols, which is why this option is provided.
+
+[Example usage](https://github.com/pmret/papermario/blob/c43d15e/ver/us/splat.yaml#L1707)
+
+### `vtx`
+
+`vtx` can be used to extract arrays of Vtx struct data, into a .vtx.inc.c file, which is meant to be `#include`d from a source c file.
+
+This option also supports the `data_only` attribute. See the section on the `gfx` segment for more details.
+
+[Example usage](https://github.com/pmret/papermario/blob/c43d15e/ver/us/splat.yaml#L1706)
+
+### `rsp`
+
+The `rsp` segment is used for disassembling RSP microcode. It is an extension of the `hasm` segment type and enables special instruction handling in the disassembler.
+
+### `ipl3`
+
+The `ipl3` segment is used for disassembling ipl3 code. It is an extension of the `hasm` segment type and opts out of standard symbol-tracking behavior, since it lives in an unconventional memory space.
+
+### Compressed segment types
+
+splat supports the compression types MIO0 and Yay0 with segment type names `mio0` and `yay0`, respectively. Both of these output a .bin file, which is expected to be re-compressed as part of the project's build system.
+The generated linker script then will expect a .`type`.o file to exist.
+
+For example, for a `yay0` segment named "john", splat will create a decompressed john.bin file. The build system should then compress this file into `john.Yay0.bin` and then turn that into an object named `john.Yay0.o`, which will be linked into the output rom.
+
+We recommend using [crunch64](https://github.com/decompals/crunch64) to re-compress MIO0 and Yay0 assets that are extracted with splat.
+
+## PS2
 
 ### `lit4`
 
@@ -338,7 +460,7 @@ The disassembly of this section is tweaked to avoid confusing its data with othe
 
 The disassembly of this section is tweaked to avoid confusing its data with other types of data, this is because the disassembler can sometimes get confused and disassemble a pointer as a float, string, etc.
 
-## General segment options
+# General segment options
 
 All splat's segments can be passed extra options for finer configuration. Note that those extra options require to rewrite the entry using the dictionary yaml notation instead of the list one.
 

@@ -92,10 +92,8 @@ class SplatOpts:
     # Linker script
     # Determines the default subalign value to be specified in the generated linker script
     subalign: Optional[int]
-    # The following option determines whether to automatically configure the linker script to link against
-    # specified sections for all "base" (asm/c) files when the yaml doesn't have manual configurations
-    # for these sections.
-    auto_all_sections: List[str]
+    # The following option determines a list of sections for which automatic linker script entries should be added
+    auto_link_sections: List[str]
     # Determines the desired path to the linker script that splat will generate
     ld_script_path: Path
     # Determines the desired path to the linker symbol header,
@@ -435,8 +433,8 @@ def _parse_yaml(
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
-        auto_all_sections=p.parse_opt(
-            "auto_all_sections", list, [".data", ".rodata", ".bss"]
+        auto_link_sections=p.parse_opt(
+            "auto_link_sections", list, [".data", ".rodata", ".bss"]
         ),
         ld_script_path=p.parse_path(base_path, "ld_script_path", f"{basename}.ld"),
         ld_symbol_header_path=p.parse_optional_path(base_path, "ld_symbol_header_path"),

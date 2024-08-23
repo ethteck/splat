@@ -3,7 +3,6 @@
 import argparse
 import hashlib
 import importlib
-import pickle
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from pathlib import Path
 
@@ -41,7 +40,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     segment_rams = IntervalTree()
 
     segments_by_name: Dict[str, Segment] = {}
-    ret = []
+    ret: List[Segment] = []
 
     last_rom_end = 0
 
@@ -109,6 +108,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             segment.given_vram_symbol = get_segment_vram_end_symbol_name(
                 segments_by_name[segment.given_follows_vram]
             )
+
+    if ret[-1].type == "pad":
+        log.error(
+            "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
+        )
 
     return ret
 

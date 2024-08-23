@@ -308,7 +308,7 @@ extensions_path: path/to/extensions/folder
 
 ### lib_path
 
-Determines the path to library files that are to be linked into the target binary
+Determines the path to library files that are to be linked into the target binary when the [`lib`](https://github.com/ethteck/splat/wiki/Segments#lib) segment type is used.
 
 
 ### elf_section_list_path
@@ -341,9 +341,12 @@ subalign: 4
 `16`
 
 
-### auto_all_sections
+### auto_link_sections
 
-TODO
+A list of linker sections for which entries will be automatically added to the linker script. If a segment contains 10 "c" subsegments, one can rely on this feature to automatically create linker entries for these files in the specified sections. This feature reduces the need to manually add lines to your yaml which only would serve to add linker entries for common sections, such as .data, .rodata, and .bss.
+
+#### Default
+`[".data", ".rodata", ".bss"]`
 
 ### ld_script_path
 

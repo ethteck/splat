@@ -11,6 +11,7 @@ from . import group as group
 from . import hasm as hasm
 from . import header as header
 from . import lib as lib
+from . import linker_offset as linker_offset
 from . import rdata as rdata
 from . import rodatabin as rodatabin
 from . import rodata as rodata

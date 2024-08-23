@@ -171,7 +171,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     if rodata_sibling is None:
                         continue
 
-                    if rodata_sibling.is_auto_all:
+                    if rodata_sibling.is_generated:
                         continue
 
                     assert isinstance(
