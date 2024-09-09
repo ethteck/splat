@@ -189,6 +189,9 @@ def handle_sym_addrs(
                             if attr_name == "visibility":
                                 sym.given_visibility = attr_val
                                 continue
+                            if attr_name == "function_owner":
+                                sym.function_owner = attr_val
+                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -470,6 +473,7 @@ def add_symbol_to_spim_segment(
         context_sym.forceMigration = True
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
+    context_sym.functionOwnerForMigration = sym.function_owner
     if sym.allow_addend:
         context_sym.allowedToReferenceAddends = True
     if sym.dont_allow_addend:
@@ -521,6 +525,7 @@ def add_symbol_to_spim_section(
         context_sym.forceMigration = True
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
+    context_sym.functionOwnerForMigration = sym.function_owner
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
@@ -610,6 +615,7 @@ class Symbol:
 
     force_migration: bool = False
     force_not_migration: bool = False
+    function_owner: str|None = None
 
     allow_addend: bool = False
     dont_allow_addend: bool = False
