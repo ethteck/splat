@@ -6,6 +6,7 @@
   * `function_owner`: Allows to force a rodata symbol to be migrated to the given function, skipping over the rodata migration heuristic.
   * `allow_reference`: Allows toggling if the symbol is allowed to reference other symbols.
   * `allow_be_referenced`: Allows toggling if the symbol is allowed to be referenced by other symbols.
+* `spimdisasm` 1.29.0 or above is now required.
 
 ### 0.27.0
 
