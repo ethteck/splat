@@ -625,7 +625,7 @@ class Symbol:
 
     force_migration: bool = False
     force_not_migration: bool = False
-    function_owner: str|None = None
+    function_owner: Optional[str] = None
 
     allow_addend: bool = False
     dont_allow_addend: bool = False
