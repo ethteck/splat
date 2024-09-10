@@ -235,6 +235,12 @@ def handle_sym_addrs(
                             if attr_name == "dont_allow_addend":
                                 sym.dont_allow_addend = tf_val
                                 continue
+                            if attr_name == "allow_reference":
+                                sym.allow_reference = tf_val
+                                continue
+                            if attr_name == "allow_be_referenced":
+                                sym.allow_be_referenced = tf_val
+                                continue
                             if attr_name == "allow_duplicated":
                                 sym.allow_duplicated = True
                                 continue
@@ -478,6 +484,10 @@ def add_symbol_to_spim_segment(
         context_sym.allowedToReferenceAddends = True
     if sym.dont_allow_addend:
         context_sym.notAllowedToReferenceAddends = True
+    if sym.allow_reference is not None:
+        context_sym.allowedToReferenceSymbols = sym.allow_reference
+    if sym.allow_be_referenced is not None:
+        context_sym.allowedToBeReferenced = sym.allow_be_referenced
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
@@ -619,6 +629,9 @@ class Symbol:
 
     allow_addend: bool = False
     dont_allow_addend: bool = False
+
+    allow_reference: Optional[bool] = None
+    allow_be_referenced: Optional[bool] = None
 
     linker_section: Optional[str] = None
 

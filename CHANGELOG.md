@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.27.1
+
+* bleh
+
 ### 0.27.0
 
 * BREAKING: Renamed `auto_all_sections` to `auto_link_sections` and documented its behavior.
