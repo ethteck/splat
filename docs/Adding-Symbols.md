@@ -150,7 +150,7 @@ This attribute overrides the global `allow_data_addends` option.
 aspMainTextStart = 0x80084760; // dont_allow_addend:True
 ```
 
-### `allow_reference`
+### `can_reference`
 
 Allows this symbol to reference (or to not reference) other symbols.
 
@@ -161,10 +161,10 @@ Defaults to `True`.
 **Example:**
 
 ```ini
-aspMainTextStart = 0x80084760; // allow_reference:False
+aspMainTextStart = 0x80084760; // can_reference:False
 ```
 
-### `allow_be_referenced`
+### `can_be_referenced`
 
 Allows this symbol to be referenced (or to not be referenced) by other symbols.
 
@@ -175,7 +175,7 @@ Defaults to `True`.
 **Example:**
 
 ```ini
-dummy_symbol = 0x800782B0; // allow_be_referenced:True
+dummy_symbol = 0x800782B0; // can_be_referenced:True
 ```
 
 ### `allow_duplicated`
