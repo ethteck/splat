@@ -189,6 +189,9 @@ def handle_sym_addrs(
                             if attr_name == "visibility":
                                 sym.given_visibility = attr_val
                                 continue
+                            if attr_name == "function_owner":
+                                sym.function_owner = attr_val
+                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -231,6 +234,12 @@ def handle_sym_addrs(
                                 continue
                             if attr_name == "dont_allow_addend":
                                 sym.dont_allow_addend = tf_val
+                                continue
+                            if attr_name == "can_reference":
+                                sym.can_reference = tf_val
+                                continue
+                            if attr_name == "can_be_referenced":
+                                sym.can_be_referenced = tf_val
                                 continue
                             if attr_name == "allow_duplicated":
                                 sym.allow_duplicated = True
@@ -470,10 +479,15 @@ def add_symbol_to_spim_segment(
         context_sym.forceMigration = True
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
+    context_sym.functionOwnerForMigration = sym.function_owner
     if sym.allow_addend:
         context_sym.allowedToReferenceAddends = True
     if sym.dont_allow_addend:
         context_sym.notAllowedToReferenceAddends = True
+    if sym.can_reference is not None:
+        context_sym.allowedToReferenceSymbols = sym.can_reference
+    if sym.can_be_referenced is not None:
+        context_sym.allowedToBeReferenced = sym.can_be_referenced
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
@@ -521,6 +535,7 @@ def add_symbol_to_spim_section(
         context_sym.forceMigration = True
     if sym.force_not_migration:
         context_sym.forceNotMigration = True
+    context_sym.functionOwnerForMigration = sym.function_owner
     context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
     if sym.given_name_end:
         context_sym.nameEnd = sym.given_name_end
@@ -610,9 +625,13 @@ class Symbol:
 
     force_migration: bool = False
     force_not_migration: bool = False
+    function_owner: Optional[str] = None
 
     allow_addend: bool = False
     dont_allow_addend: bool = False
+
+    can_reference: Optional[bool] = None
+    can_be_referenced: Optional[bool] = None
 
     linker_section: Optional[str] = None
 

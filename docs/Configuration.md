@@ -112,7 +112,15 @@ generated_s_preamble: .set fp=64
 
 ### o_as_suffix
 
-Determines whether to replace the suffix of the file to `.o` or to append `.o` to the suffix of the file.
+Used to determine the file extension of the built files that will be listed on the linker script.
+
+Setting it to `True` tells splat to use `.o` as the file extension of the built file, replacing the existing one.
+For example `some_file.o`.
+
+Setting this to `False` appends `.o` to the extension of the file.
+For example `some_file.c.o`.
+
+Defaults to `False`.
 
 
 ### gp_value
