@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.27.3
+* Added new global option `subalign_override`. If set, overrides the subalign of all segments to the specified value. Unset by default (no change in default behavior).
+* Removed global option `emit subalign`. Shiftability problems are great.
+
 ### 0.27.2
 * Added new global option `emit_subalign`. If disabled, subalign directives will not be emitted in the generated linker script. Enabled by default (no change in default behavior).
 

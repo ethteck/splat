@@ -92,8 +92,8 @@ class SplatOpts:
     # Linker script
     # Determines the default subalign value to be specified in the generated linker script
     subalign: Optional[int]
-    # Determines whether to emit the subalign directive in the generated linker script
-    emit_subalign: bool
+    # An optional override value for all segments' subalign values
+    subalign_override: Optional[int]
     # The following option determines a list of sections for which automatic linker script entries should be added
     auto_link_sections: List[str]
     # Determines the desired path to the linker script that splat will generate
@@ -435,7 +435,7 @@ def _parse_yaml(
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
-        emit_subalign=p.parse_opt("emit_subalign", bool, True),
+        subalign_override=p.parse_optional_opt("subalign_override", int),
         auto_link_sections=p.parse_opt(
             "auto_link_sections", list, [".data", ".rodata", ".bss"]
         ),
