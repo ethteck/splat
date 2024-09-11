@@ -349,12 +349,12 @@ subalign: 4
 `16`
 
 
-### emit_subalign
+### subalign_override
 
-Controls whether the `SUBALIGN` directive can be emitted in generated linker scripts. Enabled by default.
+Overrides the `SUBALIGN` value for all segments. `null` by default.
 
 This parameter was added as a way to override standard behavior with multiple yamls.
-The base project yaml may need to use subalign for matching purposes, but shiftable builds might not want such a linker script.
+The base project yaml may need to use subalign for matching purposes, but shiftable builds might need a different subalign value.
 
 
 ### auto_link_sections
