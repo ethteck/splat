@@ -349,6 +349,14 @@ subalign: 4
 `16`
 
 
+### emit_subalign
+
+Controls whether the `SUBALIGN` directive can be emitted in generated linker scripts. Enabled by default.
+
+This parameter was added as a way to override standard behavior with multiple yamls.
+The base project yaml may need to use subalign for matching purposes, but shiftable builds might not want such a linker script.
+
+
 ### auto_link_sections
 
 A list of linker sections for which entries will be automatically added to the linker script. If a segment contains 10 "c" subsegments, one can rely on this feature to automatically create linker entries for these files in the specified sections. This feature reduces the need to manually add lines to your yaml which only would serve to add linker entries for common sections, such as .data, .rodata, and .bss.
