@@ -92,19 +92,25 @@ class N64EntrypointInfo:
         nops_count = 0
 
         register_values = [0 for _ in range(32)]
+        completed_pair = [False for _ in range(32)]
 
         register_bss_address: Optional[int] = None
         register_bss_size: Optional[int] = None
         register_main_address: Optional[int] = None
 
+        bss_address: Optional[int] = None
+        bss_size: Optional[int] = None
+
         traditional_entrypoint = True
+        decrementing_bss_routine = True
         data_size = 0
         func_call_target: Optional[int] = None
 
         prev_insn = rabbitizer.Instruction(0, vram-4)
         size = 0
         i = 0
-        for word in word_list:
+        while i < len(word_list):
+            word = word_list[i]
             insn = rabbitizer.Instruction(word, vram)
             if not insn.isValid():
                 break
@@ -115,29 +121,57 @@ class N64EntrypointInfo:
                 break
             elif insn.canBeHi():
                 register_values[insn.rt.value] = insn.getProcessedImmediate() << 16
+                completed_pair[insn.rt.value] = False
             elif insn.canBeLo():
                 if insn.isLikelyHandwritten():
                     # Try to skip these instructions:
                     # addi        $t0, $t0, 0x8
                     # addi        $t1, $t1, -0x8
                     pass
-                elif insn.modifiesRt():
+                elif insn.modifiesRt() and not completed_pair[insn.rt.value]:
                     register_values[insn.rt.value] = (
                         register_values[insn.rs.value] + insn.getProcessedImmediate()
                     )
+                    completed_pair[insn.rt.value] = True
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
                         # Try to detect the zero-ing bss algorithm
                         # sw          $zero, 0x0($t0)
                         register_bss_address = insn.rs.value
             elif insn.isBranch():
-                # lui         $t1, 0x2
-                # addiu       $t1, $t1, -0x7220
-                # ...
-                # addi        $t1, $t1, -0x8
-                # ...
-                # bnez        $t1, label
-                register_bss_size = insn.rs.value
+                if insn.uniqueId == rabbitizer.InstrId.cpu_beq:
+                    traditional_entrypoint = False
+                    decrementing_bss_routine = False
+                    if register_values[insn.rs.value] == register_values[insn.rt.value]:
+                        # Some non-traditional entrypoints have what seems to
+                        # be a second bss-clearing routine, but for some reason
+                        # both the start and end addresses are the same.
+                        # This is speculated to be code to handle sbss (kinda
+                        # plausible since those entrypoints also initialize the
+                        # $gp register).
+                        #
+                        # lui        $t0, %hi(A)
+                        # addiu      $t0, $t0, %lo(A)
+                        # lui        $t1, %hi(B)
+                        # addiu      $t1, $t1, %lo(B)
+                        # beq        $t0, $t1, label
+                        branch_target = insn.getBranchOffset()
+                        size += branch_target
+                        vram += branch_target
+                        i += branch_target // 4
+                        continue
+                elif insn.uniqueId == rabbitizer.InstrId.cpu_bnez:
+                    # Traditional entrypoints set the bss size into a register
+                    # and loop through it by decrementing it, with a pattern
+                    # like the following:
+                    #
+                    # lui         $t1, %hi(BSS_SIZE)
+                    # addiu       $t1, $t1, %lo(BSS_SIZE)
+                    # ...
+                    # addi        $t1, $t1, -0x8
+                    # ...
+                    # bnez        $t1, label
+                    register_bss_size = insn.rs.value
 
             elif insn.isJumptableJump() or insn.isReturn():
                 # lui         $t2, 0x8000
@@ -145,6 +179,22 @@ class N64EntrypointInfo:
                 # ...
                 # jr          $t2
                 register_main_address = insn.rs.value
+
+            elif insn.uniqueId == rabbitizer.InstrId.cpu_sltu:
+                # Some non-traditional entrypoints clear bss by loading the
+                # bss start and looping though it until reaches the address
+                # of the bss end instead of looping by using the bss size
+                # explicitly.
+                #
+                # .clear_bss:
+                # addiu      $t0, $t0, 0x4
+                # sltu       $at, $t0, $t1
+                # bnez       $at, .clear_bss
+                #  sw        $zero, -0x4($t0)
+                if bss_address is None and bss_size is None:
+                    bss_address = register_values[insn.rs.value]
+                    bss_end_address = register_values[insn.rt.value]
+                    bss_size = bss_end_address - bss_address
 
             # Traditional entrypoints don't touch the $gp register.
             if insn.modifiesRd() and insn.rd == rabbitizer.RegGprO32.gp:
@@ -172,16 +222,17 @@ class N64EntrypointInfo:
         # for i, val in enumerate(register_values):
         #     print(i, f"{val:08X}")
 
-        bss_address = (
-            register_values[register_bss_address]
-            if register_bss_address is not None
-            else None
-        )
-        bss_size = (
-            register_values[register_bss_size]
-            if register_bss_size is not None
-            else None
-        )
+        if decrementing_bss_routine:
+            bss_address = (
+                register_values[register_bss_address]
+                if register_bss_address is not None
+                else None
+            )
+            bss_size = (
+                register_values[register_bss_size]
+                if register_bss_size is not None
+                else None
+            )
         main_address = (
             register_values[register_main_address]
             if register_main_address is not None

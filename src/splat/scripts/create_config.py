@@ -117,10 +117,11 @@ segments:
       - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data] # TODO: splat failed to determine if there's any actual functions here. Human intervention is required.
 """
 
+    main_rom_start = 0x1000 + rom.entrypoint_info.segment_size()
     segments += f"""
   - name: main
     type: code
-    start: 0x{0x1000 + rom.entrypoint_info.segment_size():X}
+    start: 0x{main_rom_start:X}
     vram: 0x{rom.entry_point + rom.entrypoint_info.segment_size():X}
     follows_vram: entry
 """
@@ -132,27 +133,33 @@ segments:
 
     segments += f"""\
     subsegments:
-      - [0x{0x1000 + rom.entrypoint_info.segment_size():X}, asm]
+      - [0x{main_rom_start:X}, asm]
 """
 
     if (
         rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_size > 0
         and rom.entrypoint_info.bss_start_address is not None
+        and first_section_end > main_rom_start
     ):
         bss_start = rom.entrypoint_info.bss_start_address - rom.entry_point + 0x1000
         # first_section_end points to the start of data
         segments += f"""\
       - [0x{first_section_end:X}, data]
-      - {{ start: 0x{bss_start:X}, type: bss, vram: 0x{rom.entrypoint_info.bss_start_address:08X} }}
+      - {{ type: bss, vram: 0x{rom.entrypoint_info.bss_start_address:08X} }}
 """
         # Point next segment to the detected end of the main one
         first_section_end = bss_start
 
-    segments += f"""\
+    if first_section_end > main_rom_start:
+      segments += f"""\
 
   - type: bin
     start: 0x{first_section_end:X}
     follows_vram: main
+"""
+
+    segments += f"""\
+
   - [0x{rom.size:X}]
 """
 
