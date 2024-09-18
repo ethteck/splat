@@ -120,7 +120,8 @@ segments:
 """
 
     main_rom_start = 0x1000 + rom.entrypoint_info.segment_size()
-    segments += f"""
+    segments += f"""\
+
   - name: main
     type: code
     start: 0x{main_rom_start:X}

@@ -106,7 +106,6 @@ class N64EntrypointInfo:
         data_size = 0
         func_call_target: Optional[int] = None
 
-        prev_insn = rabbitizer.Instruction(0, vram - 4)
         size = 0
         i = 0
         while i < len(word_list):
@@ -178,6 +177,20 @@ class N64EntrypointInfo:
                     bss_end_address = register_values[insn.rt.value]
                     bss_size = bss_end_address - bss_address
 
+            elif insn.isFunctionCall():
+                # Some games don't follow the usual pattern for entrypoints.
+                # Those usually use `jal` instead of `jr` to jump out of the
+                # entrypoint to actual code.
+                traditional_entrypoint = False
+                func_call_target = insn.getInstrIndexAsVram()
+
+            elif insn.uniqueId == rabbitizer.InstrId.cpu_break:
+                traditional_entrypoint = False
+                size += 4
+                vram += 4
+                i += 1
+                break
+
             # Traditional entrypoints don't touch the $gp register.
             if insn.modifiesRd() and insn.rd == rabbitizer.RegGprO32.gp:
                 traditional_entrypoint = False
@@ -190,16 +203,6 @@ class N64EntrypointInfo:
             size += 4
             vram += 4
             i += 1
-
-            if prev_insn.isFunctionCall():
-                # Some games don't follow the usual pattern for entrypoints.
-                # Those usually use `jal` instead of `jr` to jump out of the
-                # entrypoint to actual code.
-                traditional_entrypoint = False
-                func_call_target = prev_insn.getInstrIndexAsVram()
-                break
-
-            prev_insn = insn
 
         # for i, val in enumerate(register_values):
         #     if val != 0:
@@ -224,14 +227,6 @@ class N64EntrypointInfo:
         stack_top = register_values[rabbitizer.RegGprO32.sp.value]
 
         if not traditional_entrypoint:
-            while size % 0x10 != 0:
-                # Weird entrypoints have weird boundaries that may not be
-                # aligned to 0x10, so we try to align them manually to avoid
-                # silly issues.
-                size += 4
-                vram += 4
-                i += 1
-
             if func_call_target is not None:
                 main_address = func_call_target
                 if func_call_target > vram:
@@ -241,7 +236,7 @@ class N64EntrypointInfo:
                     # everything in between as "entrypoint data".
 
                     code_start = find_code_after_data(rom_bytes, offset + i * 4, vram)
-                    if code_start is not None:
+                    if code_start is not None and code_start > offset + size:
                         data_size = code_start - (offset + size)
 
         return N64EntrypointInfo(
