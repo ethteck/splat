@@ -88,7 +88,12 @@ options:
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 """
 
+    # Start analysing after the entrypoint segment.
     first_section_end = find_code_length.run(rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point)
+
+    extra_message = ""
+    if not rom.entrypoint_info.traditional_entrypoint:
+        extra_message = " # This game uses a non-traditional entrypoint, meaning splat's analysis may be wrong"
 
     segments = f"""\
 segments:
@@ -100,7 +105,7 @@ segments:
     type: bin
     start: 0x40
 
-  - name: entry
+  - name: entry{extra_message}
     type: code
     start: 0x1000
     vram: 0x{rom.entry_point:X}

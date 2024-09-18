@@ -72,12 +72,12 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 @dataclass
 class N64EntrypointInfo:
     entry_size: int
+    data_size: int
     bss_start_address: Optional[int]
     bss_size: Optional[int]
     main_address: Optional[int]
     stack_top: int
     traditional_entrypoint: bool
-    data_size: int
 
     def segment_size(self) -> int:
         return self.entry_size + self.data_size
@@ -146,6 +146,14 @@ class N64EntrypointInfo:
                 # jr          $t2
                 register_main_address = insn.rs.value
 
+            # Traditional entrypoints don't touch the $gp register.
+            if insn.modifiesRd() and insn.rd == rabbitizer.RegGprO32.gp:
+                traditional_entrypoint = False
+            if insn.modifiesRs() and insn.rs == rabbitizer.RegGprO32.gp:
+                traditional_entrypoint = False
+            if insn.modifiesRt() and insn.rt == rabbitizer.RegGprO32.gp:
+                traditional_entrypoint = False
+
             # print(f"{word:08X}", insn)
             size += 4
             vram += 4
@@ -163,6 +171,23 @@ class N64EntrypointInfo:
 
         # for i, val in enumerate(register_values):
         #     print(i, f"{val:08X}")
+
+        bss_address = (
+            register_values[register_bss_address]
+            if register_bss_address is not None
+            else None
+        )
+        bss_size = (
+            register_values[register_bss_size]
+            if register_bss_size is not None
+            else None
+        )
+        main_address = (
+            register_values[register_main_address]
+            if register_main_address is not None
+            else None
+        )
+        stack_top = register_values[rabbitizer.RegGprO32.sp.value]
 
         if not traditional_entrypoint:
             while size % 0x10 != 0:
@@ -187,24 +212,9 @@ class N64EntrypointInfo:
                     )
                     if any(not rabbitizer.Instruction(word).isValid() for word in word_list2):
                         data_size = func_call_target - vram
+                main_address = func_call_target
 
-        bss_address = (
-            register_values[register_bss_address]
-            if register_bss_address is not None
-            else None
-        )
-        bss_size = (
-            register_values[register_bss_size]
-            if register_bss_size is not None
-            else None
-        )
-        main_address = (
-            register_values[register_main_address]
-            if register_main_address is not None
-            else None
-        )
-        stack_top = register_values[rabbitizer.RegGprO32.sp.value]
-        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint, data_size)
+        return N64EntrypointInfo(size, data_size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint)
 
 
 @dataclass
