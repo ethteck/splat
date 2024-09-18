@@ -77,10 +77,14 @@ class N64EntrypointInfo:
     main_address: Optional[int]
     stack_top: int
     traditional_entrypoint: bool
+    data_size: int
+
+    def segment_size(self) -> int:
+        return self.entry_size + self.data_size
 
     @staticmethod
     def parse_rom_bytes(
-        rom_bytes, offset: int = 0x1000, size: int = 0x60
+        rom_bytes, vram: int, offset: int = 0x1000, size: int = 0x60
     ) -> "N64EntrypointInfo":
         word_list = spimdisasm.common.Utils.bytesToWords(
             rom_bytes, offset, offset + size
@@ -94,12 +98,14 @@ class N64EntrypointInfo:
         register_main_address: Optional[int] = None
 
         traditional_entrypoint = True
+        data_size = 0
+        func_call_target: Optional[int] = None
 
-        prev_insn = rabbitizer.Instruction(0)
+        prev_insn = rabbitizer.Instruction(0, vram-4)
         size = 0
+        i = 0
         for word in word_list:
-            insn = rabbitizer.Instruction(word)
-            print(insn)
+            insn = rabbitizer.Instruction(word, vram)
             if not insn.isValid():
                 break
 
@@ -142,18 +148,45 @@ class N64EntrypointInfo:
 
             # print(f"{word:08X}", insn)
             size += 4
+            vram += 4
+            i += 1
 
             if prev_insn.isFunctionCall():
                 # Some games don't follow the usual pattern for entrypoints.
                 # Those usually use `jal` instead of `jr` to jump out of the
                 # entrypoint to actual code.
                 traditional_entrypoint = False
+                func_call_target = prev_insn.getInstrIndexAsVram()
                 break
 
             prev_insn = insn
 
         # for i, val in enumerate(register_values):
         #     print(i, f"{val:08X}")
+
+        if not traditional_entrypoint:
+            while size % 0x10 != 0:
+                # Weird entrypoints have weird boundaries that may not be
+                # aligned to 0x10, so we try to align them manually to avoid
+                # silly issues.
+                size += 4
+                vram += 4
+                i += 4
+
+            if func_call_target is not None:
+                if func_call_target > vram:
+                    # Some weird-entrypoint games have non-code between the
+                    # entrypoint and the actual user code.
+                    # So we check if there are valid instructions in this range,
+                    # if any of them are not valid then we give up and tag this
+                    # as data since we want to keep this entrypoint analisys
+                    # simple-ish.
+
+                    word_list2 = spimdisasm.common.Utils.bytesToWords(
+                        rom_bytes, offset + i, offset + i + (func_call_target - vram)
+                    )
+                    if any(not rabbitizer.Instruction(word).isValid() for word in word_list2):
+                        data_size = func_call_target - vram
 
         bss_address = (
             register_values[register_bss_address]
@@ -171,7 +204,7 @@ class N64EntrypointInfo:
             else None
         )
         stack_top = register_values[rabbitizer.RegGprO32.sp.value]
-        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint)
+        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint, data_size)
 
 
 @dataclass
@@ -272,7 +305,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes, size=0x100)
+    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes, entry_point, size=0x100)
 
     return N64Rom(
         name,

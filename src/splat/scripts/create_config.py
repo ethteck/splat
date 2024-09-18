@@ -88,7 +88,7 @@ options:
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 """
 
-    first_section_end = find_code_length.run(rom_bytes, 0x1000 + rom.entrypoint_info.entry_size, rom.entry_point)
+    first_section_end = find_code_length.run(rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point)
 
     segments = f"""\
 segments:
@@ -106,26 +106,32 @@ segments:
     vram: 0x{rom.entry_point:X}
     subsegments:
       - [0x1000, hasm]
+"""
+    if rom.entrypoint_info.data_size > 0:
+      segments += f"""\
+      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data] # TODO: splat failed to determine if there's any actual functions here. Human intervention is required.
+"""
 
+    segments += f"""
   - name: main
     type: code
-    start: 0x{0x1000 + rom.entrypoint_info.entry_size:X}
-    vram: 0x{rom.entry_point + rom.entrypoint_info.entry_size:X}
+    start: 0x{0x1000 + rom.entrypoint_info.segment_size():X}
+    vram: 0x{rom.entry_point + rom.entrypoint_info.segment_size():X}
     follows_vram: entry
 """
 
-    if rom.entrypoint_info.bss_size is not None:
+    if rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_size > 0:
         segments += f"""\
     bss_size: 0x{rom.entrypoint_info.bss_size:X}
 """
 
     segments += f"""\
     subsegments:
-      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, asm]
+      - [0x{0x1000 + rom.entrypoint_info.segment_size():X}, asm]
 """
 
     if (
-        rom.entrypoint_info.bss_size is not None
+        rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_size > 0
         and rom.entrypoint_info.bss_start_address is not None
     ):
         bss_start = rom.entrypoint_info.bss_start_address - rom.entry_point + 0x1000
