@@ -106,7 +106,7 @@ class N64EntrypointInfo:
         data_size = 0
         func_call_target: Optional[int] = None
 
-        prev_insn = rabbitizer.Instruction(0, vram-4)
+        prev_insn = rabbitizer.Instruction(0, vram - 4)
         size = 0
         i = 0
         while i < len(word_list):
@@ -240,14 +240,24 @@ class N64EntrypointInfo:
                     # We try to find where actual code may begin, and tag
                     # everything in between as "entrypoint data".
 
-                    code_start = find_code_after_data(rom_bytes, offset + i*4, vram)
+                    code_start = find_code_after_data(rom_bytes, offset + i * 4, vram)
                     if code_start is not None:
                         data_size = code_start - (offset + size)
 
-        return N64EntrypointInfo(size, data_size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint)
+        return N64EntrypointInfo(
+            size,
+            data_size,
+            bss_address,
+            bss_size,
+            main_address,
+            stack_top,
+            traditional_entrypoint,
+        )
 
 
-def find_code_after_data(rom_bytes: bytes, offset: int, vram: int, threshold: int=0x18000) -> Optional[int]:
+def find_code_after_data(
+    rom_bytes: bytes, offset: int, vram: int, threshold: int = 0x18000
+) -> Optional[int]:
     code_offset: Optional[int] = None
 
     # We loop through every word until we find a valid `jr $ra` instruction and
@@ -257,17 +267,15 @@ def find_code_after_data(rom_bytes: bytes, offset: int, vram: int, threshold: in
 
     jr_ra_found = False
     while offset < len(rom_bytes) // 4 and offset < threshold:
-        word = spimdisasm.common.Utils.bytesToWords(
-            rom_bytes, offset, offset + 4
-        )[0]
+        word = spimdisasm.common.Utils.bytesToWords(rom_bytes, offset, offset + 4)[0]
         insn = rabbitizer.Instruction(word, vram)
 
         if insn.isValid() and insn.isReturn():
             # Check the instruction on the delay slot of the `jr $ra` is valid too.
             next_word = spimdisasm.common.Utils.bytesToWords(
-                rom_bytes, offset+4, offset + 4+4
+                rom_bytes, offset + 4, offset + 4 + 4
             )[0]
-            if rabbitizer.Instruction(next_word, vram+4).isValid():
+            if rabbitizer.Instruction(next_word, vram + 4).isValid():
                 jr_ra_found = True
                 break
 
@@ -281,9 +289,9 @@ def find_code_after_data(rom_bytes: bytes, offset: int, vram: int, threshold: in
         offset -= 4
 
         while offset >= 0:
-            word = spimdisasm.common.Utils.bytesToWords(
-                rom_bytes, offset, offset + 4
-            )[0]
+            word = spimdisasm.common.Utils.bytesToWords(rom_bytes, offset, offset + 4)[
+                0
+            ]
             insn = rabbitizer.Instruction(word, vram)
 
             if not insn.isValid():
@@ -397,7 +405,9 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes, entry_point, size=0x100)
+    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(
+        rom_bytes, entry_point, size=0x100
+    )
 
     return N64Rom(
         name,

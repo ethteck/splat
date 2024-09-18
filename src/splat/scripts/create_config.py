@@ -89,7 +89,9 @@ options:
 """
 
     # Start analysing after the entrypoint segment.
-    first_section_end = find_code_length.run(rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point)
+    first_section_end = find_code_length.run(
+        rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point
+    )
 
     extra_message = ""
     if not rom.entrypoint_info.traditional_entrypoint:
@@ -113,7 +115,7 @@ segments:
       - [0x1000, hasm]
 """
     if rom.entrypoint_info.data_size > 0:
-      segments += f"""\
+        segments += f"""\
       - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data]
 """
 
@@ -151,7 +153,7 @@ segments:
         first_section_end = bss_start
 
     if first_section_end > main_rom_start:
-      segments += f"""\
+        segments += f"""\
 
   - type: bin
     start: 0x{first_section_end:X}
