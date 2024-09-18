@@ -88,7 +88,14 @@ options:
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 """
 
-    first_section_end = find_code_length.run(rom_bytes, 0x1000, rom.entry_point)
+    # Start analysing after the entrypoint segment.
+    first_section_end = find_code_length.run(
+        rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point
+    )
+
+    extra_message = ""
+    if not rom.entrypoint_info.traditional_entrypoint:
+        extra_message = " # This game uses a non-traditional entrypoint, meaning splat's analysis may be wrong"
 
     segments = f"""\
 segments:
@@ -100,17 +107,25 @@ segments:
     type: bin
     start: 0x40
 
-  - name: entry
+  - name: entry{extra_message}
     type: code
     start: 0x1000
     vram: 0x{rom.entry_point:X}
     subsegments:
       - [0x1000, hasm]
+"""
+    if rom.entrypoint_info.data_size > 0:
+        segments += f"""\
+      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data]
+"""
+
+    main_rom_start = 0x1000 + rom.entrypoint_info.segment_size()
+    segments += f"""\
 
   - name: main
     type: code
-    start: 0x{0x1000 + rom.entrypoint_info.entry_size:X}
-    vram: 0x{rom.entry_point + rom.entrypoint_info.entry_size:X}
+    start: 0x{main_rom_start:X}
+    vram: 0x{rom.entry_point + rom.entrypoint_info.segment_size():X}
     follows_vram: entry
 """
 
@@ -121,27 +136,33 @@ segments:
 
     segments += f"""\
     subsegments:
-      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, asm]
+      - [0x{main_rom_start:X}, asm]
 """
 
     if (
         rom.entrypoint_info.bss_size is not None
         and rom.entrypoint_info.bss_start_address is not None
+        and first_section_end > main_rom_start
     ):
         bss_start = rom.entrypoint_info.bss_start_address - rom.entry_point + 0x1000
         # first_section_end points to the start of data
         segments += f"""\
       - [0x{first_section_end:X}, data]
-      - {{ start: 0x{bss_start:X}, type: bss, vram: 0x{rom.entrypoint_info.bss_start_address:08X} }}
+      - {{ type: bss, vram: 0x{rom.entrypoint_info.bss_start_address:08X} }}
 """
         # Point next segment to the detected end of the main one
         first_section_end = bss_start
 
-    segments += f"""\
+    if first_section_end > main_rom_start:
+        segments += f"""\
 
   - type: bin
     start: 0x{first_section_end:X}
     follows_vram: main
+"""
+
+    segments += f"""\
+
   - [0x{rom.size:X}]
 """
 
