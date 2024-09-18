@@ -88,7 +88,7 @@ options:
   # gfx_ucode: # one of [f3d, f3db, f3dex, f3dexb, f3dex2]
 """
 
-    first_section_end = find_code_length.run(rom_bytes, 0x1000, rom.entry_point)
+    first_section_end = find_code_length.run(rom_bytes, 0x1000 + rom.entrypoint_info.entry_size, rom.entry_point)
 
     segments = f"""\
 segments:

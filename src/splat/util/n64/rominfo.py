@@ -76,6 +76,7 @@ class N64EntrypointInfo:
     bss_size: Optional[int]
     main_address: Optional[int]
     stack_top: int
+    traditional_entrypoint: bool
 
     @staticmethod
     def parse_rom_bytes(
@@ -92,10 +93,14 @@ class N64EntrypointInfo:
         register_bss_size: Optional[int] = None
         register_main_address: Optional[int] = None
 
+        traditional_entrypoint = True
+
+        prev_insn = rabbitizer.Instruction(0)
         size = 0
         for word in word_list:
             insn = rabbitizer.Instruction(word)
-            if not insn.isImplemented():
+            print(insn)
+            if not insn.isValid():
                 break
 
             if insn.isNop():
@@ -138,6 +143,15 @@ class N64EntrypointInfo:
             # print(f"{word:08X}", insn)
             size += 4
 
+            if prev_insn.isFunctionCall():
+                # Some games don't follow the usual pattern for entrypoints.
+                # Those usually use `jal` instead of `jr` to jump out of the
+                # entrypoint to actual code.
+                traditional_entrypoint = False
+                break
+
+            prev_insn = insn
+
         # for i, val in enumerate(register_values):
         #     print(i, f"{val:08X}")
 
@@ -157,7 +171,7 @@ class N64EntrypointInfo:
             else None
         )
         stack_top = register_values[rabbitizer.RegGprO32.sp.value]
-        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top)
+        return N64EntrypointInfo(size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint)
 
 
 @dataclass
@@ -258,7 +272,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
-    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes)
+    entrypoint_info = N64EntrypointInfo.parse_rom_bytes(rom_bytes, size=0x100)
 
     return N64Rom(
         name,
