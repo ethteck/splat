@@ -142,24 +142,6 @@ class N64EntrypointInfo:
                 if insn.uniqueId == rabbitizer.InstrId.cpu_beq:
                     traditional_entrypoint = False
                     decrementing_bss_routine = False
-                    if register_values[insn.rs.value] == register_values[insn.rt.value]:
-                        # Some non-traditional entrypoints have what seems to
-                        # be a second bss-clearing routine, but for some reason
-                        # both the start and end addresses are the same.
-                        # This is speculated to be code to handle sbss (kinda
-                        # plausible since those entrypoints also initialize the
-                        # $gp register).
-                        #
-                        # lui        $t0, %hi(A)
-                        # addiu      $t0, $t0, %lo(A)
-                        # lui        $t1, %hi(B)
-                        # addiu      $t1, $t1, %lo(B)
-                        # beq        $t0, $t1, label
-                        branch_target = insn.getBranchOffset()
-                        size += branch_target
-                        vram += branch_target
-                        i += branch_target // 4
-                        continue
                 elif insn.uniqueId == rabbitizer.InstrId.cpu_bnez:
                     # Traditional entrypoints set the bss size into a register
                     # and loop through it by decrementing it, with a pattern
@@ -220,7 +202,8 @@ class N64EntrypointInfo:
             prev_insn = insn
 
         # for i, val in enumerate(register_values):
-        #     print(i, f"{val:08X}")
+        #     if val != 0:
+        #         print(i, f"{val:08X}")
 
         if decrementing_bss_routine:
             bss_address = (
@@ -247,25 +230,73 @@ class N64EntrypointInfo:
                 # silly issues.
                 size += 4
                 vram += 4
-                i += 4
+                i += 1
 
             if func_call_target is not None:
+                main_address = func_call_target
                 if func_call_target > vram:
                     # Some weird-entrypoint games have non-code between the
                     # entrypoint and the actual user code.
-                    # So we check if there are valid instructions in this range,
-                    # if any of them are not valid then we give up and tag this
-                    # as data since we want to keep this entrypoint analisys
-                    # simple-ish.
+                    # We try to find where actual code may begin, and tag
+                    # everything in between as "entrypoint data".
 
-                    word_list2 = spimdisasm.common.Utils.bytesToWords(
-                        rom_bytes, offset + i, offset + i + (func_call_target - vram)
-                    )
-                    if any(not rabbitizer.Instruction(word).isValid() for word in word_list2):
-                        data_size = func_call_target - vram
-                main_address = func_call_target
+                    code_start = find_code_after_data(rom_bytes, offset + i*4, vram)
+                    if code_start is not None:
+                        data_size = code_start - (offset + size)
 
         return N64EntrypointInfo(size, data_size, bss_address, bss_size, main_address, stack_top, traditional_entrypoint)
+
+
+def find_code_after_data(rom_bytes: bytes, offset: int, vram: int, threshold: int=0x18000) -> Optional[int]:
+    code_offset: Optional[int] = None
+
+    # We loop through every word until we find a valid `jr $ra` instruction and
+    # hope for it to be part of valid code.
+    # Once we find it, we loop back until we find anything that is invalid
+    # again to try to find the start of this function.
+
+    jr_ra_found = False
+    while offset < len(rom_bytes) // 4 and offset < threshold:
+        word = spimdisasm.common.Utils.bytesToWords(
+            rom_bytes, offset, offset + 4
+        )[0]
+        insn = rabbitizer.Instruction(word, vram)
+
+        if insn.isValid() and insn.isReturn():
+            # Check the instruction on the delay slot of the `jr $ra` is valid too.
+            next_word = spimdisasm.common.Utils.bytesToWords(
+                rom_bytes, offset+4, offset + 4+4
+            )[0]
+            if rabbitizer.Instruction(next_word, vram+4).isValid():
+                jr_ra_found = True
+                break
+
+        vram += 4
+        offset += 4
+
+    if jr_ra_found:
+        code_offset = offset
+
+        vram -= 4
+        offset -= 4
+
+        while offset >= 0:
+            word = spimdisasm.common.Utils.bytesToWords(
+                rom_bytes, offset, offset + 4
+            )[0]
+            insn = rabbitizer.Instruction(word, vram)
+
+            if not insn.isValid():
+                # Garbage instructions, stop
+                break
+
+            if not insn.isNop():
+                # Ignore `nop`s as the code start since they may be file padding.
+                code_offset = offset
+
+            vram -= 4
+            offset -= 4
+    return code_offset
 
 
 @dataclass

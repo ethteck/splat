@@ -114,7 +114,7 @@ segments:
 """
     if rom.entrypoint_info.data_size > 0:
       segments += f"""\
-      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data] # TODO: splat failed to determine if there's any actual functions here. Human intervention is required.
+      - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data]
 """
 
     main_rom_start = 0x1000 + rom.entrypoint_info.segment_size()
@@ -126,7 +126,7 @@ segments:
     follows_vram: entry
 """
 
-    if rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_size > 0:
+    if rom.entrypoint_info.bss_size is not None:
         segments += f"""\
     bss_size: 0x{rom.entrypoint_info.bss_size:X}
 """
@@ -137,7 +137,7 @@ segments:
 """
 
     if (
-        rom.entrypoint_info.bss_size is not None and rom.entrypoint_info.bss_size > 0
+        rom.entrypoint_info.bss_size is not None
         and rom.entrypoint_info.bss_start_address is not None
         and first_section_end > main_rom_start
     ):
