@@ -472,7 +472,7 @@ def _parse_yaml(
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
         ld_generate_symbol_per_data_segment=p.parse_opt(
-            "ld_generate_symbol_per_data_segment", bool, True
+            "ld_generate_symbol_per_data_segment", bool, False
         ),
         ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
         create_c_files=p.parse_opt("create_c_files", bool, True),
