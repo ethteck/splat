@@ -400,7 +400,7 @@ def _parse_yaml(
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
-        gp=p.parse_opt("gp_value", int, 0),
+        gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
             "check_consecutive_segment_types", bool, True
         ),
@@ -472,7 +472,7 @@ def _parse_yaml(
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
         ld_generate_symbol_per_data_segment=p.parse_opt(
-            "ld_generate_symbol_per_data_segment", bool, True
+            "ld_generate_symbol_per_data_segment", bool, False
         ),
         ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
         create_c_files=p.parse_opt("create_c_files", bool, True),

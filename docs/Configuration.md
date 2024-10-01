@@ -494,7 +494,7 @@ Defaults to `True`.
 
 If enabled, the generated linker script will have a linker symbol for each data file.
 
-Defaults to `True`.
+Defaults to `False`.
 
 ### ld_bss_contains_common
 

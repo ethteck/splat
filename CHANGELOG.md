@@ -1,6 +1,11 @@
 # splat Release Notes
 
+### 0.27.3
+
+* Change the default value for `ld_generate_symbol_per_data_segment`. It defaults to `False` now.
+
 ### 0.27.2
+
 * Added new global option `emit_subalign`. If disabled, subalign directives will not be emitted in the generated linker script. Enabled by default (no change in default behavior).
 
 ### 0.27.1
