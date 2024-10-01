@@ -400,7 +400,7 @@ def _parse_yaml(
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
-        gp=p.parse_opt("gp_value", int, 0),
+        gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
             "check_consecutive_segment_types", bool, True
         ),

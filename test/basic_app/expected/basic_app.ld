@@ -1,14 +1,12 @@
 SECTIONS
 {
     __romPos = 0;
-    _gp = 0x0;
     header_ROM_START = __romPos;
     header_VRAM = ADDR(.header);
     .header : AT(header_ROM_START) SUBALIGN(16)
     {
         FILL(0x00000000);
         header_DATA_START = .;
-        header = .;
         build/split/asm/header.o(.data);
         header_DATA_END = .;
         header_DATA_SIZE = ABSOLUTE(header_DATA_END - header_DATA_START);
@@ -23,7 +21,6 @@ SECTIONS
     {
         FILL(0x00000000);
         dummy_ipl3_DATA_START = .;
-        dummy_ipl3 = .;
         build/split/assets/dummy_ipl3.o(.data);
         . = ALIGN(., 16);
         dummy_ipl3_DATA_END = .;
@@ -47,9 +44,7 @@ SECTIONS
         boot_TEXT_END = .;
         boot_TEXT_SIZE = ABSOLUTE(boot_TEXT_END - boot_TEXT_START);
         boot_DATA_START = .;
-        main_data = .;
         build/split/asm/data/main.data.o(.data);
-        handwritten = .;
         build/split/asm/handwritten.o(.data);
         . = ALIGN(., 16);
         boot_DATA_END = .;
