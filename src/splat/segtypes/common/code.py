@@ -262,12 +262,8 @@ class CommonSegCode(CommonSegGroup):
 
             if sibling is not None:
                 # Make siblings reference between them
-                segment.siblings[sibling.get_linker_section_linksection()] = (
-                    sibling
-                )
-                sibling.siblings[segment.get_linker_section_linksection()] = (
-                    segment
-                )
+                segment.siblings[sibling.get_linker_section_linksection()] = sibling
+                sibling.siblings[segment.get_linker_section_linksection()] = segment
 
         ret = self._insert_all_auto_sections(ret, base_segments, readonly_before)
 
