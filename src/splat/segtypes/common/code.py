@@ -256,7 +256,7 @@ class CommonSegCode(CommonSegGroup):
         # otherwise we may miss segments that are placed before any text segment
         for segment in ret:
             sibling = base_segments.get(segment.name, None)
-            if sibling == segment.sibling:
+            if sibling == segment:
                 sibling = None
             segment.sibling = sibling
 
