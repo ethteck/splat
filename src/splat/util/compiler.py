@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 
 
 @dataclass
@@ -54,11 +54,20 @@ PSYQ = Compiler("PSYQ")
 MWCCPS2 = Compiler("MWCCPS2")
 EEGCC = Compiler("EEGCC")
 
-compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO, "EEGCC": EEGCC}
+compiler_for_name: Dict[str, Compiler] = {
+    x.name: x for x in [
+        GCC,
+        SN64,
+        IDO,
+        KMC,
+        EGCS,
+        PSYQ,
+        MWCCPS2,
+        EEGCC,
+    ]
+}
 
 
 def for_name(name: str) -> Compiler:
     name = name.upper()
-    if name in compiler_for_name:
-        return compiler_for_name[name]
-    return Compiler(name)
+    return compiler_for_name.get(name, Compiler(name))

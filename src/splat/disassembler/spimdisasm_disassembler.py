@@ -59,7 +59,8 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         selected_compiler = options.opts.compiler
         spimdisasm_compiler = spimdisasm.common.Compiler.fromStr(selected_compiler.name)
         if spimdisasm_compiler is None:
-            log.error(f"Unsupported selected compiler for spimdisasm: {selected_compiler.name}")
+            log.write(f"Unsupported selected compiler for spimdisasm: {selected_compiler.name}", status="error")
+            log.error(f"The following options are supported: {list(spimdisasm.common.compilerOptions.keys())}")
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm_compiler
         if selected_compiler == compiler.SN64:
             rabbitizer.config.regNames_namedRegisters = False

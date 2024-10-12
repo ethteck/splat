@@ -434,7 +434,7 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
         elif insn.uniqueId == rabbitizer.InstrId.cpu_b:
             branches += 1
 
-    compiler = "IDO" if branches > jumps else "GCC"
+    compiler = "IDO" if branches > jumps else "KMC"
     if print_result:
         print(
             f"{branches} branches and {jumps} jumps detected in the first code segment."
