@@ -55,7 +55,8 @@ MWCCPS2 = Compiler("MWCCPS2")
 EEGCC = Compiler("EEGCC")
 
 compiler_for_name: Dict[str, Compiler] = {
-    x.name: x for x in [
+    x.name: x
+    for x in [
         GCC,
         SN64,
         IDO,

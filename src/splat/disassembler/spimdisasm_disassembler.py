@@ -59,8 +59,13 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         selected_compiler = options.opts.compiler
         spimdisasm_compiler = spimdisasm.common.Compiler.fromStr(selected_compiler.name)
         if spimdisasm_compiler is None:
-            log.write(f"Unsupported selected compiler for spimdisasm: {selected_compiler.name}", status="error")
-            log.error(f"The following options are supported: {list(spimdisasm.common.compilerOptions.keys())}")
+            log.write(
+                f"Unsupported selected compiler for spimdisasm: {selected_compiler.name}",
+                status="error",
+            )
+            log.error(
+                f"The following options are supported: {list(spimdisasm.common.compilerOptions.keys())}"
+            )
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm_compiler
         if selected_compiler == compiler.SN64:
             rabbitizer.config.regNames_namedRegisters = False
@@ -69,7 +74,9 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = (
                 False
             )
-        rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = selected_compiler.j_as_branch
+        rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = (
+            selected_compiler.j_as_branch
+        )
 
         spimdisasm.common.GlobalConfig.DETECT_REDUNDANT_FUNCTION_END = (
             options.opts.detect_redundant_function_end
