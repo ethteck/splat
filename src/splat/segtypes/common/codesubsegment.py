@@ -162,9 +162,6 @@ class CommonSegCodeSubsegment(Segment):
         assert isinstance(self.rom_start, int)
 
         for in_file_offset in self.spim_section.get_section().fileBoundaries:
-            if (in_file_offset % 16) != 0:
-                continue
-
             if not self.parent.reported_file_split:
                 self.parent.reported_file_split = True
 

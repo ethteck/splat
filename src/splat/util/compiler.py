@@ -14,11 +14,13 @@ class Compiler:
     c_newline: str = "\n"
     asm_inc_header: str = ""
     asm_emit_size_directive: Optional[bool] = None
+    j_as_branch: bool = False
 
 
 GCC = Compiler(
     "GCC",
     asm_inc_header=".set noat      /* allow manual use of $at */\n.set noreorder /* don't insert nops after branches */\n\n",
+    j_as_branch=True,
 )
 
 SN64 = Compiler(
@@ -29,10 +31,27 @@ SN64 = Compiler(
     asm_end_label=".end",
     c_newline="\r\n",
     asm_emit_size_directive=False,
+    j_as_branch=True,
 )
 
 IDO = Compiler("IDO", asm_emit_size_directive=False)
 
+KMC = Compiler(
+    "KMC",
+    j_as_branch=True,
+)
+
+# iQue
+EGCS = Compiler(
+    "EGCS",
+    j_as_branch=True,
+)
+
+# PS1
+PSYQ = Compiler("PSYQ")
+
+# PS2
+MWCCPS2 = Compiler("MWCCPS2")
 EEGCC = Compiler("EEGCC")
 
 compiler_for_name = {"GCC": GCC, "SN64": SN64, "IDO": IDO, "EEGCC": EEGCC}
