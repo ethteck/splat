@@ -78,6 +78,7 @@ class CommonSegCode(CommonSegGroup):
         rep.given_dir = self.given_dir
         rep.given_symbol_name_format = self.symbol_name_format
         rep.given_symbol_name_format_no_rom = self.symbol_name_format_no_rom
+        assert rep != base_seg, rep
         rep.sibling = base_seg
         rep.parent = self
         rep.is_generated = True
@@ -254,16 +255,15 @@ class CommonSegCode(CommonSegGroup):
         # We need base_segments to be fully constructed before start assigning siblings to segments,
         # otherwise we may miss segments that are placed before any text segment
         for segment in ret:
-            segment.sibling = base_segments.get(segment.name, None)
+            sibling = base_segments.get(segment.name, None)
+            if sibling == segment:
+                sibling = None
+            segment.sibling = sibling
 
-            if segment.sibling is not None:
+            if sibling is not None:
                 # Make siblings reference between them
-                segment.siblings[segment.sibling.get_linker_section_linksection()] = (
-                    segment.sibling
-                )
-                segment.sibling.siblings[segment.get_linker_section_linksection()] = (
-                    segment
-                )
+                segment.siblings[sibling.get_linker_section_linksection()] = sibling
+                sibling.siblings[segment.get_linker_section_linksection()] = segment
 
         ret = self._insert_all_auto_sections(ret, base_segments, readonly_before)
 

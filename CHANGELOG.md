@@ -1,8 +1,12 @@
 # splat Release Notes
 
-### 0.27.3
+### 0.27.4
 
 * Change the default value for `ld_generate_symbol_per_data_segment`. It defaults to `False` now.
+
+### 0.27.3
+
+* Fix a possible infinite recursion due to a segment being its own sibling.
 
 ### 0.27.2
 
