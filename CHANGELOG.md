@@ -2,6 +2,7 @@
 
 ### 0.27.4
 
+* Change the default value for `ld_generate_symbol_per_data_segment`. It defaults to `False` now.
 * Improve `create_config` to avoid choking on SN64 games.
   * The results may not be completely accurate but should give a decent enough starting yaml.
 
