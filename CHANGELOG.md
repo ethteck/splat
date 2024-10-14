@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.27.4
+
+* Improve `create_config` to avoid choking on SN64 games.
+  * The results may not be completely accurate but should give a decent enough starting yaml.
+
 ### 0.27.3
 
 * Fix a possible infinite recursion due to a segment being its own sibling.
