@@ -1,10 +1,7 @@
 # splat Release Notes
 
-### 0.28.0
-* Minor version release for previous release's breaking change that should have had its own minor release (oopsh)
-
-### 0.27.4
-
+### 0.28.0 &
+* Minor version release for previous release's breaking change that should have had its own minor release (oopsh, yanked 0.27.4)
 * BREKAING: Change the default value for `ld_generate_symbol_per_data_segment`. It defaults to `False` now.
 * Improve `create_config` to avoid choking on SN64 games.
   * The results may not be completely accurate but should give a decent enough starting yaml.
@@ -56,7 +53,7 @@
 
 * Fixed the `subalign` segment property logic to be more straightforward
 * Updated required versions of rabbitizier, n64img, and crunch64
-* Removed `include_macro_inc` option, as it was never required and often detrimental
+* BREAKING: Removed `include_macro_inc` option, as it was never required and often detrimental
 
 ### 0.25.3
 
@@ -78,7 +75,7 @@
 
 ### 0.25.0
 
-* Changed the default value of `use_legacy_include_asm` to false
+* BREAKING: Changed the default value of `use_legacy_include_asm` to false
 
 ### 0.24.7
 
