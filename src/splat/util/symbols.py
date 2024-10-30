@@ -374,7 +374,9 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
             elif global_vrom_end < segment.rom_end:
                 global_vrom_end = segment.rom_end
 
-        else:
+        elif segment.vram_start != segment.vram_end:
+            # Do not tell to spimdisasm about zero-sized segments.
+
             spim_segment = spim_context.addOverlaySegment(
                 ram_id,
                 segment.rom_start,
