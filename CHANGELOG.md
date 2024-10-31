@@ -1,6 +1,13 @@
 # splat Release Notes
 
+### 0.28.1
+
+* Fix a crash when listing zero-sized segments on the yaml.
+  * It is discouraged to have zero sized segments on the yaml, but they may be needed on games that have a "segment address" table of any kind and shows the segments having a zero size.
+  * This allows to have segment symbols for those kind of segments without having to go through linker script hacks.
+
 ### 0.28.0
+
 * Minor version release for previous release's breaking change that should have had its own minor release (oopsh, yanked 0.27.4)
 * BREKAING: Change the default value for `ld_generate_symbol_per_data_segment`. It defaults to `False` now.
 * Improve `create_config` to avoid choking on SN64 games.
