@@ -140,7 +140,11 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             )
 
             # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)
-            if self.suggestion_rodata_section_start and not rodata_encountered and self.get_most_parent().rodata_follows_data:
+            if (
+                self.suggestion_rodata_section_start
+                and not rodata_encountered
+                and self.get_most_parent().rodata_follows_data
+            ):
                 if symbol.contextSym.isJumpTable():
                     rodata_encountered = True
                     print(

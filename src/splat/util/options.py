@@ -560,7 +560,9 @@ def _parse_yaml(
             "use_gp_rel_macro_nonmatching", bool, True
         ),
         use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
-        suggestion_rodata_section_start=p.parse_opt("suggestion_rodata_section_start", bool, True),
+        suggestion_rodata_section_start=p.parse_opt(
+            "suggestion_rodata_section_start", bool, True
+        ),
     )
     p.check_no_unread_opts()
     return ret

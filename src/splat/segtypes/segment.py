@@ -221,9 +221,13 @@ class Segment:
         return options.opts.ld_align_segment_start
 
     @staticmethod
-    def parse_suggestion_rodata_section_start(yaml: Union[dict, list]) -> Optional[bool]:
+    def parse_suggestion_rodata_section_start(
+        yaml: Union[dict, list]
+    ) -> Optional[bool]:
         if isinstance(yaml, dict):
-            suggestion_rodata_section_start = yaml.get("suggestion_rodata_section_start")
+            suggestion_rodata_section_start = yaml.get(
+                "suggestion_rodata_section_start"
+            )
             if suggestion_rodata_section_start is not None:
                 assert isinstance(suggestion_rodata_section_start, bool)
                 return suggestion_rodata_section_start
@@ -310,7 +314,9 @@ class Segment:
         # True if this segment was generated based on auto_link_sections
         self.is_generated: bool = False
 
-        self.given_suggestion_rodata_section_start: Optional[bool] = self.parse_suggestion_rodata_section_start(yaml)
+        self.given_suggestion_rodata_section_start: Optional[bool] = (
+            self.parse_suggestion_rodata_section_start(yaml)
+        )
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
