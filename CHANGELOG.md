@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.28.2
+
+* New global option and per-segment option: `suggestion_rodata_section_start`
+  * Allows to toggle the rodata section start suggestion that is emitted by inspecting the data section.
+
 ### 0.28.1
 
 * Fix a crash when listing zero-sized segments on the yaml.
