@@ -232,6 +232,8 @@ class SplatOpts:
     use_gp_rel_macro_nonmatching: bool
     # Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `asm` and `hasm` segments.
     use_gp_rel_macro: bool
+    # Allows emitting suggestions for where the rodata may start by examining the data section.
+    suggestion_rodata_section_start: bool
 
     ################################################################################
     # N64-specific options
@@ -558,6 +560,7 @@ def _parse_yaml(
             "use_gp_rel_macro_nonmatching", bool, True
         ),
         use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
+        suggestion_rodata_section_start=p.parse_opt("suggestion_rodata_section_start", bool, True),
     )
     p.check_no_unread_opts()
     return ret

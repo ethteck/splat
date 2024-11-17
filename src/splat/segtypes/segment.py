@@ -220,6 +220,15 @@ class Segment:
             return yaml["ld_align_segment_start"]
         return options.opts.ld_align_segment_start
 
+    @staticmethod
+    def parse_suggestion_rodata_section_start(yaml: Union[dict, list]) -> Optional[bool]:
+        if isinstance(yaml, dict):
+            suggestion_rodata_section_start = yaml.get("suggestion_rodata_section_start")
+            if suggestion_rodata_section_start is not None:
+                assert isinstance(suggestion_rodata_section_start, bool)
+                return suggestion_rodata_section_start
+        return None
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -300,6 +309,8 @@ class Segment:
 
         # True if this segment was generated based on auto_link_sections
         self.is_generated: bool = False
+
+        self.given_suggestion_rodata_section_start: Optional[bool] = self.parse_suggestion_rodata_section_start(yaml)
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
@@ -508,6 +519,14 @@ class Segment:
         return (
             self.section_order.index(".rodata") - self.section_order.index(".data") == 1
         )
+
+    @property
+    def suggestion_rodata_section_start(self) -> bool:
+        if self.given_suggestion_rodata_section_start is not None:
+            return self.given_suggestion_rodata_section_start
+        if self.parent is not None:
+            return self.parent.suggestion_rodata_section_start
+        return options.opts.suggestion_rodata_section_start
 
     def get_cname(self) -> str:
         name = self.name
