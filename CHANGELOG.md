@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.28.2
+
+* A zero-sized bin segment is considered a hard error.
+
 ### 0.28.1
 
 * Fix a crash when listing zero-sized segments on the yaml.
