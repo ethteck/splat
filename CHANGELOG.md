@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.28.2
+
+* Avoid running spimdisasm on auto segments.
+  * Should improve runtime performance and avoid giving redundant filesplit suggestions.
+
 ### 0.28.1
 
 * Fix a crash when listing zero-sized segments on the yaml.
