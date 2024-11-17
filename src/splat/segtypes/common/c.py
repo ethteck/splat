@@ -151,6 +151,9 @@ class CommonSegC(CommonSegCodeSubsegment):
             self.scan_code(rom_bytes)
 
     def split(self, rom_bytes: bytes):
+        if self.is_auto_segment:
+            return
+
         if self.rom_start != self.rom_end:
             asm_out_dir = options.opts.nonmatchings_path / self.dir
             matching_asm_out_dir = options.opts.matchings_path / self.dir
