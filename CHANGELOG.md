@@ -3,7 +3,8 @@
 ### 0.28.2
 
 * New global option and per-segment option: `suggestion_rodata_section_start`
-  * Allows to toggle the rodata section start suggestion that is emitted by inspecting the data section.
+  * Allows to toggle the rodata section start suggestion that is emitted by inspecting the data section
+* A zero-sized bin segment is considered a hard error.
 
 ### 0.28.1
 

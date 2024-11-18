@@ -24,6 +24,9 @@ class CommonSegBin(CommonSegment):
                 f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
             )
 
+        if self.size is None or self.size <= 0:
+            log.error(f"Segment {self.name} has zero size.")
+
         with open(path, "wb") as f:
             assert isinstance(self.rom_start, int)
             assert isinstance(self.rom_end, int)
