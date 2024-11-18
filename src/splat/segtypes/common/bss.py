@@ -35,6 +35,9 @@ class CommonSegBss(CommonSegData):
             super().disassemble_data(rom_bytes)
             return
 
+        if self.is_auto_segment:
+            return
+
         if not isinstance(self.rom_start, int):
             log.error(
                 f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"

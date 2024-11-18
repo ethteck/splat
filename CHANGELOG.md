@@ -4,7 +4,9 @@
 
 * New global option and per-segment option: `suggestion_rodata_section_start`
   * Allows to toggle the rodata section start suggestion that is emitted by inspecting the data section
-* A zero-sized bin segment is considered a hard error.
+* Avoid running spimdisasm on auto segments.
+  * Should improve runtime performance and avoid giving redundant filesplit suggestions.
+* A zero-sized bin segment is now considered a hard error.
 
 ### 0.28.1
 
