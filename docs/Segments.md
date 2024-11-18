@@ -537,3 +537,25 @@ Only works on top-level segments
 ```
 
 Defaults to the global `subalign` option.
+
+### `suggestion_rodata_section_start`
+
+splat is able to suggest where the rodata section may start by inspecting a corresponding data section (as long as the rodata section follows rodata and not the other way around).
+Don't trust this suggestion blindly since it may be incorrect, either because the rodata section may start a lot before than what splat suggests or splat even may be completely wrong and suggest something that
+actually is data as if it were rodata.
+
+This option allows turning off the suggestion for this segment in case you have checked the suggestion is not correct. This option is inherited from the parent segment if a subsegment does not specify it.
+
+This can be turned off [globally](Configuration.md#suggestion_rodata_section_start), but it is not recommended to globally turn it off unless you are confident you have mapped every data/rodata section of every segment.
+
+Defaults to the global option.
+
+**Example:**
+
+```yaml
+  - name: boot
+    type: code
+    start: 0x001060
+    vram: 0x80000460
+    suggestion_rodata_section_start: False
+```

@@ -674,6 +674,18 @@ Does the same as `use_gp_rel_macro_nonmatching`, except it is only applied to `a
 
 Defaults to `True`
 
+### suggestion_rodata_section_start
+
+splat is able to suggest where the rodata section may start by inspecting a corresponding data section (as long as the rodata section follows rodata and not the other way around).
+Don't trust this suggestion blindly since it may be incorrect, either because the rodata section may start a lot before than what splat suggests or splat even may be completely wrong and suggest something that
+actually is data as if it were rodata.
+
+This option allows turning off the suggestion in case you have checked it is not correct.
+
+This can be turned off [per segment](Segments.md#suggestion_rodata_section_start), which is recommended if you are still on the exploration stage of the decompilation project.
+
+Defaults to `True`.
+
 ## N64-specific options
 
 ### header_encoding
