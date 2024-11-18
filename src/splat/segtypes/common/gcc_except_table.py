@@ -30,6 +30,9 @@ class CommonSegGcc_except_table(CommonSegData):
         section.enableStringGuessing = False
 
     def disassemble_data(self, rom_bytes):
+        if self.is_auto_segment:
+            return
+
         if not isinstance(self.rom_start, int):
             log.error(
                 f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"

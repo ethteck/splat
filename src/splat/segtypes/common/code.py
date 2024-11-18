@@ -82,6 +82,7 @@ class CommonSegCode(CommonSegGroup):
         rep.sibling = base_seg
         rep.parent = self
         rep.is_generated = True
+        rep.is_auto_segment = True
         if rep.special_vram_segment:
             self.special_vram_segment = True
         rep.bss_contains_common = self.bss_contains_common
@@ -181,7 +182,9 @@ class CommonSegCode(CommonSegGroup):
 
             segment_class = Segment.get_class_for_type(typ)
 
+            is_auto_segment = False
             if start is None:
+                is_auto_segment = True
                 # Attempt to infer the start address
                 if i == 0:
                     # The start address of this segment is the start address of the group
@@ -222,6 +225,7 @@ class CommonSegCode(CommonSegGroup):
             segment: Segment = Segment.from_yaml(
                 segment_class, subsegment_yaml, start, end, self, vram
             )
+            segment.is_auto_segment = is_auto_segment
 
             if (
                 segment.vram_start is not None

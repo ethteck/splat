@@ -301,6 +301,9 @@ class Segment:
         # True if this segment was generated based on auto_link_sections
         self.is_generated: bool = False
 
+        # Is an automatic segment, generated automatically or declared on the yaml by the user
+        self.is_auto_segment: bool = False
+
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
                 log.error(

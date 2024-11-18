@@ -59,7 +59,9 @@ class CommonSegGroup(CommonSegment):
 
             segment_class = Segment.get_class_for_type(typ)
 
+            is_auto_segment = False
             if start is None:
+                is_auto_segment = True
                 # Attempt to infer the start address
                 if i == 0:
                     # The start address of this segment is the start address of the group
@@ -106,6 +108,7 @@ class CommonSegGroup(CommonSegment):
             )
             if segment.special_vram_segment:
                 self.special_vram_segment = True
+            segment.is_auto_segment = is_auto_segment
 
             ret.append(segment)
             prev_start = start
