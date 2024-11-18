@@ -4,6 +4,7 @@
 
 * Avoid running spimdisasm on auto segments.
   * Should improve runtime performance and avoid giving redundant filesplit suggestions.
+* A zero-sized bin segment is considered a hard error.
 
 ### 0.28.1
 
