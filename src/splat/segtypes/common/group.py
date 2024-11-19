@@ -61,7 +61,7 @@ class CommonSegGroup(CommonSegment):
 
             is_auto_segment = False
             if start is None:
-                is_auto_segment = True
+                # is_auto_segment = True
                 # Attempt to infer the start address
                 if i == 0:
                     # The start address of this segment is the start address of the group
