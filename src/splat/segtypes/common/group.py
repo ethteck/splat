@@ -73,7 +73,9 @@ class CommonSegGroup(CommonSegment):
             # Third, try to get the end address from the next segment with a start address
             end: Optional[int] = None
             if i < len(yaml["subsegments"]) - 1:
-                end, end_is_auto_segment = Segment.parse_segment_start(yaml["subsegments"][i + 1])
+                end, end_is_auto_segment = Segment.parse_segment_start(
+                    yaml["subsegments"][i + 1]
+                )
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
                 if est_size is not None:

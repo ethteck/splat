@@ -57,7 +57,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         j = i + 1
         while j < len(config_segments):
-            next_start, next_is_auto_segment = Segment.parse_segment_start(config_segments[j])
+            next_start, next_is_auto_segment = Segment.parse_segment_start(
+                config_segments[j]
+            )
             if next_start is not None:
                 break
             j += 1
