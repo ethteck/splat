@@ -37,7 +37,11 @@ class CommonSegAsmtu(CommonSegAsm):
                 if sibling is None:
                     continue
 
-                if isinstance(sibling, CommonSegCodeSubsegment) and sibling.spim_section is not None and not sibling.should_split():
+                if (
+                    isinstance(sibling, CommonSegCodeSubsegment)
+                    and sibling.spim_section is not None
+                    and not sibling.should_split()
+                ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
                     f.write(sibling.spim_section.disassemble())
@@ -51,7 +55,11 @@ class CommonSegAsmtu(CommonSegAsm):
                     # Already handled on the above loop
                     continue
 
-                if isinstance(sibling, CommonSegCodeSubsegment) and sibling.spim_section is not None and not sibling.should_split():
+                if (
+                    isinstance(sibling, CommonSegCodeSubsegment)
+                    and sibling.spim_section is not None
+                    and not sibling.should_split()
+                ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
                     f.write(sibling.spim_section.disassemble())

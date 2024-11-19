@@ -30,12 +30,10 @@ class CommonSegAsm(CommonSegCodeSubsegment):
 
         ret.append('.include "macro.inc"')
         ret.append("")
-        ret.append(".set noat") # allow manual use of $at
-        ret.append(".set noreorder") # don't insert nops after branches
+        ret.append(".set noat")  # allow manual use of $at
+        ret.append(".set noreorder")  # don't insert nops after branches
         if options.opts.add_set_gp_64:
-            ret.append(
-                ".set gp=64" # allow use of 64-bit general purpose registers
-            )
+            ret.append(".set gp=64")  # allow use of 64-bit general purpose registers
         ret.append("")
         preamble = options.opts.generated_s_preamble
         if preamble:
