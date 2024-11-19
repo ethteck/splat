@@ -153,7 +153,7 @@ class Segment:
 
         if s is None:
             return None, False
-        if s == "auto" or s == "...":
+        if s == "auto":
             return None, True
         else:
             return int(s), False

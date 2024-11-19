@@ -1,8 +1,9 @@
 # splat Release Notes
 
-### 0.28.3
+### 0.29.0
 
 * TODO
+* Remove `...` as a valid rom start address for segments.
 
 ### 0.28.2
 
