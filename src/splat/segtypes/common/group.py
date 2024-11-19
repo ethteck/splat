@@ -29,10 +29,10 @@ class CommonSegGroup(CommonSegment):
 
         self.subsegments: List[Segment] = self.parse_subsegments(yaml)
 
-    def get_next_seg_start(self, i, subsegment_yamls):
+    def get_next_seg_start(self, i, subsegment_yamls) -> Optional[int]:
         j = i + 1
         while j < len(subsegment_yamls):
-            ret = Segment.parse_segment_start(subsegment_yamls[j])
+            ret, is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
             if ret is not None:
                 return ret
             j += 1
@@ -55,13 +55,11 @@ class CommonSegGroup(CommonSegment):
                 continue
 
             typ = Segment.parse_segment_type(subsegment_yaml)
-            start = Segment.parse_segment_start(subsegment_yaml)
+            start, is_auto_segment = Segment.parse_segment_start(subsegment_yaml)
 
             segment_class = Segment.get_class_for_type(typ)
 
-            is_auto_segment = False
             if start is None:
-                is_auto_segment = True
                 # Attempt to infer the start address
                 if i == 0:
                     # The start address of this segment is the start address of the group
@@ -75,7 +73,7 @@ class CommonSegGroup(CommonSegment):
             # Third, try to get the end address from the next segment with a start address
             end: Optional[int] = None
             if i < len(yaml["subsegments"]) - 1:
-                end = Segment.parse_segment_start(yaml["subsegments"][i + 1])
+                end, end_is_auto_segment = Segment.parse_segment_start(yaml["subsegments"][i + 1])
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
                 if est_size is not None:

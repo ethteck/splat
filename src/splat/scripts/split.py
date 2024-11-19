@@ -53,11 +53,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         segment_class = Segment.get_class_for_type(seg_type)
 
-        this_start = Segment.parse_segment_start(seg_yaml)
+        this_start, is_auto_segment = Segment.parse_segment_start(seg_yaml)
 
         j = i + 1
         while j < len(config_segments):
-            next_start = Segment.parse_segment_start(config_segments[j])
+            next_start, next_is_auto_segment = Segment.parse_segment_start(config_segments[j])
             if next_start is not None:
                 break
             j += 1
