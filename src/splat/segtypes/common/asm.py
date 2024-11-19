@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from ...util import options
 
@@ -25,8 +25,27 @@ class CommonSegAsm(CommonSegCodeSubsegment):
         ):
             self.scan_code(rom_bytes)
 
-    def get_file_header(self):
-        return []
+    def get_file_header(self) -> List[str]:
+        ret = []
+
+        ret.append('.include "macro.inc"')
+        ret.append("")
+        ret.append(".set noat") # allow manual use of $at
+        ret.append(".set noreorder") # don't insert nops after branches
+        if options.opts.add_set_gp_64:
+            ret.append(
+                ".set gp=64" # allow use of 64-bit general purpose registers
+            )
+        ret.append("")
+        preamble = options.opts.generated_s_preamble
+        if preamble:
+            ret.append(preamble)
+            ret.append("")
+
+        ret.append(self.get_section_asm_line())
+        ret.append("")
+
+        return ret
 
     def split(self, rom_bytes: bytes):
         if not self.rom_start == self.rom_end and self.spim_section is not None:

@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.29.0
+
+* TODO
+* Cleanup some redundant code regarding duplicated `asm` segments.
+
 ### 0.28.2
 
 * New global option and per-segment option: `suggestion_rodata_section_start`
