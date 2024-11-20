@@ -54,7 +54,7 @@ platform: psx
 
 Compiler used to build the binary.
 
-splat recognizes the following compilers, and it will adapt it behavior accordingly for them, but unknown compilers can be passed as well:
+splat recognizes the following compilers, and it will adapt it behavior accordingly for them:
 
 - GCC
 - SN64
@@ -64,6 +64,11 @@ splat recognizes the following compilers, and it will adapt it behavior accordin
 - PSYQ
 - MWCCPS2
 - EEGCC
+
+In general it is better to use a specific disassembler instead of the general `GCC` option, since splat will be able to better adapt to the specific compiler's codegen.
+For example, most N64 games that do not use `IDO` will want to select `KMC` instead of `GCC`, even if `KMC` is just an specific gcc build.
+
+An unknown compiler may be passed as well, but the internal disassembler may complain about it.
 
 #### Usage
 

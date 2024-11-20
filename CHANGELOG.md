@@ -4,6 +4,7 @@
 
 * Add compiler options supported by spimdisasm.
   * New compilers: `KMC` (n64), `EGCS` (iQue), `PSYQ` (PS1) and `MWCCPS2` (PS2)
+  * It is highly recommended to use the specific compiler that the game uses (i.e. `KMC`) than just a general option like `GCC` because splat won't be able to adjust as best as it can.
 * `spimdisasm` 1.31.0 or above is now required.
 
 ### 0.29.0
