@@ -2,7 +2,7 @@
 
 ### 0.29.0
 
-* TODO
+* Fix bss/sbss asm files not being generated.
 * Remove `...` as a valid rom start address for segments.
 
 ### 0.28.2
