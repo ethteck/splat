@@ -2,7 +2,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union
+from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union, Tuple
 
 from intervaltree import Interval, IntervalTree
 from ..util import vram_classes
@@ -135,18 +135,28 @@ class Segment:
         )
 
     @staticmethod
-    def parse_segment_start(segment: Union[dict, list]) -> Optional[int]:
+    def parse_segment_start(segment: Union[dict, list]) -> Tuple[Optional[int], bool]:
+        """
+        Parses the rom start address of a given segment.
+
+        Returns a two-tuple containing:
+        - The rom start address of the segment, if any.
+        - `True` if the user explicitly specified `auto` as the start address.
+          Note this will be `False` if user specified an actual number or did not specify anything at all (in the dict notation).
+          Not specifying a explicit `start` is useful for `bss`/`sbss` segments, since they do not have a real rom address.
+        """
+
         if isinstance(segment, dict):
-            s = segment.get("start", "auto")
+            s = segment.get("start", None)
         else:
             s = segment[0]
 
+        if s is None:
+            return None, False
         if s == "auto":
-            return None
-        elif s == "...":
-            return None
+            return None, True
         else:
-            return int(s)
+            return int(s), False
 
     @staticmethod
     def parse_segment_type(segment: Union[dict, list]) -> str:

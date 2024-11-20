@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.29.0
+
+* Fix bss/sbss asm files not being generated.
+* Remove `...` as a valid rom start address for segments.
+
 ### 0.28.2
 
 * New global option and per-segment option: `suggestion_rodata_section_start`
