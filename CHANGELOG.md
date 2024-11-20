@@ -1,12 +1,17 @@
 # splat Release Notes
 
-### 0.29.0
+### 0.30.0
 
 * New `asmtu` segment type.
   * Allows writing the disassembly of every section for a given object into the same assembly file.
   * Useful for dealing with symbols with local visibility.
 * Cleanup some redundant code regarding duplicated `asm` segments.
 * The global option `add_set_gp_64` now defaults to `False` on psx and ps2 platforms.
+
+### 0.29.0
+
+* Fix bss/sbss asm files not being generated.
+* Remove `...` as a valid rom start address for segments.
 
 ### 0.28.2
 
