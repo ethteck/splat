@@ -43,6 +43,30 @@ Hand-written Assembly, `hasm`, similar to `asm` except it will not overwrite any
   start: 0xABC
 ```
 
+### `asmtu`
+
+**Description:**
+
+Allows disassembling every section of an object that share the same name into the same assembly file.
+This is a better parallel to how an object is compiled from a [TU](https://en.wikipedia.org/wiki/Translation_unit_(programming)) than disassembling each section to individual assembly files.
+
+This is specially useful when dealing with symbols that may not be globally visible (locally binded symbols), because those symbols should be visible to the whole TU but disassembling each section individually disallows this visibility.
+
+This segment requires that every other segment that shares the same name must have their segment type be prefixed with a dot.
+
+```yaml
+    subsegments:
+      # ...
+      - [0x000100, asmtu, code/allai]
+      # ...
+      - [0x324680, .data, code/allai] # Note `.data` instead of `data`
+      # ...
+      - [0x350100, .rodata, code/allai]
+      # ...
+      - { type: .bss, vram: 0x004B10C8, name: code/allai }
+      # ...
+```
+
 ## `bin`
 
 **Description:**

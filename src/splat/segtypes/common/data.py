@@ -73,13 +73,16 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         return True
 
     def should_split(self) -> bool:
-        return True
+        return not self.type.startswith(".")
 
     def cache(self):
         return [CommonSegCodeSubsegment.cache(self), CommonSegGroup.cache(self)]
 
     def get_linker_section(self) -> str:
         return ".data"
+
+    def get_section_flags(self) -> Optional[str]:
+        return "wa"
 
     def get_linker_entries(self):
         return CommonSegCodeSubsegment.get_linker_entries(self)

@@ -384,6 +384,10 @@ def _parse_yaml(
     if platform == "psx":
         default_ld_bss_is_noload = False
 
+    default_add_set_gp_64 = True
+    if platform in ("psx", "ps2"):
+        default_add_set_gp_64 = False
+
     ret = SplatOpts(
         verbose=verbose,
         dump_symbols=p.parse_opt("dump_symbols", bool, False),
@@ -523,7 +527,7 @@ def _parse_yaml(
             "numeric",
         ),
         named_regs_for_c_funcs=p.parse_opt("named_regs_for_c_funcs", bool, True),
-        add_set_gp_64=p.parse_opt("add_set_gp_64", bool, True),
+        add_set_gp_64=p.parse_opt("add_set_gp_64", bool, default_add_set_gp_64),
         create_asm_dependencies=p.parse_opt("create_asm_dependencies", bool, False),
         string_encoding=p.parse_optional_opt("string_encoding", str),
         data_string_encoding=p.parse_optional_opt("data_string_encoding", str),

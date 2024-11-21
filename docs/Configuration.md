@@ -623,7 +623,9 @@ Determines whether functions inside c files should have named registers
 
 ### add_set_gp_64
 
-Determines whether to add ".set gp=64" to asm/hasm files
+Determines whether to add ".set gp=64" to asm/hasm files.
+
+Defaults to `False` on psx and ps2 platforms, `True` for every other platform.
 
 ### create_asm_dependencies
 

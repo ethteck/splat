@@ -1,3 +1,5 @@
+from typing import Optional
+
 from ...util import options, symbols, log
 
 from .data import CommonSegData
@@ -10,6 +12,9 @@ from ...disassembler.disassembler_section import DisassemblerSection, make_bss_s
 class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"
+
+    def get_section_flags(self) -> Optional[str]:
+        return "wa"
 
     @staticmethod
     def is_data() -> bool:
