@@ -14,13 +14,13 @@ Copy the `baserom.z64` file into the `mygame` directory inside your home directo
 
 ## System packages
 
-### Python 3.8
+### Python 3.9
 
-Ensure you are have **Python 3.8** or higher installed:
+Ensure you are have **Python 3.9** or higher installed:
 
 ```sh
 python3 --version
-Python 3.8.10
+Python 3.9.10
 ```
 
 If you get `bash: python3: command not found` install it with the following command:
