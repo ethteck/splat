@@ -15,6 +15,9 @@ class CommonSegRodata(CommonSegData):
     def get_linker_section(self) -> str:
         return ".rodata"
 
+    def get_section_flags(self) -> Optional[str]:
+        return "a"
+
     @staticmethod
     def is_data() -> bool:
         return False

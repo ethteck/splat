@@ -1,6 +1,6 @@
 .include "macro.inc"
 
-.section .data
+.section .data, "wa"
 
 glabel D_80000500
     /* 1100 80000500 00000001 */ .word 0x00000001
