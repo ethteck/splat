@@ -474,13 +474,13 @@ splat will try to disassemble all the data from this segment as individual doubl
 
 ### `ctor`
 
-`ctor` is used by certain compilers (like MWCC) to store pointers to functions that initialize C++ global data objects.
+`ctor` is used by certain compilers (like MWCCPS2) to store pointers to functions that initialize C++ global data objects.
 
 The disassembly of this section is tweaked to avoid confusing its data with other types of data, this is because the disassembler can sometimes get confused and disassemble a pointer as a float, string, etc.
 
 ### `vtables`
 
-`vtables` is used by certain compilers (like MWCC) to store the virtual tables of C++ classes
+`vtables` is used by certain compilers (like MWCCPS2) to store the virtual tables of C++ classes
 
 The disassembly of this section is tweaked to avoid confusing its data with other types of data, this is because the disassembler can sometimes get confused and disassemble a pointer as a float, string, etc.
 

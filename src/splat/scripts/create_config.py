@@ -185,7 +185,7 @@ options:
   target_path: {exe_path}
   base_path: .
   platform: psx
-  compiler: GCC
+  compiler: PSYQ
 
   # asm_path: asm
   # src_path: src

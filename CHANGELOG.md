@@ -7,6 +7,11 @@
   * Useful for dealing with symbols with local visibility.
 * Cleanup some redundant code regarding duplicated `asm` segments.
 * The global option `add_set_gp_64` now defaults to `False` on psx and ps2 platforms.
+* Add compiler options supported by spimdisasm.
+  * New compilers: `KMC` (n64), `EGCS` (iQue), `PSYQ` (PS1) and `MWCCPS2` (PS2)
+  * It is highly recommended to use the specific compiler that the game uses (i.e. `KMC`) than just a general option like `GCC` because splat won't be able to adjust as best as it can.
+* `spimdisasm` 1.31.0 or above is now required.
+* Python 3.9 or above is now required.
 
 ### 0.29.0
 
