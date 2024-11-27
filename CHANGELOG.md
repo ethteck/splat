@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.30.1
+
+* Fix `create_config` not handling unsafe path characters.
+
 ### 0.30.0
 
 * New `asmtu` segment type.
