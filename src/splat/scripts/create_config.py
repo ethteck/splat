@@ -30,11 +30,19 @@ def main(file_path: Path):
     log.error(f"create_config does not support the file format of '{file_path}'")
 
 
+def remove_invalid_path_characters(p: str) -> str:
+    invalid_characters = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
+    for invalid in invalid_characters:
+        p = p.replace(invalid, "_")
+    return p
+
+
 def create_n64_config(rom_path: Path):
     rom_bytes = rominfo.read_rom(rom_path)
 
     rom = rominfo.get_info(rom_path, rom_bytes)
-    basename = rom.name.replace(" ", "").replace("/", "_").lower()
+    basename = rom.name.replace(" ", "").lower()
+    cleaned_basename = remove_invalid_path_characters(basename)
 
     header = f"""\
 name: {rom.name.title()} ({rom.get_country_name()})
@@ -42,7 +50,7 @@ sha1: {rom.sha1}
 options:
   basename: {basename}
   target_path: {rom_path.with_suffix(".z64")}
-  elf_path: build/{basename}.elf
+  elf_path: build/{cleaned_basename}.elf
   base_path: .
   platform: n64
   compiler: {rom.compiler}
@@ -52,7 +60,7 @@ options:
   # build_path: build
   # create_asm_dependencies: True
 
-  ld_script_path: {basename}.ld
+  ld_script_path: {cleaned_basename}.ld
   ld_dependencies: True
 
   find_file_boundaries: True
@@ -166,7 +174,7 @@ segments:
   - [0x{rom.size:X}]
 """
 
-    out_file = f"{basename}.yaml"
+    out_file = f"{cleaned_basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
@@ -175,7 +183,8 @@ segments:
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
     exe = psxexeinfo.PsxExe.get_info(exe_path, exe_bytes)
-    basename = exe_path.name.replace(" ", "").replace("/", "_").lower()
+    basename = exe_path.name.replace(" ", "").lower()
+    cleaned_basename = remove_invalid_path_characters(basename)
 
     header = f"""\
 name: {exe_path.name}
@@ -183,6 +192,7 @@ sha1: {exe.sha1}
 options:
   basename: {basename}
   target_path: {exe_path}
+  elf_path: build/{cleaned_basename}.elf
   base_path: .
   platform: psx
   compiler: PSYQ
@@ -192,7 +202,8 @@ options:
   # build_path: build
   # create_asm_dependencies: True
 
-  ld_script_path: {basename}.ld
+  ld_script_path: {cleaned_basename}.ld
+  ld_dependencies: True
 
   find_file_boundaries: False
   gp_value: 0x{exe.initial_gp:08X}
@@ -257,7 +268,7 @@ segments:
   - [0x{exe.size:X}]
 """
 
-    out_file = f"{basename}.yaml"
+    out_file = f"{cleaned_basename}.yaml"
     with open(out_file, "w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
