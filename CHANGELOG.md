@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.31.0
+
+* Fix subsegments of auto `data` segments not being split.
+
 ### 0.30.1
 
 * Fix `create_config` not handling unsafe path characters.
