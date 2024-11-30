@@ -39,9 +39,6 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             self.disassemble_data(rom_bytes)
 
     def split(self, rom_bytes: bytes):
-        if self.is_auto_segment:
-            return
-
         super().split(rom_bytes)
 
         if self.type.startswith(".") and not options.opts.disassemble_all:
@@ -73,7 +70,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         return True
 
     def should_split(self) -> bool:
-        return not self.type.startswith(".")
+        return True
 
     def cache(self):
         return [CommonSegCodeSubsegment.cache(self), CommonSegGroup.cache(self)]
