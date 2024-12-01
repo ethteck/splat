@@ -423,9 +423,14 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 )
                 overlaps_found = True
         if overlaps_found:
-            log.write(f"Many overlaps between non-global and global segments were found. This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments", status="warn")
+            log.write(
+                f"Many overlaps between non-global and global segments were found. This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments",
+                status="warn",
+            )
             if len(global_segments_after_overlays) > 0:
-                log.write(f"These segments are the main suspects for missing a `exclusive_ram_id` tag:")
+                log.write(
+                    f"These segments are the main suspects for missing a `exclusive_ram_id` tag:"
+                )
                 for seg in global_segments_after_overlays:
                     log.write(f"  {seg.name}")
             else:
