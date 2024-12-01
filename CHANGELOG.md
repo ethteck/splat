@@ -2,7 +2,8 @@
 
 ### 0.31.1
 
-* Improve information given on the global segment overlap warning.
+* Try to tell the users what segments are causing the overlapping issue.
+* The overlap warning has been promoted to an error.
 
 ### 0.31.0
 

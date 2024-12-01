@@ -418,24 +418,27 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 and global_vram_end > ovl_segment.vramStart
             ):
                 log.write(
-                    f"Warning: the vram range ([0x{ovl_segment.vramStart:08X}, 0x{ovl_segment.vramEnd:08X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
+                    f"Error: the vram range ([0x{ovl_segment.vramStart:08X}, 0x{ovl_segment.vramEnd:08X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
                     status="warn",
                 )
                 overlaps_found = True
         if overlaps_found:
             log.write(
-                f"Many overlaps between non-global and global segments were found. This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments",
-                status="warn",
+                f"Many overlaps between non-global and global segments were found.",
+            )
+            log.write(
+                f"This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
             )
             if len(global_segments_after_overlays) > 0:
                 log.write(
-                    f"These segments are the main suspects for missing a `exclusive_ram_id` tag:"
+                    f"These segments are the main suspects for missing a `exclusive_ram_id` tag:",
+                    status="warn",
                 )
                 for seg in global_segments_after_overlays:
-                    log.write(f"  {seg.name}")
+                    log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}")
             else:
                 log.write(f"No suspected segments??", status="warn")
-            log.error("Stopping due to the above warnings")
+            log.error("Stopping due to the above errors")
 
     # pass the global symbols to spimdisasm
     for segment in all_segments:
