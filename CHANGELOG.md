@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.31.1
+
+* Improve information given on the global segment overlap warning.
+
 ### 0.31.0
 
 * Fix subsegments of auto `data` segments not being split.
