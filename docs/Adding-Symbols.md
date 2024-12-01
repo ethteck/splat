@@ -12,6 +12,8 @@ osInitialize = 0x801378C0; // type:func
 
 :information_source: The file used can be overridden via the `symbol_addrs_path` setting in the global `options` section of the splat yaml. This option can also accept a list of paths, allowing for symbols to be organized in multiple files.
 
+:warning: **NOTE:** This file is an input to splat, it should **NOT** be passed to the linker (pass `undefined_syms_*.txt` files to the linker) :warning:
+
 ## symbol
 
 This is the name of the symbol and can be any valid C variable name, e.g. `myCoolFunction` or `gReticulatedSplineCounter`
