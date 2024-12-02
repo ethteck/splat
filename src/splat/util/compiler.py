@@ -48,7 +48,10 @@ EGCS = Compiler(
 )
 
 # PS1
-PSYQ = Compiler("PSYQ")
+PSYQ = Compiler(
+    "PSYQ",
+    j_as_branch=True,
+)
 
 # PS2
 MWCCPS2 = Compiler("MWCCPS2")

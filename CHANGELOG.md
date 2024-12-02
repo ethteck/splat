@@ -2,6 +2,8 @@
 
 ### 0.31.1
 
+* Tag `PSYQ` as a compiler that uses `j` instructions as branches.
+  * Fixes incorrect detection of non existing functions under the mentioned compiler.
 * Try to tell the users what segments are causing the overlapping issue.
 * The overlap warning has been promoted to an error.
 
