@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.31.1
+
+* Tag `PSYQ` as a compiler that uses `j` instructions as branches.
+  * Fixes incorrect detection of non existing functions under the mentioned compiler.
+
 ### 0.31.0
 
 * Fix subsegments of auto `data` segments not being split.
