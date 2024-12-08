@@ -46,5 +46,8 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/splat"]
 
+[tool.hatch.envs.dev]
+features = ["dev"]
+
 [project.scripts]
 splat = "splat.__main__:splat_main"
