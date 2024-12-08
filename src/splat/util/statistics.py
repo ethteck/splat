@@ -24,15 +24,15 @@ class Statistics:
             self.seg_sizes[typ] = 0
         self.seg_sizes[typ] += 0 if size is None else size
 
-    def count_split(self, typ: str):
+    def count_split(self, typ: str, count: int = 1):
         if typ not in self.seg_split:
             self.seg_split[typ] = 0
-        self.seg_split[typ] += 1
+        self.seg_split[typ] += count
 
-    def count_cached(self, typ: str):
+    def count_cached(self, typ: str, count: int = 1):
         if typ not in self.seg_cached:
             self.seg_cached[typ] = 0
-        self.seg_cached[typ] += 1
+        self.seg_cached[typ] += count
 
     def print_statistics(self, total_size: int):
         unk_size = self.seg_sizes.get("unk", 0)

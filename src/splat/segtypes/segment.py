@@ -1,3 +1,5 @@
+import collections
+import dataclasses
 import importlib
 import importlib.util
 from pathlib import Path
@@ -65,6 +67,27 @@ def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
     if isinstance(segment, dict):
         return segment.get("section_order", default)
     return default
+
+
+SegmentType = str
+
+
+@dataclasses.dataclass
+class SegmentStatisticsInfo:
+    size: int
+    count: int
+
+    def merge(self, other: "SegmentStatisticsInfo") -> "SegmentStatisticsInfo":
+        return SegmentStatisticsInfo(
+            size=self.size + other.size, count=self.count + other.count
+        )
+
+
+SegmentStatistics = dict[SegmentType, SegmentStatisticsInfo]
+
+
+def empty_statistics() -> SegmentStatistics:
+    return collections.defaultdict(lambda: SegmentStatisticsInfo(size=0, count=0))
 
 
 class Segment:
@@ -519,6 +542,17 @@ class Segment:
             return self.rom_end - self.rom_start
         else:
             return None
+
+    @property
+    def statistics(self) -> SegmentStatistics:
+        stats = empty_statistics()
+        if self.size is not None:
+            stats[self.statistics_type] = SegmentStatisticsInfo(size=self.size, count=1)
+        return stats
+
+    @property
+    def statistics_type(self) -> SegmentType:
+        return self.type
 
     @property
     def vram_end(self) -> Optional[int]:
