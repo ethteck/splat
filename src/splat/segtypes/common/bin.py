@@ -3,7 +3,7 @@ from typing import Optional
 
 from ...util import log, options
 
-from .segment import CommonSegment
+from .segment import CommonSegment, SegmentType
 
 
 class CommonSegBin(CommonSegment):
@@ -33,3 +33,10 @@ class CommonSegBin(CommonSegment):
 
             f.write(rom_bytes[self.rom_start : self.rom_end])
         self.log(f"Wrote {self.name} to {path}")
+
+    @property
+    def statistics_type(self) -> SegmentType:
+        stats_type = self.type
+        if self.is_name_default():
+            stats_type = "unk"
+        return stats_type

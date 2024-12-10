@@ -271,11 +271,9 @@ def do_scan(
     for segment in scan_bar:
         assert isinstance(segment, Segment)
         scan_bar.set_description(f"Scanning {brief_seg_name(segment, 20)}")
-        typ = segment.type
-        if segment.type == "bin" and segment.is_name_default():
-            typ = "unk"
 
-        stats.add_size(typ, segment.size)
+        for ty, sub_stats in segment.statistics.items():
+            stats.add_size(ty, sub_stats.size)
 
         if segment.should_scan():
             # Check cache but don't write anything
@@ -287,7 +285,8 @@ def do_scan(
 
             processed_segments.append(segment)
 
-            stats.count_split(typ)
+            for ty, sub_stats in segment.statistics.items():
+                stats.count_split(ty, sub_stats.count)
 
     symbols.mark_c_funcs_as_defined()
     return processed_segments
@@ -305,7 +304,8 @@ def do_split(
         split_bar.set_description(f"Splitting {brief_seg_name(segment, 20)}")
 
         if cache.check_cache_hit(segment, True):
-            stats.count_cached(segment.type)
+            for ty, sub_stats in segment.statistics.items():
+                stats.count_cached(ty, sub_stats.count)
             continue
 
         if segment.should_split():

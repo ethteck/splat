@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.32.1
+* Include subsegment information when aggregating split statistics.
+
 ### 0.32.0
 
 * Tag `PSYQ` as a compiler that uses `j` instructions as branches.

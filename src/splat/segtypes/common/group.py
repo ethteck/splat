@@ -3,7 +3,7 @@ from typing import List, Optional
 from ...util import log
 
 from .segment import CommonSegment
-from ..segment import Segment
+from ..segment import empty_statistics, Segment, SegmentStatistics
 
 
 class CommonSegGroup(CommonSegment):
@@ -123,6 +123,14 @@ class CommonSegGroup(CommonSegment):
             if seg.needs_symbols:
                 return True
         return False
+
+    @property
+    def statistics(self) -> SegmentStatistics:
+        stats = empty_statistics()
+        for sub in self.subsegments:
+            for ty, info in sub.statistics.items():
+                stats[ty] = stats[ty].merge(info)
+        return stats
 
     def get_linker_entries(self):
         return [entry for sub in self.subsegments for entry in sub.get_linker_entries()]
