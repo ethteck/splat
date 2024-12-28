@@ -21,7 +21,7 @@ The brackets corresponds to the optional dependencies to install while installin
 If you use a `requirements.txt` file in your repository, then you can add this library with the following line:
 
 ```txt
-splat64[mips]>=0.32.0,<1.0.0
+splat64[mips]>=0.32.2,<1.0.0
 ```
 
 ### Optional dependencies

@@ -122,7 +122,7 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referenced_vram in func_spim.instrAnalyzer.referencedVrams:
+        for referenced_vram in func_spim.referencedVrams:
             context_sym = self.spim_section.get_section().getSymbol(
                 referenced_vram, tryPlusOffset=False
             )
