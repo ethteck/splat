@@ -1,6 +1,12 @@
 # splat Release Notes
 
+### 0.32.2
+
+* Fix jumptable labels not being properly formatted with the given `symbol_name_format`.
+* `spimdisasm` 1.32.0 or above is now required.
+
 ### 0.32.1
+
 * Include subsegment information when aggregating split statistics.
 
 ### 0.32.0
