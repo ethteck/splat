@@ -145,6 +145,16 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 self.get_most_parent(), symbol.contextSym
             )
 
+            # Gather symbols found by spimdisasm and create those symbols in splat's side
+            for referenced_vram in symbol.referencedVrams:
+                context_sym = self.spim_section.get_section().getSymbol(
+                    referenced_vram, tryPlusOffset=False
+                )
+                if context_sym is not None:
+                    symbols.create_symbol_from_spim_symbol(
+                        self.get_most_parent(), context_sym
+                    )
+
             # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)
             if (
                 self.suggestion_rodata_section_start
