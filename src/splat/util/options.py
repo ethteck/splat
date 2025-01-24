@@ -554,10 +554,10 @@ def _parse_yaml(
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True
         ),
-        # Command line argument takes precedence over yaml option
-        disassemble_all=(
-            disasm_all if disasm_all else p.parse_opt("disassemble_all", bool, False)
-        ),
+        # Setting either option will produce a full disassembly,
+        # but we still have to check the yaml option first to avoid leaving option unparsed,
+        # because splat would complain about an unrecognized yaml option otherwise.
+        disassemble_all=p.parse_opt("disassemble_all", bool, False) or disasm_all,
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
         use_gp_rel_macro_nonmatching=p.parse_opt(
