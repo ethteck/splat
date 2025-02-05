@@ -449,7 +449,7 @@ def main(
     skip_version_check: bool = False,
     stdout_only: bool = False,
     disassemble_all: bool = False,
-    include_path: List[str] = []
+    include_path: List[Path] = [],
 ):
     if stdout_only:
         progress_bar.out_file = sys.stdout
@@ -539,7 +539,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         "-I",
         help="Add the directory to the list of search directories when including other config",
         action="append",
-        type=Path
+        type=Path,
     )
 
 
@@ -552,7 +552,7 @@ def process_arguments(args: argparse.Namespace):
         args.skip_version_check,
         args.stdout_only,
         args.disassemble_all,
-        args.I
+        args.I,
     )
 
 

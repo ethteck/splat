@@ -9,6 +9,7 @@ import sys
 
 from . import log, options, vram_classes
 
+
 def merge_configs(main_config, additional_config):
     # Merge rules are simple
     # For each key in the dictionary
@@ -36,19 +37,20 @@ def merge_configs(main_config, additional_config):
 
     return main_config
 
+
 def resolve_path(base: Path, rel: Path, include_paths: List[Path]) -> Path:
     if (base / rel).exists():
-        return (base / rel)
+        return base / rel
 
     for path in include_paths:
         candidate = path / rel
         if candidate.exists():
             return candidate
-    log.error(f"\"{rel}\" not found")
+    log.error(f'"{rel}" not found')
     return None
 
 
-def load_config(config_path: str, include_path: List[Path]) -> Dict[str, Any]:
+def load_config(config_path: Path, include_path: List[Path]) -> Dict[str, Any]:
     base_path = Path(config_path).parent
     with open(config_path) as f:
         config = yaml.load(f.read(), Loader=yaml.SafeLoader)
@@ -60,6 +62,7 @@ def load_config(config_path: str, include_path: List[Path]) -> Dict[str, Any]:
 
     return config
 
+
 def initialize(
     config_path: List[str],
     include_path: List[Path],
@@ -69,7 +72,7 @@ def initialize(
 ) -> Dict[str, Any]:
     config: Dict[str, Any] = {}
     for entry in config_path:
-        additional_config = load_config(entry, include_path)
+        additional_config = load_config(Path(entry), include_path)
         config = merge_configs(config, additional_config)
 
     vram_classes.initialize(config.get("vram_classes"))
@@ -77,4 +80,3 @@ def initialize(
     options.initialize(config, config_path, modes, verbose, disassemble_all)
 
     return config
-
