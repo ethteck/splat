@@ -1,24 +1,14 @@
+parent: n64.yaml
 options:
-  platform:     n64
-  compiler:     GCC
   basename:     basic_app
-  base_path:    .
-  build_path:   build
   target_path:  build/basic_app.bin
-  asm_path:     split/asm
-  src_path:     split/src
   ld_script_path: split/basic_app.ld
-  cache_path:     split/.splache
   symbol_addrs_path:    split/generated.symbols.txt
   undefined_funcs_auto_path: split/undefined_funcs_auto.txt
   undefined_syms_auto_path:  split/undefined_syms_auto.txt
-  asset_path: split/assets
-  compiler: GCC
-  o_as_suffix: True
+  symbol_addrs_path:
+    - config/symbols.splat.txt
 segments:
-  - name: header
-    type: header
-    start: 0x00
   - name: dummy_ipl3
     type: code
     start: 0x40

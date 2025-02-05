@@ -8,11 +8,7 @@ from pathlib import Path
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics
-
-# This unused import makes the yaml library faster. don't remove
-import pylibyaml  # pyright: ignore
-import yaml
+from ..util import cache_handler, conf, progress_bar, vram_classes, statistics
 
 from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
@@ -142,34 +138,6 @@ def assign_symbols_to_segments():
                     seg.add_symbol(symbol)
 
 
-def merge_configs(main_config, additional_config):
-    # Merge rules are simple
-    # For each key in the dictionary
-    # - If list then append to list
-    # - If a dictionary then repeat merge on sub dictionary entries
-    # - Else assume string or number and replace entry
-
-    for curkey in additional_config:
-        if curkey not in main_config:
-            main_config[curkey] = additional_config[curkey]
-        elif type(main_config[curkey]) != type(additional_config[curkey]):
-            log.error(f"Type for key {curkey} in configs does not match")
-        else:
-            # keys exist and match, see if a list to append
-            if type(main_config[curkey]) == list:
-                main_config[curkey] += additional_config[curkey]
-            elif type(main_config[curkey]) == dict:
-                # need to merge sub areas
-                main_config[curkey] = merge_configs(
-                    main_config[curkey], additional_config[curkey]
-                )
-            else:
-                # not a list or dictionary, must be a number or string, overwrite
-                main_config[curkey] = additional_config[curkey]
-
-    return main_config
-
-
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -201,25 +169,6 @@ def calc_segment_dependences(
                         vram_class
                     ] += vram_class_to_segments[follows_class]
     return vram_class_to_follows_segments
-
-
-def initialize_config(
-    config_path: List[str],
-    modes: Optional[List[str]],
-    verbose: bool,
-    disassemble_all: bool = False,
-) -> Dict[str, Any]:
-    config: Dict[str, Any] = {}
-    for entry in config_path:
-        with open(entry) as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        config = merge_configs(config, additional_config)
-
-    vram_classes.initialize(config.get("vram_classes"))
-
-    options.initialize(config, config_path, modes, verbose, disassemble_all)
-
-    return config
 
 
 def read_target_binary() -> bytes:
@@ -500,13 +449,14 @@ def main(
     skip_version_check: bool = False,
     stdout_only: bool = False,
     disassemble_all: bool = False,
+    include_path: List[str] = []
 ):
     if stdout_only:
         progress_bar.out_file = sys.stdout
 
     # Load config
     global config
-    config = initialize_config(config_path, modes, verbose, disassemble_all)
+    config = conf.initialize(config_path, include_path, modes, verbose, disassemble_all)
 
     disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
 
@@ -585,6 +535,12 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         help="Disasemble matched functions and migrated data",
         action="store_true",
     )
+    parser.add_argument(
+        "-I",
+        help="Add the directory to the list of search directories when including other config",
+        action="append",
+        type=Path
+    )
 
 
 def process_arguments(args: argparse.Namespace):
@@ -596,6 +552,7 @@ def process_arguments(args: argparse.Namespace):
         args.skip_version_check,
         args.stdout_only,
         args.disassemble_all,
+        args.I
     )
 
 

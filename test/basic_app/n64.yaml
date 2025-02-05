@@ -1,0 +1,17 @@
+options:
+  platform:     n64
+  compiler:     GCC
+  base_path:    .
+  build_path:   build
+  asm_path:     split/asm
+  src_path:     split/src
+  cache_path:   split/.splache
+  asset_path: split/assets
+  compiler: GCC
+  symbol_addrs_path:
+    - config/symbols.txt
+  o_as_suffix: True
+segments:
+  - name: header
+    type: header
+    start: 0x00
