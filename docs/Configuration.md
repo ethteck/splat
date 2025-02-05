@@ -758,7 +758,7 @@ use_legacy_include_asm: True
 
 ## Inheritance
 
-For projects with several similar overlays, Splat supports configuration inheritance. Shared options and segments can be
+For projects with several similar overlays, splat supports configuration inheritance. Shared options and segments can be
 defined in a configuration file and then extended in another configuration file using the top level `parent` key.
 Parents are resolved recursively, allowing projects to be organized using a flexible configuration tree.
 

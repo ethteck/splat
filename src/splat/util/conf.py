@@ -47,7 +47,6 @@ def resolve_path(base: Path, rel: Path, include_paths: List[Path]) -> Path:
         if candidate.exists():
             return candidate
     log.error(f'"{rel}" not found')
-    return None
 
 
 def load_config(config_path: Path, include_path: List[Path]) -> Dict[str, Any]:
