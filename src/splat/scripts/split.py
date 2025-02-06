@@ -536,7 +536,8 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         action="store_true",
     )
     parser.add_argument(
-        "-I", "--include-directory",
+        "-I",
+        "--include-directory",
         help="Add the directory to the list of search directories when including other config",
         action="append",
         type=Path,
