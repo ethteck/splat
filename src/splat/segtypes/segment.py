@@ -255,7 +255,7 @@ class Segment:
 
     @staticmethod
     def parse_suggestion_rodata_section_start(
-        yaml: Union[dict, list]
+        yaml: Union[dict, list],
     ) -> Optional[bool]:
         if isinstance(yaml, dict):
             suggestion_rodata_section_start = yaml.get(

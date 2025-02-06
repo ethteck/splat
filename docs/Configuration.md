@@ -753,3 +753,85 @@ use_legacy_include_asm: True
 
 #### Default
 `False`
+
+# Project Organization Configuration
+
+## Inheritance
+
+For projects with several similar overlays, splat supports configuration inheritance. Shared options and segments can be
+defined in a configuration file and then extended in another configuration file using the top level `parent` key.
+Parents are resolved recursively, allowing projects to be organized using a flexible configuration tree.
+
+Using the parent key is similar to specifying multiple configuration files at the command line when running `split`, but
+can be modeled as configuration rather than in the build system.
+
+#### Usage
+psx.yaml:
+```yaml
+options:
+  platform:     psx
+  base_path:    ..
+  compiler:     GCC
+  symbol_addrs_path:
+    - config/symbols.txt
+  asm_jtbl_label_macro: jlabel
+  extensions_path: tools/splat_ext
+  section_order:
+    - ".data"
+    - ".rodata"
+    - ".text"
+    - ".bss"
+    - ".sbss"
+```
+overlay.yaml:
+```yaml
+parent: psx.yaml
+options:
+  basename:     overlay
+  target_path:  disks/OVERLAY.BIN
+  asm_path:     asm/overlay
+  asset_path:   assets/overlay
+  src_path:     src/overlay
+  ld_script_path: build/overlay.ld
+  symbol_addrs_path:
+    - config/symbols.overlay.txt
+segments:
+  - name: overlay
+    type: code
+    start: 0x00000000
+    vram:  0x80000000
+    align: 4
+    subalign: 4
+```
+
+This produces a merged config equivalent to:
+```yaml
+options:
+  platform:     psx
+  base_path:    ..
+  compiler:     GCC
+  symbol_addrs_path:
+    - config/symbols.txt
+    - config/symbols.overlay.txt
+  asm_jtbl_label_macro: jlabel
+  extensions_path: tools/splat_ext
+  section_order:
+    - ".data"
+    - ".rodata"
+    - ".text"
+    - ".bss"
+    - ".sbss"
+  basename:     overlay
+  target_path:  disks/OVERLAY.BIN
+  asm_path:     asm/overlay
+  asset_path:   assets/overlay
+  src_path:     src/overlay
+  ld_script_path: build/overlay.ld
+segments:
+  - name: overlay
+    type: code
+    start: 0x00000000
+    vram:  0x80000000
+    align: 4
+    subalign: 4
+```
