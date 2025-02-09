@@ -1,7 +1,7 @@
 [project]
 name = "splat64"
 # Should be synced with src/splat/__init__.py
-version = "0.32.2"
+version = "0.32.3"
 description = "A binary splitting tool to assist with decompilation and modding projects"
 readme = "README.md"
 license = {file = "LICENSE"}

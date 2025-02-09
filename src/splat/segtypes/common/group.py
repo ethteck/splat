@@ -110,10 +110,15 @@ class CommonSegGroup(CommonSegment):
                 self.special_vram_segment = True
             segment.is_auto_segment = is_auto_segment
 
+            segment.index_within_group = len(ret)
+
             ret.append(segment)
             prev_start = start
             if end is not None:
                 last_rom_end = end
+
+        for i, seg in enumerate(ret):
+            seg.index_within_group = i
 
         return ret
 
@@ -165,13 +170,17 @@ class CommonSegGroup(CommonSegment):
                 return sub
         return None
 
-    def get_next_subsegment_for_ram(self, addr: int) -> Optional[Segment]:
+    def get_next_subsegment_for_ram(
+        self, addr: int, current_subseg_index: Optional[int]
+    ) -> Optional[Segment]:
         """
         Returns the first subsegment which comes after the specified address,
         or None in case this address belongs to the last subsegment of this group
         """
 
-        for sub in self.subsegments:
+        start = current_subseg_index if current_subseg_index is not None else 0
+
+        for sub in self.subsegments[start:]:
             if sub.vram_start is None:
                 continue
             assert isinstance(sub.vram_start, int)

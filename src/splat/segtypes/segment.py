@@ -255,7 +255,7 @@ class Segment:
 
     @staticmethod
     def parse_suggestion_rodata_section_start(
-        yaml: Union[dict, list]
+        yaml: Union[dict, list],
     ) -> Optional[bool]:
         if isinstance(yaml, dict):
             suggestion_rodata_section_start = yaml.get(
@@ -353,6 +353,8 @@ class Segment:
 
         # Is an automatic segment, generated automatically or declared on the yaml by the user
         self.is_auto_segment: bool = False
+
+        self.index_within_group: Optional[int] = None
 
         if self.rom_start is not None and self.rom_end is not None:
             if self.rom_start > self.rom_end:
