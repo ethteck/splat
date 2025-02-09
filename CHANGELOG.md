@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.32.3
+
+- Fix "unrecognized YAML option" error if disassemble_all is provided via CLI and as a YAML option.
+- Slightly speed up `bss` disassembly for projects over thousands of subsegments in the same top-level segment.
+
 ### 0.32.2
 
 * Fix jumptable labels not being properly formatted with the given `symbol_name_format`.
