@@ -170,7 +170,9 @@ class CommonSegGroup(CommonSegment):
                 return sub
         return None
 
-    def get_next_subsegment_for_ram(self, addr: int, current_subseg_index: Optional[int]) -> Optional[Segment]:
+    def get_next_subsegment_for_ram(
+        self, addr: int, current_subseg_index: Optional[int]
+    ) -> Optional[Segment]:
         """
         Returns the first subsegment which comes after the specified address,
         or None in case this address belongs to the last subsegment of this group

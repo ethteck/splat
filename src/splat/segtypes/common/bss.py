@@ -60,7 +60,9 @@ class CommonSegBss(CommonSegData):
                 f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
-        next_subsegment = self.parent.get_next_subsegment_for_ram(self.vram_start, self.index_within_group)
+        next_subsegment = self.parent.get_next_subsegment_for_ram(
+            self.vram_start, self.index_within_group
+        )
         if next_subsegment is None:
             bss_end = self.get_most_parent().vram_end
         else:
