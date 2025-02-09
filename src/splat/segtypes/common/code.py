@@ -270,6 +270,8 @@ class CommonSegCode(CommonSegGroup):
                 sibling.siblings[segment.get_linker_section_linksection()] = segment
 
         ret = self._insert_all_auto_sections(ret, base_segments, readonly_before)
+        for i, seg in enumerate(ret):
+            seg.index_within_group = i
 
         return ret
 
