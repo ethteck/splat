@@ -37,7 +37,9 @@ def _merge_configs(main_config, additional_config, additional_config_path):
             elif type(main_config[curkey]) == dict:
                 # need to merge sub areas
                 main_config[curkey] = _merge_configs(
-                    main_config[curkey], additional_config[curkey]
+                    main_config[curkey],
+                    additional_config[curkey],
+                    additional_config_path,
                 )
             else:
                 # not a list or dictionary, must be a number or string, overwrite

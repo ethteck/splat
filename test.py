@@ -6,6 +6,7 @@ from src.splat.scripts.split import *
 import unittest
 import io
 import filecmp
+import pathlib
 from src.splat.util import symbols, options
 import spimdisasm
 from src.splat.segtypes.common.rodata import CommonSegRodata
@@ -50,8 +51,6 @@ class Testing(unittest.TestCase):
             self.get_right_only_files(sub_dcmp, out)
 
     def test_basic_app(self):
-        import pathlib
-
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
         main([pathlib.Path("test/basic_app/splat.yaml")], None, False)
 
@@ -97,8 +96,6 @@ class Testing(unittest.TestCase):
 
 
 def test_init():
-    import pathlib
-
     options_dict = {
         "options": {
             "platform": "n64",
@@ -348,8 +345,6 @@ class Bss(unittest.TestCase):
 
 class SymbolsInitialize(unittest.TestCase):
     def test_attrs(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 
@@ -380,8 +375,6 @@ class SymbolsInitialize(unittest.TestCase):
         assert symbols.all_symbols[0].given_name_end == "the_name_end"
 
     def test_boolean_attrs(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 
@@ -413,8 +406,6 @@ class SymbolsInitialize(unittest.TestCase):
 
     # test spim ban range
     def test_ignore(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 
