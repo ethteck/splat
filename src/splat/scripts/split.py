@@ -10,10 +10,6 @@ from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
 from ..util import cache_handler, progress_bar, vram_classes, statistics
 
-# This unused import makes the yaml library faster. don't remove
-import pylibyaml  # pyright: ignore
-import yaml
-
 from colorama import Fore, Style
 from intervaltree import Interval, IntervalTree
 import sys
@@ -23,7 +19,7 @@ from ..segtypes.linker_entry import (
     get_segment_vram_end_symbol_name,
 )
 from ..segtypes.segment import Segment
-from ..util import log, options, palettes, symbols, relocs
+from ..util import conf, log, options, palettes, symbols, relocs
 
 linker_writer: LinkerWriter
 config: Dict[str, Any]
@@ -142,34 +138,6 @@ def assign_symbols_to_segments():
                     seg.add_symbol(symbol)
 
 
-def merge_configs(main_config, additional_config):
-    # Merge rules are simple
-    # For each key in the dictionary
-    # - If list then append to list
-    # - If a dictionary then repeat merge on sub dictionary entries
-    # - Else assume string or number and replace entry
-
-    for curkey in additional_config:
-        if curkey not in main_config:
-            main_config[curkey] = additional_config[curkey]
-        elif type(main_config[curkey]) != type(additional_config[curkey]):
-            log.error(f"Type for key {curkey} in configs does not match")
-        else:
-            # keys exist and match, see if a list to append
-            if type(main_config[curkey]) == list:
-                main_config[curkey] += additional_config[curkey]
-            elif type(main_config[curkey]) == dict:
-                # need to merge sub areas
-                main_config[curkey] = merge_configs(
-                    main_config[curkey], additional_config[curkey]
-                )
-            else:
-                # not a list or dictionary, must be a number or string, overwrite
-                main_config[curkey] = additional_config[curkey]
-
-    return main_config
-
-
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -201,25 +169,6 @@ def calc_segment_dependences(
                         vram_class
                     ] += vram_class_to_segments[follows_class]
     return vram_class_to_follows_segments
-
-
-def initialize_config(
-    config_path: List[str],
-    modes: Optional[List[str]],
-    verbose: bool,
-    disassemble_all: bool = False,
-) -> Dict[str, Any]:
-    config: Dict[str, Any] = {}
-    for entry in config_path:
-        with open(entry) as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
-        config = merge_configs(config, additional_config)
-
-    vram_classes.initialize(config.get("vram_classes"))
-
-    options.initialize(config, config_path, modes, verbose, disassemble_all)
-
-    return config
 
 
 def read_target_binary() -> bytes:
@@ -493,7 +442,7 @@ def dump_symbols() -> None:
 
 
 def main(
-    config_path: List[str],
+    config_path: List[Path],
     modes: Optional[List[str]],
     verbose: bool,
     use_cache: bool = True,
@@ -506,7 +455,7 @@ def main(
 
     # Load config
     global config
-    config = initialize_config(config_path, modes, verbose, disassemble_all)
+    config = conf.load(config_path, modes, verbose, disassemble_all)
 
     disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
 
@@ -565,7 +514,10 @@ def main(
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "config", help="path to a compatible config .yaml file", nargs="+"
+        "config",
+        help="path to a compatible config .yaml file",
+        nargs="+",
+        type=Path,
     )
     parser.add_argument("--modes", nargs="+", default="all")
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")

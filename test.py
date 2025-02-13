@@ -50,8 +50,10 @@ class Testing(unittest.TestCase):
             self.get_right_only_files(sub_dcmp, out)
 
     def test_basic_app(self):
+        import pathlib
+
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
-        main(["test/basic_app/splat.yaml"], None, False)
+        main([pathlib.Path("test/basic_app/splat.yaml")], None, False)
 
         comparison = filecmp.dircmp(
             "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
@@ -95,6 +97,8 @@ class Testing(unittest.TestCase):
 
 
 def test_init():
+    import pathlib
+
     options_dict = {
         "options": {
             "platform": "n64",
@@ -123,7 +127,9 @@ def test_init():
             [0x1290],
         ],
     }
-    options.initialize(options_dict, ["./test/basic_app/splat.yaml"], [], False)
+    options.initialize(
+        options_dict, [pathlib.Path("./test/basic_app/splat.yaml")], [], False
+    )
 
 
 class Symbols(unittest.TestCase):
