@@ -6,6 +6,7 @@ from src.splat.scripts.split import *
 import unittest
 import io
 import filecmp
+import pathlib
 from src.splat.util import symbols, options
 import spimdisasm
 from src.splat.segtypes.common.rodata import CommonSegRodata
@@ -51,7 +52,7 @@ class Testing(unittest.TestCase):
 
     def test_basic_app(self):
         spimdisasm.common.GlobalConfig.ASM_GENERATED_BY = False
-        main(["test/basic_app/splat.yaml"], None, False)
+        main([pathlib.Path("test/basic_app/splat.yaml")], None, False)
 
         comparison = filecmp.dircmp(
             "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
@@ -123,7 +124,9 @@ def test_init():
             [0x1290],
         ],
     }
-    options.initialize(options_dict, ["./test/basic_app/splat.yaml"], [], False)
+    options.initialize(
+        options_dict, [pathlib.Path("./test/basic_app/splat.yaml")], [], False
+    )
 
 
 class Symbols(unittest.TestCase):
@@ -342,8 +345,6 @@ class Bss(unittest.TestCase):
 
 class SymbolsInitialize(unittest.TestCase):
     def test_attrs(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 
@@ -374,8 +375,6 @@ class SymbolsInitialize(unittest.TestCase):
         assert symbols.all_symbols[0].given_name_end == "the_name_end"
 
     def test_boolean_attrs(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 
@@ -407,8 +406,6 @@ class SymbolsInitialize(unittest.TestCase):
 
     # test spim ban range
     def test_ignore(self):
-        import pathlib
-
         symbols.reset_symbols()
         test_init()
 

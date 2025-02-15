@@ -344,7 +344,7 @@ class OptParser:
 
 def _parse_yaml(
     yaml: Dict,
-    config_paths: List[str],
+    config_paths: List[Path],
     modes: List[str],
     verbose: bool = False,
     disasm_all: bool = False,
@@ -356,7 +356,7 @@ def _parse_yaml(
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(
-        os.path.normpath(Path(config_paths[0]).parent / p.parse_opt("base_path", str))
+        os.path.normpath(config_paths[0].parent / p.parse_opt("base_path", str))
     )
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
@@ -574,7 +574,7 @@ def _parse_yaml(
 
 def initialize(
     config: Dict,
-    config_paths: List[str],
+    config_paths: List[Path],
     modes: Optional[List[str]] = None,
     verbose=False,
     disasm_all=False,
