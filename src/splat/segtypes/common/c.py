@@ -380,7 +380,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
             asm_outpath = asm_out_dir / self.name / f"{sym.filename}.s"
             rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
-            final_path = Path(f"{rel_asm_outpath}").as_posix()
+            final_path = Path(rel_asm_outpath).as_posix()
             return f'#pragma GLOBAL_ASM("{final_path}")'
 
         if options.opts.use_legacy_include_asm:
