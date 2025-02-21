@@ -1,7 +1,6 @@
 import os
 import re
 from pathlib import Path
-from pathlib import PureWindowsPath
 from typing import Optional, Set, List
 
 import rabbitizer
@@ -381,15 +380,15 @@ class CommonSegC(CommonSegCodeSubsegment):
             # IDO uses the asm processor to embeed assembly, and it doesn't require a special directive to include symbols
             asm_outpath = asm_out_dir / self.name / f"{sym.filename}.s"
             rel_asm_outpath = os.path.relpath(asm_outpath, options.opts.base_path)
-            final_path = PureWindowsPath(f"{rel_asm_outpath}").as_posix()
+            final_path = Path(f"{rel_asm_outpath}").as_posix()
             return f'#pragma GLOBAL_ASM("{final_path}")'
 
         if options.opts.use_legacy_include_asm:
             rel_asm_out_dir = asm_out_dir.relative_to(options.opts.nonmatchings_path)
-            final_path = f'{(rel_asm_out_dir / self.name).as_posix()}'
+            final_path = f"{(rel_asm_out_dir / self.name).as_posix()}"
             return f'{macro_name}(const s32, "{final_path}", {sym.filename});'
 
-        final_path = f'{(asm_out_dir / self.name).as_posix()}'
+        final_path = f"{(asm_out_dir / self.name).as_posix()}"
         return f'{macro_name}("{final_path}", {sym.filename});'
 
     def get_c_lines_for_function(
