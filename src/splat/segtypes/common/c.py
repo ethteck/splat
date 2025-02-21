@@ -385,10 +385,10 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         if options.opts.use_legacy_include_asm:
             rel_asm_out_dir = asm_out_dir.relative_to(options.opts.nonmatchings_path)
-            final_path = f"{(rel_asm_out_dir / self.name).as_posix()}"
+            final_path = (rel_asm_out_dir / self.name).as_posix()
             return f'{macro_name}(const s32, "{final_path}", {sym.filename});'
 
-        final_path = f"{(asm_out_dir / self.name).as_posix()}"
+        final_path = (asm_out_dir / self.name).as_posix()
         return f'{macro_name}("{final_path}", {sym.filename});'
 
     def get_c_lines_for_function(
