@@ -26,6 +26,9 @@ jobs:
     - name: mypy splat lib
       run: mypy --show-column-numbers --hide-error-context src/splat
 
+    - name: mypy test
+      run: mypy --show-column-numbers --hide-error-context test/test.py
+
   mypy_programs_checks:
     runs-on: ubuntu-latest
     name: mypy splat programs
@@ -49,6 +52,3 @@ jobs:
 
     - name: mypy create_config
       run: mypy --show-column-numbers --hide-error-context create_config.py
-
-    - name: mypy test
-      run: mypy --show-column-numbers --hide-error-context test/test.py

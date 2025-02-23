@@ -44,6 +44,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           ${{ matrix.os.python_venv }} -m pip install -U -r requirements.txt
+          ${{ matrix.os.python_venv }} -m pip install -e .
 
       - name: Build `basic_app` on ${{ matrix.os.name }}
         if: matrix.os.name == 'linux'
