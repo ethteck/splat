@@ -51,7 +51,7 @@ def write_file_if_different(path: Path, new_content: str):
 
     if old_content != new_content:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w") as f:
+        with path.open("w", newline=options.opts.c_newline) as f:
             f.write(new_content)
 
 
@@ -522,18 +522,18 @@ class LinkerWriter:
             )
 
     def save_dependencies_file(self, output_path: Path, target_elf_path: Path):
-        output = f"{target_elf_path}:"
+        output = f"{target_elf_path.as_posix()}:"
 
         for entry in self.dependencies_entries:
             if entry.object_path is None:
                 continue
-            output += f" \\\n    {entry.object_path}"
+            output += f" \\\n    {entry.object_path.as_posix()}"
 
         output += "\n"
         for entry in self.dependencies_entries:
             if entry.object_path is None:
                 continue
-            output += f"{entry.object_path}:\n"
+            output += f"{entry.object_path.as_posix()}:\n"
         write_file_if_different(output_path, output)
 
     def _writeln(self, line: str):
@@ -561,7 +561,7 @@ class LinkerWriter:
         self.header_symbols.add(symbol)
 
     def _write_object_path_section(self, object_path: Path, section: str):
-        self._writeln(f"{object_path}({section});")
+        self._writeln(f"{object_path.as_posix()}({section});")
 
     def _begin_segment(
         self, segment: Segment, seg_name: str, noload: bool, is_first: bool

@@ -22,6 +22,7 @@ jobs:
         pip install mypy
         pip install -r requirements.txt
         pip install types-PyYAML
+        pip install -e .
 
     - name: mypy splat lib
       run: mypy --show-column-numbers --hide-error-context src/splat

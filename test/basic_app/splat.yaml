@@ -1,20 +1,22 @@
 options:
+  base_path:    split
   platform:     n64
-  compiler:     GCC
+  compiler:     KMC
   basename:     basic_app
-  base_path:    .
   build_path:   build
-  target_path:  build/basic_app.bin
-  asm_path:     split/asm
-  src_path:     split/src
-  ld_script_path: split/basic_app.ld
-  cache_path:     split/.splache
-  symbol_addrs_path:    split/generated.symbols.txt
-  undefined_funcs_auto_path: split/undefined_funcs_auto.txt
-  undefined_syms_auto_path:  split/undefined_syms_auto.txt
-  asset_path: split/assets
-  compiler: GCC
+  target_path:  ../build/basic_app.bin
+  elf_path:     build/basic_app_target.elf
+  asm_path:     asm
+  src_path:     src
+  ld_script_path: basic_app.ld
+  cache_path:     .splache
+  symbol_addrs_path:    generated.symbols.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.txt
+  undefined_syms_auto_path:  undefined_syms_auto.txt
+  asset_path: assets
   o_as_suffix: True
+  ld_dependencies: True
+  create_asm_dependencies: True
 segments:
   - name: header
     type: header
