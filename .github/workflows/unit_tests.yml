@@ -13,15 +13,18 @@ jobs:
         os: [
           {
             name: linux,
-            runner: ubuntu-latest
-          },
-          {
-            name: windows,
-            runner: windows-latest
+            runner: ubuntu-latest,
+            python_venv: .venv/bin/python3,
           },
           {
             name: macos,
-            runner: macos-latest
+            runner: macos-latest,
+            python_venv: .venv/bin/python3,
+          },
+          {
+            name: windows,
+            runner: windows-latest,
+            python_venv: .venv/Scripts/python3,
           },
         ]
 
@@ -39,7 +42,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          .venv/bin/python3 -m pip install -U -r requirements.txt
+          ${{ matrix.os.python_venv }} -m pip install -U -r requirements.txt
 
       - name: Build `basic_app` on ${{ matrix.os.name }}
         if: matrix.os.name == 'linux'
@@ -52,4 +55,4 @@ jobs:
 
       - name: Run the test
         run: |
-          .venv/bin/python3 test.py
+          ${{ matrix.os.python_venv }} test.py
