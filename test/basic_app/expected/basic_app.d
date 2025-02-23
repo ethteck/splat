@@ -1,4 +1,4 @@
-split/build/basic_app_target.elf: \
+test/basic_app/split/build/basic_app_target.elf: \
     build/asm/header.o \
     build/assets/dummy_ipl3.o \
     build/src/main.o \
