@@ -477,7 +477,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 o_path = build_path / c_path.with_suffix(".o")
             else:
                 o_path = build_path / c_path.with_suffix(c_path.suffix + ".o")
-            f.write(f"{o_path}:")
+            f.write(f"{o_path.as_posix()}:")
             depend_list = []
             for entry in symbols_entries:
                 if entry.function is not None:
@@ -488,7 +488,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         outpath.parent.mkdir(parents=True, exist_ok=True)
 
                         depend_list.append(outpath)
-                        f.write(f" \\\n    {outpath}")
+                        f.write(f" \\\n    {outpath.as_posix()}")
                 else:
                     for rodata_sym in entry.rodataSyms:
                         rodata_name = rodata_sym.getName()
@@ -498,9 +498,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                             outpath.parent.mkdir(parents=True, exist_ok=True)
 
                             depend_list.append(outpath)
-                            f.write(f" \\\n    {outpath}")
+                            f.write(f" \\\n    {outpath.as_posix()}")
 
             f.write("\n")
 
             for depend_file in depend_list:
-                f.write(f"{depend_file}:\n")
+                f.write(f"{depend_file.as_posix()}:\n")

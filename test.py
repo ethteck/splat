@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import unittest
-import io
+import difflib
 import filecmp
+import io
 import pathlib
 import spimdisasm
-import difflib
+import unittest
 
 from src.splat import __version__
 from src.splat.scripts.split import *
