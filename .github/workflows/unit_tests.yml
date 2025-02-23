@@ -6,6 +6,7 @@ on:
 
 jobs:
   unit_tests:
+    name: unit_tests on ${{ matrix.os.name }}
     runs-on: ${{ matrix.os.runner }}
     strategy:
       fail-fast: false
@@ -54,5 +55,6 @@ jobs:
           git diff --exit-code test/basic_app/build/basic_app.bin
 
       - name: Run the test
+        working-directory: test/basic_app
         run: |
-          ${{ matrix.os.python_venv }} test.py
+          ../../${{ matrix.os.python_venv }} ../test.py
