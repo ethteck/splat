@@ -57,4 +57,4 @@ jobs:
 
       - name: Run the test
         run: |
-          ${{ matrix.os.python_venv }} test/test.py
+          ${{ matrix.os.python_venv }} test/test.py || (tree test/basic_app && false)
