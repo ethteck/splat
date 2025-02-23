@@ -6,22 +6,44 @@ on:
 
 jobs:
   unit_tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+          {
+            name: linux,
+            runner: ubuntu-latest
+          },
+          {
+            name: windows,
+            runner: windows-latest
+          },
+          {
+            name: macos,
+            runner: macos-latest
+          },
+        ]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install dependencies
+        if: matrix.os.name == 'linux'
         run: sudo apt-get install -y build-essential make binutils-mips-linux-gnu python3 python3-pip wget
 
       - name: Install Python dependencies
         run: python3 -m pip install -U -r requirements.txt
 
-      - name: Build basic_app
+      - name: Build `basic_app` on ${{ matrix.os.name }}
+        if: matrix.os.name == 'linux'
+        # Linux CI checks if any of the test C code has changed without updating the generated binary
         run: |
           make -C test/basic_app clean
           make -C test/basic_app download_kmc
           make -C test/basic_app all
+          git diff --exit-code test/basic_app/build/basic_app.bin
 
       - name: Run the test
         run: python3 test.py
