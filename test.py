@@ -7,13 +7,13 @@ import pathlib
 import spimdisasm
 import unittest
 
-from splat import __version__
-from splat.scripts.split import *
-from splat.util import symbols, options
-from splat.segtypes.common.rodata import CommonSegRodata
-from splat.segtypes.common.code import CommonSegCode
-from splat.segtypes.common.c import CommonSegC
-from splat.segtypes.common.bss import CommonSegBss
+from src.splat import __version__
+from src.splat.scripts.split import *
+from src.splat.util import symbols, options
+from src.splat.segtypes.common.rodata import CommonSegRodata
+from src.splat.segtypes.common.code import CommonSegCode
+from src.splat.segtypes.common.c import CommonSegC
+from src.splat.segtypes.common.bss import CommonSegBss
 
 
 class Testing(unittest.TestCase):
