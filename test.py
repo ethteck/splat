@@ -35,14 +35,18 @@ class Testing(unittest.TestCase):
         for sub_dcmp in dcmp.subdirs.values():
             self.get_diff_files(sub_dcmp, out)
 
-    def get_left_only_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_left_only_files(
+        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+    ):
         for name in dcmp.left_only:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_left_only_files(sub_dcmp, out)
 
-    def get_right_only_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_right_only_files(
+        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+    ):
         for name in dcmp.right_only:
             out.append((name, dcmp.left, dcmp.right))
 

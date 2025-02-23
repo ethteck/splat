@@ -51,7 +51,7 @@ def write_file_if_different(path: Path, new_content: str):
 
     if old_content != new_content:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w") as f:
+        with path.open("w", newline=options.opts.c_newline) as f:
             f.write(new_content)
 
 

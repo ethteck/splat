@@ -451,7 +451,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     c_lines += self.get_c_lines_for_rodata_sym(rodata_sym, asm_out_dir)
 
         c_path.parent.mkdir(parents=True, exist_ok=True)
-        with c_path.open("w") as f:
+        with c_path.open("w", newline=options.opts.c_newline) as f:
             f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
 
@@ -475,7 +475,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         dep_path = build_path / c_path.with_suffix(".asmproc.d")
         dep_path.parent.mkdir(parents=True, exist_ok=True)
-        with dep_path.open("w") as f:
+        with dep_path.open("w", newline=options.opts.c_newline) as f:
             if options.opts.use_o_as_suffix:
                 o_path = build_path / c_path.with_suffix(".o")
             else:
