@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-from spimdisasm.common import FileSectionType
-
-from src.splat.scripts.split import *
-import unittest
-import io
-import filecmp
-import pathlib
-from src.splat.util import symbols, options
-import spimdisasm
-from src.splat.segtypes.common.rodata import CommonSegRodata
-from src.splat.segtypes.common.code import CommonSegCode
-from src.splat.segtypes.common.c import CommonSegC
-from src.splat.segtypes.common.bss import CommonSegBss
-from src.splat import __version__
 import difflib
+import filecmp
+import io
+import pathlib
+import spimdisasm
+import unittest
+
+from splat import __version__
+from splat.scripts.split import *
+from splat.util import symbols, options
+from splat.segtypes.common.rodata import CommonSegRodata
+from splat.segtypes.common.code import CommonSegCode
+from splat.segtypes.common.c import CommonSegC
+from splat.segtypes.common.bss import CommonSegBss
 
 
 class Testing(unittest.TestCase):
@@ -188,7 +187,7 @@ class Symbols(unittest.TestCase):
             vram=0x40000000,
             filename="test",
             words=[],
-            sectionType=FileSectionType.Text,
+            sectionType=spimdisasm.common.FileSectionType.Text,
             segmentVromStart=0x0,
             overlayCategory=None,
         )

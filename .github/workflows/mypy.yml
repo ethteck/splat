@@ -51,4 +51,4 @@ jobs:
       run: mypy --show-column-numbers --hide-error-context create_config.py
 
     - name: mypy test
-      run: mypy --show-column-numbers --hide-error-context test.py
+      run: mypy --show-column-numbers --hide-error-context test/test.py
