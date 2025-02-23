@@ -21,30 +21,30 @@ class Testing(unittest.TestCase):
         with io.open(test_path) as test_f, io.open(ref_path) as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
-    def get_same_files(self, dcmp, out):
+    def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[Path, Path, Path]]):
         for name in dcmp.same_files:
-            out.append((name, dcmp.left, dcmp.right))
+            out.append((Path(name), Path(dcmp.left), Path(dcmp.right)))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_same_files(sub_dcmp, out)
 
-    def get_diff_files(self, dcmp, out):
+    def get_diff_files(self, dcmp: filecmp.dircmp, out: List[Tuple[Path, Path, Path]]):
         for name in dcmp.diff_files:
-            out.append((name, dcmp.left, dcmp.right))
+            out.append((Path(name), Path(dcmp.left), Path(dcmp.right)))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_diff_files(sub_dcmp, out)
 
-    def get_left_only_files(self, dcmp, out):
+    def get_left_only_files(self, dcmp: filecmp.dircmp, out: List[Tuple[Path, Path, Path]]):
         for name in dcmp.left_only:
-            out.append((name, dcmp.left, dcmp.right))
+            out.append((Path(name), Path(dcmp.left), Path(dcmp.right)))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_left_only_files(sub_dcmp, out)
 
-    def get_right_only_files(self, dcmp, out):
+    def get_right_only_files(self, dcmp: filecmp.dircmp, out: List[Tuple[Path, Path, Path]]):
         for name in dcmp.right_only:
-            out.append((name, dcmp.left, dcmp.right))
+            out.append((Path(name), Path(dcmp.left), Path(dcmp.right)))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_right_only_files(sub_dcmp, out)
@@ -57,16 +57,16 @@ class Testing(unittest.TestCase):
             "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
         )
 
-        diff_files: List[Tuple[str, str, str]] = []
+        diff_files: List[Tuple[Path, Path, Path]] = []
         self.get_diff_files(comparison, diff_files)
 
-        same_files: List[Tuple[str, str, str]] = []
+        same_files: List[Tuple[Path, Path, Path]] = []
         self.get_same_files(comparison, same_files)
 
-        left_only_files: List[Tuple[str, str, str]] = []
+        left_only_files: List[Tuple[Path, Path, Path]] = []
         self.get_left_only_files(comparison, left_only_files)
 
-        right_only_files: List[Tuple[str, str, str]] = []
+        right_only_files: List[Tuple[Path, Path, Path]] = []
         self.get_right_only_files(comparison, right_only_files)
 
         print("same_files", same_files)
