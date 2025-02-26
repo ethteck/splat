@@ -83,6 +83,11 @@ class CommonSegTextbin(CommonSegment):
 
         if sym is not None:
             f.write(f"{asm_label} {sym.name}\n")
+            if self.is_text() and asm_label == ".globl":
+                f.write(f".ent {sym.name}\n")
+                f.write(f"{sym.name}:\n")
+            if not self.is_text() and asm_label == ".globl":
+                f.write(f"{sym.name}:\n")
             sym.defined = True
 
         f.write(f'.incbin "{binpath.as_posix()}"\n')
