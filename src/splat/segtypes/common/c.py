@@ -451,7 +451,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     c_lines += self.get_c_lines_for_rodata_sym(rodata_sym, asm_out_dir)
 
         c_path.parent.mkdir(parents=True, exist_ok=True)
-        with c_path.open("w") as f:
+        with c_path.open("w", newline=options.opts.c_newline) as f:
             f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
 
@@ -475,12 +475,12 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         dep_path = build_path / c_path.with_suffix(".asmproc.d")
         dep_path.parent.mkdir(parents=True, exist_ok=True)
-        with dep_path.open("w") as f:
+        with dep_path.open("w", newline=options.opts.c_newline) as f:
             if options.opts.use_o_as_suffix:
                 o_path = build_path / c_path.with_suffix(".o")
             else:
                 o_path = build_path / c_path.with_suffix(c_path.suffix + ".o")
-            f.write(f"{o_path}:")
+            f.write(f"{o_path.as_posix()}:")
             depend_list = []
             for entry in symbols_entries:
                 if entry.function is not None:
@@ -491,7 +491,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         outpath.parent.mkdir(parents=True, exist_ok=True)
 
                         depend_list.append(outpath)
-                        f.write(f" \\\n    {outpath}")
+                        f.write(f" \\\n    {outpath.as_posix()}")
                 else:
                     for rodata_sym in entry.rodataSyms:
                         rodata_name = rodata_sym.getName()
@@ -501,9 +501,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                             outpath.parent.mkdir(parents=True, exist_ok=True)
 
                             depend_list.append(outpath)
-                            f.write(f" \\\n    {outpath}")
+                            f.write(f" \\\n    {outpath.as_posix()}")
 
             f.write("\n")
 
             for depend_file in depend_list:
-                f.write(f"{depend_file}:\n")
+                f.write(f"{depend_file.as_posix()}:\n")

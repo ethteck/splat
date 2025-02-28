@@ -1,6 +1,3 @@
-.set noat      /* allow manual use of $at */
-.set noreorder /* don't insert nops after branches */
-
 .section .rodata
 .align 3
 glabel jtbl_80000518

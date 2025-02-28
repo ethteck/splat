@@ -7,7 +7,7 @@ SECTIONS
     {
         FILL(0x00000000);
         header_DATA_START = .;
-        build/split/asm/header.o(.data);
+        build/asm/header.o(.data);
         header_DATA_END = .;
         header_DATA_SIZE = ABSOLUTE(header_DATA_END - header_DATA_START);
     }
@@ -21,7 +21,7 @@ SECTIONS
     {
         FILL(0x00000000);
         dummy_ipl3_DATA_START = .;
-        build/split/assets/dummy_ipl3.o(.data);
+        build/assets/dummy_ipl3.o(.data);
         . = ALIGN(., 16);
         dummy_ipl3_DATA_END = .;
         dummy_ipl3_DATA_SIZE = ABSOLUTE(dummy_ipl3_DATA_END - dummy_ipl3_DATA_START);
@@ -38,20 +38,20 @@ SECTIONS
     {
         FILL(0x00000000);
         boot_TEXT_START = .;
-        build/split/src/main.o(.text);
-        build/split/asm/handwritten.o(.text);
+        build/src/main.o(.text);
+        build/asm/handwritten.o(.text);
         . = ALIGN(., 16);
         boot_TEXT_END = .;
         boot_TEXT_SIZE = ABSOLUTE(boot_TEXT_END - boot_TEXT_START);
         boot_DATA_START = .;
-        build/split/asm/data/main.data.o(.data);
-        build/split/asm/handwritten.o(.data);
+        build/asm/data/main.data.o(.data);
+        build/asm/handwritten.o(.data);
         . = ALIGN(., 16);
         boot_DATA_END = .;
         boot_DATA_SIZE = ABSOLUTE(boot_DATA_END - boot_DATA_START);
         boot_RODATA_START = .;
-        build/split/src/main.o(.rodata);
-        build/split/asm/handwritten.o(.rodata);
+        build/src/main.o(.rodata);
+        build/asm/handwritten.o(.rodata);
         . = ALIGN(., 16);
         boot_RODATA_END = .;
         boot_RODATA_SIZE = ABSOLUTE(boot_RODATA_END - boot_RODATA_START);
@@ -61,8 +61,8 @@ SECTIONS
     {
         FILL(0x00000000);
         boot_BSS_START = .;
-        build/split/asm/data/main.bss.o(.bss);
-        build/split/asm/handwritten.o(.bss);
+        build/asm/data/main.bss.o(.bss);
+        build/asm/handwritten.o(.bss);
         . = ALIGN(., 16);
         boot_BSS_END = .;
         boot_BSS_SIZE = ABSOLUTE(boot_BSS_END - boot_BSS_START);

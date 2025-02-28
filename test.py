@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-from spimdisasm.common import FileSectionType
-
-from src.splat.scripts.split import *
-import unittest
-import io
+import difflib
 import filecmp
+import io
 import pathlib
-from src.splat.util import symbols, options
 import spimdisasm
+import unittest
+
+from src.splat import __version__
+from src.splat.scripts.split import *
+from src.splat.util import symbols, options
 from src.splat.segtypes.common.rodata import CommonSegRodata
 from src.splat.segtypes.common.code import CommonSegCode
 from src.splat.segtypes.common.c import CommonSegC
 from src.splat.segtypes.common.bss import CommonSegBss
-from src.splat import __version__
-import difflib
 
 
 class Testing(unittest.TestCase):
@@ -22,28 +21,32 @@ class Testing(unittest.TestCase):
         with io.open(test_path) as test_f, io.open(ref_path) as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
-    def get_same_files(self, dcmp, out):
+    def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
         for name in dcmp.same_files:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_same_files(sub_dcmp, out)
 
-    def get_diff_files(self, dcmp, out):
+    def get_diff_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
         for name in dcmp.diff_files:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_diff_files(sub_dcmp, out)
 
-    def get_left_only_files(self, dcmp, out):
+    def get_left_only_files(
+        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+    ):
         for name in dcmp.left_only:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_left_only_files(sub_dcmp, out)
 
-    def get_right_only_files(self, dcmp, out):
+    def get_right_only_files(
+        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+    ):
         for name in dcmp.right_only:
             out.append((name, dcmp.left, dcmp.right))
 
@@ -188,7 +191,7 @@ class Symbols(unittest.TestCase):
             vram=0x40000000,
             filename="test",
             words=[],
-            sectionType=FileSectionType.Text,
+            sectionType=spimdisasm.common.FileSectionType.Text,
             segmentVromStart=0x0,
             overlayCategory=None,
         )
