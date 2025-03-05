@@ -41,9 +41,6 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
-        if self.type.startswith(".") and not options.opts.disassemble_all:
-            return
-
         if self.spim_section is None or not self.should_self_split():
             return
 
@@ -64,7 +61,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             f.write(self.spim_section.disassemble())
 
     def should_self_split(self) -> bool:
-        return options.opts.is_mode_active("data")
+        return options.opts.is_mode_active("data") and (
+            not self.type.startswith(".") or options.opts.disassemble_all
+        )
 
     def should_scan(self) -> bool:
         return True

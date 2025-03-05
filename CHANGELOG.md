@@ -4,7 +4,7 @@
 
 - Fix splat on Windows not using forward slashes on generated paths.
 - Setup CI to be run on Windows and Macos too.
-- Fix generated `incbin`s segments not being compatible with SN64 compiler.
+- Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
 
 ### 0.32.3
 

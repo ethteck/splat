@@ -40,7 +40,7 @@ class CommonSegAsmtu(CommonSegAsm):
                 if (
                     isinstance(sibling, CommonSegCodeSubsegment)
                     and sibling.spim_section is not None
-                    and not sibling.should_split()
+                    and not sibling.should_self_split()
                 ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
@@ -58,7 +58,7 @@ class CommonSegAsmtu(CommonSegAsm):
                 if (
                     isinstance(sibling, CommonSegCodeSubsegment)
                     and sibling.spim_section is not None
-                    and not sibling.should_split()
+                    and not sibling.should_self_split()
                 ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
