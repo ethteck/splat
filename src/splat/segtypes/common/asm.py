@@ -22,17 +22,6 @@ class CommonSegAsm(CommonSegCodeSubsegment):
         ):
             self.scan_code(rom_bytes)
 
-    def get_asm_file_extra_directives(self) -> List[str]:
-        ret = []
-
-        ret.append(".set noat")  # allow manual use of $at
-        ret.append(".set noreorder")  # don't insert nops after branches
-        if options.opts.add_set_gp_64:
-            ret.append(".set gp=64")  # allow use of 64-bit general purpose registers
-        ret.append("")
-
-        return ret
-
     def split(self, rom_bytes: bytes):
         if self.rom_start == self.rom_end:
             return

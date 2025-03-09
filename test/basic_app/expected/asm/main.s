@@ -1,5 +1,9 @@
 .include "macro.inc"
 
+.set noat
+.set noreorder
+.set gp=64
+
 .section .text, "ax"
 
 glabel func_80000400

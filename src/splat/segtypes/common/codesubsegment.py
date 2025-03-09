@@ -218,7 +218,15 @@ class CommonSegCodeSubsegment(Segment):
         return ret
 
     def get_asm_file_extra_directives(self) -> List[str]:
-        return []
+        ret = []
+
+        ret.append(".set noat")  # allow manual use of $at
+        ret.append(".set noreorder")  # don't insert nops after branches
+        if options.opts.add_set_gp_64:
+            ret.append(".set gp=64")  # allow use of 64-bit general purpose registers
+        ret.append("")
+
+        return ret
 
     def asm_out_path(self) -> Path:
         return options.opts.asm_path / self.dir / f"{self.name}.s"

@@ -667,7 +667,7 @@ Don't skip disassembling already matched functions and migrated sections
 
 Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
 
-Can be used to generate "base" or "expected" objects for asm diffing.
+Can be used to generate "target" or "expected" objects for asm diffing.
 
 ### global_vram_start and global_vram_end
 

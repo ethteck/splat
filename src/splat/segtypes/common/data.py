@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -37,6 +37,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         if self.rom_start is not None and self.rom_end is not None:
             self.disassemble_data(rom_bytes)
+
+    def get_asm_file_extra_directives(self) -> List[str]:
+        return []
 
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
