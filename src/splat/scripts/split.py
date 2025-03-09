@@ -449,13 +449,14 @@ def main(
     skip_version_check: bool = False,
     stdout_only: bool = False,
     disassemble_all: bool = False,
+    keep_complete_c_asm_splits_for_objdiff_compatibility=False,
 ):
     if stdout_only:
         progress_bar.out_file = sys.stdout
 
     # Load config
     global config
-    config = conf.load(config_path, modes, verbose, disassemble_all)
+    config = conf.load(config_path, modes, verbose, disassemble_all, keep_complete_c_asm_splits_for_objdiff_compatibility)
 
     disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
 
@@ -537,6 +538,11 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         help="Disasemble matched functions and migrated data",
         action="store_true",
     )
+    parser.add_argument(
+        "--keep_complete_c_asm_splits_for_objdiff_compatibility",
+        help="Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions",
+        action="store_true",
+    )
 
 
 def process_arguments(args: argparse.Namespace):
@@ -548,6 +554,7 @@ def process_arguments(args: argparse.Namespace):
         args.skip_version_check,
         args.stdout_only,
         args.disassemble_all,
+        args.keep_complete_c_asm_splits_for_objdiff_compatibility,
     )
 
 
