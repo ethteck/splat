@@ -84,6 +84,13 @@ def load(
 
     vram_classes.initialize(config.get("vram_classes"))
 
-    options.initialize(config, config_path, modes, verbose, disassemble_all, keep_complete_c_asm_splits_for_objdiff_compatibility)
+    options.initialize(
+        config,
+        config_path,
+        modes,
+        verbose,
+        disassemble_all,
+        keep_complete_c_asm_splits_for_objdiff_compatibility,
+    )
 
     return config

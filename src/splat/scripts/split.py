@@ -456,7 +456,13 @@ def main(
 
     # Load config
     global config
-    config = conf.load(config_path, modes, verbose, disassemble_all, keep_complete_c_asm_splits_for_objdiff_compatibility)
+    config = conf.load(
+        config_path,
+        modes,
+        verbose,
+        disassemble_all,
+        keep_complete_c_asm_splits_for_objdiff_compatibility,
+    )
 
     disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
 

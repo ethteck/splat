@@ -561,7 +561,10 @@ def _parse_yaml(
         # but we still have to check the yaml option first to avoid leaving option unparsed,
         # because splat would complain about an unrecognized yaml option otherwise.
         disassemble_all=p.parse_opt("disassemble_all", bool, False) or disasm_all,
-        keep_complete_c_asm_splits_for_objdiff_compatibility=p.parse_opt("keep_complete_c_asm_splits_for_objdiff_compatibility", bool, False) or keep_complete_c_asm_splits_for_objdiff_compatibility,
+        keep_complete_c_asm_splits_for_objdiff_compatibility=p.parse_opt(
+            "keep_complete_c_asm_splits_for_objdiff_compatibility", bool, False
+        )
+        or keep_complete_c_asm_splits_for_objdiff_compatibility,
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
         use_gp_rel_macro_nonmatching=p.parse_opt(
@@ -589,4 +592,11 @@ def initialize(
     if not modes:
         modes = ["all"]
 
-    opts = _parse_yaml(config["options"], config_paths, modes, verbose, disasm_all, keep_complete_c_asm_splits_for_objdiff_compatibility)
+    opts = _parse_yaml(
+        config["options"],
+        config_paths,
+        modes,
+        verbose,
+        disasm_all,
+        keep_complete_c_asm_splits_for_objdiff_compatibility,
+    )
