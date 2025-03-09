@@ -663,6 +663,12 @@ Tries to detect redundant and unreferenced functions ends and merge them togethe
 
 Don't skip disassembling already matched functions and migrated sections
 
+### keep_complete_c_asm_splits_for_objdiff_compatibility
+
+Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
+
+Can be used to generate "base" or "expected" objects for asm diffing.
+
 ### global_vram_start and global_vram_end
 
 Allow specifying that the global memory range may be larger than what was automatically detected.

@@ -276,6 +276,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                                 spim_rodata_sym, asm_out_dir, rodata_sym
                             )
 
+            if options.opts.keep_complete_c_asm_splits_for_objdiff_compatibility:
+                self.split_as_asm_file(self.asm_out_path())
+
     def get_c_preamble(self):
         ret = []
 
