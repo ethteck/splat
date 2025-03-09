@@ -101,6 +101,8 @@ class CommonSegTextbin(CommonSegment):
                     or sym.given_size == self.rom_end - self.rom_start
                 ):
                     f.write(f"{asm_label} {sym.given_name_end}\n")
+                    if asm_label == ".globl":
+                        f.write(f"{sym.given_name_end}:\n")
 
     def split(self, rom_bytes):
         if self.rom_end is None:
