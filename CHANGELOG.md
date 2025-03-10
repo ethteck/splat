@@ -1,10 +1,13 @@
 # splat Release Notes
 
-### 0.32.4
+### 0.33.0
 
-- Fix splat on Windows not using forward slashes on generated paths.
-- Setup CI to be run on Windows and Macos too.
-- Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
+* BREAKING: Move splat config loading and parsing into "splat.util.conf" to modularize this part of the code and allow projects to interface with segment loading more gracefully.
+  * `initialize_config` is now `splat.util.conf.load`. It takes `Path`s instead of `str`s for YAML paths. It will no longer `exit` if config merging fails, but will throw a `TypeError` which can be handled as desired by callers.
+* Fix splat on Windows not using forward slashes on generated paths.
+* Setup CI to be run on Windows and MacOS too.
+* Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
+* Fix output of incbin segments for SN64 projects
 
 ### 0.32.3
 
