@@ -1,19 +1,20 @@
 # splat Release Notes
 
-### 0.32.4
+### 0.33.0
 
-- Fix splat on Windows not using forward slashes on generated paths.
-- Setup CI to be run on Windows and Macos too.
-- Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
-- New yaml option: `keep_complete_c_asm_splits_for_objdiff_compatibility`
-  - Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
-  - Can be used to generate "target" or "expected" objects for asm diffing.
-  - Also available as a cli parameter: `--keep_complete_c_asm_splits_for_objdiff_compatibility`
+* Fix splat on Windows not using forward slashes on generated paths.
+* Setup CI to be run on Windows and Macos too.
+* Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
+* New yaml option: `keep_complete_c_asm_splits_for_objdiff_compatibility`
+  * Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
+  * Can be used to generate "target" or "expected" objects for asm diffing.
+  * Also available as a cli parameter: `--keep_complete_c_asm_splits_for_objdiff_compatibility`
+* `spimdisasm` 1.33.0 or above is now required.
 
 ### 0.32.3
 
-- Fix "unrecognized YAML option" error if disassemble_all is provided via CLI and as a YAML option.
-- Slightly speed up `bss` disassembly for projects over thousands of subsegments in the same top-level segment.
+* Fix "unrecognized YAML option" error if disassemble_all is provided via CLI and as a YAML option.
+* Slightly speed up `bss` disassembly for projects over thousands of subsegments in the same top-level segment.
 
 ### 0.32.2
 
