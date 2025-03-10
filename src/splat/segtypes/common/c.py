@@ -279,10 +279,10 @@ class CommonSegC(CommonSegCodeSubsegment):
             if options.opts.keep_complete_c_asm_splits_for_objdiff_compatibility:
                 # Disable gpRelHack since this file is expected to be built with modern gas
                 section = self.spim_section.get_section()
-                old_value = section.gpRelHack
-                section.gpRelHack = False
+                old_value = section.getGpRelHack()
+                section.setGpRelHack(False)
                 self.split_as_asm_file(self.asm_out_path())
-                section.gpRelHack = old_value
+                section.setGpRelHack(old_value)
 
     def get_c_preamble(self):
         ret = []

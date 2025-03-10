@@ -61,7 +61,7 @@ class CommonSegCodeSubsegment(Segment):
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category
         section.detectRedundantFunctionEnd = self.detect_redundant_function_end
-        section.gpRelHack = not self.use_gp_rel_macro
+        section.setGpRelHack(not self.use_gp_rel_macro)
 
     def scan_code(self, rom_bytes, is_hasm=False):
         self.is_hasm = is_hasm
