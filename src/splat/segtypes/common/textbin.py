@@ -83,6 +83,10 @@ class CommonSegTextbin(CommonSegment):
 
         if sym is not None:
             f.write(f"{asm_label} {sym.name}\n")
+            if asm_label == ".globl":
+                if self.is_text():
+                    f.write(f".ent {sym.name}\n")
+                f.write(f"{sym.name}:\n")
             sym.defined = True
 
         f.write(f'.incbin "{binpath.as_posix()}"\n')
@@ -97,6 +101,8 @@ class CommonSegTextbin(CommonSegment):
                     or sym.given_size == self.rom_end - self.rom_start
                 ):
                     f.write(f"{asm_label} {sym.given_name_end}\n")
+                    if asm_label == ".globl":
+                        f.write(f"{sym.given_name_end}:\n")
 
     def split(self, rom_bytes):
         if self.rom_end is None:

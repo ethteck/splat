@@ -26,6 +26,7 @@ GCC = Compiler(
 SN64 = Compiler(
     "SN64",
     asm_function_macro=".globl",
+    asm_function_alt_macro=".globl",
     asm_jtbl_label_macro=".globl",
     asm_data_macro=".globl",
     asm_end_label=".end",
