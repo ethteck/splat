@@ -403,20 +403,84 @@ ld_symbol_header_path: path/to/linker_symbol_header
 
 ### ld_discard_section
 
-Determines whether to add a discard section to the linker script
+Determines whether to add a wildcard discard section to the linker script.
+
+This tells the linker that every section not explicitly listed on the linker script will be discarded.
+
+### ld_sections_allowlist
+
+A list of sections to preserve during link time. It can be useful to preserve debugging sections.
+
+#### Usage
+
+```yaml
+  ld_sections_allowlist:
+    - .shstrtab
+    - .mdebug
+    - .mdebug.abi32
+```
+
+Generates entries at the bottom of the linker script like:
+
+```text
+    .shstrtab 0 :
+    {
+        *(.shstrtab);
+    }
+    .mdebug 0 :
+    {
+        *(.mdebug);
+    }
+    .mdebug.abi32 0 :
+    {
+        *(.mdebug.abi32);
+    }
+```
+
+### ld_sections_denylist
+
+A list of sections to discard during link time. It can be useful to avoid using the [wildcard discard](#ld_discard_section).
+
+Note this option does not turn off [`ld_discard_section`](#ld_discard_section), neither checks if the listed sections overlap with it.
+
+#### Usage
+
+```yaml
+  ld_sections_denylist:
+    - .reginfo
+    - .MIPS.abiflags
+    - .MIPS.options
+    - .note.gnu.build-id
+    - .interp
+    - .eh_frame
+```
+
+Generates a discard section like this:
+
+```text
+    /DISCARD/ :
+    {
+        *(.reginfo);
+        *(.MIPS.abiflags);
+        *(.MIPS.options);
+        *(.note.gnu.build-id);
+        *(.interp);
+        *(.eh_frame);
+    }
+```
 
 ### ld_wildcard_sections
 
 Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
 
-### ld_use_symbolic_vram_addreses
+### ld_use_symbolic_vram_addresses
 
 Determines whether to use `follows_vram` (segment option) and `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
 Enabled by default. If disabled, this uses the plain integer values for vram addresses defined in the yaml.
 
 ### ld_partial_linking
 
-Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
+Change linker script generation to allow partially linking segments. Requires both [`ld_partial_scripts_path`](#ld_partial_scripts_path) and [`ld_partial_build_segments_path`](#ld_partial_build_segments_path) to be set.
 
 ### ld_partial_scripts_path
 
@@ -542,7 +606,7 @@ Determine the format that symbols should be named by default
 
 ### symbol_name_format_no_rom
 
-Same as `symbol_name_format` but for symbols with no rom address
+Same as [`symbol_name_format`](#symbol_name_format) but for symbols with no rom address
 
 ### find_file_boundaries
 
