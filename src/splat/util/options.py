@@ -220,6 +220,8 @@ class SplatOpts:
     detect_redundant_function_end: bool
     # Don't skip disassembling already matched functions and migrated sections
     disassemble_all: bool
+    # Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions
+    keep_complete_c_asm_splits_for_objdiff_compatibility: bool
     # Allow specifying that the global memory range may be larger than what was automatically detected.
     # Useful for projects where splat is used in multiple individual files, meaning the expected global segment may not be properly detected because each instance of splat can't see the info from other files.
     global_vram_start: Optional[int]
@@ -348,6 +350,7 @@ def _parse_yaml(
     modes: List[str],
     verbose: bool = False,
     disasm_all: bool = False,
+    keep_complete_c_asm_splits_for_objdiff_compatibility: bool = False,
 ) -> SplatOpts:
     p = OptParser(yaml)
 
@@ -558,6 +561,10 @@ def _parse_yaml(
         # but we still have to check the yaml option first to avoid leaving option unparsed,
         # because splat would complain about an unrecognized yaml option otherwise.
         disassemble_all=p.parse_opt("disassemble_all", bool, False) or disasm_all,
+        keep_complete_c_asm_splits_for_objdiff_compatibility=p.parse_opt(
+            "keep_complete_c_asm_splits_for_objdiff_compatibility", bool, False
+        )
+        or keep_complete_c_asm_splits_for_objdiff_compatibility,
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
         use_gp_rel_macro_nonmatching=p.parse_opt(
@@ -578,10 +585,18 @@ def initialize(
     modes: Optional[List[str]] = None,
     verbose=False,
     disasm_all=False,
+    keep_complete_c_asm_splits_for_objdiff_compatibility=False,
 ):
     global opts
 
     if not modes:
         modes = ["all"]
 
-    opts = _parse_yaml(config["options"], config_paths, modes, verbose, disasm_all)
+    opts = _parse_yaml(
+        config["options"],
+        config_paths,
+        modes,
+        verbose,
+        disasm_all,
+        keep_complete_c_asm_splits_for_objdiff_compatibility,
+    )

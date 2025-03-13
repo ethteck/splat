@@ -24,7 +24,7 @@ class CommonSegAsmtu(CommonSegAsm):
 
         with open(out_path, "w", newline="\n") as f:
             # Write `.text` contents
-            for line in self.get_file_header():
+            for line in self.get_asm_file_header():
                 f.write(line + "\n")
             f.write(self.spim_section.disassemble())
 

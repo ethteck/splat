@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -38,27 +38,16 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if self.rom_start is not None and self.rom_end is not None:
             self.disassemble_data(rom_bytes)
 
+    def get_asm_file_extra_directives(self) -> List[str]:
+        return []
+
     def split(self, rom_bytes: bytes):
         super().split(rom_bytes)
 
         if self.spim_section is None or not self.should_self_split():
             return
 
-        path = self.asm_out_path()
-
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        self.print_file_boundaries()
-
-        with path.open("w", newline="\n") as f:
-            f.write('.include "macro.inc"\n\n')
-            preamble = options.opts.generated_s_preamble
-            if preamble:
-                f.write(preamble + "\n")
-
-            f.write(f"{self.get_section_asm_line()}\n\n")
-
-            f.write(self.spim_section.disassemble())
+        self.split_as_asm_file(self.asm_out_path())
 
     def should_self_split(self) -> bool:
         return options.opts.is_mode_active("data") and (

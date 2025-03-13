@@ -1,7 +1,7 @@
 __package_name__ = __name__
 
 # Should be synced with pyproject.toml
-__version__ = "0.32.4"
+__version__ = "0.33.0"
 __author__ = "ethteck"
 
 from . import util as util
