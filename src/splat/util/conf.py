@@ -53,6 +53,7 @@ def load(
     modes: Optional[List[str]] = None,
     verbose: bool = False,
     disassemble_all: bool = False,
+    make_full_disasm_for_code=False,
 ) -> Dict[str, Any]:
     """
     Returns a `dict` with resolved splat config.
@@ -83,6 +84,13 @@ def load(
 
     vram_classes.initialize(config.get("vram_classes"))
 
-    options.initialize(config, config_path, modes, verbose, disassemble_all)
+    options.initialize(
+        config,
+        config_path,
+        modes,
+        verbose,
+        disassemble_all,
+        make_full_disasm_for_code,
+    )
 
     return config

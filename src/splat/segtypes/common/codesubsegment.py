@@ -1,4 +1,5 @@
-from typing import Optional
+from pathlib import Path
+from typing import Optional, List
 
 import spimdisasm
 import rabbitizer
@@ -60,7 +61,7 @@ class CommonSegCodeSubsegment(Segment):
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category
         section.detectRedundantFunctionEnd = self.detect_redundant_function_end
-        section.gpRelHack = not self.use_gp_rel_macro
+        section.setGpRelHack(not self.use_gp_rel_macro)
 
     def scan_code(self, rom_bytes, is_hasm=False):
         self.is_hasm = is_hasm
@@ -197,3 +198,52 @@ class CommonSegCodeSubsegment(Segment):
 
     def should_self_split(self) -> bool:
         return self.should_split()
+
+    def get_asm_file_header(self) -> List[str]:
+        ret = []
+
+        ret.append('.include "macro.inc"')
+        ret.append("")
+
+        ret.extend(self.get_asm_file_extra_directives())
+
+        preamble = options.opts.generated_s_preamble
+        if preamble:
+            ret.append(preamble)
+            ret.append("")
+
+        ret.append(self.get_section_asm_line())
+        ret.append("")
+
+        return ret
+
+    def get_asm_file_extra_directives(self) -> List[str]:
+        ret = []
+
+        ret.append(".set noat")  # allow manual use of $at
+        ret.append(".set noreorder")  # don't insert nops after branches
+        if options.opts.add_set_gp_64:
+            ret.append(".set gp=64")  # allow use of 64-bit general purpose registers
+        ret.append("")
+
+        return ret
+
+    def asm_out_path(self) -> Path:
+        return options.opts.asm_path / self.dir / f"{self.name}.s"
+
+    def out_path(self) -> Optional[Path]:
+        return self.asm_out_path()
+
+    def split_as_asm_file(self, out_path: Optional[Path]):
+        if self.spim_section is None:
+            return
+
+        if out_path:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+
+            self.print_file_boundaries()
+
+            with open(out_path, "w", newline="\n") as f:
+                for line in self.get_asm_file_header():
+                    f.write(line + "\n")
+                f.write(self.spim_section.disassemble())

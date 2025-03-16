@@ -6,13 +6,17 @@
   * `initialize_config` is now `splat.util.conf.load`. It takes `Path`s instead of `str`s for YAML paths. It will no longer `exit` if config merging fails, but will throw a `TypeError` which can be handled as desired by callers.
 * Fix splat on Windows not using forward slashes on generated paths.
 * Setup CI to be run on Windows and MacOS too.
-* Fix `asmtu` segments not writing the other corresponding sections into the generated assembly file.
 * Fix output of incbin segments for SN64 projects
+* New yaml option: `make_full_disasm_for_code`
+  * Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
+  * Can be used to generate "target" or "expected" objects for asm diffing.
+  * Also available as a cli parameter: `--make-full-disasm-for-code`
+* `spimdisasm` 1.33.0 or above is now required.
 
 ### 0.32.3
 
-- Fix "unrecognized YAML option" error if disassemble_all is provided via CLI and as a YAML option.
-- Slightly speed up `bss` disassembly for projects over thousands of subsegments in the same top-level segment.
+* Fix "unrecognized YAML option" error if disassemble_all is provided via CLI and as a YAML option.
+* Slightly speed up `bss` disassembly for projects over thousands of subsegments in the same top-level segment.
 
 ### 0.32.2
 
