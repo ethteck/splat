@@ -53,7 +53,7 @@ def load(
     modes: Optional[List[str]] = None,
     verbose: bool = False,
     disassemble_all: bool = False,
-    keep_complete_c_asm_splits_for_objdiff_compatibility=False,
+    make_full_disasm_for_code=False,
 ) -> Dict[str, Any]:
     """
     Returns a `dict` with resolved splat config.
@@ -90,7 +90,7 @@ def load(
         modes,
         verbose,
         disassemble_all,
-        keep_complete_c_asm_splits_for_objdiff_compatibility,
+        make_full_disasm_for_code,
     )
 
     return config

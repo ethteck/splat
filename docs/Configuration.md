@@ -663,7 +663,7 @@ Tries to detect redundant and unreferenced functions ends and merge them togethe
 
 Don't skip disassembling already matched functions and migrated sections
 
-### keep_complete_c_asm_splits_for_objdiff_compatibility
+### make_full_disasm_for_code
 
 Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
 

@@ -276,7 +276,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                                 spim_rodata_sym, asm_out_dir, rodata_sym
                             )
 
-            if options.opts.keep_complete_c_asm_splits_for_objdiff_compatibility:
+            if options.opts.make_full_disasm_for_code:
                 # Disable gpRelHack since this file is expected to be built with modern gas
                 section = self.spim_section.get_section()
                 old_value = section.getGpRelHack()

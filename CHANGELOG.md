@@ -7,10 +7,10 @@
 * Fix splat on Windows not using forward slashes on generated paths.
 * Setup CI to be run on Windows and MacOS too.
 * Fix output of incbin segments for SN64 projects
-* New yaml option: `keep_complete_c_asm_splits_for_objdiff_compatibility`
+* New yaml option: `make_full_disasm_for_code`
   * Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
   * Can be used to generate "target" or "expected" objects for asm diffing.
-  * Also available as a cli parameter: `--keep_complete_c_asm_splits_for_objdiff_compatibility`
+  * Also available as a cli parameter: `--make-full-disasm-for-code`
 * `spimdisasm` 1.33.0 or above is now required.
 
 ### 0.32.3

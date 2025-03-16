@@ -449,7 +449,7 @@ def main(
     skip_version_check: bool = False,
     stdout_only: bool = False,
     disassemble_all: bool = False,
-    keep_complete_c_asm_splits_for_objdiff_compatibility=False,
+    make_full_disasm_for_code=False,
 ):
     if stdout_only:
         progress_bar.out_file = sys.stdout
@@ -461,7 +461,7 @@ def main(
         modes,
         verbose,
         disassemble_all,
-        keep_complete_c_asm_splits_for_objdiff_compatibility,
+        make_full_disasm_for_code,
     )
 
     disassembler_instance.create_disassembler_instance(skip_version_check, __version__)
@@ -545,7 +545,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         action="store_true",
     )
     parser.add_argument(
-        "--keep_complete_c_asm_splits_for_objdiff_compatibility",
+        "--make-full-disasm-for-code",
         help="Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions",
         action="store_true",
     )
@@ -560,7 +560,7 @@ def process_arguments(args: argparse.Namespace):
         args.skip_version_check,
         args.stdout_only,
         args.disassemble_all,
-        args.keep_complete_c_asm_splits_for_objdiff_compatibility,
+        args.make_full_disasm_for_code,
     )
 
 
