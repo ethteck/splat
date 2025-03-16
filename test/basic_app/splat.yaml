@@ -18,7 +18,7 @@ options:
   ld_dependencies: True
   create_asm_dependencies: True
   disassemble_all: True
-  keep_complete_c_asm_splits_for_objdiff_compatibility: True
+  make_full_disasm_for_code: True
 segments:
   - name: header
     type: header
