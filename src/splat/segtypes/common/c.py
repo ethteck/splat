@@ -283,7 +283,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 section = self.spim_section.get_section()
                 old_value = section.getGpRelHack()
                 section.setGpRelHack(False)
-                CommonSegAsmtu.split_as_asm_file(self, self.asm_out_path())
+                self.split_as_asmtu_file(self, self.asm_out_path())
                 section.setGpRelHack(old_value)
 
     def get_c_preamble(self):
