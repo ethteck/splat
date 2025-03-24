@@ -1,8 +1,4 @@
 from pathlib import Path
-from typing import Optional, TextIO
-
-from ...util import log, options
-
 from .asm import CommonSegAsm
 from .codesubsegment import CommonSegCodeSubsegment
 
@@ -18,6 +14,9 @@ class CommonSegAsmtu(CommonSegAsm):
         out_path = self.out_path()
         assert out_path is not None, str(self)
 
+        self.split_asmtu_file(out_path)
+
+    def split_asmtu_file(self, out_path: Path):
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.print_file_boundaries()

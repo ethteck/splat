@@ -6,6 +6,8 @@ from typing import Optional, Set, List
 import rabbitizer
 import spimdisasm
 
+from splat.segtypes.common.asmtu import CommonSegAsmtu
+
 from ...util import log, options, symbols
 from ...util.compiler import IDO
 from ...util.symbols import Symbol
@@ -281,7 +283,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 section = self.spim_section.get_section()
                 old_value = section.getGpRelHack()
                 section.setGpRelHack(False)
-                self.split_as_asm_file(self.asm_out_path())
+                CommonSegAsmtu.split_as_asm_file(self, self.asm_out_path())
                 section.setGpRelHack(old_value)
 
     def get_c_preamble(self):
