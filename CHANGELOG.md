@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.33.1
+* Fix `hasm` segments overwriting files already on disk
+
 ### 0.33.0
 
 * BREAKING: Move splat config loading and parsing into "splat.util.conf" to modularize this part of the code and allow projects to interface with segment loading more gracefully.
