@@ -24,4 +24,6 @@ class CommonSegHasm(CommonSegAsm):
         if self.rom_start == self.rom_end:
             return
 
-        self.split_as_asm_file(self.out_path())
+        out_path = self.out_path()
+        if out_path and not out_path.exists():
+            self.split_as_asm_file(out_path)
