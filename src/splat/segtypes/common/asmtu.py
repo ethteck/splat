@@ -25,6 +25,8 @@ class CommonSegAsmtu(CommonSegAsm):
             # Write `.text` contents
             for line in self.get_asm_file_header():
                 f.write(line + "\n")
+
+            assert self.spim_section is not None
             f.write(self.spim_section.disassemble())
 
             # Disassemble the siblings to this file by respecting the `section_order`
