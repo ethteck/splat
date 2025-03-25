@@ -238,12 +238,69 @@ class CommonSegCodeSubsegment(Segment):
         if self.spim_section is None:
             return
 
-        if out_path:
-            out_path.parent.mkdir(parents=True, exist_ok=True)
+        if not out_path:
+            return
 
-            self.print_file_boundaries()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(out_path, "w", newline="\n") as f:
-                for line in self.get_asm_file_header():
-                    f.write(line + "\n")
-                f.write(self.spim_section.disassemble())
+        self.print_file_boundaries()
+
+        with open(out_path, "w", newline="\n") as f:
+            # Write `.text` contents
+            for line in self.get_asm_file_header():
+                f.write(line + "\n")
+            f.write(self.spim_section.disassemble())
+
+    # Same as above but write all sections from siblings
+    def split_as_asmtu_file(self, out_path: Optional[Path]):
+        if self.spim_section is None:
+            return
+
+        if not out_path:
+            return
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self.print_file_boundaries()
+
+        with open(out_path, "w", newline="\n") as f:
+            # Write `.text` contents
+            for line in self.get_asm_file_header():
+                f.write(line + "\n")
+            f.write(self.spim_section.disassemble())
+
+            # Disassemble the siblings to this file by respecting the `section_order`
+            for sect in self.section_order:
+                if sect == self.get_linker_section_linksection():
+                    continue
+
+                sibling = self.siblings.get(sect)
+                if sibling is None:
+                    continue
+
+                if (
+                    isinstance(sibling, CommonSegCodeSubsegment)
+                    and sibling.spim_section is not None
+                    and not sibling.should_self_split()
+                ):
+                    f.write("\n")
+                    f.write(f"{sibling.get_section_asm_line()}\n\n")
+                    f.write(sibling.spim_section.disassemble())
+
+            # Another loop to check anything that somehow may not be present on the `section_order`
+            for sect, sibling in self.siblings.items():
+                if sect == self.get_linker_section_linksection():
+                    continue
+
+                if sect in self.section_order:
+                    # Already handled on the above loop
+                    continue
+
+                if (
+                    isinstance(sibling, CommonSegCodeSubsegment)
+                    and sibling.spim_section is not None
+                    and not sibling.should_self_split()
+                ):
+                    f.write("\n")
+                    f.write(f"{sibling.get_section_asm_line()}\n\n")
+                    f.write(sibling.spim_section.disassemble())

@@ -729,7 +729,7 @@ Don't skip disassembling already matched functions and migrated sections
 
 ### make_full_disasm_for_code
 
-Emit a full `.s` file for each `c`/`cpp` segment besides the generated `nonmatchings` individual functions.
+Emit a full `.s` file for each `c`/`cpp` segment containing disassembly of .text and any available sibling sections, in addition to the normally-generated `nonmatchings` individual functions.
 
 Can be used to generate "target" or "expected" objects for asm diffing.
 

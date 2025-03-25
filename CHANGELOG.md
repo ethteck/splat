@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.33.2
+* Change `make_full_disasm_for_code` to output other sections for the TU in addition to .text.
+
 ### 0.33.1
 * Fix `hasm` segments overwriting files already on disk
 

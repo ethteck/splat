@@ -250,7 +250,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         assert func_sym is not None
 
                         if (
-                            not entry.function.getName() in self.global_asm_funcs
+                            entry.function.getName() not in self.global_asm_funcs
                             and options.opts.disassemble_all
                             and not is_new_c_file
                         ):
@@ -281,7 +281,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 section = self.spim_section.get_section()
                 old_value = section.getGpRelHack()
                 section.setGpRelHack(False)
-                self.split_as_asm_file(self.asm_out_path())
+                self.split_as_asmtu_file(self.asm_out_path())
                 section.setGpRelHack(old_value)
 
     def get_c_preamble(self):
@@ -304,7 +304,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             if rodata_sym.vramEnd != next_rodata_sym.vram:
                 log.write(
-                    f"\nA gap was detected in migrated rodata symbols!", status="warn"
+                    "\nA gap was detected in migrated rodata symbols!", status="warn"
                 )
                 log.write(
                     f"\t In function '{func.getName()}' (0x{func.vram:08X}), gap detected between '{rodata_sym.getName()}' (0x{rodata_sym.vram:08X}) and '{next_rodata_sym.getName()}' (0x{next_rodata_sym.vram:08X})"
@@ -313,7 +313,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     f"\t The address of the missing rodata symbol is 0x{rodata_sym.vramEnd:08X}"
                 )
                 log.write(
-                    f"\t Try to force the migration of that symbol with `force_migration:True` in the symbol_addrs.txt file; or avoid the migration of symbols around this address with `force_not_migration:True`"
+                    "\t Try to force the migration of that symbol with `force_migration:True` in the symbol_addrs.txt file; or avoid the migration of symbols around this address with `force_not_migration:True`"
                 )
 
     def create_c_asm_file(
