@@ -154,6 +154,21 @@ check_consecutive_segment_types: False
 ```
 
 
+### is_unsupported_platform
+
+Disable checks on `platform` option.
+
+Defaults to `False`.
+
+
+### allow_segment_overrides
+
+Allows to take precedence over the splat builtin platform segments via splat extension.
+
+Setting it to `True` tells splat to look for platorm segments in `extensions_path`.
+
+Defaults to `False`.
+
 ## Paths
 
 

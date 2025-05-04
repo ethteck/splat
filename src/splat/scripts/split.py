@@ -475,7 +475,8 @@ def main(
 
     cache = cache_handler.Cache(config, use_cache, verbose)
 
-    initialize_platform(rom_bytes)
+    if not options.opts.is_unsupported_platform:
+        initialize_platform(rom_bytes)
 
     # Initialize segments
     all_segments = initialize_segments(config["segments"])
