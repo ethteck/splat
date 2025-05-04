@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.33.3
+* Added new global option `unsupported_platform`. If enabled, allows to take precedence over the splat builtin platform segments via splat extension.
+
 ### 0.33.2
 * Change `make_full_disasm_for_code` to output other sections for the TU in addition to .text.
 

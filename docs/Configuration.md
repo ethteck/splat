@@ -154,6 +154,15 @@ check_consecutive_segment_types: False
 ```
 
 
+### unsupported_platform
+
+Allows to take precedence over the splat builtin platform segments via splat extension.
+
+Setting it to `True` tells splat to look for platorm segments in `extensions_path/platform`.
+For example `tools/splat_ext/dos`.
+
+Defaults to `False`.
+
 ## Paths
 
 
