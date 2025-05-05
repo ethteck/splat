@@ -579,7 +579,7 @@ Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
 
 Specify that segments should be aligned before starting them.
 
-This option specifies the desired alignment value, or `null` if no aligment should be imposed on the segment start.
+This option specifies the desired alignment value, or `null` if no alignment should be imposed on the segment start.
 
 This behavior can be customized per segment too. See [ld_align_segment_start](Segments.md#ld_align_segment_start) on the Segments section.
 

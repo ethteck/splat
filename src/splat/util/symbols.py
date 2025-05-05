@@ -192,6 +192,22 @@ def handle_sym_addrs(
                             if attr_name == "function_owner":
                                 sym.function_owner = attr_val
                                 continue
+                            if attr_name == "align":
+                                align = int(attr_val, 0)
+
+                                if align < 0:
+                                    log.parsing_error_preamble(path, line_num, line)
+                                    log.error(f"The given alignment for {sym.name} (0x{sym.vram_start:08X}) is negative.")
+                                align_shift = (align & (-align)).bit_length() - 1
+                                if (1 << align_shift) != align:
+                                    log.parsing_error_preamble(path, line_num, line)
+                                    log.error(f"The given alignment 0x{align:X} for symbol {sym.name} (0x{sym.vram_start:08X}) is not a power of two.")
+                                if sym.vram_start % align != 0:
+                                    log.parsing_error_preamble(path, line_num, line)
+                                    log.error(f"The symbol {sym.name} (0x{sym.vram_start:08X}) is not aligned already to the given alignment 0x{align:X}.")
+
+                                sym.given_align = align
+                                continue
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
@@ -520,6 +536,8 @@ def add_symbol_to_spim_segment(
         context_sym.nameEnd = sym.given_name_end
     if sym.given_visibility:
         context_sym.visibility = sym.given_visibility
+    if sym.given_align:
+        context_sym.setAlignment(sym.given_align)
 
     return context_sym
 
@@ -568,6 +586,8 @@ def add_symbol_to_spim_section(
         context_sym.nameEnd = sym.given_name_end
     if sym.given_visibility:
         context_sym.visibility = sym.given_visibility
+    if sym.given_align:
+        context_sym.setAlignment(sym.given_align)
 
     return context_sym
 
@@ -666,6 +686,8 @@ class Symbol:
 
     given_filename: Optional[str] = None
     given_visibility: Optional[str] = None
+
+    given_align: Optional[int] = None
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None

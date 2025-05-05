@@ -209,3 +209,27 @@ __opPCc__Q23std34_RefCountedPtr<c,Q23std9_Array<c>>CFv = 0x00202850; // filename
 ```
 
 Gets written to `func_00202850.s`
+
+### `align`
+
+Emit an alignment directive for the given symbol during disassembly.
+
+Even when an explicit alignment directive is not necessary in most situations, it may be desired to have one on shiftable builds on partially matched projects, allowing to ensure the symbol's required alignment even when it is still being disassembled. Some situations that may require an explicit alignment directive include textures in N64 (0x8 alignment) or symbols sent to the IOP on PS2 (0x40 alignment).
+
+The symbol's address must already be aligned to the given custom alignment, otherwise the alignment will be discarded.
+
+This value must be a power of two, otherwise it will be discarded.
+
+**Example**
+
+```ini
+rgb_texture = 0x82013118; // align:0x8
+```
+
+Produces a disassembly similar to the following:
+
+```mips
+.align 3
+dlabel rgb_texture
+# ...
+```

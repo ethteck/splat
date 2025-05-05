@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.36.0
+
+* Add new symbol attribute: `align`.
+  * Emit an alignment directive for the given symbol during disassembly.
+  * The given alignment must be positive, be a power of two and The symbol's address must already be aligned to the given custom alignment, otherwise splat will emit an error and halt.
+
 ### 0.35.2
 
 * Miscellaneous updates to generated macro labels.
