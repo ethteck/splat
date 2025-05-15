@@ -41,6 +41,10 @@ class SplatOpts:
     gp: Optional[int]
     # Checks and errors if there are any non consecutive segment types
     check_consecutive_segment_types: bool
+    # Disable checks on `platform` option.
+    is_unsupported_platform: bool
+    # Allows to take precedence over the splat builtin platform segments via splat extension.
+    allow_segment_overrides: bool
 
     # Paths
     asset_path: Path
@@ -355,7 +359,13 @@ def _parse_yaml(
     p = OptParser(yaml)
 
     basename = p.parse_opt("basename", str)
-    platform = p.parse_opt_within("platform", str, ["n64", "psx", "ps2", "psp"])
+    is_unsupported_platform = p.parse_opt("is_unsupported_platform", bool, False)
+
+    if is_unsupported_platform:
+        platform = p.parse_opt("platform", str)
+    else:
+        platform = p.parse_opt_within("platform", str, ["n64", "psx", "ps2", "psp"])
+
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(
@@ -399,6 +409,8 @@ def _parse_yaml(
         target_path=p.parse_path(base_path, "target_path"),
         elf_path=p.parse_optional_path(base_path, "elf_path"),
         platform=platform,
+        is_unsupported_platform=is_unsupported_platform,
+        allow_segment_overrides=p.parse_opt("allow_segment_overrides", bool, False),
         compiler=comp,
         endianness=parse_endianness(),
         section_order=p.parse_opt(

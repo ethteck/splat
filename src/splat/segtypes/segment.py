@@ -99,10 +99,21 @@ class Segment:
         if seg_type.startswith("."):
             seg_type = seg_type[1:]
 
-        segment_class = Segment.get_base_segment_class(seg_type)
-        if segment_class == None:
-            # Look in extensions
+        if options.opts.allow_segment_overrides:
             segment_class = Segment.get_extension_segment_class(seg_type)
+            if segment_class == None:
+                segment_class = Segment.get_base_segment_class(seg_type)
+        else:
+            segment_class = Segment.get_base_segment_class(seg_type)
+            if segment_class == None:
+                # Look in extensions
+                segment_class = Segment.get_extension_segment_class(seg_type)
+
+        if segment_class == None:
+            log.error(
+                f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)"
+            )
+
         return segment_class
 
     @staticmethod
@@ -147,11 +158,8 @@ class Segment:
             ext_mod = importlib.util.module_from_spec(ext_spec)
             assert ext_spec.loader is not None
             ext_spec.loader.exec_module(ext_mod)
-        except Exception as err:
-            log.write(err, status="error")
-            log.error(
-                f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)"
-            )
+        except Exception:
+            return None
 
         return getattr(
             ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}"
