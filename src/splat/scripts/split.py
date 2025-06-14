@@ -452,7 +452,8 @@ def main(
     make_full_disasm_for_code=False,
 ):
     if stdout_only:
-        progress_bar.out_file = sys.stdout
+        log.write("--stdout-only flag is deprecated", status="warn")
+    progress_bar.out_file = sys.stdout
 
     # Load config
     global config
@@ -538,7 +539,9 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         help="Skips the disassembler's version check",
     )
     parser.add_argument(
-        "--stdout-only", help="Print all output to stdout", action="store_true"
+        "--stdout-only",
+        help="Print all output to stdout (deprecated)",
+        action="store_true",
     )
     parser.add_argument(
         "--disassemble-all",
