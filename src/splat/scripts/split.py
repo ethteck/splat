@@ -428,7 +428,7 @@ def dump_symbols() -> None:
         for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
             f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
             if s.given_size is not None:
-                f.write(f"0x{s.given_size:X},")
+                f.write(f"0x{s.size:X},")
             else:
                 f.write("None,")
             f.write(f"{s.size},")

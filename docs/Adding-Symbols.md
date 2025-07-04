@@ -59,6 +59,17 @@ The size of the function or the size of the data depending on the type of the sy
 RawHuffmanTable = 0x8022E0E0; // type:symbol size:0x100
 ```
 
+### `count`
+
+The number of [size](#size) byte chunks the symbol is represents.
+This doesn't have much practical use, acting as a documentation aid instead.
+Defaults to `1` if unspecified.
+
+**Example:**
+```ini
+pauseMenuAudioSettings = 0x80109E68; // size:0x6 count:0x16
+```
+
 ### `rom`
 
 The ROM offset for the symbol, useful (potentially mandatory) for symbols in overlays where multiple symbols could share the same VRAM address.

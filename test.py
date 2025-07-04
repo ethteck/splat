@@ -353,6 +353,7 @@ class SymbolsInitialize(unittest.TestCase):
 
         sym_addrs_lines = [
             "func_1 = 0x100; // type:func size:10 rom:100 segment:test_segment name_end:the_name_end "
+            "item_1 = 0x200; // size:10 count:4 "
         ]
 
         all_segments = [
@@ -376,6 +377,8 @@ class SymbolsInitialize(unittest.TestCase):
         assert symbols.all_symbols[0].rom == 100
         assert symbols.all_symbols[0].segment == all_segments[0]
         assert symbols.all_symbols[0].given_name_end == "the_name_end"
+
+        assert symbols.all_symbols[1].size == 40
 
     def test_boolean_attrs(self):
         symbols.reset_symbols()
