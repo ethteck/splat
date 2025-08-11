@@ -417,13 +417,22 @@ class Segment:
         # Import here to avoid circular imports
         from .common.code import CommonSegCode
         from .common.bss import CommonSegBss
+
         if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss):
             # We need to know the bss space for the segment.
             if isinstance(parent, CommonSegCode):
                 if parent.bss_size <= 0:
-                    log.error(f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section).")
-                if isinstance(ret.vram_start, int) and isinstance(parent.vram_end, int) and ret.vram_start >= parent.vram_end:
-                    log.error(f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small.")
+                    log.error(
+                        f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section)."
+                    )
+                if (
+                    isinstance(ret.vram_start, int)
+                    and isinstance(parent.vram_end, int)
+                    and ret.vram_start >= parent.vram_end
+                ):
+                    log.error(
+                        f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small."
+                    )
 
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
