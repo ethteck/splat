@@ -187,3 +187,22 @@ class CommonSegGroup(CommonSegment):
             if sub.vram_start > addr:
                 return sub
         return None
+
+    def pair_subsegments_to_other_segment(
+        self,
+        other_segment: "CommonSegGroup",
+    ):
+        # Pair cousins with the same name
+        for segment in self.subsegments:
+            for sibling in other_segment.subsegments:
+                if segment.name == sibling.name:
+                    # Make them reference each other
+                    segment.siblings[sibling.get_linker_section_linksection()] = sibling
+                    sibling.siblings[segment.get_linker_section_linksection()] = segment
+
+                    if segment.is_text():
+                        sibling.sibling = segment
+                    elif sibling.is_text():
+                        segment.sibling = sibling
+
+                    break

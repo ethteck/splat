@@ -19,6 +19,7 @@ from ..segtypes.linker_entry import (
     get_segment_vram_end_symbol_name,
 )
 from ..segtypes.segment import Segment
+from ..segtypes.common.group import CommonSegGroup
 from ..util import conf, log, options, palettes, symbols, relocs
 
 linker_writer: LinkerWriter
@@ -37,6 +38,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
     segments_by_name: Dict[str, Segment] = {}
     ret: List[Segment] = []
+
+    # Cross segment pairing can be quite expensive, so we try to avoid it if the user haven't requested it.
+    do_cross_segment_pairing = False
 
     last_rom_end = 0
 
@@ -80,6 +84,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
             segments_by_name[segment.name] = segment
 
+        if segment.pair_segment is not None:
+            do_cross_segment_pairing = True
+
         ret.append(segment)
         if (
             isinstance(segment.rom_start, int)
@@ -111,6 +118,31 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         log.error(
             "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
         )
+
+    if do_cross_segment_pairing:
+        # Do the cross segment pairing
+        for seg in ret:
+            if seg.pair_segment is not None and isinstance(seg, CommonSegGroup):
+                found = False
+                for other_seg in ret:
+                    if seg == other_seg:
+                        continue
+                    if seg.pair_segment == other_seg.name and isinstance(
+                        other_seg, CommonSegGroup
+                    ):
+                        if other_seg.pair_segment is not None:
+                            log.error(
+                                f"Both segments '{seg.name}' and '{other_seg.name}' have a `pair_segment` value, when only at most one of the cross-paired segments can have this attribute."
+                            )
+
+                        seg.pair_subsegments_to_other_segment(other_seg)
+                        found = True
+                        break
+
+                if not found:
+                    log.error(
+                        f"Segment '{seg.pair_segment}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute."
+                    )
 
     return ret
 
@@ -215,6 +247,8 @@ def do_scan(
     cache: cache_handler.Cache,
 ):
     processed_segments: List[Segment] = []
+
+    do_cross_segment_pairing = False
 
     scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
