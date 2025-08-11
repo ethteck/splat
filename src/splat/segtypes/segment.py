@@ -274,6 +274,12 @@ class Segment:
                 return suggestion_rodata_section_start
         return None
 
+    @staticmethod
+    def parse_pair_segment(yaml: Union[dict, list]) -> Optional[str]:
+        if isinstance(yaml, dict) and "pair_segment" in yaml:
+            return yaml["pair_segment"]
+        return None
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -319,6 +325,8 @@ class Segment:
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
         self.siblings: Dict[str, Segment] = {}
+        self.pair_segment: Optional[str] = self.parse_pair_segment(yaml)
+
         self.file_path: Optional[Path] = None
 
         self.args: List[str] = args
