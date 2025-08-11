@@ -19,6 +19,7 @@ from ..segtypes.linker_entry import (
     get_segment_vram_end_symbol_name,
 )
 from ..segtypes.segment import Segment
+from ..segtypes.common.group import CommonSegGroup
 from ..util import conf, log, options, palettes, symbols, relocs
 
 linker_writer: LinkerWriter
@@ -37,6 +38,8 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
     segments_by_name: Dict[str, Segment] = {}
     ret: List[Segment] = []
+
+    do_cross_segment_pairing = False
 
     last_rom_end = 0
 
@@ -80,6 +83,9 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
             segments_by_name[segment.name] = segment
 
+        if segment.pair_segment is not None:
+            do_cross_segment_pairing = True
+
         ret.append(segment)
         if (
             isinstance(segment.rom_start, int)
@@ -111,6 +117,15 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         log.error(
             "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
         )
+
+    print(f"\n\n\n{do_cross_segment_pairing}\n")
+    if do_cross_segment_pairing:
+        for parent_segment in ret:
+            if parent_segment.pair_segment is not None and isinstance(parent_segment, CommonSegGroup):
+                for other_segment in ret:
+                    if parent_segment.pair_segment == other_segment.name and isinstance(other_segment, CommonSegGroup):
+                        parent_segment.pair_subsegments_to_other_segment(other_segment)
+                        break
 
     return ret
 
@@ -215,6 +230,8 @@ def do_scan(
     cache: cache_handler.Cache,
 ):
     processed_segments: List[Segment] = []
+
+    do_cross_segment_pairing = False
 
     scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
