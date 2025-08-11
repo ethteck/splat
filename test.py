@@ -456,11 +456,11 @@ class InitializeSpimContext(unittest.TestCase):
 
         all_segments: List["Segment"] = [
             CommonSegCode(
-                rom_start=0x0,
-                rom_end=0x200,
+                rom_start=0x1000,
+                rom_end=0x1140,
                 type="code",
                 name="main",
-                vram_start=0x100,
+                vram_start=0x80000400,
                 args=[],
                 yaml=yaml,
             )
@@ -472,7 +472,7 @@ class InitializeSpimContext(unittest.TestCase):
         symbols.initialize_spim_context(all_segments)
         # spim should have added something to overlaySegments
         assert (
-            type(symbols.spim_context.overlaySegments["overlay"][0])
+            type(symbols.spim_context.overlaySegments["overlay"][0x1000])
             == spimdisasm.common.SymbolsSegment
         )
 
@@ -485,22 +485,21 @@ class InitializeSpimContext(unittest.TestCase):
             "name": "boot",
             "type": "code",
             "start": 0x1000,
-            "vram": 0x80000400,
+            "vram": 0x100,
             "bss_size": 0x80,
-            "exclusive_ram_id": "overlay",
             "subsegments": [
                 [0x1000, "c", "main"],
                 [0x10F0, "hasm", "handwritten"],
                 [0x1100, "data", "main"],
                 [0x1110, ".rodata", "main"],
-                {"start": 0x1140, "type": "bss", "vram": 0x80000540, "name": "main"},
+                {"start": 0x1140, "type": "bss", "vram": 0x240, "name": "main"},
             ],
         }
 
         all_segments: List["Segment"] = [
             CommonSegCode(
-                rom_start=0x0,
-                rom_end=0x200,
+                rom_start=0x1000,
+                rom_end=0x1140,
                 type="code",
                 name="main",
                 vram_start=0x100,
@@ -513,7 +512,7 @@ class InitializeSpimContext(unittest.TestCase):
         assert symbols.spim_context.globalSegment.vramEnd == 0x80001000
         symbols.initialize_spim_context(all_segments)
         assert symbols.spim_context.globalSegment.vramStart == 0x100
-        assert symbols.spim_context.globalSegment.vramEnd == 0x380
+        assert symbols.spim_context.globalSegment.vramEnd == 0x2C0
 
 
 if __name__ == "__main__":
