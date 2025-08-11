@@ -583,3 +583,36 @@ Defaults to the global option.
     vram: 0x80000460
     suggestion_rodata_section_start: False
 ```
+
+### `pair_segment`
+
+Allows pairing sections of two different segments together.
+
+The main purpose of this is to make the automatic rodata-to-function migration possible, since the default behavior only allows pairing different sections of the same name under the same segment only. This kind of ROM layout can be seen on some TLB games from N64 projects.
+
+This value expects the name of the other segment that should be paired to the current one. Only one of the two to-be-paired segments should have this attribute.
+
+**Example:**
+
+```yaml
+  - name:  init
+    type:  code
+    start: 0x00001000
+    vram:  0x10001000
+    pair_segment: init_data # This is the name of the following segment.
+    subsegments:
+      # -- snip --
+      - [0x15550, c, libultra/audio/init_15550]
+      # -- snip --
+
+  - name:  init_data
+    type:  code
+    start: 0x000290D0
+    vram:  0x800290D0
+    bss_size: 0x16690
+    # Note there's no `pair_segment: init` on this segment.
+    subsegments:
+      # -- snip --
+      - [0x2C6B0, .rodata, libultra/audio/init_15550]
+      # -- snip --
+```

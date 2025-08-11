@@ -39,6 +39,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     segments_by_name: Dict[str, Segment] = {}
     ret: List[Segment] = []
 
+    # Cross segment pairing can be quite expensive, so we try to avoid it if the user haven't requested it.
     do_cross_segment_pairing = False
 
     last_rom_end = 0
@@ -118,14 +119,30 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
         )
 
-    print(f"\n\n\n{do_cross_segment_pairing}\n")
     if do_cross_segment_pairing:
-        for parent_segment in ret:
-            if parent_segment.pair_segment is not None and isinstance(parent_segment, CommonSegGroup):
-                for other_segment in ret:
-                    if parent_segment.pair_segment == other_segment.name and isinstance(other_segment, CommonSegGroup):
-                        parent_segment.pair_subsegments_to_other_segment(other_segment)
+        # Do the cross segment pairing
+        for seg in ret:
+            if seg.pair_segment is not None and isinstance(seg, CommonSegGroup):
+                found = False
+                for other_seg in ret:
+                    if seg == other_seg:
+                        continue
+                    if seg.pair_segment == other_seg.name and isinstance(
+                        other_seg, CommonSegGroup
+                    ):
+                        if other_seg.pair_segment is not None:
+                            log.error(
+                                f"Both segments '{seg.name}' and '{other_seg.name}' have a `pair_segment` value, when only at most one of the cross-paired segments can have this attribute."
+                            )
+
+                        seg.pair_subsegments_to_other_segment(other_seg)
+                        found = True
                         break
+
+                if not found:
+                    log.error(
+                        f"Segment '{seg.pair_segment}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute."
+                    )
 
     return ret
 

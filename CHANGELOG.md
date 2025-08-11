@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.35.0
+
+* Add `pair_segment` option to segments:
+  * Allows pairing the sections of two different segments together, making cross-segment rodata migration possible.
+
 ### 0.34.1
 * Deprecate `--stdout-only` cli flag. Changed output such that errors and warnings go to stderr and all other output goes to stdout.
 
