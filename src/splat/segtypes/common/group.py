@@ -190,10 +190,10 @@ class CommonSegGroup(CommonSegment):
 
     def pair_subsegments_to_other_segment(
         self,
-        other_segment: CommonSegGroup,
+        other_segment: "CommonSegGroup",
     ):
         for segment in self.subsegments:
-            for sibling in other_segment:
+            for sibling in other_segment.subsegments:
                 if segment.name == sibling.name:
                     # Make siblings reference between them
                     segment.siblings[sibling.get_linker_section_linksection()] = sibling
