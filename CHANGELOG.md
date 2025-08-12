@@ -1,17 +1,26 @@
 # splat Release Notes
 
+### 0.34.2
+
+* Emit an error if a top-level segment containing bss sections does not specify a `bss_size` value.
+* Emit an error if a bss section is outside the address space of its parent segment.
+
 ### 0.34.1
+
 * Deprecate `--stdout-only` cli flag. Changed output such that errors and warnings go to stderr and all other output goes to stdout.
 
 ### 0.34.0
+
 * Add new global option `is_unsupported_platform`. If enabled, disable checks on platform option.
 * Add new global option `allow_segment_overrides`. If enabled, allows to take precedence over the splat builtin platform segments via splat extension.
 
 ### 0.33.2
+
 * Change `make_full_disasm_for_code` to output other sections for the TU in addition to .text.
 
 ### 0.33.1
-* Fix `hasm` segments overwriting files already on disk
+
+* Fix `hasm` segments overwriting files already on disk.
 
 ### 0.33.0
 
