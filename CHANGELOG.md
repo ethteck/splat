@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.34.3
+* `asm_emit_size_directive` now also affects generated assembly from `textbin`, `databin`, and `rodatabin` segments.
+
 ### 0.34.2
 
 * Emit an error if a top-level segment containing bss sections does not specify a `bss_size` value.
