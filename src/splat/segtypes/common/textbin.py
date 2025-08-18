@@ -92,6 +92,9 @@ class CommonSegTextbin(CommonSegment):
         f.write(f'.incbin "{binpath.as_posix()}"\n')
 
         if sym is not None:
+            if options.opts.asm_emit_size_directive:
+                f.write(f".size {sym.name}, . - {sym.name}\n")
+
             if self.is_text() and options.opts.asm_end_label != "":
                 f.write(f"{options.opts.asm_end_label} {sym.name}\n")
 
