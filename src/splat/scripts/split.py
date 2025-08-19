@@ -267,8 +267,6 @@ def do_scan(
 ):
     processed_segments: List[Segment] = []
 
-    do_cross_segment_pairing = False
-
     scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
         assert isinstance(segment, Segment)
