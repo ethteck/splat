@@ -168,6 +168,10 @@ class CommonSegGroup(CommonSegment):
         for sub in self.subsegments:
             if sub.contains_vram(addr):
                 return sub
+        if isinstance(self.paired_segment, CommonSegGroup):
+            for sub in self.paired_segment.subsegments:
+                if sub.contains_vram(addr):
+                    return sub
         return None
 
     def get_next_subsegment_for_ram(

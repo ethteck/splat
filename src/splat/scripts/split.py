@@ -84,7 +84,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
             segments_by_name[segment.name] = segment
 
-        if segment.pair_segment is not None:
+        if segment.pair_segment_name is not None:
             do_cross_segment_pairing = True
 
         ret.append(segment)
@@ -122,26 +122,45 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     if do_cross_segment_pairing:
         # Do the cross segment pairing
         for seg in ret:
-            if seg.pair_segment is not None and isinstance(seg, CommonSegGroup):
+            if seg.pair_segment_name is not None:
                 found = False
                 for other_seg in ret:
                     if seg == other_seg:
                         continue
-                    if seg.pair_segment == other_seg.name and isinstance(
+                    if seg.pair_segment_name == other_seg.name and isinstance(
                         other_seg, CommonSegGroup
                     ):
-                        if other_seg.pair_segment is not None:
+                        # We found the other segment specified by `pair_segment`
+
+                        if other_seg.pair_segment_name is not None:
                             log.error(
                                 f"Both segments '{seg.name}' and '{other_seg.name}' have a `pair_segment` value, when only at most one of the cross-paired segments can have this attribute."
                             )
 
-                        seg.pair_subsegments_to_other_segment(other_seg)
+                        # Not user error, hopefully...
+                        assert (
+                            seg.paired_segment is None
+                        ), f"Somehow '{seg.name}' was already paired so something else? It is paired to '{seg.paired_segment.name}' instead of {other_seg.name}"
+                        assert (
+                            other_seg.paired_segment is None
+                        ), f"Somehow '{other_seg.name}' was already paired so something else? It is paired to '{other_seg.paired_segment.name}' instead of {seg.name}"
+
                         found = True
+                        # Pair them
+                        seg.paired_segment = other_seg
+                        other_seg.paired_segment = seg
+
+                        if isinstance(seg, CommonSegGroup) and isinstance(
+                            other_seg, CommonSegGroup
+                        ):
+                            # Pair the subsegments
+                            seg.pair_subsegments_to_other_segment(other_seg)
+
                         break
 
                 if not found:
                     log.error(
-                        f"Segment '{seg.pair_segment}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute."
+                        f"Segment '{seg.pair_segment_name}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute."
                     )
 
     return ret

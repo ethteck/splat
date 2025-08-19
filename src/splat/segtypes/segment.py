@@ -325,7 +325,8 @@ class Segment:
         self.parent: Optional[Segment] = None
         self.sibling: Optional[Segment] = None
         self.siblings: Dict[str, Segment] = {}
-        self.pair_segment: Optional[str] = self.parse_pair_segment(yaml)
+        self.pair_segment_name: Optional[str] = self.parse_pair_segment(yaml)
+        self.paired_segment: Optional[Segment] = None
 
         self.file_path: Optional[Path] = None
 
