@@ -427,7 +427,9 @@ def _parse_yaml(
             "generated_c_preamble", str, '#include "common.h"'
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
-        generated_macro_inc_content=p.parse_optional_opt("generated_macro_inc_content", str),
+        generated_macro_inc_content=p.parse_optional_opt(
+            "generated_macro_inc_content", str
+        ),
         generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
@@ -532,11 +534,15 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
-        asm_data_end_label=p.parse_opt("asm_data_end_label", str, comp.asm_data_end_label),
+        asm_data_end_label=p.parse_opt(
+            "asm_data_end_label", str, comp.asm_data_end_label
+        ),
         asm_ehtable_label_macro=p.parse_opt(
             "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
         ),
-        asm_nonmatching_label_macro=p.parse_opt("asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro),
+        asm_nonmatching_label_macro=p.parse_opt(
+            "asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro
+        ),
         asm_emit_size_directive=asm_emit_size_directive,
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
         rom_address_padding=p.parse_opt("rom_address_padding", bool, False),

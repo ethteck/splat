@@ -93,11 +93,15 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         )
         spimdisasm.common.GlobalConfig.ASM_DATA_LABEL = options.opts.asm_data_macro
         spimdisasm.common.GlobalConfig.ASM_TEXT_END_LABEL = options.opts.asm_end_label
-        spimdisasm.common.GlobalConfig.ASM_DATA_END_LABEL = options.opts.asm_data_end_label
+        spimdisasm.common.GlobalConfig.ASM_DATA_END_LABEL = (
+            options.opts.asm_data_end_label
+        )
         spimdisasm.common.GlobalConfig.ASM_EHTBL_LABEL = (
             options.opts.asm_ehtable_label_macro
         )
-        spimdisasm.common.GlobalConfig.ASM_NM_LABEL = options.opts.asm_nonmatching_label_macro
+        spimdisasm.common.GlobalConfig.ASM_NM_LABEL = (
+            options.opts.asm_nonmatching_label_macro
+        )
 
         if options.opts.asm_emit_size_directive is not None:
             spimdisasm.common.GlobalConfig.ASM_EMIT_SIZE_DIRECTIVE = (

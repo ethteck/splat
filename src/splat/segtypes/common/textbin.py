@@ -111,7 +111,9 @@ class CommonSegTextbin(CommonSegment):
                     if self.is_text() and options.opts.asm_end_label != "":
                         f.write(f"{options.opts.asm_end_label} {sym.given_name_end}\n")
                     elif self.is_data() and options.opts.asm_data_end_label != "":
-                        f.write(f"{options.opts.asm_data_end_label} {sym.given_name_end}\n")
+                        f.write(
+                            f"{options.opts.asm_data_end_label} {sym.given_name_end}\n"
+                        )
 
     def split(self, rom_bytes):
         if self.rom_end is None:

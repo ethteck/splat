@@ -2,9 +2,13 @@ from pathlib import Path
 
 from . import compiler
 
-def write_all_files(comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None):
+
+def write_all_files(
+    comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None
+):
     write_include_asm_h(comp)
     write_assembly_inc_files(comp, platform, generated_macro_inc_content)
+
 
 def write_include_asm_h(comp: compiler.Compiler):
     if comp == compiler.IDO or comp == compiler.MWCCPS2:
@@ -53,7 +57,10 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 """
     Path("include/include_asm.h").write_text(file_data, encoding="UTF-8", newline="\n")
 
-def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None):
+
+def write_assembly_inc_files(
+    comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None
+):
     func_macros = """\
 # A function symbol.
 .macro glabel label, visibility=global
@@ -139,7 +146,9 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
     if comp != compiler.IDO and comp != compiler.MWCCPS2:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
-        Path("include/labels.inc").write_text(f"{preamble}\n{labels_inc}", encoding="UTF-8", newline="\n")
+        Path("include/labels.inc").write_text(
+            f"{preamble}\n{labels_inc}", encoding="UTF-8", newline="\n"
+        )
 
     if platform in {"n64", "psx"}:
         gas = macros_inc
@@ -147,7 +156,9 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
         # ps2 and psp usually use c++ mangled names, so we need to quote those
         # names when using modern gas to avoid build errors.
         # This means we can't reuse the labels.inc file.
-        gas = macros_inc.replace("\\label", '"\\label"').replace('"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"')
+        gas = macros_inc.replace("\\label", '"\\label"').replace(
+            '"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"'
+        )
 
     if platform == "n64":
         gas += """
@@ -229,8 +240,13 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
         gas += f"\n{generated_macro_inc_content}\n"
 
     # File used by modern gas
-    preamble = "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
-    Path("include/macro.inc").write_text(f"{preamble}\n{gas}", encoding="UTF-8", newline="\n")
+    preamble = (
+        "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
+    )
+    Path("include/macro.inc").write_text(
+        f"{preamble}\n{gas}", encoding="UTF-8", newline="\n"
+    )
+
 
 def write_gte_macros():
     # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
@@ -643,4 +659,6 @@ def write_gte_macros():
 .endm
 """
 
-    Path("include/gte_macros.inc").write_text(gte_macros, encoding="UTF-8", newline="\n")
+    Path("include/gte_macros.inc").write_text(
+        gte_macros, encoding="UTF-8", newline="\n"
+    )

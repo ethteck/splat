@@ -520,7 +520,11 @@ def main(
     if options.opts.is_mode_active("code"):
         dump_symbols()
 
-    file_presets.write_all_files(options.opts.compiler, options.opts.platform, options.opts.generated_macro_inc_content)
+    file_presets.write_all_files(
+        options.opts.compiler,
+        options.opts.platform,
+        options.opts.generated_macro_inc_content,
+    )
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
