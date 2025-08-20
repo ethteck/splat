@@ -187,8 +187,12 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
+    # Determines the macro used at the end of a data symbol, such as enddlabel
+    asm_data_end_label: str
     # Determines the macro used to declare ehtable labels in asm files
     asm_ehtable_label_macro: str
+    # Determines the macro used to declare the given symbol is a non matching one.
+    asm_nonmatching_label_macro: str
     # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
     # Determines the number of characters to left align before the TODO finish documenting
@@ -523,9 +527,11 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
+        asm_data_end_label=p.parse_opt("asm_data_end_label", str, comp.asm_data_end_label),
         asm_ehtable_label_macro=p.parse_opt(
             "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
         ),
+        asm_nonmatching_label_macro=p.parse_opt("asm_nonmatching_label_macro", str, comp.asm_data_end_label),
         asm_emit_size_directive=asm_emit_size_directive,
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
         rom_address_padding=p.parse_opt("rom_address_padding", bool, False),
