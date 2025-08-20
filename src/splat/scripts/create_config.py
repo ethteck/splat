@@ -70,10 +70,6 @@ options:
   use_legacy_include_asm: False
   mips_abi_float_regs: o32
 
-  asm_function_macro: glabel
-  asm_jtbl_label_macro: jlabel
-  asm_data_macro: dlabel
-
   # section_order: [".text", ".data", ".rodata", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
 
@@ -213,10 +209,6 @@ options:
 
   o_as_suffix: True
   use_legacy_include_asm: False
-
-  asm_function_macro: glabel
-  asm_jtbl_label_macro: jlabel
-  asm_data_macro: dlabel
 
   section_order: [".rodata", ".text", ".data", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
