@@ -51,10 +51,11 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    Path("include/include_asm.h").write_text(file_data)
+    Path("include/include_asm.h").write_text(file_data, encoding="UTF-8", newline="\n")
 
 def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None):
-    macro_labels = """\
+    func_macros = """\
+# A function symbol.
 .macro glabel label, visibility=global
     .align 2
     .\\visibility \\label
@@ -63,11 +64,13 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
         .ent \\label
 .endm
 
+# The end of a function symbol.
 .macro endlabel label
     .size \\label, . - \\label
     .end \\label
 .endm
 
+# An alternative entry to a function.
 .macro alabel label, visibility=global
     .\\visibility \\label
     .type \\label, @function
@@ -75,31 +78,43 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
         .aent \\label
 .endm
 
+# A label referenced by an error handler table.
+.macro ehlabel label, visibility=global
+    .\\visibility \\label
+    \\label:
+.endm
+"""
 
+    jlabel_macro_labelsinc = """
+# A label referenced by a jumptable.
+.macro jlabel label, visibility=global
+    \\label:
+.endm
+"""
+    jlabel_macro_macroinc = """
+# A label referenced by a jumptable.
+.macro jlabel label, visibility=global
+    .\\visibility \\label
+    .type \\label, @function
+    \\label:
+.endm
+"""
+
+    data_macros = """
+# A data symbol.
 .macro dlabel label, visibility=global
     .\\visibility \\label
 	.type \\label, @object
     \\label:
 .endm
 
+# End of a data symbol.
 .macro enddlabel label
     .size \\label, . - \\label
 .endm
-
-
-.macro jlabel label, visibility=global
-    .\\visibility \\label
-    .type \\label, @function
-    \\label:
-.endm
-
-
-.macro ehlabel label, visibility=global
-    .\\visibility \\label
-    \\label:
-.endm
-
-
+"""
+    nm_macros = """
+# Label to signal the symbol haven't been matched yet.
 .macro nmlabel label, size=1
     .global \\label\\().NON_MATCHING
     .type \\label\\().NON_MATCHING, @object
@@ -108,17 +123,31 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
 .endm
 """
 
+    labels_inc = f"""\
+{func_macros}
+{jlabel_macro_labelsinc}
+{data_macros}
+{nm_macros}\
+"""
+    macros_inc = f"""\
+{func_macros}
+{jlabel_macro_macroinc}
+{data_macros}
+{nm_macros}\
+"""
+
     if comp != compiler.IDO and comp != compiler.MWCCPS2:
         # File used by original assembler
-        Path("include/labels.inc").write_text(macro_labels)
+        preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
+        Path("include/labels.inc").write_text(f"{preamble}\n{labels_inc}", encoding="UTF-8", newline="\n")
 
     if platform in {"n64", "psx"}:
-        gas = '.include "labels.inc"\n'
+        gas = macros_inc
     else:
         # ps2 and psp usually use c++ mangled names, so we need to quote those
         # names when using modern gas to avoid build errors.
         # This means we can't reuse the labels.inc file.
-        gas = macro_labels.replace("\\label", '"\\label"')
+        gas = macros_inc.replace("\\label", '"\\label"').replace('"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"')
 
     if platform == "n64":
         gas += """
@@ -200,7 +229,8 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_m
         gas += f"\n{generated_macro_inc_content}\n"
 
     # File used by modern gas
-    Path("include/macro.inc").write_text(gas)
+    preamble = "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
+    Path("include/macro.inc").write_text(f"{preamble}\n{gas}", encoding="UTF-8", newline="\n")
 
 def write_gte_macros():
     # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
@@ -613,4 +643,4 @@ def write_gte_macros():
 .endm
 """
 
-    Path("include/gte_macros.inc").write_text(gte_macros)
+    Path("include/gte_macros.inc").write_text(gte_macros, encoding="UTF-8", newline="\n")

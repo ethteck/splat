@@ -37,6 +37,7 @@ class SplatOpts:
     generated_s_preamble: str
     # Determines any extra content to be added in the generated macro.inc file
     generated_macro_inc_content: Optional[str]
+    generate_asm_macros_files: bool
     # Determines whether to use .o as the suffix for all binary files?... TODO document
     use_o_as_suffix: bool
     # the value of the $gp register to correctly calculate offset to %gp_rel relocs
@@ -427,6 +428,7 @@ def _parse_yaml(
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         generated_macro_inc_content=p.parse_optional_opt("generated_macro_inc_content", str),
+        generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
