@@ -181,7 +181,7 @@ segments:
         f.write(segments)
 
     comp = compiler.for_name(rom.compiler)
-    file_presets.write_all_files(comp, "n64")
+    file_presets.write_all_files(comp, "n64", None)
 
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
@@ -278,7 +278,7 @@ segments:
         f.write(segments)
 
     comp = compiler.for_name("PSYQ")
-    file_presets.write_all_files(comp, "psx")
+    file_presets.write_all_files(comp, "psx", None)
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):

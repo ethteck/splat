@@ -2,9 +2,9 @@ from pathlib import Path
 
 from . import compiler
 
-def write_all_files(comp: compiler.Compiler, platform: str):
+def write_all_files(comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None):
     write_include_asm_h(comp)
-    write_assembly_inc_files(comp, platform)
+    write_assembly_inc_files(comp, platform, generated_macro_inc_content)
 
 def write_include_asm_h(comp: compiler.Compiler):
     if comp == compiler.IDO or comp == compiler.MWCCPS2:
@@ -53,7 +53,7 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 """
     Path("include/include_asm.h").write_text(file_data)
 
-def write_assembly_inc_files(comp: compiler.Compiler, platform: str):
+def write_assembly_inc_files(comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None):
     macro_labels = """\
 .macro glabel label, visibility=global
     .align 2
@@ -195,6 +195,9 @@ def write_assembly_inc_files(comp: compiler.Compiler, platform: str):
     elif platform == "psx":
         gas += '\ninclude "gte_macros.inc"\n'
         write_gte_macros()
+
+    if generated_macro_inc_content is not None:
+        gas += f"\n{generated_macro_inc_content}\n"
 
     # File used by modern gas
     Path("include/macro.inc").write_text(gas)
