@@ -531,7 +531,7 @@ def _parse_yaml(
         asm_ehtable_label_macro=p.parse_opt(
             "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
         ),
-        asm_nonmatching_label_macro=p.parse_opt("asm_nonmatching_label_macro", str, comp.asm_data_end_label),
+        asm_nonmatching_label_macro=p.parse_opt("asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro),
         asm_emit_size_directive=asm_emit_size_directive,
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
         rom_address_padding=p.parse_opt("rom_address_padding", bool, False),

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
-from ..util import log
+from ..util import log, file_presets, compiler
 
 
 def main(file_path: Path):
@@ -180,6 +180,9 @@ segments:
         f.write(header)
         f.write(segments)
 
+    comp = compiler.for_name(rom.compiler)
+    file_presets.write_all_files(comp, "n64")
+
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
     exe = psxexeinfo.PsxExe.get_info(exe_path, exe_bytes)
@@ -251,7 +254,7 @@ segments:
 """
     text_offset = exe.text_offset
     if text_offset != 0x800:
-        segments += f"""\
+        segments += """\
       - [0x800, rodata, 800]
 """
     segments += f"""\
@@ -273,6 +276,9 @@ segments:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
+
+    comp = compiler.for_name("PSYQ")
+    file_presets.write_all_files(comp, "psx")
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):

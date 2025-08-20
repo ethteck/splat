@@ -1,6 +1,7 @@
 from . import cache_handler as cache_handler
 from . import color as color
 from . import compiler as compiler
+from . import file_presets as file_presets
 from . import log as log
 from . import n64 as n64
 from . import options as options
