@@ -9,24 +9,26 @@ This includes writing files like:
 
 from pathlib import Path
 
-from . import compiler
+from .compiler import Compiler
 
 
 def write_all_files(
-    comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None
+    base_path: Path,
+    comp: Compiler,
+    platform: str,
+    generated_macro_inc_content: str | None,
 ):
-    write_include_asm_h(comp)
-    write_assembly_inc_files(comp, platform, generated_macro_inc_content)
+    write_include_asm_h(base_path, comp)
+    write_assembly_inc_files(base_path, comp, platform, generated_macro_inc_content)
 
 
-def _write(filepath: str, contents: str):
-    p = Path(filepath)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(contents, encoding="UTF-8", newline="\n")
+def _write(filepath: Path, contents: str):
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.write_text(contents, encoding="UTF-8", newline="\n")
 
 
-def write_include_asm_h(comp: compiler.Compiler):
-    if comp == compiler.IDO or comp == compiler.MWCCPS2:
+def write_include_asm_h(base_path: Path, comp: Compiler):
+    if not comp.uses_include_asm:
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
 
@@ -70,11 +72,14 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    _write("include/include_asm.h", file_data)
+    _write(base_path / "include/include_asm.h", file_data)
 
 
 def write_assembly_inc_files(
-    comp: compiler.Compiler, platform: str, generated_macro_inc_content: str | None
+    base_path: Path,
+    comp: Compiler,
+    platform: str,
+    generated_macro_inc_content: str | None,
 ):
     func_macros = """\
 # A function symbol.
@@ -157,10 +162,10 @@ def write_assembly_inc_files(
 {nm_macros}\
 """
 
-    if comp != compiler.IDO and comp != compiler.MWCCPS2:
+    if comp.uses_include_asm:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
-        _write("include/labels.inc", f"{preamble}\n{labels_inc}")
+        _write(base_path / "include/labels.inc", f"{preamble}\n{labels_inc}")
 
     if platform in {"n64", "psx"}:
         gas = macros_inc
@@ -246,7 +251,7 @@ def write_assembly_inc_files(
 """
     elif platform == "psx":
         gas += '\ninclude "gte_macros.inc"\n'
-        write_gte_macros()
+        write_gte_macros(base_path)
 
     if generated_macro_inc_content is not None:
         gas += f"\n{generated_macro_inc_content}\n"
@@ -255,10 +260,10 @@ def write_assembly_inc_files(
     preamble = (
         "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
     )
-    _write("include/macro.inc", f"{preamble}\n{gas}")
+    _write(base_path / "include/macro.inc", f"{preamble}\n{gas}")
 
 
-def write_gte_macros():
+def write_gte_macros(base_path: Path):
     # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
     # Please try to upstream any fix/update done here.
     gte_macros = """
@@ -669,4 +674,4 @@ def write_gte_macros():
 .endm
 """
 
-    _write("include/gte_macros.inc", gte_macros)
+    _write(base_path / "include/gte_macros.inc", gte_macros)

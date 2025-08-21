@@ -17,6 +17,7 @@ class Compiler:
     asm_inc_header: str = ""
     asm_emit_size_directive: Optional[bool] = None
     j_as_branch: bool = False
+    uses_include_asm: bool = True
 
 
 GCC = Compiler(
@@ -39,7 +40,7 @@ SN64 = Compiler(
     j_as_branch=True,
 )
 
-IDO = Compiler("IDO", asm_emit_size_directive=False)
+IDO = Compiler("IDO", asm_emit_size_directive=False, uses_include_asm=False)
 
 KMC = Compiler(
     "KMC",
@@ -59,7 +60,7 @@ PSYQ = Compiler(
 )
 
 # PS2
-MWCCPS2 = Compiler("MWCCPS2")
+MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
 EEGCC = Compiler("EEGCC")
 
 compiler_for_name: Dict[str, Compiler] = {

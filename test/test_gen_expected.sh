@@ -4,13 +4,10 @@ set -e
 
 export SPIMDISASM_ASM_GENERATED_BY="False"
 
-# cd into the "root" of the "project"
-cd test/basic_app
-
 # Ensure we start from a clean state
-rm -rf split
+rm -rf test/basic_app/split
 
-python3 -m splat split splat.yaml --use-cache
+python3 -m splat split test/basic_app/splat.yaml --use-cache
 
-rm -rf expected
-cp -r split expected
+rm -rf test/basic_app/expected
+cp -r test/basic_app/split test/basic_app/expected

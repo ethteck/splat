@@ -521,6 +521,7 @@ def main(
         dump_symbols()
 
     file_presets.write_all_files(
+        options.opts.base_path,
         options.opts.compiler,
         options.opts.platform,
         options.opts.generated_macro_inc_content,
