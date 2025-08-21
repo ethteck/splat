@@ -8,6 +8,7 @@ This includes writing files like:
 """
 
 from pathlib import Path
+import os
 
 from .compiler import Compiler
 
@@ -22,9 +23,10 @@ def write_all_files(
     write_assembly_inc_files(base_path, comp, platform, generated_macro_inc_content)
 
 
-def _write(filepath: Path, contents: str):
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    filepath.write_text(contents, encoding="UTF-8", newline="\n")
+def _write(base_path: Path, filepath: str, contents: str):
+    p = Path(os.path.normpath(base_path / filepath))
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(contents, encoding="UTF-8", newline="\n")
 
 
 def write_include_asm_h(base_path: Path, comp: Compiler):
@@ -72,7 +74,7 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    _write(base_path / "include/include_asm.h", file_data)
+    _write(base_path, "include/include_asm.h", file_data)
 
 
 def write_assembly_inc_files(
@@ -165,7 +167,7 @@ def write_assembly_inc_files(
     if comp.uses_include_asm:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
-        _write(base_path / "include/labels.inc", f"{preamble}\n{labels_inc}")
+        _write(base_path, "include/labels.inc", f"{preamble}\n{labels_inc}")
 
     if platform in {"n64", "psx"}:
         gas = macros_inc
@@ -260,7 +262,7 @@ def write_assembly_inc_files(
     preamble = (
         "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
     )
-    _write(base_path / "include/macro.inc", f"{preamble}\n{gas}")
+    _write(base_path, "include/macro.inc", f"{preamble}\n{gas}")
 
 
 def write_gte_macros(base_path: Path):
@@ -674,4 +676,4 @@ def write_gte_macros(base_path: Path):
 .endm
 """
 
-    _write(base_path / "include/gte_macros.inc", gte_macros)
+    _write(base_path, "include/gte_macros.inc", gte_macros)
