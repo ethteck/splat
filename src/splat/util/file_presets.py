@@ -19,6 +19,12 @@ def write_all_files(
     write_assembly_inc_files(comp, platform, generated_macro_inc_content)
 
 
+def _write(filepath: str, contents: str):
+    p = Path(filepath)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(contents, encoding="UTF-8", newline="\n")
+
+
 def write_include_asm_h(comp: compiler.Compiler):
     if comp == compiler.IDO or comp == compiler.MWCCPS2:
         # These compilers do not use the `INCLUDE_ASM` macro.
@@ -64,7 +70,7 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    Path("include/include_asm.h").write_text(file_data, encoding="UTF-8", newline="\n")
+    _write("include/include_asm.h", file_data)
 
 
 def write_assembly_inc_files(
@@ -154,9 +160,7 @@ def write_assembly_inc_files(
     if comp != compiler.IDO and comp != compiler.MWCCPS2:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
-        Path("include/labels.inc").write_text(
-            f"{preamble}\n{labels_inc}", encoding="UTF-8", newline="\n"
-        )
+        _write("include/labels.inc", f"{preamble}\n{labels_inc}")
 
     if platform in {"n64", "psx"}:
         gas = macros_inc
@@ -251,9 +255,7 @@ def write_assembly_inc_files(
     preamble = (
         "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
     )
-    Path("include/macro.inc").write_text(
-        f"{preamble}\n{gas}", encoding="UTF-8", newline="\n"
-    )
+    _write("include/macro.inc", f"{preamble}\n{gas}")
 
 
 def write_gte_macros():
@@ -667,6 +669,4 @@ def write_gte_macros():
 .endm
 """
 
-    Path("include/gte_macros.inc").write_text(
-        gte_macros, encoding="UTF-8", newline="\n"
-    )
+    _write("include/gte_macros.inc", gte_macros)
