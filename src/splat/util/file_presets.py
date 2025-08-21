@@ -1,3 +1,12 @@
+"""
+Utilities to write assembly-related macros.
+This includes writing files like:
+- include/include_asm.h
+- include/macro.inc
+- include/labels.inc
+- include/gte_macros.inc
+"""
+
 from pathlib import Path
 
 from . import compiler
@@ -64,7 +73,6 @@ def write_assembly_inc_files(
     func_macros = """\
 # A function symbol.
 .macro glabel label, visibility=global
-    .align 2
     .\\visibility \\label
     .type \\label, @function
     \\label:
@@ -111,7 +119,7 @@ def write_assembly_inc_files(
 # A data symbol.
 .macro dlabel label, visibility=global
     .\\visibility \\label
-	.type \\label, @object
+    .type \\label, @object
     \\label:
 .endm
 
