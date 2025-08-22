@@ -76,7 +76,9 @@ class EntryAddressInfo:
     rom_lo: int
 
     @staticmethod
-    def new(value: Optional[int], hi: Optional[int], lo: Optional[int]) -> Optional["EntryAddressInfo"]:
+    def new(
+        value: Optional[int], hi: Optional[int], lo: Optional[int]
+    ) -> Optional["EntryAddressInfo"]:
         if value is not None and hi is not None and lo is not None:
             return EntryAddressInfo(value, hi, lo)
         return None
@@ -136,7 +138,7 @@ class N64EntrypointInfo:
         i = 0
         while i < len(word_list):
             word = word_list[i]
-            current_rom = offset + i*4
+            current_rom = offset + i * 4
             insn = rabbitizer.Instruction(word, vram)
             if not insn.isValid():
                 break
@@ -218,7 +220,9 @@ class N64EntrypointInfo:
                 # Those usually use `jal` instead of `jr` to jump out of the
                 # entrypoint to actual code.
                 traditional_entrypoint = False
-                func_call_target = EntryAddressInfo(insn.getInstrIndexAsVram(), current_rom, current_rom)
+                func_call_target = EntryAddressInfo(
+                    insn.getInstrIndexAsVram(), current_rom, current_rom
+                )
 
             elif insn.uniqueId == rabbitizer.InstrId.cpu_break:
                 traditional_entrypoint = False
