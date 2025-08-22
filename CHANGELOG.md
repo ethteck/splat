@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.35.0
+
+* Now `create_config` for N64 games can create basic `symbol_addrs.txt` and `reloc_addrs.txt` files from the information inferred from its analysis.
+
 ### 0.34.3
 * `asm_emit_size_directive` now also affects generated assembly from `textbin`, `databin`, and `rodatabin` segments.
 
