@@ -13,7 +13,7 @@ To override relocs you need to have at least one `reloc_addrs.txt` file. Each li
 The format for defining an entry is:
 
 ```ini
-rom:0x04B440 symbol:BonusWait reloc:MIPS_HI16 addend:-0x3
+rom:0x04B440 reloc:MIPS_HI16 symbol:BonusWait addend:-0x3
 ```
 
 Each attribute is defined as follows:
@@ -84,8 +84,8 @@ While this assembly is very likely to build to a matching binary again, it may c
 To fix this disassembly it is needed to provide reloc entries in a `reloc_addrs.txt` file like the following:
 
 ```ini
-rom:0x0004 symbol:some_array reloc:MIPS_HI16 addend:-0x4
-rom:0x0010 symbol:some_array reloc:MIPS_LO16 addend:-0x4
+rom:0x0004 reloc:MIPS_HI16 symbol:some_array addend:-0x4
+rom:0x0010 reloc:MIPS_LO16 symbol:some_array addend:-0x4
 ```
 
 This tells the disassembler to reference `some_array - 0x4` at the instruction at rom address `0x0004` (the `lui` instruction), and that it should use the `%hi` reloc operator to do so. A similar logic is used for the instruction at rom address `0x0010` (the `lw`), but instead we told it to use the `%lw` reloc operator instead. This generates an assembly like the following:
@@ -157,10 +157,10 @@ But when this gets linked into a ROM those symbols get replaced with their raw n
 To fix the disassembly and make it use the proper segment symbols, we add more entries to the reloc_addrs.txt file. Note here we don't need to specify an `addend`, since we just want to refer to the symbol without any other calculation.
 
 ```ini
-rom:0x000C symbol:segment_menu_ROM_START reloc:MIPS_HI16
-rom:0x0010 symbol:segment_menu_ROM_START reloc:MIPS_LO16
-rom:0x0014 symbol:segment_menu_ROM_END reloc:MIPS_HI16
-rom:0x0018 symbol:segment_menu_ROM_END reloc:MIPS_LO16
+rom:0x000C reloc:MIPS_HI16 symbol:segment_menu_ROM_START
+rom:0x0010 reloc:MIPS_LO16 symbol:segment_menu_ROM_START
+rom:0x0014 reloc:MIPS_HI16 symbol:segment_menu_ROM_END
+rom:0x0018 reloc:MIPS_LO16 symbol:segment_menu_ROM_END
 ```
 
 ### Segment symbols in data
@@ -193,6 +193,6 @@ But when we try disassembling a rom with this data, the disassembler won't be ab
 In this case we can use the `MIPS_32` reloc in our `reloc_addrs` file to fix this kind of issue.
 
 ```ini
-rom:0x0100 symbol:segment_menu_ROM_START reloc:MIPS_32
-rom:0x0104 symbol:segment_menu_ROM_END reloc:MIPS_32
+rom:0x0100 reloc:MIPS_32 symbol:segment_menu_ROM_START
+rom:0x0104 reloc:MIPS_32 symbol:segment_menu_ROM_END
 ```
