@@ -235,7 +235,7 @@ segments:
         with Path("reloc_addrs.txt").open("w", newline="\n") as f:
             print("Writing reloc_addrs.txt")
             f.write(
-                "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file"
+                "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file\n"
             )
             f.write("// entrypoint relocs\n")
             contents = "\n".join(reloc_addrs)
@@ -253,7 +253,7 @@ segments:
         with Path("symbol_addrs.txt").open("w", newline="\n") as f:
             print("Writing symbol_addrs.txt")
             f.write(
-                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file"
+                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
             )
             contents = "\n".join(symbol_addrs)
             f.write(contents)
