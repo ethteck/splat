@@ -1,7 +1,7 @@
 .section .rodata
 .align 3
 dlabel jtbl_80000518
-nmlabel jtbl_80000518
+nonmatching jtbl_80000518
     /* 1118 80000518 80000448 */ .word .L80000448
     /* 111C 8000051C 80000450 */ .word .L80000450
     /* 1120 80000520 80000458 */ .word .L80000458
@@ -17,7 +17,7 @@ enddlabel jtbl_80000518
 
 .section .text
 glabel func_80000400
-nmlabel func_80000400, 0xA0
+nonmatching func_80000400, 0xA0
     /* 1000 80000400 27BDFFF8 */  addiu      $sp, $sp, -0x8
     /* 1004 80000404 AFBE0000 */  sw         $fp, 0x0($sp)
     /* 1008 80000408 03A0F021 */  addu       $fp, $sp, $zero

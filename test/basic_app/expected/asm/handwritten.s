@@ -8,7 +8,7 @@
 
 /* Handwritten function */
 glabel func_800004F0
-nmlabel func_800004F0, 0xC
+nonmatching func_800004F0, 0xC
     /* 10F0 800004F0 00851020 */  add        $v0, $a0, $a1 /* handwritten instruction */
     /* 10F4 800004F4 03E00008 */  jr         $ra
     /* 10F8 800004F8 00000000 */   nop

@@ -185,7 +185,7 @@ Those macros usually look like this:
 
 
 # Label to signal the symbol haven't been matched yet.
-.macro nmlabel label, size=1
+.macro nonmatching label, size=1
     .global \label\().NON_MATCHING
     .type \label\().NON_MATCHING, @object
     .size \label\().NON_MATCHING, \size
@@ -198,7 +198,7 @@ The most commonly used labels are:
 - `glabel` and `endlabel` which are used to define function symbols.
 - `dlabel` and `enddlabel` which are used to defined data, rodata and bss symbols.
 - `jlabel` is used for defining branch labels used by jumptables.
-- `nmlabel` is used to define the symbol haven't been matched yet.
+- `nonmatching` is used to define the symbol haven't been matched yet.
 
 Asm differ tools can sometimes struggle to show diffs with `jlabel`s when combined with certain compilers. A workaround for this issue is to mark the `jlabel` as a function, like this:
 

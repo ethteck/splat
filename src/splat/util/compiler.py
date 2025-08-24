@@ -12,7 +12,7 @@ class Compiler:
     asm_end_label: str = "endlabel"
     asm_data_end_label: str = "enddlabel"
     asm_ehtable_label_macro: str = "ehlabel"
-    asm_nonmatching_label_macro: str = "nmlabel"
+    asm_nonmatching_label_macro: str = "nonmatching"
     c_newline: str = "\n"
     asm_inc_header: str = ""
     asm_emit_size_directive: Optional[bool] = None

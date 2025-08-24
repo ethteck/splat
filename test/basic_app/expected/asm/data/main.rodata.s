@@ -3,14 +3,14 @@
 .section .rodata, "a"
 
 dlabel D_80000510
-nmlabel D_80000510
+nonmatching D_80000510
     /* 1110 80000510 00010203 */ .word 0x00010203
     /* 1114 80000514 04050607 */ .word 0x04050607
 enddlabel D_80000510
 
 .align 3
 dlabel jtbl_80000518
-nmlabel jtbl_80000518
+nonmatching jtbl_80000518
     /* 1118 80000518 80000448 */ .word .L80000448
     /* 111C 8000051C 80000450 */ .word .L80000450
     /* 1120 80000520 80000458 */ .word .L80000458

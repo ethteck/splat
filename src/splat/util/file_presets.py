@@ -143,7 +143,7 @@ def write_assembly_inc_files(
 """
     nm_macros = """
 # Label to signal the symbol haven't been matched yet.
-.macro nmlabel label, size=1
+.macro nonmatching label, size=1
     .global \\label\\().NON_MATCHING
     .type \\label\\().NON_MATCHING, @object
     .size \\label\\().NON_MATCHING, \\size

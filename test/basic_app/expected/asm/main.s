@@ -7,7 +7,7 @@
 .section .text, "ax"
 
 glabel func_80000400
-nmlabel func_80000400, 0xA0
+nonmatching func_80000400, 0xA0
     /* 1000 80000400 27BDFFF8 */  addiu      $sp, $sp, -0x8
     /* 1004 80000404 AFBE0000 */  sw         $fp, 0x0($sp)
     /* 1008 80000408 03A0F021 */  addu       $fp, $sp, $zero
@@ -61,7 +61,7 @@ nmlabel func_80000400, 0xA0
 endlabel func_80000400
 
 glabel func_800004A0
-nmlabel func_800004A0, 0x4C
+nonmatching func_800004A0, 0x4C
     /* 10A0 800004A0 27BDFFE8 */  addiu      $sp, $sp, -0x18
     /* 10A4 800004A4 AFBF0014 */  sw         $ra, 0x14($sp)
     /* 10A8 800004A8 AFBE0010 */  sw         $fp, 0x10($sp)

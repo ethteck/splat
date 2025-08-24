@@ -702,7 +702,7 @@ Determines the macro used to declare the given symbol is a non matching one.
 
 Explicitly specifying that a symbol haven't been matched yet in the generated assembly is useful for other tools that consume the build artifacts of the project. This information can be used by those tools for stuff like progress reporting.
 
-Defaults to `nmlabel`
+Defaults to `nonmatching`
 
 ### asm_emit_size_directive
 
