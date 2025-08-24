@@ -10,27 +10,22 @@ This includes writing files like:
 from pathlib import Path
 import os
 
-from .compiler import Compiler
+from . import options, log
 
 
-def write_all_files(
-    base_path: Path,
-    comp: Compiler,
-    platform: str,
-    generated_macro_inc_content: str | None,
-):
-    write_include_asm_h(base_path, comp)
-    write_assembly_inc_files(base_path, comp, platform, generated_macro_inc_content)
+def write_all_files():
+    write_include_asm_h()
+    write_assembly_inc_files()
 
 
-def _write(base_path: Path, filepath: str, contents: str):
-    p = Path(os.path.normpath(base_path / filepath))
+def _write(filepath: str, contents: str):
+    p = Path(os.path.normpath(options.opts.base_path / filepath))
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(contents, encoding="UTF-8", newline="\n")
 
 
-def write_include_asm_h(base_path: Path, comp: Compiler):
-    if not comp.uses_include_asm:
+def write_include_asm_h():
+    if not options.opts.compiler.uses_include_asm:
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
 
@@ -74,76 +69,99 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    _write(base_path, "include/include_asm.h", file_data)
+    _write("include/include_asm.h", file_data)
 
 
-def write_assembly_inc_files(
-    base_path: Path,
-    comp: Compiler,
-    platform: str,
-    generated_macro_inc_content: str | None,
-):
-    func_macros = """\
+def write_assembly_inc_files():
+    func_macros = f"""\
 # A function symbol.
-.macro glabel label, visibility=global
+.macro {options.opts.asm_function_macro} label, visibility=global
     .\\visibility \\label
     .type \\label, @function
     \\label:
         .ent \\label
 .endm
-
+"""
+    if options.opts.asm_end_label != "":
+        func_macros += f"""
 # The end of a function symbol.
-.macro endlabel label
+.macro {options.opts.asm_end_label} label
     .size \\label, . - \\label
     .end \\label
 .endm
-
+"""
+    if (
+        options.opts.asm_function_alt_macro != ""
+        and options.opts.asm_function_alt_macro != options.opts.asm_function_macro
+    ):
+        func_macros += f"""
 # An alternative entry to a function.
-.macro alabel label, visibility=global
+.macro {options.opts.asm_function_alt_macro} label, visibility=global
     .\\visibility \\label
     .type \\label, @function
     \\label:
         .aent \\label
 .endm
-
+"""
+    if (
+        options.opts.asm_ehtable_label_macro != ""
+        and options.opts.asm_ehtable_label_macro != options.opts.asm_function_macro
+    ):
+        func_macros += f"""
 # A label referenced by an error handler table.
-.macro ehlabel label, visibility=global
+.macro {options.opts.asm_ehtable_label_macro} label, visibility=global
     .\\visibility \\label
     \\label:
 .endm
 """
 
-    jlabel_macro_labelsinc = """
+    jlabel_macro_labelsinc = ""
+    jlabel_macro_macroinc = ""
+    if (
+        options.opts.asm_jtbl_label_macro != ""
+        and options.opts.asm_jtbl_label_macro != options.opts.asm_function_macro
+    ):
+        jlabel_macro_labelsinc = f"""
 # A label referenced by a jumptable.
-.macro jlabel label, visibility=global
+.macro {options.opts.asm_jtbl_label_macro} label, visibility=global
     \\label:
 .endm
 """
-    jlabel_macro_macroinc = """
+        jlabel_macro_macroinc = f"""
 # A label referenced by a jumptable.
-.macro jlabel label, visibility=global
+.macro {options.opts.asm_jtbl_label_macro} label, visibility=global
     .\\visibility \\label
     .type \\label, @function
     \\label:
 .endm
 """
 
-    data_macros = """
+    data_macros = ""
+    if (
+        options.opts.asm_data_macro != ""
+        and options.opts.asm_data_macro != options.opts.asm_function_macro
+    ):
+        data_macros += f"""
 # A data symbol.
-.macro dlabel label, visibility=global
+.macro {options.opts.asm_data_macro} label, visibility=global
     .\\visibility \\label
     .type \\label, @object
     \\label:
 .endm
-
+"""
+    if options.opts.asm_data_end_label != "":
+        data_macros += f"""
 # End of a data symbol.
-.macro enddlabel label
+.macro {options.opts.asm_data_end_label} label
     .size \\label, . - \\label
 .endm
 """
-    nm_macros = """
+
+    nm_macros = ""
+    if options.opts.asm_nonmatching_label_macro != "":
+        nm_macros = f"""
 # Label to signal the symbol haven't been matched yet.
-.macro nonmatching label, size=1
+.macro {options.opts.asm_nonmatching_label_macro} label, size=1
     .global \\label\\().NON_MATCHING
     .type \\label\\().NON_MATCHING, @object
     .size \\label\\().NON_MATCHING, \\size
@@ -164,22 +182,26 @@ def write_assembly_inc_files(
 {nm_macros}\
 """
 
-    if comp.uses_include_asm:
+    if options.opts.compiler.uses_include_asm:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
-        _write(base_path, "include/labels.inc", f"{preamble}\n{labels_inc}")
+        _write("include/labels.inc", f"{preamble}\n{labels_inc}")
 
-    if platform in {"n64", "psx"}:
+    if options.opts.platform in {"n64", "psx"}:
         gas = macros_inc
-    else:
+    elif options.opts.platform in {"ps2", "psp"}:
         # ps2 and psp usually use c++ mangled names, so we need to quote those
         # names when using modern gas to avoid build errors.
         # This means we can't reuse the labels.inc file.
         gas = macros_inc.replace("\\label", '"\\label"').replace(
             '"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"'
         )
+    elif not options.opts.is_unsupported_platform:
+        log.error(f"Unknown platform '{options.opts.platform}'")
+    else:
+        gas = macros_inc
 
-    if platform == "n64":
+    if options.opts.platform == "n64":
         gas += """
 # COP0 register aliases
 
@@ -251,21 +273,21 @@ def write_assembly_inc_files(
 .set $fs5,          $f30
 .set $fs5f,         $f31
 """
-    elif platform == "psx":
+    elif options.opts.platform == "psx":
         gas += '\ninclude "gte_macros.inc"\n'
-        write_gte_macros(base_path)
+        write_gte_macros()
 
-    if generated_macro_inc_content is not None:
-        gas += f"\n{generated_macro_inc_content}\n"
+    if options.opts.generated_macro_inc_content is not None:
+        gas += f"\n{options.opts.generated_macro_inc_content}\n"
 
     # File used by modern gas
     preamble = (
         "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
     )
-    _write(base_path, "include/macro.inc", f"{preamble}\n{gas}")
+    _write("include/macro.inc", f"{preamble}\n{gas}")
 
 
-def write_gte_macros(base_path: Path):
+def write_gte_macros():
     # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
     # Please try to upstream any fix/update done here.
     gte_macros = """
@@ -676,4 +698,4 @@ def write_gte_macros(base_path: Path):
 .endm
 """
 
-    _write(base_path, "include/gte_macros.inc", gte_macros)
+    _write("include/gte_macros.inc", gte_macros)

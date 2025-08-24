@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
-from ..util import log, file_presets, compiler
+from ..util import log, file_presets, conf
 
 
 def main(file_path: Path):
@@ -170,14 +170,16 @@ segments:
   - [0x{rom.size:X}]
 """
 
-    out_file = f"{cleaned_basename}.yaml"
-    with open(out_file, "w", newline="\n") as f:
+    out_file = Path(f"{cleaned_basename}.yaml")
+    with out_file.open("w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
 
-    comp = compiler.for_name(rom.compiler)
-    file_presets.write_all_files(Path("."), comp, "n64", None)
+    # `file_presets` requires an initialized `opts`.
+    # A simple way to do that is to simply load the yaml we just generated.
+    conf.load([out_file])
+    file_presets.write_all_files()
 
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
@@ -263,14 +265,16 @@ segments:
   - [0x{exe.size:X}]
 """
 
-    out_file = f"{cleaned_basename}.yaml"
-    with open(out_file, "w", newline="\n") as f:
+    out_file = Path(f"{cleaned_basename}.yaml")
+    with out_file.open("w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
 
-    comp = compiler.for_name("PSYQ")
-    file_presets.write_all_files(Path("."), comp, "psx", None)
+    # `file_presets` requires an initialized `opts`.
+    # A simple way to do that is to simply load the yaml we just generated.
+    conf.load([out_file])
+    file_presets.write_all_files()
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
