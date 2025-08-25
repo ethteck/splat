@@ -275,7 +275,7 @@ def write_assembly_inc_files():
 .set $fs5f,         $f31
 """
     elif options.opts.platform == "psx":
-        gas += '\ninclude "gte_macros.inc"\n'
+        gas += '\n.include "gte_macros.inc"\n'
         write_gte_macros()
 
     if options.opts.generated_macro_inc_content is not None:
