@@ -522,7 +522,7 @@ class LinkerWriter:
             )
 
     def save_dependencies_file(self, output_path: Path, target_elf_path: Path):
-        output = f"{target_elf_path.as_posix()}:"
+        output = f"{clean_up_path(target_elf_path).as_posix()}:"
 
         for entry in self.dependencies_entries:
             if entry.object_path is None:

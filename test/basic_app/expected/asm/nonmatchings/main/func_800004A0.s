@@ -1,4 +1,5 @@
 glabel func_800004A0
+nonmatching func_800004A0, 0x4C
     /* 10A0 800004A0 27BDFFE8 */  addiu      $sp, $sp, -0x18
     /* 10A4 800004A4 AFBF0014 */  sw         $ra, 0x14($sp)
     /* 10A8 800004A8 AFBE0010 */  sw         $fp, 0x10($sp)
@@ -19,5 +20,5 @@ glabel func_800004A0
     /* 10E0 800004E0 8FBE0010 */  lw         $fp, 0x10($sp)
     /* 10E4 800004E4 03E00008 */  jr         $ra
     /* 10E8 800004E8 27BD0018 */   addiu     $sp, $sp, 0x18
-.size func_800004A0, . - func_800004A0
+endlabel func_800004A0
     /* 10EC 800004EC 00000000 */  nop

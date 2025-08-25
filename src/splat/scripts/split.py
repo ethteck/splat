@@ -8,9 +8,9 @@ from pathlib import Path
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics
+from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
 
-from colorama import Fore, Style
+from colorama import Style
 from intervaltree import Interval, IntervalTree
 import sys
 
@@ -570,6 +570,8 @@ def main(
 
     if options.opts.is_mode_active("code"):
         dump_symbols()
+
+        file_presets.write_all_files()
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):

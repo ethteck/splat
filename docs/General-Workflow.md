@@ -118,7 +118,7 @@ The macros to include text/rodata assembly are different for GCC vs IDO compiler
 **GCC**: `INCLUDE_ASM` & `INCLUDE_RODATA` (text/rodata respectively)
 **IDO**: `GLOBAL_ASM`
 
-These macros must be defined in an included header, which splat currently does not produce.
+These macros must be defined in an included header, which splat generates and updates by default for GCC-based projects.
 
 For a GCC example, see the [include.h](https://github.com/AngheloAlf/drmario64/blob/master/include/include_asm.h) from the Dr. Mario project.
 
@@ -130,27 +130,75 @@ For MWCC, you will need [mwccgap](https://github.com/mkst/mwccgap) to include as
 
 splat relies on some assembly macros for the asm generation. They usually live on the `include/macro.inc` file. Without these macros then an assembler would not be able to build our disassemblies.
 
+By default splat will generate files with the required assembly macros.
+
 Those macros usually look like this:
 
 ```mips
-.macro glabel label
-    .global \label
+# A function symbol.
+.macro glabel label, visibility=global
+    .\visibility \label
     .type \label, @function
     \label:
+        .ent \label
 .endm
 
-.macro dlabel label
-    .global \label
+# The end of a function symbol.
+.macro endlabel label
+    .size \label, . - \label
+    .end \label
+.endm
+
+# An alternative entry to a function.
+.macro alabel label, visibility=global
+    .\visibility \label
+    .type \label, @function
+    \label:
+        .aent \label
+.endm
+
+# A label referenced by an error handler table.
+.macro ehlabel label, visibility=global
+    .\visibility \label
     \label:
 .endm
 
+
+# A label referenced by a jumptable.
 .macro jlabel label
     .global \label
     \label:
 .endm
+
+
+# A data symbol.
+.macro dlabel label, visibility=global
+    .\visibility \label
+    .type \label, @object
+    \label:
+.endm
+
+# End of a data symbol.
+.macro enddlabel label
+    .size \label, . - \label
+.endm
+
+
+# Label to signal the symbol haven't been matched yet.
+.macro nonmatching label, size=1
+    .global \label\().NON_MATCHING
+    .type \label\().NON_MATCHING, @object
+    .size \label\().NON_MATCHING, \size
+    \label\().NON_MATCHING:
+.endm
 ```
 
-Where `glabel` is used for functions, `dlabel` is used for data, rodata and bss variables and `jlabel` is used for branch labels used by jumptables.
+The most commonly used labels are:
+
+- `glabel` and `endlabel` which are used to define function symbols.
+- `dlabel` and `enddlabel` which are used to defined data, rodata and bss symbols.
+- `jlabel` is used for defining branch labels used by jumptables.
+- `nonmatching` is used to define the symbol haven't been matched yet.
 
 Asm differ tools can sometimes struggle to show diffs with `jlabel`s when combined with certain compilers. A workaround for this issue is to mark the `jlabel` as a function, like this:
 

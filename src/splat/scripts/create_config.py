@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
-from ..util import log
+from ..util import log, file_presets, conf
 
 
 def main(file_path: Path):
@@ -69,10 +69,6 @@ options:
   o_as_suffix: True
   use_legacy_include_asm: False
   mips_abi_float_regs: o32
-
-  asm_function_macro: glabel
-  asm_jtbl_label_macro: jlabel
-  asm_data_macro: dlabel
 
   # section_order: [".text", ".data", ".rodata", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
@@ -176,11 +172,16 @@ segments:
   - [0x{rom.size:X}]
 """
 
-    out_file = f"{cleaned_basename}.yaml"
-    with open(out_file, "w", newline="\n") as f:
+    out_file = Path(f"{cleaned_basename}.yaml")
+    with out_file.open("w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
+
+    # `file_presets` requires an initialized `opts`.
+    # A simple way to do that is to simply load the yaml we just generated.
+    conf.load([out_file])
+    file_presets.write_all_files()
 
     # Write reloc_addrs.txt file
     reloc_addrs = []
@@ -289,10 +290,6 @@ options:
   o_as_suffix: True
   use_legacy_include_asm: False
 
-  asm_function_macro: glabel
-  asm_jtbl_label_macro: jlabel
-  asm_data_macro: dlabel
-
   section_order: [".rodata", ".text", ".data", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
 
@@ -329,7 +326,7 @@ segments:
 """
     text_offset = exe.text_offset
     if text_offset != 0x800:
-        segments += f"""\
+        segments += """\
       - [0x800, rodata, 800]
 """
     segments += f"""\
@@ -346,11 +343,16 @@ segments:
   - [0x{exe.size:X}]
 """
 
-    out_file = f"{cleaned_basename}.yaml"
-    with open(out_file, "w", newline="\n") as f:
+    out_file = Path(f"{cleaned_basename}.yaml")
+    with out_file.open("w", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
+
+    # `file_presets` requires an initialized `opts`.
+    # A simple way to do that is to simply load the yaml we just generated.
+    conf.load([out_file])
+    file_presets.write_all_files()
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):

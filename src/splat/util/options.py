@@ -35,6 +35,9 @@ class SplatOpts:
     generated_c_preamble: str
     # Determines the code that is inserted by default in generated .s files
     generated_s_preamble: str
+    # Determines any extra content to be added in the generated macro.inc file
+    generated_macro_inc_content: Optional[str]
+    generate_asm_macros_files: bool
     # Determines whether to use .o as the suffix for all binary files?... TODO document
     use_o_as_suffix: bool
     # the value of the $gp register to correctly calculate offset to %gp_rel relocs
@@ -187,8 +190,12 @@ class SplatOpts:
     asm_data_macro: str
     # Determines the macro used at the end of a function, such as endlabel or .end
     asm_end_label: str
+    # Determines the macro used at the end of a data symbol, such as enddlabel
+    asm_data_end_label: str
     # Determines the macro used to declare ehtable labels in asm files
     asm_ehtable_label_macro: str
+    # Determines the macro used to declare the given symbol is a non matching one.
+    asm_nonmatching_label_macro: str
     # Toggles the .size directive emitted by the disassembler
     asm_emit_size_directive: Optional[bool]
     # Determines the number of characters to left align before the TODO finish documenting
@@ -420,6 +427,10 @@ def _parse_yaml(
             "generated_c_preamble", str, '#include "common.h"'
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
+        generated_macro_inc_content=p.parse_optional_opt(
+            "generated_macro_inc_content", str
+        ),
+        generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
@@ -523,8 +534,14 @@ def _parse_yaml(
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
+        asm_data_end_label=p.parse_opt(
+            "asm_data_end_label", str, comp.asm_data_end_label
+        ),
         asm_ehtable_label_macro=p.parse_opt(
             "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
+        ),
+        asm_nonmatching_label_macro=p.parse_opt(
+            "asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro
         ),
         asm_emit_size_directive=asm_emit_size_directive,
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),

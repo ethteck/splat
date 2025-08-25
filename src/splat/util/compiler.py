@@ -6,15 +6,18 @@ from typing import Optional, Dict
 class Compiler:
     name: str
     asm_function_macro: str = "glabel"
-    asm_function_alt_macro: str = "glabel"
-    asm_jtbl_label_macro: str = "glabel"
-    asm_data_macro: str = "glabel"
-    asm_end_label: str = ""
+    asm_function_alt_macro: str = "alabel"
+    asm_jtbl_label_macro: str = "jlabel"
+    asm_data_macro: str = "dlabel"
+    asm_end_label: str = "endlabel"
+    asm_data_end_label: str = "enddlabel"
     asm_ehtable_label_macro: str = "ehlabel"
+    asm_nonmatching_label_macro: str = "nonmatching"
     c_newline: str = "\n"
     asm_inc_header: str = ""
     asm_emit_size_directive: Optional[bool] = None
     j_as_branch: bool = False
+    uses_include_asm: bool = True
 
 
 GCC = Compiler(
@@ -30,12 +33,14 @@ SN64 = Compiler(
     asm_jtbl_label_macro=".globl",
     asm_data_macro=".globl",
     asm_end_label=".end",
+    asm_data_end_label="",
+    asm_nonmatching_label_macro="",
     c_newline="\r\n",
     asm_emit_size_directive=False,
     j_as_branch=True,
 )
 
-IDO = Compiler("IDO", asm_emit_size_directive=False)
+IDO = Compiler("IDO", asm_emit_size_directive=False, uses_include_asm=False)
 
 KMC = Compiler(
     "KMC",
@@ -55,7 +60,7 @@ PSYQ = Compiler(
 )
 
 # PS2
-MWCCPS2 = Compiler("MWCCPS2")
+MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
 EEGCC = Compiler("EEGCC")
 
 compiler_for_name: Dict[str, Compiler] = {
