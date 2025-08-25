@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.35.1
+
+* Fixes a typo in the generated `macro.inc` file on psx projects.
+
 ### 0.35.0
 
 * Add `pair_segment` option to segments.
