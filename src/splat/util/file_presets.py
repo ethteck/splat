@@ -21,7 +21,8 @@ def write_all_files():
 def _write(filepath: str, contents: str):
     p = Path(os.path.normpath(options.opts.base_path / filepath))
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(contents, encoding="UTF-8")
+    with p.open("w", encoding="UTF-8", newline="\n") as f:
+        f.write(contents)
 
 
 def write_include_asm_h():
