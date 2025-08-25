@@ -2,7 +2,8 @@
 
 ### 0.35.1
 
-* Fixes a typo in the generated `macro.inc` file on psx projects.
+* Fixes issues in the generated `macro.inc` and `labels.inc` files on psx projects.
+* Change `jlabel`s to be global if the user has turned off rodata migration to functions.
 
 ### 0.35.0
 
