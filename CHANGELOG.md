@@ -2,9 +2,12 @@
 
 ### 0.35.0
 
+* Add `pair_segment` option to segments:
+  * Allows pairing the sections of two different segments together, making cross-segment rodata migration possible.
 * Now `create_config` for N64 games can create basic `symbol_addrs.txt` and `reloc_addrs.txt` files from the information inferred from its analysis.
 
 ### 0.34.3
+
 * `asm_emit_size_directive` now also affects generated assembly from `textbin`, `databin`, and `rodatabin` segments.
 
 ### 0.34.2
