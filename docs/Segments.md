@@ -189,9 +189,9 @@ Data located in the ROM that is linked from a C file. Use the `.data` segment to
 
 **NOTE:** `splat` will not generate any `.data.s` files for these `.` (dot) sections.
 
-## `.sdata`
+## `sdata` / `.sdata`
 
-The `.sdata` segment behaves the same as the `.data` segment but supports "small data" linker sections named `.sdata`.
+The `sdata` and `.sdata` segments behaves the same as the `data` and `.data` segments, but supports "small data" linker sections.
 
 ## `rodata`
 
@@ -263,9 +263,9 @@ Links the `.bss` section of the associated `c` file.
 - { start: 0x7D1AD0, type: .bss, name: filepath, vram: 0x803C0420 }
 ```
 
-## `.sbss`
+## `sbss` / `.sbss`
 
-The `.sbss` segment behaves the same as the `.bss` segment but supports "small bss" linker sections named `.sbss`.
+The `sbss` and `.sbss` segments behaves the same as the `bss` and `.bss` segments, but supports "small bss" linker sections.
 
 ## `lib`
 
