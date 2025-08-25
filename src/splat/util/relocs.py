@@ -38,10 +38,8 @@ def initialize():
         prog_bar.set_description(f"Loading relocs ({path.stem})")
         line: str
         for line_num, line in enumerate(prog_bar):
-            line = line.strip()
             # Allow comments
-            line = line.split("//")[0]
-            line = line.strip()
+            line = line.split("//")[0].strip()
 
             if line == "":
                 continue

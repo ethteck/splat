@@ -11,7 +11,7 @@ import zlib
 from dataclasses import dataclass
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import rabbitizer
 import spimdisasm
@@ -70,17 +70,42 @@ unknown_cic = CIC("unknown", "unknown", 0x0000000)
 
 
 @dataclass
+class EntryAddressInfo:
+    value: int
+    rom_hi: int
+    rom_lo: int
+
+    @staticmethod
+    def new(
+        value: Optional[int], hi: Optional[int], lo: Optional[int]
+    ) -> Optional["EntryAddressInfo"]:
+        if value is not None and hi is not None and lo is not None:
+            return EntryAddressInfo(value, hi, lo)
+        return None
+
+
+@dataclass
 class N64EntrypointInfo:
     entry_size: int
-    data_size: int
-    bss_start_address: Optional[int]
-    bss_size: Optional[int]
-    main_address: Optional[int]
-    stack_top: int
+    data_size: Optional[int]
+    bss_start_address: Optional[EntryAddressInfo]
+    bss_size: Optional[EntryAddressInfo]
+    bss_end_address: Optional[EntryAddressInfo]
+    main_address: Optional[EntryAddressInfo]
+    stack_top: Optional[EntryAddressInfo]
     traditional_entrypoint: bool
 
     def segment_size(self) -> int:
-        return self.entry_size + self.data_size
+        if self.data_size is not None:
+            return self.entry_size + self.data_size
+        return self.entry_size
+
+    def get_bss_size(self) -> Optional[int]:
+        if self.bss_size is not None:
+            return self.bss_size.value
+        if self.bss_start_address is not None and self.bss_end_address is not None:
+            return self.bss_end_address.value - self.bss_start_address.value
+        return None
 
     @staticmethod
     def parse_rom_bytes(
@@ -93,23 +118,27 @@ class N64EntrypointInfo:
 
         register_values = [0 for _ in range(32)]
         completed_pair = [False for _ in range(32)]
+        hi_assignments: List[Optional[int]] = [None for _ in range(32)]
+        lo_assignments: List[Optional[int]] = [None for _ in range(32)]
 
         register_bss_address: Optional[int] = None
         register_bss_size: Optional[int] = None
         register_main_address: Optional[int] = None
 
-        bss_address: Optional[int] = None
-        bss_size: Optional[int] = None
+        bss_address: Optional[EntryAddressInfo] = None
+        bss_size: Optional[EntryAddressInfo] = None
+        bss_end_address: Optional[EntryAddressInfo] = None
 
         traditional_entrypoint = True
         decrementing_bss_routine = True
-        data_size = 0
-        func_call_target: Optional[int] = None
+        data_size: Optional[int] = None
+        func_call_target: Optional[EntryAddressInfo] = None
 
         size = 0
         i = 0
         while i < len(word_list):
             word = word_list[i]
+            current_rom = offset + i * 4
             insn = rabbitizer.Instruction(word, vram)
             if not insn.isValid():
                 break
@@ -121,6 +150,7 @@ class N64EntrypointInfo:
             elif insn.canBeHi():
                 register_values[insn.rt.value] = insn.getProcessedImmediate() << 16
                 completed_pair[insn.rt.value] = False
+                hi_assignments[insn.rt.value] = current_rom
             elif insn.canBeLo():
                 if insn.isLikelyHandwritten():
                     # Try to skip these instructions:
@@ -132,6 +162,8 @@ class N64EntrypointInfo:
                         register_values[insn.rs.value] + insn.getProcessedImmediate()
                     )
                     completed_pair[insn.rt.value] = True
+                    if not insn.isUnsigned():
+                        lo_assignments[insn.rt.value] = current_rom
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
                         # Try to detect the zero-ing bss algorithm
@@ -173,16 +205,25 @@ class N64EntrypointInfo:
                 # bnez       $at, .clear_bss
                 #  sw        $zero, -0x4($t0)
                 if bss_address is None and bss_size is None:
-                    bss_address = register_values[insn.rs.value]
-                    bss_end_address = register_values[insn.rt.value]
-                    bss_size = bss_end_address - bss_address
+                    bss_address = EntryAddressInfo.new(
+                        register_values[insn.rs.value],
+                        hi_assignments[insn.rs.value],
+                        lo_assignments[insn.rs.value],
+                    )
+                    bss_end_address = EntryAddressInfo.new(
+                        register_values[insn.rt.value],
+                        hi_assignments[insn.rt.value],
+                        lo_assignments[insn.rt.value],
+                    )
 
             elif insn.isFunctionCall():
                 # Some games don't follow the usual pattern for entrypoints.
                 # Those usually use `jal` instead of `jr` to jump out of the
                 # entrypoint to actual code.
                 traditional_entrypoint = False
-                func_call_target = insn.getInstrIndexAsVram()
+                func_call_target = EntryAddressInfo(
+                    insn.getInstrIndexAsVram(), current_rom, current_rom
+                )
 
             elif insn.uniqueId == rabbitizer.InstrId.cpu_break:
                 traditional_entrypoint = False
@@ -209,27 +250,38 @@ class N64EntrypointInfo:
         #         print(i, f"{val:08X}")
 
         if decrementing_bss_routine:
-            bss_address = (
-                register_values[register_bss_address]
-                if register_bss_address is not None
-                else None
+            if register_bss_address is not None:
+                bss_address = EntryAddressInfo.new(
+                    register_values[register_bss_address],
+                    hi_assignments[register_bss_address],
+                    lo_assignments[register_bss_address],
+                )
+            if register_bss_size is not None:
+                bss_size = EntryAddressInfo.new(
+                    register_values[register_bss_size],
+                    hi_assignments[register_bss_size],
+                    lo_assignments[register_bss_size],
+                )
+
+        if register_main_address is not None:
+            main_address = EntryAddressInfo.new(
+                register_values[register_main_address],
+                hi_assignments[register_main_address],
+                lo_assignments[register_main_address],
             )
-            bss_size = (
-                register_values[register_bss_size]
-                if register_bss_size is not None
-                else None
-            )
-        main_address = (
-            register_values[register_main_address]
-            if register_main_address is not None
-            else None
+        else:
+            main_address = None
+
+        stack_top = EntryAddressInfo.new(
+            register_values[rabbitizer.RegGprO32.sp.value],
+            hi_assignments[rabbitizer.RegGprO32.sp.value],
+            lo_assignments[rabbitizer.RegGprO32.sp.value],
         )
-        stack_top = register_values[rabbitizer.RegGprO32.sp.value]
 
         if not traditional_entrypoint:
             if func_call_target is not None:
                 main_address = func_call_target
-                if func_call_target > vram:
+                if func_call_target.value > vram:
                     # Some weird-entrypoint games have non-code between the
                     # entrypoint and the actual user code.
                     # We try to find where actual code may begin, and tag
@@ -244,6 +296,7 @@ class N64EntrypointInfo:
             data_size,
             bss_address,
             bss_size,
+            bss_end_address,
             main_address,
             stack_top,
             traditional_entrypoint,

@@ -203,9 +203,15 @@ symbol_addrs_path: path/to/symbol_addrs
 
 
 
-### reloc_addrs_paths
+### reloc_addrs_path
 
+Determines the path to the reloc addresses file(s). A `reloc_addrs` file contains metadata to override relocations within the generated assembly. For more information about the syntax and how to use it refer to the corresponding [reloc_addrs chapter](Advanced-Reloc.md).
 
+It's possible to use more than one file by supplying a list instead of a string.
+
+#### Default
+
+`reloc_addrs.txt`
 
 ### build_path
 Path that built files will be found. Used for generation of the linker script.
