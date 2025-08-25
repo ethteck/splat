@@ -2,6 +2,8 @@
 
 ### 0.35.0
 
+* Add `pair_segment` option to segments.
+  * Allows pairing the sections of two different segments together, making cross-segment rodata migration possible.
 * splat will now start generating and regenerating files related to assembly macros, allowing less painful updates to newer splat versions.
   * This includes generating files like `include/include_asm.h`, `include/macro.inc`, `include/labels.inc` and `include/gte_macros.inc`.
   * This makes easier for splat to introduce new kinds of labels or update the current definitions with minimal pain for the end-user.
