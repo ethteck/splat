@@ -1,6 +1,7 @@
 .section .rodata
 .align 3
-glabel jtbl_80000518
+dlabel jtbl_80000518
+nonmatching jtbl_80000518
     /* 1118 80000518 80000448 */ .word .L80000448
     /* 111C 8000051C 80000450 */ .word .L80000450
     /* 1120 80000520 80000458 */ .word .L80000458
@@ -11,11 +12,12 @@ glabel jtbl_80000518
     /* 1134 80000534 80000480 */ .word .L80000480
     /* 1138 80000538 00000000 */ .word 0x00000000
     /* 113C 8000053C 00000000 */ .word 0x00000000
-.size jtbl_80000518, . - jtbl_80000518
+enddlabel jtbl_80000518
 
 
 .section .text
 glabel func_80000400
+nonmatching func_80000400, 0xA0
     /* 1000 80000400 27BDFFF8 */  addiu      $sp, $sp, -0x8
     /* 1004 80000404 AFBE0000 */  sw         $fp, 0x0($sp)
     /* 1008 80000408 03A0F021 */  addu       $fp, $sp, $zero
@@ -66,4 +68,4 @@ glabel func_80000400
     /* 1094 80000494 8FBE0000 */  lw         $fp, 0x0($sp)
     /* 1098 80000498 03E00008 */  jr         $ra
     /* 109C 8000049C 27BD0008 */   addiu     $sp, $sp, 0x8
-.size func_80000400, . - func_80000400
+endlabel func_80000400
