@@ -107,7 +107,7 @@ segments:
     type: header
     start: 0x0
 
-  - name: boot
+  - name: ipl3
     type: bin
     start: 0x40
 
@@ -118,7 +118,7 @@ segments:
     subsegments:
       - [0x1000, hasm]
 """
-    if rom.entrypoint_info.data_size > 0:
+    if rom.entrypoint_info.data_size is not None:
         segments += f"""\
       - [0x{0x1000 + rom.entrypoint_info.entry_size:X}, data]
 """
@@ -135,7 +135,7 @@ segments:
 
     if rom.entrypoint_info.bss_size is not None:
         segments += f"""\
-    bss_size: 0x{rom.entrypoint_info.bss_size:X}
+    bss_size: 0x{rom.entrypoint_info.bss_size.value:X}
 """
 
     segments += f"""\
@@ -148,11 +148,13 @@ segments:
         and rom.entrypoint_info.bss_start_address is not None
         and first_section_end > main_rom_start
     ):
-        bss_start = rom.entrypoint_info.bss_start_address - rom.entry_point + 0x1000
+        bss_start = (
+            rom.entrypoint_info.bss_start_address.value - rom.entry_point + 0x1000
+        )
         # first_section_end points to the start of data
         segments += f"""\
       - [0x{first_section_end:X}, data]
-      - {{ type: bss, vram: 0x{rom.entrypoint_info.bss_start_address:08X} }}
+      - {{ type: bss, vram: 0x{rom.entrypoint_info.bss_start_address.value:08X} }}
 """
         # Point next segment to the detected end of the main one
         first_section_end = bss_start
@@ -180,6 +182,82 @@ segments:
     # A simple way to do that is to simply load the yaml we just generated.
     conf.load([out_file])
     file_presets.write_all_files()
+
+    # Write reloc_addrs.txt file
+    reloc_addrs = []
+    if rom.entrypoint_info.bss_start_address is not None:
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_start_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_START"
+        )
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_start_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_START"
+        )
+        reloc_addrs.append("")
+    if rom.entrypoint_info.bss_size is not None:
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_size.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_SIZE"
+        )
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_size.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_SIZE"
+        )
+        reloc_addrs.append("")
+    if rom.entrypoint_info.bss_end_address is not None:
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_end_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_END"
+        )
+        reloc_addrs.append(
+            f"rom:0x{rom.entrypoint_info.bss_end_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_END"
+        )
+        reloc_addrs.append("")
+    if rom.entrypoint_info.stack_top is not None:
+        reloc_addrs.append(
+            '// This entry corresponds to the "stack top", which is the end of the array used as the stack for the main segment.'
+        )
+        reloc_addrs.append(
+            "// It is commented out because it was not possible to infer what the start of the stack symbol is, so you'll have to figure it out by yourself."
+        )
+        reloc_addrs.append(
+            "// Once you have found it you can properly name it and specify the length of this stack as the addend value here."
+        )
+        reloc_addrs.append(
+            f"// The address of the end of the stack is 0x{rom.entrypoint_info.stack_top.value:08X}."
+        )
+        reloc_addrs.append(
+            f"// A common size for this stack is 0x2000, so try checking for the address 0x{rom.entrypoint_info.stack_top.value-0x2000:08X}. Note the stack may have a different size."
+        )
+        reloc_addrs.append(
+            f"// rom:0x{rom.entrypoint_info.stack_top.rom_hi:06X} reloc:MIPS_HI16 symbol:main_stack addend:0xXXXX"
+        )
+        reloc_addrs.append(
+            f"// rom:0x{rom.entrypoint_info.stack_top.rom_lo:06X} reloc:MIPS_LO16 symbol:main_stack addend:0xXXXX"
+        )
+        reloc_addrs.append("")
+    if reloc_addrs:
+        with Path("reloc_addrs.txt").open("w", newline="\n") as f:
+            print("Writing reloc_addrs.txt")
+            f.write(
+                "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file\n"
+            )
+            f.write("// entrypoint relocs\n")
+            contents = "\n".join(reloc_addrs)
+            f.write(contents)
+
+    # Write symbol_addrs.txt file
+    symbol_addrs = []
+    symbol_addrs.append(f"entrypoint = 0x{rom.entry_point:08X}; // type:func")
+    if rom.entrypoint_info.main_address is not None:
+        symbol_addrs.append(
+            f"main = 0x{rom.entrypoint_info.main_address.value:08X}; // type:func"
+        )
+    if symbol_addrs:
+        symbol_addrs.append("")
+        with Path("symbol_addrs.txt").open("w", newline="\n") as f:
+            print("Writing symbol_addrs.txt")
+            f.write(
+                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
+            )
+            contents = "\n".join(symbol_addrs)
+            f.write(contents)
 
 
 def create_psx_config(exe_path: Path, exe_bytes: bytes):
