@@ -122,12 +122,6 @@ def write_assembly_inc_files():
         options.opts.asm_jtbl_label_macro != ""
         and options.opts.asm_jtbl_label_macro != options.opts.asm_function_macro
     ):
-        jlabel_macro_labelsinc = f"""
-# A label referenced by a jumptable.
-.macro {options.opts.asm_jtbl_label_macro} label, visibility=global
-    \\label:
-.endm
-"""
         jlabel_macro_macroinc = f"""
 # A label referenced by a jumptable.
 .macro {options.opts.asm_jtbl_label_macro} label, visibility=global
@@ -136,6 +130,18 @@ def write_assembly_inc_files():
     \\label:
 .endm
 """
+        if options.opts.migrate_rodata_to_functions:
+            jlabel_macro_labelsinc = f"""
+# A label referenced by a jumptable.
+.macro {options.opts.asm_jtbl_label_macro} label, visibility=global
+    \\label:
+.endm
+"""
+        else:
+            # If the user doesn't migrate rodata, like jumptables, to functions
+            # then the user will need jlabels to be global instead of local,
+            # so we just reuse the definition from macro.inc
+            jlabel_macro_labelsinc = jlabel_macro_macroinc
 
     data_macros = ""
     if (
@@ -186,6 +192,9 @@ def write_assembly_inc_files():
     if options.opts.compiler.uses_include_asm:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
+
+        if options.opts.platform == "psx":
+            preamble += '\n.include "gte_macros.inc"\n'
         _write("include/labels.inc", f"{preamble}\n{labels_inc}")
 
     if options.opts.platform in {"n64", "psx"}:
@@ -275,7 +284,7 @@ def write_assembly_inc_files():
 .set $fs5f,         $f31
 """
     elif options.opts.platform == "psx":
-        gas += '\ninclude "gte_macros.inc"\n'
+        gas += '\n.include "gte_macros.inc"\n'
         write_gte_macros()
 
     if options.opts.generated_macro_inc_content is not None:

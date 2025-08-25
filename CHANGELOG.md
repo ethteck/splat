@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.35.1
+
+* Fixes issues in the generated `macro.inc` and `labels.inc` files on psx projects.
+* Change `jlabel`s to be global if the user has turned off rodata migration to functions.
+
 ### 0.35.0
 
 * Add `pair_segment` option to segments.
