@@ -32,6 +32,8 @@ Each attribute is defined as follows:
     - `MIPS_GOT_LO16`: Corresponds to the `%got_lo` reloc operator.
     - `MIPS_CALL_HI16`: Corresponds to the `%call_hi` reloc operator.
     - `MIPS_CALL_LO16`: Corresponds to the `%call_lo` reloc operator.
+    - `MIPS_26`: No direct operator. Used in `jal` (jump and link) and `j` (jump) instructions.
+    - `MIPS_PC16`: No direct operator. Used in branch instructions.
   - Data relocs:
     - `MIPS_32`: Corresponds to `.word`.
     - `MIPS_GPREL32`: Corresponds to `.gpword`.
