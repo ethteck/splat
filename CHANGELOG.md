@@ -1,6 +1,12 @@
 # splat Release Notes
 
+### 0.35.0
+
+* Add `pair_segment` option to segments:
+  * Allows pairing the sections of two different segments together, making cross-segment rodata migration possible.
+
 ### 0.34.3
+
 * `asm_emit_size_directive` now also affects generated assembly from `textbin`, `databin`, and `rodatabin` segments.
 
 ### 0.34.2
