@@ -186,6 +186,9 @@ def write_assembly_inc_files():
     if options.opts.compiler.uses_include_asm:
         # File used by original assembler
         preamble = "# This file is used by the original compiler/assembler.\n# Defines the expected assembly macros.\n"
+
+        if options.opts.platform == "psx":
+            preamble += '\n.include "gte_macros.inc"\n'
         _write("include/labels.inc", f"{preamble}\n{labels_inc}")
 
     if options.opts.platform in {"n64", "psx"}:
