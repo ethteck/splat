@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.35.2
+
+* Fix splat not respecting when `generate_asm_macros_files` was being turned off.
+
 ### 0.35.1
 
 * Fixes issues in the generated `macro.inc` and `labels.inc` files on psx projects.
