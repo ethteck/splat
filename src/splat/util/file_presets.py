@@ -14,6 +14,9 @@ from . import options, log
 
 
 def write_all_files():
+    if not options.opts.generate_asm_macros_files:
+        return
+
     write_include_asm_h()
     write_assembly_inc_files()
 
