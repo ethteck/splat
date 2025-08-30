@@ -129,14 +129,14 @@ def write_assembly_inc_files():
 # A label referenced by a jumptable.
 .macro {options.opts.asm_jtbl_label_macro} label, visibility=global
     .\\visibility \\label
-    .type \\label, @function
     \\label:
 .endm
 """
         if options.opts.migrate_rodata_to_functions:
             jlabel_macro_labelsinc = f"""
 # A label referenced by a jumptable.
-.macro {options.opts.asm_jtbl_label_macro} label, visibility=global
+.macro {options.opts.asm_jtbl_label_macro} label, visibility=local
+    .\\visibility \\label
     \\label:
 .endm
 """
@@ -179,12 +179,6 @@ def write_assembly_inc_files():
 .endm
 """
 
-    labels_inc = f"""\
-{func_macros}
-{jlabel_macro_labelsinc}
-{data_macros}
-{nm_macros}\
-"""
     macros_inc = f"""\
 {func_macros}
 {jlabel_macro_macroinc}
@@ -198,7 +192,15 @@ def write_assembly_inc_files():
 
         if options.opts.platform == "psx":
             preamble += '\n.include "gte_macros.inc"\n'
-        _write("include/labels.inc", f"{preamble}\n{labels_inc}")
+
+        labels_inc = f"""\
+{preamble}
+{func_macros}
+{jlabel_macro_labelsinc}
+{data_macros}
+{nm_macros}\
+"""
+        _write("include/labels.inc", labels_inc)
 
     if options.opts.platform in {"n64", "psx"}:
         gas = macros_inc
@@ -297,6 +299,15 @@ def write_assembly_inc_files():
     preamble = (
         "# This file is used by modern gas.\n# Defines the expected assembly macros\n"
     )
+    gas = f"""\
+# Evaluate this file only once in case it's included more than once
+.ifndef _MACRO_INC_GUARD
+.internal _MACRO_INC_GUARD
+.set _MACRO_INC_GUARD, 1
+
+{gas}
+.endif
+"""
     _write("include/macro.inc", f"{preamble}\n{gas}")
 
 

@@ -2,6 +2,11 @@
 
 ### 0.35.2
 
+* Miscellaneous updates to generated macro labels.
+  * `jlabel`s in `labels.inc` are now explicitly marked as local.
+  * `jlabel`s in `macro.inc` no longer are marked as `@function` type.
+  * `macro.inc` now has include guards.
+    * `labels.inc` does not have them because no old assembler seem to properly support them.
 * Fix splat not respecting when `generate_asm_macros_files` was being turned off.
 
 ### 0.35.1
