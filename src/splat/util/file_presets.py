@@ -33,13 +33,7 @@ def write_include_asm_h():
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
 
-    file_data = """\
-#ifndef INCLUDE_ASM_H
-#define INCLUDE_ASM_H
-
-#if !defined(M2CTX) && !defined(PERMUTER)
-
-#ifndef INCLUDE_ASM
+    include_asm_macro = """\
 #define INCLUDE_ASM(FOLDER, NAME) \\
     __asm__( \\
         ".section .text\\n" \\
@@ -49,14 +43,43 @@ def write_include_asm_h():
         "    .set reorder\\n" \\
         "    .set at\\n" \\
     )
-#endif
-#ifndef INCLUDE_RODATA
+"""
+    if options.opts.maspsx_include_asm_hack:
+        include_asm_macro = """\
+#define INCLUDE_ASM(FOLDER, NAME) \\
+    void __maspsx_include_asm_hack_##NAME() { \\
+        __asm__( \\
+            ".text # maspsx-keep \\n" \\
+            "    .align 2 # maspsx-keep\\n" \\
+            "    .set noat # maspsx-keep\\n" \\
+            "    .set noreorder # maspsx-keep\\n" \\
+            "    .include \\"" FOLDER "/" #NAME ".s\\" # maspsx-keep\\n" \\
+            "    .set reorder # maspsx-keep\\n" \\
+            "    .set at # maspsx-keep\\n" \\
+        ); \\
+    }
+"""
+
+    include_rodata_macro = """\
 #define INCLUDE_RODATA(FOLDER, NAME) \\
     __asm__( \\
         ".section .rodata\\n" \\
         "    .include \\"" FOLDER "/" #NAME ".s\\"\\n" \\
         ".section .text" \\
     )
+"""
+
+    file_data = f"""\
+#ifndef INCLUDE_ASM_H
+#define INCLUDE_ASM_H
+
+#if !defined(M2CTX) && !defined(PERMUTER)
+
+#ifndef INCLUDE_ASM
+{include_asm_macro}\
+#endif
+#ifndef INCLUDE_RODATA
+{include_rodata_macro}\
 #endif
 __asm__(".include \\"include/labels.inc\\"\\n");
 

@@ -138,6 +138,14 @@ Some files may not be generated depending on the selected platform and compiler,
 
 Defaults to `True`.
 
+### maspsx_include_asm_hack
+
+This option is only relevant for psx projects.
+
+Changes the definition of the `INCLUDE_ASM` macro in the generated `include/include_asm.h` file so it uses the reordering workaround hack provided by [`maspsx`](https://github.com/mkst/maspsx). Please consult [`maspsx`'s readme](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack) for more information.
+
+Defaults to `False`.
+
 ### o_as_suffix
 
 Used to determine the file extension of the built files that will be listed on the linker script.

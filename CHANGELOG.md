@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.36.0
+
+* New yaml option:
+  * `maspsx_include_asm_hack`: Changes the definition of the generated `INCLUDE_ASM` to be compatible with the one expected by `maspsx` when using the [reordering workaround hack](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack).
+
 ### 0.35.2
 
 * Miscellaneous updates to generated macro labels.
