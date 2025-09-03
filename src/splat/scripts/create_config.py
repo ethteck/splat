@@ -312,7 +312,7 @@ options:
 
   # Uncomment this line in case you need to use the maspsx reorder workaround hack
   # https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
-  # maspsx_include_asm_hack: True
+  # include_asm_macro_style: maspsx_hack
 """
 
     segments = f"""\

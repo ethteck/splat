@@ -138,13 +138,14 @@ Some files may not be generated depending on the selected platform and compiler,
 
 Defaults to `True`.
 
-### maspsx_include_asm_hack
+### include_asm_macro_style
 
-This option is only relevant for psx projects.
+Allows configuring the style used by the generated `INCLUDE_ASM` macro. It currently allows two possible values:
 
-Changes the definition of the `INCLUDE_ASM` macro in the generated `include/include_asm.h` file so it uses the reordering workaround hack provided by [`maspsx`](https://github.com/mkst/maspsx). Please consult [`maspsx`'s readme](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack) for more information.
+- `default`: Uses the default definition for the macro. This is the default.
+- `maspsx_hack`: Changes the definition of the generated `INCLUDE_ASM` to be compatible with the one expected by `maspsx` when using the [reordering workaround hack](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack).
 
-Defaults to `False`.
+Defaults to `default`.
 
 ### o_as_suffix
 

@@ -33,18 +33,7 @@ def write_include_asm_h():
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
 
-    include_asm_macro = """\
-#define INCLUDE_ASM(FOLDER, NAME) \\
-    __asm__( \\
-        ".section .text\\n" \\
-        "    .set noat\\n" \\
-        "    .set noreorder\\n" \\
-        "    .include \\"" FOLDER "/" #NAME ".s\\"\\n" \\
-        "    .set reorder\\n" \\
-        "    .set at\\n" \\
-    )
-"""
-    if options.opts.maspsx_include_asm_hack:
+    if options.opts.include_asm_macro_style == "maspsx_hack":
         include_asm_macro = """\
 #define INCLUDE_ASM(FOLDER, NAME) \\
     void __maspsx_include_asm_hack_##NAME() { \\
@@ -58,6 +47,18 @@ def write_include_asm_h():
             "    .set at # maspsx-keep\\n" \\
         ); \\
     }
+"""
+    else:  # default
+        include_asm_macro = """\
+#define INCLUDE_ASM(FOLDER, NAME) \\
+    __asm__( \\
+        ".section .text\\n" \\
+        "    .set noat\\n" \\
+        "    .set noreorder\\n" \\
+        "    .include \\"" FOLDER "/" #NAME ".s\\"\\n" \\
+        "    .set reorder\\n" \\
+        "    .set at\\n" \\
+    )
 """
 
     include_rodata_macro = """\
