@@ -204,8 +204,10 @@ class LinkerWriter:
         if not self.is_partial:
             self._writeln(f"__romPos = {options.opts.ld_rom_start};")
 
-            if options.opts.gp is not None:
-                self._writeln("_gp = " + f"0x{options.opts.gp:X};")
+            if options.opts.ld_gp_expression is not None:
+                self._writeln(f"_gp = {options.opts.ld_gp_expression};")
+            elif options.opts.gp is not None:
+                self._writeln(f"_gp = 0x{options.opts.gp:X};")
 
     # Write a series of statements which compute a symbol that represents the highest address among a list of segments' end addresses
     def write_max_vram_end_sym(self, symbol: str, overlays: List[Segment]):

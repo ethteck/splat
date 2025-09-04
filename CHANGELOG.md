@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.36.0
+
+* New yaml options:
+  * `ld_gp_expression`: Allows setting a custom expression for the `_gp` symbol in the generated linker script, making this symbol to properly shift around instead of hardcoding it to the given `gp_value`.
+
 ### 0.35.2
 
 * Miscellaneous updates to generated macro labels.
