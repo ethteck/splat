@@ -155,6 +155,8 @@ Defaults to `False`.
 
 The value of the `$gp` register to correctly calculate offset to `%gp_rel` relocs.
 
+It is strongly encouraged to provide a [`ld_gp_expression`](#ld_gp_expression) once the sections of the binary are properly understood.
+Not setting this expression makes splat to always emit a hardcoded value for `_gp` in the linker script, preventing proper shiftability.
 
 ### check_consecutive_segment_types
 
@@ -614,6 +616,44 @@ Defaults to `False`.
 Sets the default option for the `bss_contains_common` attribute of all segments.
 
 Defaults to `False`.
+
+### ld_gp_expression
+
+Provides an expression for the `_gp` symbol to be emitted in the generated linker script.
+
+Most projects start by only setting a [`gp_value`](#gp_value) on their yamls. This is fine while matching the project, but it is bad for shiftable builds, becuase it prevents the `_gp` symbol to shift around as needed.
+
+This expression is used as-is in the generated linker script, so care must be taken to provide an expression that makes sense for shiftable builds and also matches the original gp value on matching builds.
+
+Usually this expression is relative to the start of an "small section" (`.sdata`, `.srodata`, `.sbss`, etc.) plus an optional offset (usually `0x7FF0` or `0x8000`).
+
+The recommended approach to know what to set here is to try to understand where the first small section is, take the difference between the [`gp_value`](#gp_value) and the address of the small section to know what the offset is and then use the linker symbol for the start of that small section.
+
+For example, say your gp value is `0x00397FF0` and you found the first small section on the rom is a `.sdata` section at vram address `0x00390000` (note __vram__ address, not rom address) which is part of the top-level segment `main`. The difference between those two addresses is `0x7FF0`, so that's your offset. Given this information the expression you want for gp is `main_SDATA_START + 0x7FF0`; where `main` is the top-level segment, `SDATA` comes from the `.sdata` section and the `+ 0x7FF0` is your calculated offset. If you did this process right, then the matching build should still match after setting the gp expression.
+
+#### Usage
+
+Not using `ld_gp_expression` makes splat to hardcoded the value:
+
+```yaml
+  gp_value: 0x0039DD70
+```
+
+```txt
+    _gp = 0x0039DD70;
+```
+
+When a `ld_gp_expression` is given then splat is able to emit a non-hardcoded expression for `_gp` without interfering with the disassembly process:
+
+```yaml
+  gp_value: 0x0039DD70
+  ld_gp_expression: main_SDATA_START + 0x7FF0
+```
+
+```txt
+    _gp = main_SDATA_START + 0x7FF0;
+```
+
 
 ## C file options
 
