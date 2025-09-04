@@ -150,7 +150,7 @@ class SplatOpts:
     ld_generate_symbol_per_data_segment: bool
     # Sets the default option for the `bss_contains_common` attribute of all segments.
     ld_bss_contains_common: bool
-    #
+    # Specify an expression to be used for the `_gp` symbol in the generated linker script instead of a hardcoded value.
     ld_gp_expression: Optional[str]
 
     ################################################################################
