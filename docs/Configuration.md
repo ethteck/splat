@@ -629,7 +629,9 @@ Usually this expression is relative to the start of an "small section" (`.sdata`
 
 The recommended approach to know what to set here is to try to understand where the first small section is, take the difference between the [`gp_value`](#gp_value) and the address of the small section to know what the offset is and then use the linker symbol for the start of that small section.
 
-For example, say your gp value is `0x00397FF0` and you found the first small section on the rom is a `.sdata` section at vram address `0x00390000` (note __vram__ address, not rom address) which is part of the top-level segment `main`. The difference between those two addresses is `0x7FF0`, so that's your offset. Given this information the expression you want for gp is `main_SDATA_START + 0x7FF0`; where `main` is the top-level segment, `SDATA` comes from the `.sdata` section and the `+ 0x7FF0` is your calculated offset. If you did this process right, then the matching build should still match after setting the gp expression.
+For example, say your gp value is `0x00397FF0` and you found the first small section on the rom is a `.sdata` section at vram address `0x00390000` (note *vram* address, not rom address) which is part of the top-level segment `main`. The difference between those two addresses is `0x7FF0`, so that's your offset. Given this information the expression you want for gp is `main_SDATA_START + 0x7FF0`; where `main` is the top-level segment, `SDATA` comes from the `.sdata` section and the `+ 0x7FF0` is your calculated offset. If you did this process right, then the matching build should still match after setting the gp expression.
+
+Note you should **not** remove the `gp_value` from your yaml when you set `ld_gp_expression`. `gp_value` is still used for the disassembly, without it you wouldn't get symbolized gp-accesses.
 
 #### Usage
 
