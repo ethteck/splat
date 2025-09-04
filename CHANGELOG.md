@@ -1,5 +1,7 @@
 # splat Release Notes
 
+* `spimdisasm` 1.36.1 or above is now required.
+
 ### 0.35.2
 
 * Miscellaneous updates to generated macro labels.
