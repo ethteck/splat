@@ -310,7 +310,7 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 
-  # Uncomment this line in case you need to use the maspsx reorder workaround hack
+  # Uncomment this line if you need to use the maspsx reorder workaround hack
   # https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
   # include_asm_macro_style: maspsx_hack
 """
