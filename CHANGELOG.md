@@ -1,5 +1,13 @@
 # splat Release Notes
 
+### 0.36.0
+
+* `incbin`s segments now provide a default symbol if the user hasn't defined a symbol at that given address.
+  * This name is automatically escaped to be a valid symbol name.
+  * The name of this symbol is based on the segment's name, with a `__` prefix and a suffix depending on the type of incbin used.
+  * This naming scheme may change at any time without further notice.
+* `incbin`s segments now emit a nonmatching marker.
+
 ### 0.35.2
 
 * Miscellaneous updates to generated macro labels.
