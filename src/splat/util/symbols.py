@@ -197,14 +197,20 @@ def handle_sym_addrs(
 
                                 if align < 0:
                                     log.parsing_error_preamble(path, line_num, line)
-                                    log.error(f"The given alignment for {sym.name} (0x{sym.vram_start:08X}) is negative.")
+                                    log.error(
+                                        f"The given alignment for '{sym.name}' (0x{sym.vram_start:08X}) is negative."
+                                    )
                                 align_shift = (align & (-align)).bit_length() - 1
                                 if (1 << align_shift) != align:
                                     log.parsing_error_preamble(path, line_num, line)
-                                    log.error(f"The given alignment 0x{align:X} for symbol {sym.name} (0x{sym.vram_start:08X}) is not a power of two.")
+                                    log.error(
+                                        f"The given alignment '0x{align:X}' for symbol '{sym.name}' (0x{sym.vram_start:08X}) is not a power of two."
+                                    )
                                 if sym.vram_start % align != 0:
                                     log.parsing_error_preamble(path, line_num, line)
-                                    log.error(f"The symbol {sym.name} (0x{sym.vram_start:08X}) is not aligned already to the given alignment 0x{align:X}.")
+                                    log.error(
+                                        f"The symbol '{sym.name}' (0x{sym.vram_start:08X}) is not aligned already to the given alignment '0x{align:X}'."
+                                    )
 
                                 sym.given_align = align
                                 continue
