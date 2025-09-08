@@ -2,9 +2,11 @@
 
 ### 0.36.0
 
-* Add new symbol attribute: `align`.
+* New symbol attribute: `align`.
   * Emit an alignment directive for the given symbol during disassembly.
   * The given alignment must be positive, be a power of two and The symbol's address must already be aligned to the given custom alignment, otherwise splat will emit an error and halt.
+* New yaml option: `ld_gp_expression`:
+  * Allows setting a custom expression for the `_gp` symbol in the generated linker script, making this symbol to properly shift around instead of hardcoding it to the given `gp_value`.
 * New yaml option: `include_asm_macro_style`:
   * Allows configuring the style used by the generated `INCLUDE_ASM` macro. It currently allows two possible values:
   * `default`: Uses the default definition for the macro. This is the default.

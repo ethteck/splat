@@ -286,6 +286,7 @@ options:
 
   find_file_boundaries: False
   gp_value: 0x{exe.initial_gp:08X}
+  # ld_gp_expression: main_SCOMMON_START + 0x7FF0
 
   o_as_suffix: True
   use_legacy_include_asm: False

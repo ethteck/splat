@@ -155,6 +155,8 @@ class SplatOpts:
     ld_generate_symbol_per_data_segment: bool
     # Sets the default option for the `bss_contains_common` attribute of all segments.
     ld_bss_contains_common: bool
+    # Specify an expression to be used for the `_gp` symbol in the generated linker script instead of a hardcoded value.
+    ld_gp_expression: Optional[str]
 
     ################################################################################
     # C file options
@@ -528,6 +530,9 @@ def _parse_yaml(
             "ld_generate_symbol_per_data_segment", bool, False
         ),
         ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
+        ld_gp_expression=p.parse_optional_opt_with_default(
+            "ld_gp_expression", str, None
+        ),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
             "auto_decompile_empty_functions", bool, True
