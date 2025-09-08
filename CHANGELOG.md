@@ -4,6 +4,7 @@
 
 * New yaml options:
   * `ld_gp_expression`: Allows setting a custom expression for the `_gp` symbol in the generated linker script, making this symbol to properly shift around instead of hardcoding it to the given `gp_value`.
+* `spimdisasm` 1.36.1 or above is now required.
 
 ### 0.35.2
 
