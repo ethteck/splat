@@ -156,7 +156,7 @@ Defaults to `False`.
 The value of the `$gp` register to correctly calculate offset to `%gp_rel` relocs.
 
 It is strongly encouraged to provide a [`ld_gp_expression`](#ld_gp_expression) once the sections of the binary are properly understood.
-Not setting this expression makes splat to always emit a hardcoded value for `_gp` in the linker script, preventing proper shiftability.
+Not setting this expression makes splat always emit a hardcoded value for `_gp` in the linker script, preventing proper shiftability.
 
 ### check_consecutive_segment_types
 
