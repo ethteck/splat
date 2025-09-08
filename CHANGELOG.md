@@ -11,6 +11,11 @@
   * Allows configuring the style used by the generated `INCLUDE_ASM` macro. It currently allows two possible values:
   * `default`: Uses the default definition for the macro. This is the default.
   * `maspsx_hack`: Changes the definition of the generated `INCLUDE_ASM` to be compatible with the one expected by `maspsx` when using the [reordering workaround hack](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack). This value is only relevant for psx projects.
+* `incbin` segments now provide a default symbol if the user hasn't defined a symbol at that given address.
+  * This name is automatically escaped to be a valid symbol name.
+  * The name of this symbol is based on the segment's name, with a `__` prefix and a suffix depending on the type of incbin used.
+  * This naming scheme may change at any time.
+* `incbin` segments now emit a nonmatching marker.
 * `spimdisasm` 1.36.1 or above is now required.
 
 ### 0.35.2
