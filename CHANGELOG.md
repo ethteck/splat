@@ -5,6 +5,10 @@
 * Add new symbol attribute: `align`.
   * Emit an alignment directive for the given symbol during disassembly.
   * The given alignment must be positive, be a power of two and The symbol's address must already be aligned to the given custom alignment, otherwise splat will emit an error and halt.
+* New yaml option: `include_asm_macro_style`:
+  * Allows configuring the style used by the generated `INCLUDE_ASM` macro. It currently allows two possible values:
+  * `default`: Uses the default definition for the macro. This is the default.
+  * `maspsx_hack`: Changes the definition of the generated `INCLUDE_ASM` to be compatible with the one expected by `maspsx` when using the [reordering workaround hack](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack). This value is only relevant for psx projects.
 * `spimdisasm` 1.36.1 or above is now required.
 
 ### 0.35.2
