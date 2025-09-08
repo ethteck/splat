@@ -544,7 +544,7 @@ Defaults to the value of the global option.
 
 Specify the current segment should be aligned before starting it.
 
-This option specifies the desired alignment value, or `null` if no aligment should be imposed on the segment start.
+This option specifies the desired alignment value, or `null` if no alignment should be imposed on the segment start.
 
 If not set, then the global configuration is used. See [ld_align_segment_start](Configuration.md#ld_align_segment_start) on the Configuration section.
 
