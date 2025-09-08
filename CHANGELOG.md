@@ -7,6 +7,7 @@
   * The name of this symbol is based on the segment's name, with a `__` prefix and a suffix depending on the type of incbin used.
   * This naming scheme may change at any time.
 * `incbin`s segments now emit a nonmatching marker.
+* `spimdisasm` 1.36.1 or above is now required.
 
 ### 0.35.2
 
