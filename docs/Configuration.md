@@ -635,7 +635,7 @@ Note you should **not** remove the `gp_value` from your yaml when you set `ld_gp
 
 #### Usage
 
-Not using `ld_gp_expression` makes splat to hardcoded the value:
+Not using `ld_gp_expression` makes splat hardcode the value:
 
 ```yaml
   gp_value: 0x0039DD70
