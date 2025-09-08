@@ -138,6 +138,15 @@ Some files may not be generated depending on the selected platform and compiler,
 
 Defaults to `True`.
 
+### include_asm_macro_style
+
+Allows configuring the style used by the generated `INCLUDE_ASM` macro. It currently allows two possible values:
+
+- `default`: Uses the default definition for the macro. This is the default.
+- `maspsx_hack`: Changes the definition of the generated `INCLUDE_ASM` to be compatible with the one expected by `maspsx` when using the [reordering workaround hack](https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack).
+
+Defaults to `default`.
+
 ### o_as_suffix
 
 Used to determine the file extension of the built files that will be listed on the linker script.
@@ -581,7 +590,7 @@ Defaults to `True`, meaning `bss` sections will be put on `NOLOAD` segments.
 
 Specify that segments should be aligned before starting them.
 
-This option specifies the desired alignment value, or `null` if no aligment should be imposed on the segment start.
+This option specifies the desired alignment value, or `null` if no alignment should be imposed on the segment start.
 
 This behavior can be customized per segment too. See [ld_align_segment_start](Segments.md#ld_align_segment_start) on the Segments section.
 
