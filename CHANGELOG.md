@@ -5,6 +5,7 @@
 * Add new symbol attribute: `align`.
   * Emit an alignment directive for the given symbol during disassembly.
   * The given alignment must be positive, be a power of two and The symbol's address must already be aligned to the given custom alignment, otherwise splat will emit an error and halt.
+* `spimdisasm` 1.36.1 or above is now required.
 
 ### 0.35.2
 
