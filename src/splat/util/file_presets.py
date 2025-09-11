@@ -369,7 +369,7 @@ def write_gte_macros():
     cop2op 0x07, 0x10
 .endm
 
-/*  DPCT    17      0x4AF8002A  Depth cue color RGB0,RGB1,RGB2 */
+/*  DPCT    17      0x4A88002A  Depth cue color RGB0,RGB1,RGB2 */
 .macro dpct
     cop2op 0x08, 0x2A
 .endm
