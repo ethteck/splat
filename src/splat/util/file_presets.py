@@ -24,6 +24,12 @@ def write_all_files():
 def _write(filepath: str, contents: str):
     p = Path(os.path.normpath(options.opts.base_path / filepath))
     p.parent.mkdir(parents=True, exist_ok=True)
+
+    if p.exists():
+        with p.open("r", encoding="UTF-8") as f:
+            existing_contents = f.read()
+        if existing_contents == contents:
+            return
     with p.open("w", encoding="UTF-8", newline="\n") as f:
         f.write(contents)
 
