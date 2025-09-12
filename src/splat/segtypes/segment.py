@@ -83,7 +83,7 @@ class SegmentStatisticsInfo:
         )
 
 
-SegmentStatistics = dict[SegmentType, SegmentStatisticsInfo]
+SegmentStatistics = Dict[SegmentType, SegmentStatisticsInfo]
 
 
 def empty_statistics() -> SegmentStatistics:
