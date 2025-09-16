@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.36.1
+* Files generated with `generate_asm_macros_files` will not be overwritten if they already exist on disk unchanged.
+* Updated GTE macros to better document opcode encodings
+
 ### 0.36.0
 
 * New symbol attribute: `align`.
