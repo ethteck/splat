@@ -1,7 +1,7 @@
 [project]
 name = "splat64"
 # Should be synced with src/splat/__init__.py
-version = "0.36.1"
+version = "0.36.2"
 description = "A binary splitting tool to assist with decompilation and modding projects"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -21,7 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 mips = [
     "spimdisasm>=1.36.1,<2.0.0", # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py
-    "rabbitizer>=1.12.0,<2.0.0",
+    "rabbitizer>=1.14.0,<2.0.0",
     "pygfxd",
     "n64img>=0.3.3",
     "crunch64>=0.5.1,<1.0.0",

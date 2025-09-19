@@ -1,8 +1,15 @@
 # splat Release Notes
 
+### 0.36.2
+
+* Update GTE macros to use the new `dpct` encoding used by `rabbitizer` 1.14.0.
+  * The new encoding exposes some garbage bits used by this instruction that are not always the same on every psx project.
+* `rabbitizer` 1.14.0 or above is now required.
+
 ### 0.36.1
+
 * Files generated with `generate_asm_macros_files` will not be overwritten if they already exist on disk unchanged.
-* Updated GTE macros to better document opcode encodings
+* Updated GTE macros to better document opcode encodings.
 
 ### 0.36.0
 
