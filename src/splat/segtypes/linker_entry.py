@@ -594,7 +594,7 @@ class LinkerWriter:
         if not noload:
             seg_rom_start = get_segment_rom_start(seg_name)
             line += f" AT({seg_rom_start})"
-        if options.opts.emit_subalign and segment.subalign != None:
+        if options.opts.emit_subalign and segment.subalign is not None:
             line += f" SUBALIGN({segment.subalign})"
 
         self._writeln(line)
@@ -636,7 +636,7 @@ class LinkerWriter:
         if noload:
             line += " (NOLOAD)"
         line += " :"
-        if options.opts.emit_subalign and segment.subalign != None:
+        if options.opts.emit_subalign and segment.subalign is not None:
             line += f" SUBALIGN({segment.subalign})"
 
         self._writeln(line)
