@@ -342,7 +342,7 @@ def write_assembly_inc_files():
 
 
 def write_gte_macros():
-    # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
+    # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/-/docs/r3000gte/gte_macros.s
     # Please try to upstream any fix/update done here.
     gte_macros = """\
 .ifndef .L_GTE_MACRO_INC
