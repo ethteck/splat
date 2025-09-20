@@ -342,17 +342,17 @@ def write_assembly_inc_files():
 
 
 def write_gte_macros():
-    # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/develop/docs/r3000gte/gte_macros.s
+    # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/-/docs/r3000gte/gte_macros.s
     # Please try to upstream any fix/update done here.
-    gte_macros = """
+    gte_macros = """\
 .ifndef .L_GTE_MACRO_INC
 .L_GTE_MACRO_INC:
 
 ## GTE instruction macros
 ## These are meant for use with GAS and replace DMPSX
 
-.macro cop2op pseudo, op, sf = 1, mx = 0, v = 0, cv = 0, lm = 0
-    cop2 \\pseudo << 20 | \\sf << 19 | \\mx << 17 | \\v << 15 | \\cv << 13 | \\lm << 10 | \\op
+.macro cop2op fake_op, op, gbg = 0, sf = 1, mx = 0, v = 0, cv = 0, lm = 0
+    cop2 \\fake_op << 20 | \\gbg << 20 | \\sf << 19 | \\mx << 17 | \\v << 15 | \\cv << 13 | \\lm << 10 | \\op
 .endm
 
 /*  RTPS    15      0x4A180001  Perspective transform */
@@ -375,9 +375,9 @@ def write_gte_macros():
     cop2op 0x07, 0x10
 .endm
 
-/*  DPCT    17      0x4A88002A  Depth cue color RGB0,RGB1,RGB2 */
+/*  DPCT    17      0x4AF8002A  Depth cue color RGB0,RGB1,RGB2 */
 .macro dpct
-    cop2op 0x08, 0x2A
+    cop2op 0x0F, 0x2A
 .endm
 
 /*  INTPL   8       0x4A980011  Interpolation of vector and far color */
@@ -442,6 +442,7 @@ def write_gte_macros():
 
 
 ## Instructions which take an argument
+# gbg: arg is 5 bit wide
 # sf : arg is 1 bit wide
 # mx : arg is 2 bit wide
 # v  : arg is 2 bit wide
