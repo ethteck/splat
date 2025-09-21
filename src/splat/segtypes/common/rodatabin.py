@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 from ...util import log, options

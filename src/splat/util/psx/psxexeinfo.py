@@ -12,7 +12,6 @@ import dataclasses
 from pathlib import Path
 
 import rabbitizer
-import spimdisasm
 
 # PSX EXE has the following layout
 # header   ; 0x80 bytes
@@ -215,11 +214,11 @@ def main():
 
     print(f"Entrypoint: 0x{exe.entrypoint:08X}")
 
-    print(f"Initial GP: ", end="")
+    print("Initial GP: ", end="")
     if exe.initial_gp != 0:
         print(f"0x{exe.initial_gp:08X}")
     else:
-        print(f"No")
+        print("No")
 
     print()
     print(f"Destination VRAM: 0x{exe.destination_vram:08X}")

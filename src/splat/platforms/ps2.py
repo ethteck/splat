@@ -1,7 +1,6 @@
 import spimdisasm
 import rabbitizer
 
-from ..util import compiler, options
 
 
 def init(target_bytes: bytes):

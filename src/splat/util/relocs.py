@@ -94,13 +94,13 @@ def initialize():
 
             if rom_addr is None:
                 log.parsing_error_preamble(path, line_num, line)
-                log.error(f"Missing required 'rom' attribute for reloc")
+                log.error("Missing required 'rom' attribute for reloc")
             if reloc_type is None:
                 log.parsing_error_preamble(path, line_num, line)
-                log.error(f"Missing required 'reloc' attribute for reloc")
+                log.error("Missing required 'reloc' attribute for reloc")
             if symbol_name is None:
                 log.parsing_error_preamble(path, line_num, line)
-                log.error(f"Missing required 'symbol' attribute for reloc")
+                log.error("Missing required 'symbol' attribute for reloc")
 
             reloc = Reloc(rom_addr, reloc_type, symbol_name)
             if addend is not None:

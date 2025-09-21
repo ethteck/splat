@@ -13,7 +13,7 @@ from pathlib import Path
 import pylibyaml  # pyright: ignore
 import yaml
 
-from . import log, options, vram_classes
+from . import options, vram_classes
 
 
 def _merge_configs(main_config, additional_config, additional_config_path):
@@ -26,15 +26,15 @@ def _merge_configs(main_config, additional_config, additional_config_path):
     for curkey in additional_config:
         if curkey not in main_config:
             main_config[curkey] = additional_config[curkey]
-        elif type(main_config[curkey]) != type(additional_config[curkey]):
+        elif type(main_config[curkey]) is not type(additional_config[curkey]):
             raise TypeError(
                 f"Could not merge {str(additional_config_path)}: type for key '{curkey}' in configs does not match"
             )
         else:
             # keys exist and match, see if a list to append
-            if type(main_config[curkey]) == list:
+            if type(main_config[curkey]) is list:
                 main_config[curkey] += additional_config[curkey]
-            elif type(main_config[curkey]) == dict:
+            elif type(main_config[curkey]) is dict:
                 # need to merge sub areas
                 main_config[curkey] = _merge_configs(
                     main_config[curkey],

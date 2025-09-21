@@ -1,4 +1,4 @@
-from ...segtypes.segment import Segment, SegmentType
+from ...segtypes.segment import Segment
 
 
 class CommonSegment(Segment):
