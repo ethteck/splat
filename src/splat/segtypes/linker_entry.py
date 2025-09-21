@@ -237,9 +237,9 @@ class LinkerWriter:
             return
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
-        for l in segment.section_order:
-            if l in options.opts.section_order:
-                section_entries[l] = []
+        for section_name in segment.section_order:
+            if section_name in options.opts.section_order:
+                section_entries[section_name] = []
 
         # Add all entries to section_entries
         prev_entry = None
@@ -301,7 +301,7 @@ class LinkerWriter:
 
         # To keep track which sections has been started
         started_sections: Dict[str, bool] = {
-            l: False for l in options.opts.section_order
+            section_name: False for section_name in options.opts.section_order
         }
 
         # Find where sections are last seen
@@ -389,14 +389,14 @@ class LinkerWriter:
 
             self._begin_segment(segment, seg_name, noload=False, is_first=is_first)
 
-            for l in segment.section_order:
-                if l not in options.opts.section_order:
+            for section_name in segment.section_order:
+                if section_name not in options.opts.section_order:
                     continue
-                if l == ".bss":
+                if section_name == ".bss":
                     continue
 
                 entry = LinkerEntry(
-                    segment, [], segments_path / f"{seg_name}.o", l, l, noload=False
+                    segment, [], segments_path / f"{seg_name}.o", section_name, section_name, noload=False
                 )
                 self.dependencies_entries.append(entry)
                 entry.emit_entry(self)
@@ -439,9 +439,9 @@ class LinkerWriter:
         seg_name = segment.get_cname()
 
         section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
-        for l in segment.section_order:
-            if l in options.opts.section_order:
-                section_entries[l] = []
+        for section_name in segment.section_order:
+            if section_name in options.opts.section_order:
+                section_entries[section_name] = []
 
         # Add all entries to section_entries
         prev_entry = None
