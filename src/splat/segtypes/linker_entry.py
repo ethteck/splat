@@ -162,9 +162,9 @@ class LinkerEntry:
             linker_writer._write_symbol(path_cname, ".")
 
     def emit_path(self, linker_writer: "LinkerWriter"):
-        assert (
-            self.object_path is not None
-        ), f"{self.segment.name}, {self.segment.rom_start}"
+        assert self.object_path is not None, (
+            f"{self.segment.name}, {self.segment.rom_start}"
+        )
 
         if self.noload and self.bss_contains_common:
             linker_writer._write_object_path_section(
@@ -396,7 +396,12 @@ class LinkerWriter:
                     continue
 
                 entry = LinkerEntry(
-                    segment, [], segments_path / f"{seg_name}.o", section_name, section_name, noload=False
+                    segment,
+                    [],
+                    segments_path / f"{seg_name}.o",
+                    section_name,
+                    section_name,
+                    noload=False,
                 )
                 self.dependencies_entries.append(entry)
                 entry.emit_entry(self)

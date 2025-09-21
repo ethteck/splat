@@ -226,7 +226,9 @@ def handle_sym_addrs(
                         tf_val = (
                             True
                             if is_truey(attr_val)
-                            else False if is_falsey(attr_val) else None
+                            else False
+                            if is_falsey(attr_val)
+                            else None
                         )
                         if tf_val is None:
                             log.parsing_error_preamble(path, line_num, line)
@@ -432,9 +434,9 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         overlaps_found = False
         # Check the vram range of the global segment does not overlap with any overlay segment
         for ovl_segment in overlay_segments:
-            assert (
-                ovl_segment.vramStart <= ovl_segment.vramEnd
-            ), f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
+            assert ovl_segment.vramStart <= ovl_segment.vramEnd, (
+                f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
+            )
             if (
                 ovl_segment.vramEnd > global_vram_start
                 and global_vram_end > ovl_segment.vramStart

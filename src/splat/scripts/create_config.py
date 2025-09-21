@@ -223,7 +223,7 @@ segments:
             f"// The address of the end of the stack is 0x{rom.entrypoint_info.stack_top.value:08X}."
         )
         reloc_addrs.append(
-            f"// A common size for this stack is 0x2000, so try checking for the address 0x{rom.entrypoint_info.stack_top.value-0x2000:08X}. Note the stack may have a different size."
+            f"// A common size for this stack is 0x2000, so try checking for the address 0x{rom.entrypoint_info.stack_top.value - 0x2000:08X}. Note the stack may have a different size."
         )
         reloc_addrs.append(
             f"// rom:0x{rom.entrypoint_info.stack_top.rom_hi:06X} reloc:MIPS_HI16 symbol:main_stack addend:0xXXXX"
