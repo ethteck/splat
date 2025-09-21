@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 
 # This unused import makes the yaml library faster. don't remove
-import pylibyaml  # pyright: ignore
+import pylibyaml  # noqa: F401
 import yaml
 
 from . import options, vram_classes
