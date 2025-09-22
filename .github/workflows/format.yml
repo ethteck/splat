@@ -24,4 +24,4 @@ jobs:
           pip install types-PyYAML
 
       - name: Ruff format
-        run: Ruff format --check .
+        run: ruff format --check .
