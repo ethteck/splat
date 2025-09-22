@@ -182,7 +182,7 @@ class CommonSegCodeSubsegment(Segment):
                 print(
                     "File split suggestions for this segment will follow in config yaml format:"
                 )
-            print(f"      - [0x{self.rom_start+in_file_offset:X}, {self.type}]")
+            print(f"      - [0x{self.rom_start + in_file_offset:X}, {self.type}]")
 
     def should_scan(self) -> bool:
         return (

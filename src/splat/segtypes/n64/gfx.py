@@ -36,7 +36,6 @@ from pygfxd import (
     gfxd_f3dexb,
     gfxd_f3dex2,
 )
-from ..segment import Segment
 
 from ...util import log, options
 from ...util.log import error

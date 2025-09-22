@@ -3,7 +3,8 @@ from typing import Optional
 
 from ...util import log, options
 
-from .segment import CommonSegment, SegmentType
+from .segment import CommonSegment
+from ..segment import SegmentType
 
 
 class CommonSegBin(CommonSegment):

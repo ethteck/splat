@@ -101,15 +101,15 @@ class Segment:
 
         if options.opts.allow_segment_overrides:
             segment_class = Segment.get_extension_segment_class(seg_type)
-            if segment_class == None:
+            if segment_class is None:
                 segment_class = Segment.get_base_segment_class(seg_type)
         else:
             segment_class = Segment.get_base_segment_class(seg_type)
-            if segment_class == None:
+            if segment_class is None:
                 # Look in extensions
                 segment_class = Segment.get_extension_segment_class(seg_type)
 
-        if segment_class == None:
+        if segment_class is None:
             log.error(
                 f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)"
             )
@@ -538,9 +538,9 @@ class Segment:
 
     @property
     def subalign(self) -> Optional[int]:
-        assert (
-            self.parent is None
-        ), f"subalign is not valid for non-top-level segments. ({self})"
+        assert self.parent is None, (
+            f"subalign is not valid for non-top-level segments. ({self})"
+        )
         return self.given_subalign
 
     @property

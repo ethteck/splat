@@ -1,7 +1,5 @@
-from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
-from ...util import options
 
 from .codesubsegment import CommonSegCodeSubsegment
 

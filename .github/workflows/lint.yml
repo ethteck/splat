@@ -1,0 +1,55 @@
+name: Lint splat
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ruff_splat_checks:
+    runs-on: ubuntu-latest
+    name: Ruff check splat lib
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@main
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          pip install ruff
+          pip install -r requirements.txt
+          pip install types-PyYAML
+          pip install -e .
+
+      - name: ruff splat lib
+        run: ruff check src/splat
+
+  ruff_lint_programs_checks:
+    runs-on: ubuntu-latest
+    name: Ruff check splat programs
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@main
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          pip install ruff
+          pip install -r requirements.txt
+          pip install types-PyYAML
+
+      - name: ruff split
+        run: ruff check split.py
+
+      - name: ruff create_config
+        run: ruff check create_config.py
+
+      - name: ruff test
+        run: ruff check test.py

@@ -28,8 +28,7 @@ mips = [
 ]
 dev = [
     "splat64[mips]",
-    "mypy",
-    "black",
+    "ruff",
     "types-PyYAML",
     "types-colorama",
 ]

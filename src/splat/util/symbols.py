@@ -226,7 +226,9 @@ def handle_sym_addrs(
                         tf_val = (
                             True
                             if is_truey(attr_val)
-                            else False if is_falsey(attr_val) else None
+                            else False
+                            if is_falsey(attr_val)
+                            else None
                         )
                         if tf_val is None:
                             log.parsing_error_preamble(path, line_num, line)
@@ -432,9 +434,9 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
         overlaps_found = False
         # Check the vram range of the global segment does not overlap with any overlay segment
         for ovl_segment in overlay_segments:
-            assert (
-                ovl_segment.vramStart <= ovl_segment.vramEnd
-            ), f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
+            assert ovl_segment.vramStart <= ovl_segment.vramEnd, (
+                f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
+            )
             if (
                 ovl_segment.vramEnd > global_vram_start
                 and global_vram_end > ovl_segment.vramStart
@@ -446,20 +448,20 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 overlaps_found = True
         if overlaps_found:
             log.write(
-                f"Many overlaps between non-global and global segments were found.",
+                "Many overlaps between non-global and global segments were found.",
             )
             log.write(
-                f"This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
+                "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
             )
             if len(global_segments_after_overlays) > 0:
                 log.write(
-                    f"These segments are the main suspects for missing a `exclusive_ram_id` tag:",
+                    "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
                     status="warn",
                 )
                 for seg in global_segments_after_overlays:
                     log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}")
             else:
-                log.write(f"No suspected segments??", status="warn")
+                log.write("No suspected segments??", status="warn")
             log.error("Stopping due to the above errors")
 
     # pass the global symbols to spimdisasm

@@ -437,7 +437,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
 
     try:
         name = rom_bytes[0x20:0x34].decode(header_encoding).rstrip(" \0") or "empty"
-    except:
+    except UnicodeError:
         sys.exit(
             "splat could not decode the game name;"
             " try using a different encoding by passing the --header-encoding argument"

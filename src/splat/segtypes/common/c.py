@@ -177,9 +177,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                     if rodata_sibling.is_generated:
                         continue
 
-                    assert isinstance(
-                        rodata_sibling, CommonSegRodata
-                    ), f"{rodata_sibling}, {rodata_sibling.type}"
+                    assert isinstance(rodata_sibling, CommonSegRodata), (
+                        f"{rodata_sibling}, {rodata_sibling.type}"
+                    )
 
                     if not rodata_sibling.type.startswith("."):
                         # Emit an error if we try to migrate the rodata symbols to functions if the rodata section is not prefixed with a dot

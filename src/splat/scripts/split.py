@@ -138,12 +138,12 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
                             )
 
                         # Not user error, hopefully...
-                        assert (
-                            seg.paired_segment is None
-                        ), f"Somehow '{seg.name}' was already paired so something else? It is paired to '{seg.paired_segment.name}' instead of {other_seg.name}"
-                        assert (
-                            other_seg.paired_segment is None
-                        ), f"Somehow '{other_seg.name}' was already paired so something else? It is paired to '{other_seg.paired_segment.name}' instead of {seg.name}"
+                        assert seg.paired_segment is None, (
+                            f"Somehow '{seg.name}' was already paired so something else? It is paired to '{seg.paired_segment.name}' instead of {other_seg.name}"
+                        )
+                        assert other_seg.paired_segment is None, (
+                            f"Somehow '{other_seg.name}' was already paired so something else? It is paired to '{other_seg.paired_segment.name}' instead of {seg.name}"
+                        )
 
                         found = True
                         # Pair them
@@ -216,9 +216,9 @@ def calc_segment_dependences(
 
             for follows_class in vram_class.follows_classes:
                 if follows_class in vram_class_to_segments:
-                    vram_class_to_follows_segments[
-                        vram_class
-                    ] += vram_class_to_segments[follows_class]
+                    vram_class_to_follows_segments[vram_class] += (
+                        vram_class_to_segments[follows_class]
+                    )
     return vram_class_to_follows_segments
 
 

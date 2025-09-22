@@ -1,0 +1,27 @@
+name: Check code is formatted
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  black_checks:
+    runs-on: ubuntu-latest
+    name: Check format with Ruff
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@main
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          pip install ruff
+          pip install -r requirements.txt
+          pip install types-PyYAML
+
+      - name: Ruff format
+        run: ruff format --check .

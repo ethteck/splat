@@ -6,14 +6,17 @@ import io
 import pathlib
 import spimdisasm
 import unittest
+from typing import List, Tuple
 
 from src.splat import __version__
-from src.splat.scripts.split import *
+from src.splat.disassembler import disassembler_instance
+from src.splat.scripts.split import main
 from src.splat.util import symbols, options
 from src.splat.segtypes.common.rodata import CommonSegRodata
 from src.splat.segtypes.common.code import CommonSegCode
 from src.splat.segtypes.common.c import CommonSegC
 from src.splat.segtypes.common.bss import CommonSegBss
+from src.splat.segtypes.segment import Segment
 
 
 class Testing(unittest.TestCase):
@@ -305,7 +308,7 @@ class Rodata(unittest.TestCase):
 
         result = common_seg_rodata.get_possible_text_subsegment_for_symbol(rodata_sym)
         assert result is not None
-        assert type(result[0]) == CommonSegC
+        assert type(result[0]) is CommonSegC
         assert result[1].address == result_symbol_addr
 
 
@@ -401,11 +404,11 @@ class SymbolsInitialize(unittest.TestCase):
         symbols.handle_sym_addrs(
             pathlib.Path("/tmp/thing"), sym_addrs_lines, all_segments
         )
-        assert symbols.all_symbols[0].defined == True
-        assert symbols.all_symbols[0].force_migration == True
-        assert symbols.all_symbols[0].force_not_migration == True
-        assert symbols.all_symbols[0].allow_addend == True
-        assert symbols.all_symbols[0].dont_allow_addend == True
+        assert symbols.all_symbols[0].defined
+        assert symbols.all_symbols[0].force_migration
+        assert symbols.all_symbols[0].force_not_migration
+        assert symbols.all_symbols[0].allow_addend
+        assert symbols.all_symbols[0].dont_allow_addend
 
     # test spim ban range
     def test_ignore(self):
@@ -473,7 +476,7 @@ class InitializeSpimContext(unittest.TestCase):
         # spim should have added something to overlaySegments
         assert (
             type(symbols.spim_context.overlaySegments["overlay"][0x1000])
-            == spimdisasm.common.SymbolsSegment
+            is spimdisasm.common.SymbolsSegment
         )
 
     # test globalSegment settings

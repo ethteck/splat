@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import OrderedDict, List, Optional, Type, Tuple
+from typing import List, Optional, Type, Tuple
 
 from ...util import log, options, utils
 
