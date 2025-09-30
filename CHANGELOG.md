@@ -4,6 +4,7 @@
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
   * Symbol is automatically quoted if it contains in its name any of `@`, `<`, `\\`, `-` or `+`.
+* `spimdisasm` 1.38.0 or above is now required.
 
 ### 0.36.2
 
