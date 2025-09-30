@@ -1,15 +1,19 @@
 #! /usr/bin/env python3
 
 import argparse
-import sys
+import hashlib
 from pathlib import Path
+import subprocess
+import sys
+from typing import Optional
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
+from ..util.ps2 import ps2elfinfo
 from ..util import log, file_presets, conf
 
 
-def main(file_path: Path):
+def main(file_path: Path, objcopy: Optional[str]):
     if not file_path.exists():
         sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
     if file_path.is_dir():
@@ -25,6 +29,11 @@ def main(file_path: Path):
     # Check for PSX executable
     if file_bytes[0:8] == b"PS-X EXE":
         create_psx_config(file_path, file_bytes)
+        return
+
+    # Check for ELFs
+    if file_bytes[0:4] == b"\x7FELF":
+        do_elf(file_path, file_bytes, objcopy)
         return
 
     log.error(f"create_config does not support the file format of '{file_path}'")
@@ -360,15 +369,157 @@ segments:
     file_presets.write_all_files()
 
 
+def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: Optional[str]):
+    elf = ps2elfinfo.Ps2Elf.get_info(elf_path, elf_bytes)
+    if elf is None:
+        log.error(f"Unsupported elf file '{elf_path}'")
+
+    basename = elf_path.name.replace(" ", "")
+    cleaned_basename = remove_invalid_path_characters(basename)
+
+    rom_name = Path(f"{cleaned_basename}.rom")
+    # Prefer the user objcopy
+    if objcopy is None:
+        objcopy = find_objcopy()
+    run_objcopy(objcopy, str(elf_path), str(rom_name))
+
+    sha1 = hashlib.sha1(rom_name.read_bytes()).hexdigest()
+
+    # TODO: gp_value and ld_gp_expression
+    header = f"""\
+# name: Your game name here!
+sha1: {sha1}
+options:
+  basename: {basename}
+  target_path: {rom_name}
+  elf_path: build/{cleaned_basename}.elf
+  base_path: .
+  platform: ps2
+  compiler: {elf.compiler}
+
+  # gp_value:
+  # ld_gp_expression:
+
+  # asm_path: asm
+  # src_path: src
+  # build_path: build
+
+  ld_script_path: {cleaned_basename}.ld
+  ld_dependencies: True
+  create_asm_dependencies: True
+
+  find_file_boundaries: False
+
+  o_as_suffix: True
+
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+
+  # undefined_funcs_auto_path: undefined_funcs_auto.txt
+  # undefined_syms_auto_path: undefined_syms_auto.txt
+
+  extensions_path: tools/splat_ext
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  # mips_abi_gpr: numeric
+  # mips_abi_float_regs: numeric
+"""
+
+    header += "\n  section_order:\n"
+    for sect in elf.elf_section_names:
+        header += f"    - {sect}\n"
+
+    header += "\n  auto_link_sections:\n"
+    for sect in elf.elf_section_names:
+        if sect != ".text":
+            header += f"    - {sect}\n"
+
+    segments = "\nsegments:\n"
+    for seg in elf.segs:
+        segments += f"""\
+  - name: {seg.name}
+    type: code
+    start: 0x{seg.start:06X}
+    vram: 0x{seg.vram:08X}
+    bss_size: 0x{seg.bss_size:X}
+    subalign: null
+    subsegments:
+"""
+        for section in seg.sections:
+            if section.is_nobits:
+                segments += f"      - {{ type: {section.splat_segment_type}, vram: 0x{section.vram:08X}, name: {seg.name}/{section.start:06X} }} # {section.name}\n"
+            else:
+                segments += f"      - [0x{section.start:06X}, {section.splat_segment_type}, {seg.name}/{section.start:06X}] # {section.name}\n"
+
+    segments += f"""\
+  - [0x{elf.size:X}]
+"""
+
+    out_file = Path(f"{cleaned_basename}.yaml")
+    with out_file.open("w", newline="\n") as f:
+        print(f"Writing config to {out_file}")
+        f.write(header)
+        f.write(segments)
+
+    # `file_presets` requires an initialized `opts`.
+    # A simple way to do that is to simply load the yaml we just generated.
+    conf.load([out_file])
+    file_presets.write_all_files()
+
+    # TODO: symbol_addrs for entrypoint. Use _start
+    # TODO: linker script with ENTRY(_start);
+
+
+def find_objcopy() -> str:
+    # First we try to figure out if the user has objcopy on their pc, and under
+    # which name.
+    # We just try a bunch and hope for the best
+    options = [
+        "mips-linux-gnu-objcopy",
+        "mipsel-linux-gnu-objcopy",
+    ]
+
+    for name in options:
+        sub = subprocess.run([name, "--version"], capture_output=True)
+        if sub.returncode == 0:
+            return name
+
+    msg = "Unable to find objcopy.\nI tried the following list of names:\n"
+    for name in options:
+        msg += f"  - {name}\n"
+    msg += "\nTry to install one of those or use the `--objcopy` flag to pass the name to your own objcopy to me."
+    log.error(msg)
+
+
+def run_objcopy(objcopy_name: str, elf_path: str, rom: str):
+    cmd = [objcopy_name, "-O", "binary", "--gap-fill=0x00", elf_path, rom]
+    print("Running:", " ".join(cmd))
+    sub = subprocess.run(cmd)
+    if sub.returncode != 0:
+        log.error("Failed to run objcopy")
+
+
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "file",
-        help="Path to a .z64/.n64 ROM or PSX executable",
+        help="Path to a .z64/.n64 ROM, PSX executable or PS2 ELF",
+        type=Path,
+    )
+    parser.add_argument(
+        "--objcopy",
+        help="Path to an user-provided objcopy program. Only used when processing ELF files",
+        type=str,
     )
 
 
 def process_arguments(args: argparse.Namespace):
-    main(Path(args.file))
+    main(args.file, args.objcopy)
 
 
 script_description = "Create a splat config from an N64 ROM or PSX executable."
