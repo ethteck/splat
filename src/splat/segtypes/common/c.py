@@ -250,7 +250,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                         assert func_sym is not None
 
                         if (
-                            entry.function.getNameUnescaped() not in self.global_asm_funcs
+                            entry.function.getNameUnescaped()
+                            not in self.global_asm_funcs
                             and options.opts.disassemble_all
                             and not is_new_c_file
                         ):
@@ -263,7 +264,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                 else:
                     for spim_rodata_sym in entry.rodataSyms:
                         if (
-                            spim_rodata_sym.getNameUnescaped() in self.global_asm_rodata_syms
+                            spim_rodata_sym.getNameUnescaped()
+                            in self.global_asm_rodata_syms
                             or is_new_c_file
                             or options.opts.disassemble_all
                         ):
