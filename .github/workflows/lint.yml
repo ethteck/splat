@@ -53,3 +53,52 @@ jobs:
 
       - name: ruff test
         run: ruff check test.py
+
+  mypy_splat_checks:
+    runs-on: ubuntu-latest
+    name: mypy splat lib
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@main
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+
+    - name: Install Dependencies
+      run: |
+        pip install mypy
+        pip install -r requirements.txt
+        pip install types-PyYAML
+        pip install -e .
+
+    - name: mypy splat lib
+      run: mypy --show-column-numbers --hide-error-context src/splat
+
+  mypy_programs_checks:
+    runs-on: ubuntu-latest
+    name: mypy splat programs
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@main
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+
+    - name: Install Dependencies
+      run: |
+        pip install mypy
+        pip install -r requirements.txt
+        pip install types-PyYAML
+
+    - name: mypy split
+      run: mypy --show-column-numbers --hide-error-context split.py
+
+    - name: mypy create_config
+      run: mypy --show-column-numbers --hide-error-context create_config.py
+
+    - name: mypy test
+      run: mypy --show-column-numbers --hide-error-context test.py
