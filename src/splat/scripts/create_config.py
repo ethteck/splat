@@ -396,10 +396,18 @@ options:
   base_path: .
   platform: ps2
   compiler: {elf.compiler}
+"""
 
-  # gp_value:
-  # ld_gp_expression:
+    if elf.gp is not None:
+        header += f"""
+  gp_value: 0x{elf.gp:08X}
+"""
+        if elf.ld_gp_expression is not None:
+            header += f"  ld_gp_expression: {elf.ld_gp_expression}\n"
+        else:
+            header += "  # ld_gp_expression:\n"
 
+    header += f"""
   # asm_path: asm
   # src_path: src
   # build_path: build

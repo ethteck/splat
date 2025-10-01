@@ -16,6 +16,7 @@ ELF_SECTION_MAPPING: dict[str, str] = {
     ".data": "data",
     ".rodata": "rodata",
     ".bss": "bss",
+    ".sdata": "sdata",
     ".sbss": "sbss",
     ".gcc_except_table": "gcc_except_table",
     ".lit4": "lit4",
@@ -34,6 +35,14 @@ ELF_SECTIONS_IGNORE: set[str] = {
     ".vubss",
 }
 
+ELF_SMALL_SECTIONS: set[str] = {
+    ".lit4",
+    ".lit8",
+    ".sdata",
+    ".srdata",
+    ".sbss",
+}
+
 
 @dataclasses.dataclass
 class Ps2Elf:
@@ -42,7 +51,8 @@ class Ps2Elf:
     size: int
     compiler: str
     elf_section_names: list[str]
-    # gp: Optional[int] # TODO
+    gp: Optional[int]
+    ld_gp_expression: Optional[str]
 
     @staticmethod
     def get_info(elf_path: Path, elf_bytes: bytes) -> Optional[Ps2Elf]:
@@ -62,7 +72,14 @@ class Ps2Elf:
             log.write("Missing 5900 flag", status="warn")
             return None
 
-        segs = [FakeSegment("cod", 0, 0, [])]
+        if elf.reginfo is not None and elf.reginfo.gpValue != 0:
+            gp = elf.reginfo.gpValue
+        else:
+            gp = None
+        first_small_section_info: Optional[tuple[str, int]] = None
+
+        first_segment_name = "cod"
+        segs = [FakeSegment(first_segment_name, 0, 0, [])]
 
         # TODO: check `.comment` section for any compiler info
         compiler = "EEGCC"
@@ -92,6 +109,8 @@ class Ps2Elf:
                 continue
 
             flags, _unknown_flags = Elf32SectionHeaderFlag.parseFlags(section.flags)
+            # if _unknown_flags != 0:
+            #     print(name, f"0x{_unknown_flags:08X}")
             if Elf32SectionHeaderFlag.ALLOC not in flags:
                 # We don't care about non-alloc sections
                 continue
@@ -113,6 +132,9 @@ class Ps2Elf:
 
             if first_offset is None:
                 first_offset = section.offset
+
+            if first_small_section_info is None and name in ELF_SMALL_SECTIONS:
+                first_small_section_info = (name, section.addr)
 
             start = section.offset - first_offset
             size = section.size
@@ -177,12 +199,21 @@ class Ps2Elf:
         for seg in segs:
             seg.vram = seg.sections[0].vram
 
+        ld_gp_expression = None
+        if gp is not None and first_small_section_info is not None:
+            section_name, section_address = first_small_section_info
+            if gp > section_address:
+                diff = gp - section_address
+                ld_gp_expression = f"{first_segment_name}_{section_name.strip('.').upper()}_START + 0x{diff:04X}"
+
         return Ps2Elf(
             elf.header.entry,
             segs,
             rom_size,
             compiler,
             elf_section_names,
+            gp,
+            ld_gp_expression,
         )
 
 
