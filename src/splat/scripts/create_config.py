@@ -385,7 +385,6 @@ def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: Optional[str]):
 
     sha1 = hashlib.sha1(rom_name.read_bytes()).hexdigest()
 
-    # TODO: gp_value and ld_gp_expression
     header = f"""\
 # name: Your game name here!
 sha1: {sha1}
@@ -440,12 +439,12 @@ options:
 """
 
     header += "\n  section_order:\n"
-    for (sect, is_valid) in elf.elf_section_names:
+    for sect, is_valid in elf.elf_section_names:
         comment = "" if is_valid else "# "
         header += f"    {comment}- {sect}\n"
 
     header += "\n  auto_link_sections:\n"
-    for (sect, is_valid) in elf.elf_section_names:
+    for sect, is_valid in elf.elf_section_names:
         comment = "" if is_valid else "# "
         if sect != ".text" and sect != ".vutext":
             header += f"    {comment}- {sect}\n"
@@ -482,8 +481,31 @@ options:
     conf.load([out_file])
     file_presets.write_all_files()
 
-    # TODO: symbol_addrs for entrypoint. Use _start
-    # TODO: linker script with ENTRY(_start);
+    # Write symbol_addrs.txt file
+    symbol_addrs = []
+    symbol_addrs.append(f"_start = 0x{elf.entrypoint:08X}; // type:func")
+    if symbol_addrs:
+        symbol_addrs.append("")
+        with Path("symbol_addrs.txt").open("w", newline="\n") as f:
+            print("Writing symbol_addrs.txt")
+            f.write(
+                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
+            )
+            contents = "\n".join(symbol_addrs)
+            f.write(contents)
+
+    # Write other linker script
+    linker_script = []
+    linker_script.append("ENTRY(_start);")
+    if linker_script:
+        linker_script.append("")
+        with Path("linker_script_extra.ld").open("w", newline="\n") as f:
+            print("Writing linker_script_extra.ld")
+            f.write(
+                "/* Pass this file to the linker with the `-T linker_script_extra.ld` flag */\n"
+            )
+            contents = "\n".join(linker_script)
+            f.write(contents)
 
 
 def find_objcopy() -> str:

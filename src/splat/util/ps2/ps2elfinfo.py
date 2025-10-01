@@ -165,7 +165,11 @@ class Ps2Elf:
                     splat_segment_type = "rodata"
 
             if name.startswith("."):
-                valid_for_splat = name in ELF_SECTION_MAPPING and name not in ELF_SECTIONS_IGNORE and not do_new_segs
+                valid_for_splat = (
+                    name in ELF_SECTION_MAPPING
+                    and name not in ELF_SECTIONS_IGNORE
+                    and not do_new_segs
+                )
                 elf_section_names.append((name, valid_for_splat))
 
             new_section = ElfSection(
