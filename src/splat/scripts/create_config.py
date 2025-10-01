@@ -32,7 +32,7 @@ def main(file_path: Path, objcopy: Optional[str]):
         return
 
     # Check for ELFs
-    if file_bytes[0:4] == b"\x7FELF":
+    if file_bytes[0:4] == b"\x7fELF":
         do_elf(file_path, file_bytes, objcopy)
         return
 

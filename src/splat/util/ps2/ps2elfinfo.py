@@ -5,7 +5,12 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 import spimdisasm
-from spimdisasm.elf32 import Elf32File, Elf32Constants, Elf32SectionHeaderFlag, Elf32ObjectFileType
+from spimdisasm.elf32 import (
+    Elf32File,
+    Elf32Constants,
+    Elf32SectionHeaderFlag,
+    Elf32ObjectFileType,
+)
 from typing import Optional
 
 from .. import log
@@ -23,8 +28,8 @@ ELF_SECTION_MAPPING: dict[str, str] = {
     ".lit8": "lit8",
     ".ctor": "ctor",
     ".vtables": "vtables",
-    ".vutext": "textbin", # No "proper" support yet
-    ".vudata": "databin", # No "proper" support yet
+    ".vutext": "textbin",  # No "proper" support yet
+    ".vudata": "databin",  # No "proper" support yet
 }
 
 # Section to not put into the elf_section_names list, because splat doesn't
@@ -127,7 +132,10 @@ class Ps2Elf:
             elif typ == Elf32Constants.Elf32SectionHeaderType.MIPS_REGINFO:
                 continue
             else:
-                log.write(f"Unknown section type '{typ}' ({name}) found in the elf", status="warn")
+                log.write(
+                    f"Unknown section type '{typ}' ({name}) found in the elf",
+                    status="warn",
+                )
                 return None
 
             if first_offset is None:
@@ -215,7 +223,6 @@ class Ps2Elf:
             gp,
             ld_gp_expression,
         )
-
 
 
 @dataclasses.dataclass
