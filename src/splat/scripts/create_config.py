@@ -381,7 +381,7 @@ def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: Optional[str]):
     # Prefer the user objcopy
     if objcopy is None:
         objcopy = find_objcopy()
-    run_objcopy(objcopy, str(elf_path), str(rom_name))
+    objcopy_cmd = run_objcopy(objcopy, str(elf_path), str(rom_name))
 
     sha1 = hashlib.sha1(rom_name.read_bytes()).hexdigest()
 
@@ -413,6 +413,9 @@ options:
 
   ld_script_path: {cleaned_basename}.ld
   ld_dependencies: True
+  ld_wildcard_sections: True
+  ld_bss_contains_common: True
+
   create_asm_dependencies: True
 
   find_file_boundaries: False
@@ -434,8 +437,7 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 
-  # mips_abi_gpr: numeric
-  # mips_abi_float_regs: numeric
+  named_regs_for_c_funcs: False
 """
 
     header += "\n  section_order:\n"
@@ -507,6 +509,22 @@ options:
             contents = "\n".join(linker_script)
             f.write(contents)
 
+    print()
+    print(
+        "The generated yaml does not use the actual ELF file as input, but instead it"
+    )
+    print(
+        'uses a "rom" generated from said ELF, which contains the game code without any'
+    )
+    print("of the elf metadata.")
+    print(
+        'Use the following command to generate this "rom". It is recommended to include'
+    )
+    print("this command into your setup/configure script.")
+    print("```")
+    print(" ".join(objcopy_cmd))
+    print("```")
+
 
 def find_objcopy() -> str:
     # First we try to figure out if the user has objcopy on their pc, and under
@@ -529,12 +547,13 @@ def find_objcopy() -> str:
     log.error(msg)
 
 
-def run_objcopy(objcopy_name: str, elf_path: str, rom: str):
+def run_objcopy(objcopy_name: str, elf_path: str, rom: str) -> list[str]:
     cmd = [objcopy_name, "-O", "binary", "--gap-fill=0x00", elf_path, rom]
     print("Running:", " ".join(cmd))
     sub = subprocess.run(cmd)
     if sub.returncode != 0:
         log.error("Failed to run objcopy")
+    return cmd
 
 
 def add_arguments_to_parser(parser: argparse.ArgumentParser):
