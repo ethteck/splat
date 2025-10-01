@@ -437,12 +437,12 @@ options:
 
     header += "\n  auto_link_sections:\n"
     for sect in elf.elf_section_names:
-        if sect != ".text":
+        if sect != ".text" and sect != ".vutext":
             header += f"    - {sect}\n"
 
-    segments = "\nsegments:\n"
+    segments = "\nsegments:"
     for seg in elf.segs:
-        segments += f"""\
+        segments += f"""
   - name: {seg.name}
     type: code
     start: 0x{seg.start:06X}
@@ -453,7 +453,7 @@ options:
 """
         for section in seg.sections:
             if section.is_nobits:
-                segments += f"      - {{ type: {section.splat_segment_type}, vram: 0x{section.vram:08X}, name: {seg.name}/{section.start:06X} }} # {section.name}\n"
+                segments += f"      - {{ type: {section.splat_segment_type}, vram: 0x{section.vram:08X}, name: {seg.name}/{section.vram:08X} }} # {section.name}\n"
             else:
                 segments += f"      - [0x{section.start:06X}, {section.splat_segment_type}, {seg.name}/{section.start:06X}] # {section.name}\n"
 

@@ -26,6 +26,14 @@ ELF_SECTION_MAPPING: dict[str, str] = {
     ".vudata": "databin", # No "proper" support yet
 }
 
+# Section to not put into the elf_section_names list, because splat doesn't
+# know have support for them yet.
+ELF_SECTIONS_IGNORE: set[str] = {
+    ".vutext",
+    ".vudata",
+    ".vubss",
+}
+
 
 @dataclasses.dataclass
 class Ps2Elf:
@@ -54,19 +62,28 @@ class Ps2Elf:
             log.write("Missing 5900 flag", status="warn")
             return None
 
-        entrypoint = elf.header.entry
-        start = 0
-        segs = [FakeSegment("cod", 0, start, [])]
+        segs = [FakeSegment("cod", 0, 0, [])]
 
         # TODO: check `.comment` section for any compiler info
         compiler = "EEGCC"
 
         elf_section_names = []
 
+        first_offset: Optional[int] = None
+        rom_size = 0
+
         previous_type = Elf32Constants.Elf32SectionHeaderType.PROGBITS
         do_new_segs = False
-        for section in elf.sectionHeaders:
+
+        # Loop over all the sections.
+        # Treat every normal elf section as part as the "main" segment.
+        # If we see a PROGBITS after a NOBITS then we shift the behavior into
+        # putting every new elf section into their own segment, this can happen
+        # when the elf contains a few special sections like `.mfifo`.
+        section_headers = sorted(elf.sectionHeaders, key=lambda x: x.offset)
+        for section in section_headers:
             if section.size == 0:
+                # Skip over empty sections
                 continue
 
             name = elf.shstrtab[section.name]
@@ -76,8 +93,10 @@ class Ps2Elf:
 
             flags, _unknown_flags = Elf32SectionHeaderFlag.parseFlags(section.flags)
             if Elf32SectionHeaderFlag.ALLOC not in flags:
+                # We don't care about non-alloc sections
                 continue
 
+            # We want PROGBITS (actual data) and NOBITS (bss and similar)
             typ = Elf32Constants.Elf32SectionHeaderType.fromValue(section.type)
             is_nobits = typ == Elf32Constants.Elf32SectionHeaderType.NOBITS
             if typ == Elf32Constants.Elf32SectionHeaderType.PROGBITS:
@@ -92,12 +111,16 @@ class Ps2Elf:
                 log.write(f"Unknown section type '{typ}' ({name}) found in the elf", status="warn")
                 return None
 
-            start = align_up(start, section.addralign)
-            size = align_up(section.size, section.addralign)
+            if first_offset is None:
+                first_offset = section.offset
+
+            start = section.offset - first_offset
+            size = section.size
 
             if do_new_segs:
-                segs.append(FakeSegment(name, 0, start, []))
+                segs.append(FakeSegment(name.lstrip("."), 0, start, []))
 
+            # Try to map this section to something splat can understand.
             splat_segment_type = ELF_SECTION_MAPPING.get(name)
             if splat_segment_type is None:
                 # Let's infer based on the section's flags
@@ -111,7 +134,7 @@ class Ps2Elf:
                     # Whatever...
                     splat_segment_type = "rodata"
 
-            if name.startswith("."):
+            if name in ELF_SECTION_MAPPING and name not in ELF_SECTIONS_IGNORE:
                 elf_section_names.append(name)
 
             new_section = ElfSection(
@@ -126,9 +149,7 @@ class Ps2Elf:
             if is_nobits:
                 segs[-1].bss_size += size
             else:
-                start += size
-
-            print(name, section.addralign)
+                rom_size = start + size
 
             previous_type = typ
 
@@ -157,9 +178,9 @@ class Ps2Elf:
             seg.vram = seg.sections[0].vram
 
         return Ps2Elf(
-            entrypoint,
+            elf.header.entry,
             segs,
-            start,
+            rom_size,
             compiler,
             elf_section_names,
         )
@@ -183,10 +204,3 @@ class ElfSection:
     start: int
     size: int
     is_nobits: bool
-
-
-def align_up(number: int, align: int) -> int:
-    mod = number % align
-    if mod == 0:
-        return number
-    return number + (align - mod)
