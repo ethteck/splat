@@ -440,13 +440,15 @@ options:
 """
 
     header += "\n  section_order:\n"
-    for sect in elf.elf_section_names:
-        header += f"    - {sect}\n"
+    for (sect, is_valid) in elf.elf_section_names:
+        comment = "" if is_valid else "# "
+        header += f"    {comment}- {sect}\n"
 
     header += "\n  auto_link_sections:\n"
-    for sect in elf.elf_section_names:
+    for (sect, is_valid) in elf.elf_section_names:
+        comment = "" if is_valid else "# "
         if sect != ".text" and sect != ".vutext":
-            header += f"    - {sect}\n"
+            header += f"    {comment}- {sect}\n"
 
     segments = "\nsegments:"
     for seg in elf.segs:

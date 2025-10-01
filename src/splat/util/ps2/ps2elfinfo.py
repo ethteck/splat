@@ -55,7 +55,7 @@ class Ps2Elf:
     segs: list[FakeSegment]
     size: int
     compiler: str
-    elf_section_names: list[str]
+    elf_section_names: list[tuple[str, bool]]
     gp: Optional[int]
     ld_gp_expression: Optional[str]
 
@@ -89,7 +89,7 @@ class Ps2Elf:
         # TODO: check `.comment` section for any compiler info
         compiler = "EEGCC"
 
-        elf_section_names = []
+        elf_section_names: list[tuple[str, bool]] = []
 
         first_offset: Optional[int] = None
         rom_size = 0
@@ -164,8 +164,9 @@ class Ps2Elf:
                     # Whatever...
                     splat_segment_type = "rodata"
 
-            if name in ELF_SECTION_MAPPING and name not in ELF_SECTIONS_IGNORE:
-                elf_section_names.append(name)
+            if name.startswith("."):
+                valid_for_splat = name in ELF_SECTION_MAPPING and name not in ELF_SECTIONS_IGNORE and not do_new_segs
+                elf_section_names.append((name, valid_for_splat))
 
             new_section = ElfSection(
                 name,
@@ -189,18 +190,18 @@ class Ps2Elf:
         # hoping for the best.
         if len(elf_section_names) < 4:
             elf_section_names = [
-                ".text",
-                # ".vutext",
-                ".data",
-                # ".vudata",
-                ".rodata",
-                ".gcc_except_table",
-                ".lit8",
-                ".lit4",
-                ".sdata",
-                ".sbss",
-                ".bss",
-                # ".vubss",
+                (".text", True),
+                (".vutext", False),
+                (".data", True),
+                (".vudata", False),
+                (".rodata", True),
+                (".gcc_except_table", True),
+                (".lit8", True),
+                (".lit4", True),
+                (".sdata", True),
+                (".sbss", True),
+                (".bss", True),
+                (".vubss", False),
             ]
 
         # Fixup vram address of segments
