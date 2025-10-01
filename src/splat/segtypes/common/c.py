@@ -237,7 +237,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 entry.sectionRodata = rodata_section_type
                 if entry.function is not None:
                     if (
-                        entry.function.getName() in self.global_asm_funcs
+                        entry.function.getNameUnquoted() in self.global_asm_funcs
                         or is_new_c_file
                         or options.opts.disassemble_all
                     ):
@@ -250,7 +250,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                         assert func_sym is not None
 
                         if (
-                            entry.function.getName() not in self.global_asm_funcs
+                            entry.function.getNameUnquoted()
+                            not in self.global_asm_funcs
                             and options.opts.disassemble_all
                             and not is_new_c_file
                         ):
@@ -263,7 +264,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                 else:
                     for spim_rodata_sym in entry.rodataSyms:
                         if (
-                            spim_rodata_sym.getName() in self.global_asm_rodata_syms
+                            spim_rodata_sym.getNameUnquoted()
+                            in self.global_asm_rodata_syms
                             or is_new_c_file
                             or options.opts.disassemble_all
                         ):
@@ -307,7 +309,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     "\nA gap was detected in migrated rodata symbols!", status="warn"
                 )
                 log.write(
-                    f"\t In function '{func.getName()}' (0x{func.vram:08X}), gap detected between '{rodata_sym.getName()}' (0x{rodata_sym.vram:08X}) and '{next_rodata_sym.getName()}' (0x{next_rodata_sym.vram:08X})"
+                    f"\t In function '{func.getNameUnquoted()}' (0x{func.vram:08X}), gap detected between '{rodata_sym.getNameUnquoted()}' (0x{rodata_sym.vram:08X}) and '{next_rodata_sym.getNameUnquoted()}' (0x{next_rodata_sym.vram:08X})"
                 )
                 log.write(
                     f"\t The address of the missing rodata symbol is 0x{rodata_sym.vramEnd:08X}"
@@ -414,7 +416,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             and spim_sym.instructions[0].isReturn()
             and spim_sym.instructions[1].isNop()
         ):
-            c_lines.append(f"void {spim_sym.getName()}(void) {{")
+            c_lines.append(f"void {spim_sym.getNameUnquoted()}(void) {{")
             c_lines.append("}")
         else:
             c_lines.append(
@@ -492,7 +494,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             depend_list = []
             for entry in symbols_entries:
                 if entry.function is not None:
-                    func_name = entry.function.getName()
+                    func_name = entry.function.getNameUnquoted()
 
                     if func_name in self.global_asm_funcs or is_new_c_file:
                         outpath = asm_out_dir / self.name / (func_name + ".s")
@@ -502,7 +504,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                         f.write(f" \\\n    {outpath.as_posix()}")
                 else:
                     for rodata_sym in entry.rodataSyms:
-                        rodata_name = rodata_sym.getName()
+                        rodata_name = rodata_sym.getNameUnquoted()
 
                         if rodata_name in self.global_asm_rodata_syms or is_new_c_file:
                             outpath = asm_out_dir / self.name / (rodata_name + ".s")

@@ -130,7 +130,7 @@ class CommonSegRodata(CommonSegData):
                         f"\nRodata segment '{self.name}' may belong to the text segment '{text_segment.name}'"
                     )
                     print(
-                        f"    Based on the usage from the function {refenceeFunction.getName()} to the symbol {symbol.getName()}"
+                        f"    Based on the usage from the function {refenceeFunction.getNameUnquoted()} to the symbol {symbol.getNameUnquoted()}"
                     )
                     possible_text_segments.add(text_segment)
 
