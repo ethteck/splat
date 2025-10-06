@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.36.4
+
+* Add workaround for the short loop bug that happens in SN PS2 compilers.
+  * This workaround is only used when the selected compiler is `EEGCC`.
+  * Emit an `.align` directive in branch labels to avoid triggering the bug.
+  * The bug in question adds a non-zero number of nops as a workaround for a hardware defect, producing non-matching builds.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
