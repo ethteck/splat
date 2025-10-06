@@ -18,6 +18,7 @@ class Compiler:
     asm_emit_size_directive: Optional[bool] = None
     j_as_branch: bool = False
     uses_include_asm: bool = True
+    align_on_branch_labels: bool = False
 
 
 GCC = Compiler(
@@ -61,7 +62,7 @@ PSYQ = Compiler(
 
 # PS2
 MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
-EEGCC = Compiler("EEGCC")
+EEGCC = Compiler("EEGCC", align_on_branch_labels=True)
 
 compiler_for_name: Dict[str, Compiler] = {
     x.name: x
