@@ -1,5 +1,7 @@
 # splat Release Notes
 
+### 0.37.0
+
 * Add define check to allow using `macro.inc` instead of `labels.inc` in `include_asm.h`.
 * New option: `generated_asm_macros_directory`
   * Allow changing the directory for the generated assembly macros files.
