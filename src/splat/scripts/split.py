@@ -506,9 +506,6 @@ def main(
         log.write("--stdout-only flag is deprecated", status="warn")
     progress_bar.out_file = sys.stdout
 
-    print(modes)
-    print(type(modes))
-
     # Load config
     global config
     config = conf.load(
