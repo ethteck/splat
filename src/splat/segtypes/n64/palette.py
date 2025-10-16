@@ -23,7 +23,22 @@ class N64SegPalette(Segment):
                     f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
                 )
 
-            if not isinstance(self.yaml, dict) or "size" not in self.yaml:
+            if isinstance(self.yaml, dict) and "size" in self.yaml:
+                yaml_size: int = self.yaml["size"]
+                if isinstance(self.rom_start, int) and isinstance(self.rom_end, int):
+                    rom_len = self.rom_end - self.rom_start
+                    if rom_len < yaml_size:
+                        log.error(
+                            f"Error: {self.name} has a `size` value of 0x{yaml_size:X}, but this is smaller than the actual rom size of the palette (0x{self.rom_start:X} ~ 0x{self.rom_end:X})"
+                        )
+                    elif rom_len > yaml_size:
+                        log.write(
+                            f"Warning: {self.name} has a `size` value of0x{yaml_size:X}, but this is larger than the end of the palette (0x{self.rom_start:X} ~ 0x{self.rom_end:X})\n(hint add a 'bin' segment after this palette with address 0x{self.rom_end:X})",
+                            status="warn"
+                        )
+
+                size = yaml_size
+            else:
                 assert self.rom_end is not None
                 assert self.rom_start is not None
                 actual_len = self.rom_end - self.rom_start
@@ -39,7 +54,11 @@ class N64SegPalette(Segment):
                     log.error(
                         f"Error: {self.name} (0x{actual_len:X} bytes) is not a valid palette size ({', '.join(hex(s) for s in VALID_SIZES)})\n{hint_msg}"
                     )
+                size = actual_len
+        else:
+            size = 0
 
+        self.palette_size: int = size
         self.global_id: Optional[str] = (
             self.yaml.get("global_id") if isinstance(self.yaml, dict) else None
         )
@@ -61,7 +80,8 @@ class N64SegPalette(Segment):
         return palette
 
     def parse_palette(self, rom_bytes) -> List[Tuple[int, int, int, int]]:
-        data = rom_bytes[self.rom_start : self.rom_end]
+        assert self.rom_start is not None
+        data = rom_bytes[self.rom_start : self.rom_start + self.palette_size]
 
         return N64SegPalette.parse_palette_bytes(data)
 

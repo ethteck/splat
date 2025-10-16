@@ -1,5 +1,7 @@
 # splat Release Notes
 
+* Add more checks for texture and palette segments to have a correct size in the yaml given their `width`/`height` or `size` attributes respectively.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
