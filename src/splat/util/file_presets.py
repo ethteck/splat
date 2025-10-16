@@ -88,7 +88,12 @@ def write_include_asm_h():
 #ifndef INCLUDE_RODATA
 {include_rodata_macro}\
 #endif
+
+#if INCLUDE_ASM_USE_MACRO_INC
+__asm__(".include \\"include/macro.inc\\"\\n");
+#else
 __asm__(".include \\"include/labels.inc\\"\\n");
+#endif
 
 #else
 

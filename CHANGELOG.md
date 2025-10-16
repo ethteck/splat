@@ -1,5 +1,7 @@
 # splat Release Notes
 
+* Add define check to allow using `macro.inc` instead of `labels.inc` in `include_asm.h`.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
