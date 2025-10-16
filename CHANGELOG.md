@@ -3,6 +3,7 @@
 ### 0.37.0
 
 * Add define check to allow using `macro.inc` instead of `labels.inc` in `include_asm.h`.
+  * The macro must be `INCLUDE_ASM_USE_MACRO_INC` and have a non zero value.
 * New option: `generated_asm_macros_directory`
   * Allow changing the directory for the generated assembly macros files.
 

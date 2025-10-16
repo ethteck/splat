@@ -456,7 +456,9 @@ def _parse_yaml(
         ),
         generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         include_asm_macro_style=parse_include_asm_macro_style(),
-        generated_asm_macros_directory=p.parse_path(base_path, "generated_asm_macros_directory", "include"),
+        generated_asm_macros_directory=p.parse_path(
+            base_path, "generated_asm_macros_directory", "include"
+        ),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
