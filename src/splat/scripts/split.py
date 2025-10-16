@@ -506,6 +506,9 @@ def main(
         log.write("--stdout-only flag is deprecated", status="warn")
     progress_bar.out_file = sys.stdout
 
+    print(modes)
+    print(type(modes))
+
     # Load config
     global config
     config = conf.load(
@@ -581,7 +584,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
         nargs="+",
         type=Path,
     )
-    parser.add_argument("--modes", nargs="+", default="all")
+    parser.add_argument("--modes", nargs="+", default=["all"])
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--use-cache", action="store_true", help="Only split changed segments in config"
