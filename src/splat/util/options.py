@@ -43,6 +43,8 @@ class SplatOpts:
     # default: The default one.
     # maspsx_hack: Use the maspsx hack workaround definition https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
     include_asm_macro_style: Literal["default", "maspsx_hack"]
+    # Directory to place the generated asm macros files.
+    generated_asm_macros_directory: Path
     # Determines whether to use .o as the suffix for all binary files?... TODO document
     use_o_as_suffix: bool
     # the value of the $gp register to correctly calculate offset to %gp_rel relocs
@@ -454,6 +456,7 @@ def _parse_yaml(
         ),
         generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         include_asm_macro_style=parse_include_asm_macro_style(),
+        generated_asm_macros_directory=p.parse_path(base_path, "generated_asm_macros_directory", "include"),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(

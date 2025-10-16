@@ -5,6 +5,9 @@ This includes writing files like:
 - include/macro.inc
 - include/labels.inc
 - include/gte_macros.inc
+
+The directory where these files are written to can be controlled with
+`options.opts.generated_asm_macros_directory`.
 """
 
 from pathlib import Path
@@ -38,6 +41,8 @@ def write_include_asm_h():
     if not options.opts.compiler.uses_include_asm:
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
+
+    directory = options.opts.generated_asm_macros_directory.as_posix()
 
     if options.opts.include_asm_macro_style == "maspsx_hack":
         include_asm_macro = """\
@@ -90,9 +95,9 @@ def write_include_asm_h():
 #endif
 
 #if INCLUDE_ASM_USE_MACRO_INC
-__asm__(".include \\"include/macro.inc\\"\\n");
+__asm__(".include \\"{directory}/macro.inc\\"\\n");
 #else
-__asm__(".include \\"include/labels.inc\\"\\n");
+__asm__(".include \\"{directory}/labels.inc\\"\\n");
 #endif
 
 #else
@@ -108,10 +113,12 @@ __asm__(".include \\"include/labels.inc\\"\\n");
 
 #endif /* INCLUDE_ASM_H */
 """
-    _write("include/include_asm.h", file_data)
+    _write(f"{directory}/include_asm.h", file_data)
 
 
 def write_assembly_inc_files():
+    directory = options.opts.generated_asm_macros_directory.as_posix()
+
     func_macros = f"""\
 # A function symbol.
 .macro {options.opts.asm_function_macro} label, visibility=global
@@ -235,7 +242,7 @@ def write_assembly_inc_files():
 {data_macros}
 {nm_macros}\
 """
-        _write("include/labels.inc", labels_inc)
+        _write(f"{directory}/labels.inc", labels_inc)
 
     if options.opts.platform in {"n64", "psx"}:
         gas = macros_inc
@@ -343,7 +350,7 @@ def write_assembly_inc_files():
 {gas}
 .endif
 """
-    _write("include/macro.inc", f"{preamble}\n{gas}")
+    _write(f"{directory}/macro.inc", f"{preamble}\n{gas}")
 
 
 def write_gte_macros():
@@ -767,4 +774,5 @@ def write_gte_macros():
 .endif
 """
 
-    _write("include/gte_macros.inc", gte_macros)
+    directory = options.opts.generated_asm_macros_directory.as_posix()
+    _write(f"{directory}/gte_macros.inc", gte_macros)
