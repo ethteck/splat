@@ -11,7 +11,6 @@ The directory where these files are written to can be controlled with
 """
 
 from pathlib import Path
-import os
 
 from . import options, log
 
@@ -25,7 +24,7 @@ def write_all_files():
 
 
 def _write(filepath: str, contents: str):
-    p = Path(os.path.normpath(options.opts.base_path / filepath))
+    p = Path(filepath)
     p.parent.mkdir(parents=True, exist_ok=True)
 
     if p.exists():
@@ -43,6 +42,9 @@ def write_include_asm_h():
         return
 
     directory = options.opts.generated_asm_macros_directory.as_posix()
+    print()
+    print(directory)
+    print()
 
     if options.opts.include_asm_macro_style == "maspsx_hack":
         include_asm_macro = """\
