@@ -1,6 +1,8 @@
 # splat Release Notes
 
-* Add more checks for texture and palette segments to have a correct size in the yaml given their `width`/`height` or `size` attributes respectively.
+### 0.36.4
+
+* Add more checks for texture and palette segments to have a correct size in their yaml entries, ensuring their `width`/`height` or `size` attributes match the sizes relative to other segments.
 
 ### 0.36.3
 
