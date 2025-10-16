@@ -34,7 +34,7 @@ class N64SegPalette(Segment):
                     elif rom_len > yaml_size:
                         log.write(
                             f"Warning: {self.name} has a `size` value of0x{yaml_size:X}, but this is larger than the end of the palette (0x{self.rom_start:X} ~ 0x{self.rom_end:X})\n(hint add a 'bin' segment after this palette with address 0x{self.rom_end:X})",
-                            status="warn"
+                            status="warn",
                         )
 
                 size = yaml_size
