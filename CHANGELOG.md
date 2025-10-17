@@ -1,5 +1,7 @@
 # splat Release Notes
 
+* Fix `gfx` segments sometimes not picking up properly the corresponding typed reference.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
