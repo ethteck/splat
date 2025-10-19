@@ -149,9 +149,7 @@ def test_init():
             [0x1290],
         ],
     }
-    options.initialize(
-        options_dict, [Path("./test/basic_app/splat.yaml")], [], False
-    )
+    options.initialize(options_dict, [Path("./test/basic_app/splat.yaml")], [], False)
 
 
 class Symbols(unittest.TestCase):
@@ -389,9 +387,7 @@ class SymbolsInitialize(unittest.TestCase):
             )
         ]
 
-        symbols.handle_sym_addrs(
-            Path("/tmp/thing"), sym_addrs_lines, all_segments
-        )
+        symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
         assert symbols.all_symbols[0].given_name == "func_1"
         assert symbols.all_symbols[0].type == "func"
         assert symbols.all_symbols[0].given_size == 10
@@ -420,9 +416,7 @@ class SymbolsInitialize(unittest.TestCase):
             )
         ]
 
-        symbols.handle_sym_addrs(
-            Path("/tmp/thing"), sym_addrs_lines, all_segments
-        )
+        symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
         assert symbols.all_symbols[0].defined
         assert symbols.all_symbols[0].force_migration
         assert symbols.all_symbols[0].force_not_migration
@@ -448,9 +442,7 @@ class SymbolsInitialize(unittest.TestCase):
             )
         ]
 
-        symbols.handle_sym_addrs(
-            Path("/tmp/thing"), sym_addrs_lines, all_segments
-        )
+        symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
         assert symbols.spim_context.bannedRangedSymbols[0].start == 0x100
         assert symbols.spim_context.bannedRangedSymbols[0].end == 0x100 + 4
 
