@@ -1,5 +1,7 @@
 # splat Release Notes
 
+* Fix sometimes picking a name symbol from a different segment instead of the owned segment when both symbols have the same address but are from completely different segments.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
