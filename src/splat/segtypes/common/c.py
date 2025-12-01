@@ -287,6 +287,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if options.opts.platform == "ps2":
                     # Modern gas requires `$` on the special r5900 registers.
                     from rabbitizer import TrinaryValue
+
                     for func in section.symbolList:
                         assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
                         for inst in func.instructions:
