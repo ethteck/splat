@@ -14,7 +14,7 @@ dependencies = [
     "PyYAML",
     "pylibyaml",
     "tqdm",
-    "intervaltree",
+    "intervaltree==3.1.0",
     "colorama",
 ]
 

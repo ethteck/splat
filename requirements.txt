@@ -1,7 +1,7 @@
 PyYAML
 pylibyaml
 tqdm
-intervaltree
+intervaltree==3.1.0
 colorama
 # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py and pyproject.toml
 spimdisasm>=1.38.0
