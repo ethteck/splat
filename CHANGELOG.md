@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.36.4
+
+* Pin versions of dependencies to avoid breaking because they broke.
+
 ### 0.36.3
 
 * Fix not generating nonmatching `.s` files for quoted symbols.
