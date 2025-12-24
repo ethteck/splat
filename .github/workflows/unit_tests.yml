@@ -6,7 +6,7 @@ on:
 
 jobs:
   unit_tests:
-    name: unit_tests on ${{ matrix.os.name }}
+    name: unit_tests on '${{ matrix.os.name }}', Python ${{ matrix.py_version }}
     runs-on: ${{ matrix.os.runner }}
     strategy:
       fail-fast: false
@@ -15,19 +15,27 @@ jobs:
           {
             name: linux,
             runner: ubuntu-latest,
-            python_venv: .venv/bin/python3,
+            python_venv_activate: source .venv/bin/activate,
           },
           {
             name: macos,
             runner: macos-latest,
-            python_venv: .venv/bin/python3,
+            python_venv_activate: source .venv/bin/activate,
           },
           {
             name: windows,
             runner: windows-latest,
-            python_venv: .venv/Scripts/python3,
+            python_venv_activate: .venv/Scripts/Activate.ps1,
           },
         ]
+        py_version:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - '3.x' # Explicit latest
 
     steps:
       - name: Checkout
@@ -35,16 +43,29 @@ jobs:
 
       - name: Install dependencies
         if: matrix.os.name == 'linux'
-        run: sudo apt-get install -y build-essential make binutils-mips-linux-gnu python3 python3-pip python3-venv wget
+        run: sudo apt-get install -y build-essential make binutils-mips-linux-gnu wget
+
+      - name: Print Python version
+        run: |
+          python3 --version
+
+      - name: Set up Python ${{ matrix.py_version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.py_version }}
 
       - name: Setup Python venv
         run: |
+          python3 --version
           python3 -m venv .venv
+          ${{ matrix.os.python_venv_activate }}
+          python3 --version
 
       - name: Install Python dependencies
         run: |
-          ${{ matrix.os.python_venv }} -m pip install -U -r requirements.txt
-          ${{ matrix.os.python_venv }} -m pip install -e .
+          ${{ matrix.os.python_venv_activate }}
+          python3 -m pip install -U -r requirements.txt
+          python3 -m pip install -e .
 
       - name: Build `basic_app` on ${{ matrix.os.name }}
         if: matrix.os.name == 'linux'
@@ -57,4 +78,5 @@ jobs:
 
       - name: Run the test
         run: |
-          ${{ matrix.os.python_venv }} test.py
+          ${{ matrix.os.python_venv_activate }}
+          python3 test.py
