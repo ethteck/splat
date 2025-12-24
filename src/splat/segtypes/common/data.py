@@ -130,7 +130,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         for symbol in self.spim_section.get_section().symbolList:
             symbols.create_symbol_from_spim_symbol(
-                self.get_most_parent(), symbol.contextSym
+                self.get_most_parent(), symbol.contextSym, force_in_segment=True
             )
 
             # Gather symbols found by spimdisasm and create those symbols in splat's side
@@ -140,7 +140,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym
+                        self.get_most_parent(), context_sym, force_in_segment=False
                     )
 
             # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)

@@ -239,7 +239,9 @@ class Symbols(unittest.TestCase):
             yaml=None,
         )
         context_sym = spimdisasm.common.ContextSymbol(address=0)
-        result = symbols.create_symbol_from_spim_symbol(segment, context_sym)
+        result = symbols.create_symbol_from_spim_symbol(
+            segment, context_sym, force_in_segment=False
+        )
         assert result.referenced
         assert result.extract
         assert result.name == "D_0"
