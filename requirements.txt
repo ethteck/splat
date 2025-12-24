@@ -1,11 +1,11 @@
-PyYAML
-pylibyaml
-tqdm
-intervaltree
-colorama
+PyYAML==6.0.3
+pylibyaml==0.1.0
+tqdm==4.67.1
+intervaltree==3.1.0
+colorama==0.4.6
 # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py and pyproject.toml
 spimdisasm>=1.38.0
 rabbitizer>=1.10.0
-pygfxd
+pygfxd>=1.0.5
 n64img>=0.1.4
 crunch64>=0.2.0
