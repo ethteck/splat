@@ -64,6 +64,10 @@ class N64SegImg(Segment):
             log.error(
                 f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)"
             )
+        elif actual_len < expected_len:
+            log.error(
+                f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}"
+            )
 
     def out_path(self) -> Path:
         type_extension = f".{self.type}" if self.image_type_in_extension else ""

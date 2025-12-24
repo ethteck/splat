@@ -283,7 +283,24 @@ class CommonSegC(CommonSegCodeSubsegment):
                 section = self.spim_section.get_section()
                 old_value = section.getGpRelHack()
                 section.setGpRelHack(False)
+
+                if options.opts.platform == "ps2":
+                    # Modern gas requires `$` on the special r5900 registers.
+                    from rabbitizer import TrinaryValue
+
+                    for func in section.symbolList:
+                        assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
+                        for inst in func.instructions:
+                            inst.flag_r5900UseDollar = TrinaryValue.TRUE
+
                 self.split_as_asmtu_file(self.asm_out_path())
+
+                if options.opts.platform == "ps2":
+                    for func in section.symbolList:
+                        assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
+                        for inst in func.instructions:
+                            inst.flag_r5900UseDollar = TrinaryValue.FALSE
+
                 section.setGpRelHack(old_value)
 
     def get_c_preamble(self):
