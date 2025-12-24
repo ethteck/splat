@@ -600,8 +600,13 @@ def add_symbol_to_spim_section(
     return context_sym
 
 
+# force_in_segment=True when the symbol belongs to this specific segment.
+# force_in_segment=False when this symbol is just a reference.
 def create_symbol_from_spim_symbol(
-    segment: "Segment", context_sym: spimdisasm.common.ContextSymbol
+    segment: "Segment",
+    context_sym: spimdisasm.common.ContextSymbol,
+    *,
+    force_in_segment: bool,
 ) -> "Symbol":
     in_segment = False
 
@@ -631,7 +636,7 @@ def create_symbol_from_spim_symbol(
                 in_segment = segment.contains_vram(context_sym.vram)
 
     sym = segment.create_symbol(
-        context_sym.vram, in_segment, type=sym_type, reference=True
+        context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True
     )
 
     if sym.given_name is None and context_sym.name is not None:
