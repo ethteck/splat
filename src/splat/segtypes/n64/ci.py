@@ -48,6 +48,8 @@ class N64SegCi(N64SegImg):
         return options.opts.asset_path / self.dir / f"{out_name}{type_extension}.png"
 
     def split(self, rom_bytes):
+        self.check_len()
+
         assert self.palettes is not None
         if len(self.palettes) == 0:
             # TODO: output with blank palette
