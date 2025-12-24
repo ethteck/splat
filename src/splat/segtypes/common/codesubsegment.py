@@ -119,7 +119,7 @@ class CommonSegCodeSubsegment(Segment):
         self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(
-            self.get_most_parent(), func_spim.contextSym
+            self.get_most_parent(), func_spim.contextSym, force_in_segment=False
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
@@ -129,7 +129,7 @@ class CommonSegCodeSubsegment(Segment):
             )
             if context_sym is not None:
                 symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym
+                    self.get_most_parent(), context_sym, force_in_segment=False
                 )
 
         # Main loop
@@ -153,7 +153,7 @@ class CommonSegCodeSubsegment(Segment):
                 context_sym = self.spim_section.get_section().getSymbol(sym_address)
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym
+                        self.get_most_parent(), context_sym, force_in_segment=False
                     )
 
     def print_file_boundaries(self):

@@ -4,6 +4,7 @@
 
 * Add more checks for texture and palette segments to have a correct size in their yaml entries, ensuring their `width`/`height` or `size` attributes match the sizes relative to other segments.
 * Fix `gfx` segments sometimes not picking up properly the corresponding typed reference.
+* * Fix sometimes picking a name symbol from a different segment instead of the owned segment when both symbols have the same address but are from completely different segments.
 
 ### 0.36.3
 
