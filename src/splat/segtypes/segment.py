@@ -811,8 +811,7 @@ class Segment:
         items = [
             i
             for i in items
-            if i.segment is None
-            or Segment.visible_ram(self, i.segment)
+            if (i.segment is None or Segment.visible_ram(self, i.segment))
             and (type == i.type)
         ]
 
