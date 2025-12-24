@@ -88,7 +88,7 @@ class CommonSegBss(CommonSegData):
 
         for spim_sym in self.spim_section.get_section().symbolList:
             symbols.create_symbol_from_spim_symbol(
-                self.get_most_parent(), spim_sym.contextSym
+                self.get_most_parent(), spim_sym.contextSym, force_in_segment=True
             )
 
     def should_scan(self) -> bool:

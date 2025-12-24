@@ -108,7 +108,7 @@ class CommonSegRodata(CommonSegData):
 
         for symbol in self.spim_section.get_section().symbolList:
             generated_symbol = symbols.create_symbol_from_spim_symbol(
-                self.get_most_parent(), symbol.contextSym
+                self.get_most_parent(), symbol.contextSym, force_in_segment=True
             )
             generated_symbol.linker_section = self.get_linker_section_linksection()
 
@@ -119,7 +119,7 @@ class CommonSegRodata(CommonSegData):
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym
+                        self.get_most_parent(), context_sym, force_in_segment=False
                     )
 
             possible_text = self.get_possible_text_subsegment_for_symbol(symbol)
