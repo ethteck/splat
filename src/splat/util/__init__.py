@@ -7,6 +7,7 @@ from . import n64 as n64
 from . import options as options
 from . import palettes as palettes
 from . import progress_bar as progress_bar
+from . import ps2 as ps2
 from . import psx as psx
 from . import relocs as relocs
 from . import statistics as statistics

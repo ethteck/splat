@@ -22,4 +22,4 @@ After scanning and splitting, **splat** will output a linker script that can be 
 
 ### Sounds great, how do I get started?
 
-Have a look at the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart), or check out the [Examples](https://github.com/ethteck/splat/wiki/Examples) page to see projects that are using **splat**.
+Have a look at the [Quickstart](https://github.com/ethteck/splat/wiki/Quickstart), [Quickstart for PS2 ELFs](https://github.com/ethteck/splat/wiki/Quickstart-Elf), or check out the [Examples](https://github.com/ethteck/splat/wiki/Examples) page to see projects that are using **splat**.
