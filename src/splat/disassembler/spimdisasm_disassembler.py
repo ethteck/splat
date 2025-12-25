@@ -7,7 +7,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
-    SPIMDISASM_MIN = (1, 38, 0)
+    SPIMDISASM_MIN = (1, 39, 0)
 
     def configure(self):
         # Configure spimdisasm
@@ -74,6 +74,8 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = (
                 False
             )
+        if options.opts.align_on_branch_labels:
+            spimdisasm.common.GlobalConfig.ASM_EMIT_ALIGN_BRANCH_LABELS = True
         rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = (
             selected_compiler.j_as_branch
         )

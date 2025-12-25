@@ -280,6 +280,8 @@ class SplatOpts:
     # Determines whether to use a legacy INCLUDE_ASM macro format in c files
     # only applies to GCC/SN64
     use_legacy_include_asm: bool
+    # Emit alignment directives in branch labels, as a way to workaround the short loop bug present in SN PS2 compilers
+    align_on_branch_labels: bool
 
     # Returns whether the given mode is currently enabled
     def is_mode_active(self, mode: str) -> bool:
@@ -393,6 +395,11 @@ def _parse_yaml(
     # If option not provided then use the compiler default
     if asm_emit_size_directive is None:
         asm_emit_size_directive = comp.asm_emit_size_directive
+
+    align_on_branch_labels = p.parse_optional_opt("align_on_branch_labels", bool)
+    # If option not provided then use the compiler default
+    if align_on_branch_labels is None:
+        align_on_branch_labels = comp.align_on_branch_labels
 
     def parse_endianness() -> Literal["big", "little"]:
         endianness = p.parse_opt_within(
@@ -613,6 +620,7 @@ def _parse_yaml(
         hardware_regs=p.parse_opt("hardware_regs", bool, False),
         image_type_in_extension=p.parse_opt("image_type_in_extension", bool, False),
         use_legacy_include_asm=p.parse_opt("use_legacy_include_asm", bool, False),
+        align_on_branch_labels=align_on_branch_labels,
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
         detect_redundant_function_end=p.parse_opt(
             "detect_redundant_function_end", bool, True

@@ -6,6 +6,11 @@
   * The macro must be `INCLUDE_ASM_USE_MACRO_INC` and have a non zero value.
 * New option: `generated_asm_macros_directory`
   * Allow changing the directory for the generated assembly macros files.
+* Add workaround for the short loop bug that happens in SN PS2 compilers.
+  * This workaround is only used when the selected compiler is `EEGCC`.
+    * This can be manually overriden with the option `align_on_branch_labels`.
+  * Emit an `.align` directive in branch labels to avoid triggering the bug.
+  * The bug in question adds a non-zero number of nops as a workaround for a hardware defect, producing non-matching builds.
 
 ### 0.36.4
 
