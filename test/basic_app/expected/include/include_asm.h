@@ -22,7 +22,12 @@
         ".section .text" \
     )
 #endif
-__asm__(".include \"include/labels.inc\"\n");
+
+#if INCLUDE_ASM_USE_MACRO_INC
+__asm__(".include \"test/basic_app/split/include/macro.inc\"\n");
+#else
+__asm__(".include \"test/basic_app/split/include/labels.inc\"\n");
+#endif
 
 #else
 
