@@ -147,6 +147,12 @@ Allows configuring the style used by the generated `INCLUDE_ASM` macro. It curre
 
 Defaults to `default`.
 
+### generated_asm_macros_directory
+
+Change the directory where the assembly macros files are written to.
+
+Defaults to `include`.
+
 ### o_as_suffix
 
 Used to determine the file extension of the built files that will be listed on the linker script.

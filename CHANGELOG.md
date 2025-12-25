@@ -2,6 +2,10 @@
 
 ### 0.37.0
 
+* Add define check to allow using `macro.inc` instead of `labels.inc` in `include_asm.h`.
+  * The macro must be `INCLUDE_ASM_USE_MACRO_INC` and have a non zero value.
+* New option: `generated_asm_macros_directory`
+  * Allow changing the directory for the generated assembly macros files.
 * Add workaround for the short loop bug that happens in SN PS2 compilers.
   * This workaround is only used when the selected compiler is `EEGCC`.
     * This can be manually overriden with the option `align_on_branch_labels`.
@@ -14,7 +18,8 @@
 * Pin versions of dependencies to avoid breaking because they broke.
 * Add more checks for texture and palette segments to have a correct size in their yaml entries, ensuring their `width`/`height` or `size` attributes match the sizes relative to other segments.
 * Fix `gfx` segments sometimes not picking up properly the corresponding typed reference.
-* * Fix sometimes picking a name symbol from a different segment instead of the owned segment when both symbols have the same address but are from completely different segments.
+* Fix sometimes picking a name symbol from a different segment instead of the owned segment when both symbols have the same address but are from completely different segments.
+* Add PS2 compatibility to `create_config`.
 
 ### 0.36.3
 
