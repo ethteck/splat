@@ -932,3 +932,21 @@ use_legacy_include_asm: True
 
 #### Default
 `False`
+
+## align_on_branch_labels
+
+If enabled emit no-op alignment directives on all branch labels.
+
+This is useful as a workaround for the "short loop bug" present in SN PS2 compilers, in which the compiler may decide to insert extra `nop` instructions due to a hardware defect, producing non-matching builds.
+
+This option is enabled automatically if the selected compiler is known to have this issue, but this option allows to override the default selection in case this setting ends up producing problems.
+
+#### Usage
+
+```yaml
+align_on_branch_labels: False
+```
+
+#### Default
+
+`True` if [`compiler`](#compiler) is set to `EEGCC`, `False` otherwise

@@ -74,7 +74,7 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             spimdisasm.common.GlobalConfig.SYMBOL_FINDER_FILTERED_ADDRESSES_AS_HILO = (
                 False
             )
-        if selected_compiler.align_on_branch_labels:
+        if options.opts.align_on_branch_labels:
             spimdisasm.common.GlobalConfig.ASM_EMIT_ALIGN_BRANCH_LABELS = True
         rabbitizer.config.toolchainTweaks_treatJAsUnconditionalBranch = (
             selected_compiler.j_as_branch
