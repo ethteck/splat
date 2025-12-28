@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.37.1
+
+* Fix `make_full_disasm_for_code` not extracting data-only TUs.
+
 ### 0.37.0
 
 * Add define check to allow using `macro.inc` instead of `labels.inc` in `include_asm.h`.

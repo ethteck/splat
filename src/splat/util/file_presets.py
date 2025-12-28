@@ -42,9 +42,6 @@ def write_include_asm_h():
         return
 
     directory = options.opts.generated_asm_macros_directory.as_posix()
-    print()
-    print(directory)
-    print()
 
     if options.opts.include_asm_macro_style == "maspsx_hack":
         include_asm_macro = """\

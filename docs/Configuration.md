@@ -848,6 +848,16 @@ Emit a full `.s` file for each `c`/`cpp` segment containing disassembly of .text
 
 Can be used to generate "target" or "expected" objects for asm diffing.
 
+To generate `.s` files for data-only TUs (or rodata/bss only, or any other combination that doesn't have a text section) a dummy `c` or `cpp` section with the same name as the data section must be defined in the yaml with an start value of `auto` instead of a number. For example:
+
+```yaml
+      - [auto, c, boot/rom_offsets]
+
+      # -- Other c or data subsegments --
+
+      - [0x00F340, .data, boot/rom_offsets]
+```
+
 ### global_vram_start and global_vram_end
 
 Allow specifying that the global memory range may be larger than what was automatically detected.

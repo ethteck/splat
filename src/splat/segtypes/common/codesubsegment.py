@@ -252,22 +252,21 @@ class CommonSegCodeSubsegment(Segment):
             f.write(self.spim_section.disassemble())
 
     # Same as above but write all sections from siblings
-    def split_as_asmtu_file(self, out_path: Optional[Path]):
-        if self.spim_section is None:
-            return
-
-        if not out_path:
-            return
-
+    def split_as_asmtu_file(self, out_path: Path):
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.print_file_boundaries()
 
         with open(out_path, "w", newline="\n") as f:
-            # Write `.text` contents
-            for line in self.get_asm_file_header():
-                f.write(line + "\n")
-            f.write(self.spim_section.disassemble())
+            # self.spim_section would be None if the current section was
+            # declared `auto` in the yaml.
+            # This can be useful when there are TUs with only data/rodata/bss/etc
+            # sections but not text section.
+            if self.spim_section is not None:
+                # Write `.text` contents
+                for line in self.get_asm_file_header():
+                    f.write(line + "\n")
+                f.write(self.spim_section.disassemble())
 
             # Disassemble the siblings to this file by respecting the `section_order`
             for sect in self.section_order:
@@ -287,13 +286,13 @@ class CommonSegCodeSubsegment(Segment):
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
                     f.write(sibling.spim_section.disassemble())
 
-            # Another loop to check anything that somehow may not be present on the `section_order`
+            # Another loop to check anything that somehow may not be present in the `section_order`
             for sect, sibling in self.siblings.items():
                 if sect == self.get_linker_section_linksection():
                     continue
 
                 if sect in self.section_order:
-                    # Already handled on the above loop
+                    # Already handled in the above loop
                     continue
 
                 if (
