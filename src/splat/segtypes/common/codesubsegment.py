@@ -280,7 +280,10 @@ class CommonSegCodeSubsegment(Segment):
                 if (
                     isinstance(sibling, CommonSegCodeSubsegment)
                     and sibling.spim_section is not None
-                    and not sibling.should_self_split()
+                    and (
+                        not sibling.should_self_split()
+                        or options.opts.make_full_disasm_for_code
+                    )
                 ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")
@@ -298,7 +301,10 @@ class CommonSegCodeSubsegment(Segment):
                 if (
                     isinstance(sibling, CommonSegCodeSubsegment)
                     and sibling.spim_section is not None
-                    and not sibling.should_self_split()
+                    and (
+                        not sibling.should_self_split()
+                        or options.opts.make_full_disasm_for_code
+                    )
                 ):
                     f.write("\n")
                     f.write(f"{sibling.get_section_asm_line()}\n\n")

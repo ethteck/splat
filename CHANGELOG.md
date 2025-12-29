@@ -3,6 +3,8 @@
 ### 0.37.1
 
 * Fix `make_full_disasm_for_code` not extracting data-only TUs.
+* Fix `make_full_disasm_for_code` and `disassemble_all` combo
+  * Fixes not writing other sections to asm file when both options are enabled.
 
 ### 0.37.0
 
