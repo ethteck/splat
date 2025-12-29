@@ -152,6 +152,8 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     def split(self, rom_bytes: bytes):
         if self.is_auto_segment:
+            if options.opts.make_full_disasm_for_code:
+                self.split_as_asmtu_file(self.asm_out_path())
             return
 
         if self.rom_start != self.rom_end:
