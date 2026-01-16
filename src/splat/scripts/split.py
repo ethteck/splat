@@ -6,6 +6,8 @@ import importlib
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from pathlib import Path
 
+from collections import defaultdict, deque
+
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
 from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
@@ -222,6 +224,45 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
+def sort_segements_by_vram_class_dependency(all_segments: List[Segment]) -> List[Segment]:
+    # map all "_VRAM_END" strings to segments
+    end_sym_to_seg: Dict[str, Segment] = {}
+    for seg in all_segments:
+        end_sym_to_seg[get_segment_vram_end_symbol_name(seg)] = seg
+
+    # build dependency graph: A -> B means "A must come before B"
+    graph: Dict[Segment, List[Segment]] = defaultdict(list)
+    indeg: Dict[Segment, int] = {seg: 0 for seg in all_segments}
+
+    for seg in all_segments:
+        sym = seg.vram_symbol
+        if sym is None:
+            continue
+        dep = end_sym_to_seg.get(sym)
+        if dep is None or dep is seg:
+            continue
+        graph[dep].append(seg)
+        indeg[seg] += 1
+
+    # stable topo sort with queue seeded in original order
+    q = deque([seg for seg in all_segments if indeg[seg] == 0])
+    out: List[Segment] = []
+
+    while q:
+        n = q.popleft()
+        out.append(n)
+        for m in graph.get(n, []):
+            indeg[m] -= 1
+            if indeg[m] == 0:
+                q.append(m)
+
+    assert len(out) == len(all_segments), (
+        "Encountered cyclic dependency when reordering segments by vram class."
+    )
+
+    return out
+
+
 def read_target_binary() -> bytes:
     rom_bytes = options.opts.target_path.read_bytes()
 
@@ -317,6 +358,9 @@ def do_split(
 
 
 def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
+    if options.opts.ld_sort_segements_by_vram_class_dependency:
+        all_segments = sort_segements_by_vram_class_dependency(all_segments)
+
     vram_class_dependencies = calc_segment_dependences(all_segments)
     vram_classes_to_search = set(vram_class_dependencies.keys())
 
