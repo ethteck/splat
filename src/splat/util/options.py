@@ -127,6 +127,8 @@ class SplatOpts:
     # `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
     # If disabled, this uses the plain integer values for vram addresses defined in the yaml.
     ld_use_symbolic_vram_addresses: bool
+    # Ensures segments of vram classes with dependencies (`vram_symbol` / `follows_classes`) are written to the linker script AFTER the segments they depend on.
+    ld_sort_segments_by_vram_class_dependency: bool
     # Change linker script generation to allow partially linking segments. Requires both `ld_partial_scripts_path` and `ld_partial_build_segments_path` to be set.
     ld_partial_linking: bool
     # Folder were each intermediary linker script will be written to.
@@ -512,6 +514,9 @@ def _parse_yaml(
         ld_sections_allowlist=p.parse_opt("ld_sections_allowlist", list, []),
         ld_sections_denylist=p.parse_opt("ld_sections_denylist", list, []),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
+        ld_sort_segments_by_vram_class_dependency=p.parse_opt(
+            "ld_sort_segments_by_vram_class_dependency", bool, False
+        ),
         ld_use_symbolic_vram_addresses=p.parse_opt(
             "ld_use_symbolic_vram_addresses", bool, True
         ),
