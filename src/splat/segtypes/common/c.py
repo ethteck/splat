@@ -51,7 +51,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_funcs_defined_in_c(c_file: Path) -> Set[str]:
-        with open(c_file, "r") as f:
+        with open(c_file, "r", encoding="utf-8") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
         return set(m.group(1) for m in C_FUNC_RE.finditer(text))
@@ -105,7 +105,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_global_asm_funcs(c_file: Path) -> Set[str]:
-        with c_file.open() as f:
+        with c_file.open(encoding="utf-8") as f:
             text = CommonSegC.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
@@ -114,7 +114,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
-        with c_file.open() as f:
+        with c_file.open(encoding="utf-8") as f:
             text = CommonSegC.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
