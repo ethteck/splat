@@ -224,7 +224,7 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
-def sort_segements_by_vram_class_dependency(all_segments: List[Segment]) -> List[Segment]:
+def sort_segments_by_vram_class_dependency(all_segments: List[Segment]) -> List[Segment]:
     # map all "_VRAM_END" strings to segments
     end_sym_to_seg: Dict[str, Segment] = {}
     for seg in all_segments:
@@ -358,8 +358,8 @@ def do_split(
 
 
 def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
-    if options.opts.ld_sort_segements_by_vram_class_dependency:
-        all_segments = sort_segements_by_vram_class_dependency(all_segments)
+    if options.opts.ld_sort_segments_by_vram_class_dependency:
+        all_segments = sort_segments_by_vram_class_dependency(all_segments)
 
     vram_class_dependencies = calc_segment_dependences(all_segments)
     vram_classes_to_search = set(vram_class_dependencies.keys())
