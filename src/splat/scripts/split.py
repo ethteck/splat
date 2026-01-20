@@ -224,7 +224,9 @@ def calc_segment_dependences(
     return vram_class_to_follows_segments
 
 
-def sort_segments_by_vram_class_dependency(all_segments: List[Segment]) -> List[Segment]:
+def sort_segments_by_vram_class_dependency(
+    all_segments: List[Segment],
+) -> List[Segment]:
     # map all "_VRAM_END" strings to segments
     end_sym_to_seg: Dict[str, Segment] = {}
     for seg in all_segments:
