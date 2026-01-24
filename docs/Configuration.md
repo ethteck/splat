@@ -526,6 +526,10 @@ Generates a discard section like this:
 
 Determines whether to add wildcards for section linking in the linker script (.rodata* for example)
 
+### ld_sort_segments_by_vram_class_dependency
+
+Ensures segments of vram classes with dependencies (`vram_symbol` / `follows_classes`) are written to the linker script AFTER the segments they depend on. This is intended to preserve vram class ordering for shifted builds (e.g., mods) and is not expected to produce a matching build. Disable this when a matching build is desired.
+
 ### ld_use_symbolic_vram_addresses
 
 Determines whether to use `follows_vram` (segment option) and `vram_symbol` / `follows_classes` (vram_class options) to calculate vram addresses in the linker script.
