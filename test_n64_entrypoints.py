@@ -45,14 +45,14 @@ def UHI(val: int) -> int:
 
 # === Entrypoint Test Constants ===
 
-BSS_START = 0x80030000
-BSS_SIZE = 0x00020000
+BSS_START = 0x802A4000
+BSS_SIZE = 0x00018000
 BSS_END = BSS_START + BSS_SIZE
-BSS_SIZE_SMALL = 0x00004000
+BSS_SIZE_SMALL = 0x00002000
 BSS_END_SMALL = BSS_START + BSS_SIZE_SMALL
 
-MAIN_ADDR = 0x80001000
-STACK_TOP = 0x803F6000
+MAIN_ADDR = 0x80001280
+STACK_TOP = 0x803FA000
 
 
 def lui(rt, imm16):
@@ -177,7 +177,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """lui/lui/addiu/ori + decrement-first BSS loop."""
         words = [
             lui(T0, HI(BSS_START)),
-            lui(T1, HI(BSS_SIZE)),
+            lui(T1, UHI(BSS_SIZE)),
             addiu(T0, T0, LO(BSS_START)),
             ori(T1, T1, LO(BSS_SIZE)),
             addi(T1, T1, 0xFFF8),
@@ -309,7 +309,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            lui(T1, UHI(BSS_SIZE)),
+            lui(T1, HI(BSS_SIZE)),
             addiu(T1, T1, LO(BSS_SIZE)),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
@@ -319,7 +319,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             addiu(T2, T2, LO(MAIN_ADDR)),
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             jr(T2),
             ori(SP, SP, LO(STACK_TOP)),
         ]
@@ -389,7 +389,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            lui(T1, HI(BSS_SIZE)),
+            lui(T1, UHI(BSS_SIZE)),
             ori(T1, T1, LO(BSS_SIZE)),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
@@ -495,7 +495,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     def test_sltu_clear_ori_sp(self):
         """sltu pattern with ori for $sp lo half."""
         words = [
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -525,7 +525,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         BSS2_END = 0x80001000
 
         words = [
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -560,7 +560,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     def test_sltu_clear_ori_sp_double_gp(self):
         """sltu with ori $sp, double BSS clear, and $gp setup."""
         words = [
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -597,10 +597,10 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     def test_sltu_clear_ori_sp_t2(self):
         """sltu with ori $sp, TLB setup after loop (no jal)."""
         TLB_COUNT = 0x001E
-        TLB_BASE = 0x80000000
+        TLB_BASE = 0x80004000
 
         words = [
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -705,7 +705,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     def test_sltu_clear_jal(self):
         """sltu without beq guard, jal + break."""
         words = [
-            lui(SP, HI(STACK_TOP)),
+            lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -760,7 +760,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     def test_sltu_clear_tlb(self):
         """sltu with TLB setup after BSS clear, no jal."""
         TLB_COUNT = 0x001E
-        TLB_BASE = 0x80000000
+        TLB_BASE = 0x80004000
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -865,7 +865,7 @@ class TestSn64Entrypoints(unittest.TestCase):
     def test_sn64_tlb(self):
         """SN64 TLB setup, parser breaks at nop gap."""
         TLB_COUNT = 0x001E
-        TLB_BASE = 0x80000000
+        TLB_BASE = 0x80004000
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -889,7 +889,7 @@ class TestSn64Entrypoints(unittest.TestCase):
     def test_sn64_tlb_li(self):
         """SN64 TLB with li for loop counter."""
         TLB_COUNT = 0x001E
-        TLB_BASE = 0x80000000
+        TLB_BASE = 0x80004000
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -947,7 +947,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_factor5_jump(self):
         """j instruction (not tracked by parser)."""
-        MAIN_ADDR = 0x80001E90  # TODO: track j target as main_address
+        MAIN_ADDR = 0x800020F0  # TODO: track j target as main_address
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -962,11 +962,11 @@ class TestSpecialEntrypoints(unittest.TestCase):
     def test_factor5_cache(self):
         """multiple jals, last one overrides main_address."""
         CONTROL_FLAG = 0x0001
-        A0_MASK = 0x007FE000
-        A1_BASE = 0x40000000
-        A3_BASE = 0x00400000
-        JUMP_TARGET = 0x4000044C
-        FN1_ADDR = 0x80000880
+        A0_MASK = 0x0067C000
+        A1_BASE = 0x50000000
+        A3_BASE = 0x00500000
+        JUMP_TARGET = 0x50000620
+        FN1_ADDR = 0x80000A40
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -996,7 +996,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_vigilante8(self):
         """sltu loop + j instruction (not tracked as main)."""
-        MAIN_ADDR = 0x8012D260  # TODO: track j target as main_address
+        MAIN_ADDR = 0x80134080  # TODO: track j target as main_address
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -1021,7 +1021,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_acclaim_jump(self):
         """bare j instruction (not recognized by parser)."""
-        MAIN_ADDR = 0x80000430  # TODO: track j target as main_address
+        MAIN_ADDR = 0x80000890  # TODO: track j target as main_address
         words = [
             j(MAIN_ADDR),
             nop(),
@@ -1033,17 +1033,17 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_army_men(self):
         """complex boot with multiple jal calls."""
-        RANGE1_START = 0x800B3210
-        RANGE1_END = 0x800B57F0
-        RANGE2_START = 0x800C97F0
-        RANGE2_END = 0x8017E670
-        RANGE3_START = 0x800C97F0
-        RANGE3_END = 0x800C97F0
-        PTR_ADDR = 0x80000318
-        DEST_BASE = 0x8008CAB0
-        KSEG0_BASE = 0x80000000
+        RANGE1_START = 0x800A2100
+        RANGE1_END = 0x800A47E0
+        RANGE2_START = 0x800C1000
+        RANGE2_END = 0x80168000
+        RANGE3_START = 0x800C1000
+        RANGE3_END = 0x800C1000
+        PTR_ADDR = 0x80000420
+        DEST_BASE = 0x80092000
+        KSEG0_BASE = 0x80001000
         MAGIC = 0x55555555
-        FN1_ADDR = 0x800004A0
+        FN1_ADDR = 0x800005C0
 
         words = [
             lui(A1, HI(STACK_TOP)),
@@ -1102,20 +1102,20 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_cheat_device(self):
         """DMA copy loop + cache flush + j + jal."""
-        DMA_SRC = 0xB0C01000
-        DMA_DST = 0x80200400
-        DMA_SIZE = 0x0003F000
-        CACHE1_START = 0x80000000
-        CACHE1_MID_OFFSET = 0x3000
+        DMA_SRC = 0xB0D02000
+        DMA_DST = 0x80202000
+        DMA_SIZE = 0x00042000
+        CACHE1_START = 0x80002000
+        CACHE1_MID_OFFSET = 0x2800
         CACHE1_END_ADJUST = 0xFFF0
         CACHE1_LINE = 0x0010
-        CACHE2_START = 0x80000000
-        CACHE2_MID_OFFSET = 0x6000
+        CACHE2_START = 0x80002000
+        CACHE2_MID_OFFSET = 0x7000
         CACHE2_END_ADJUST = 0xFFE0
         CACHE2_LINE = 0x0020
         STACK_FRAME = 0xFFE8
         RA_SLOT = 0x0010
-        JUMP_ADDR = 0x80200480
+        JUMP_ADDR = 0x80203000
 
         words = [
             lui(V1, UHI(DMA_SRC)),
@@ -1162,9 +1162,9 @@ class TestSpecialEntrypoints(unittest.TestCase):
 
     def test_cheat_device_bal(self):
         """bgezal (BAL) + DMA loop."""
-        DMA_SRC_BASE = 0xB0C00000
-        DMA_DST_BASE = 0x80400000
-        DMA_COUNT = 0x00040000
+        DMA_SRC_BASE = 0xB0D00000
+        DMA_DST_BASE = 0x80500000
+        DMA_COUNT = 0x00048000
         bal = _w(0x04110000)  # bgezal $zero, 0
         words = [
             bal,
