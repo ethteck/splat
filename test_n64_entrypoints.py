@@ -199,13 +199,14 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         Games: Zelda: Ocarina of Time, Donkey Kong 64, Banjo-Kazooie
         """
         BSS_START = 0x80006210
+        BSS_SIZE = 0x00004910  # TODO: parse bss_size from li pattern
         MAIN_ADDR = 0x80000640
         STACK_TOP = 0x80007050
 
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            addiu(T1, ZERO, 0x4910),
+            addiu(T1, ZERO, LO(BSS_SIZE)),
             addi(T1, T1, 0xFFF8),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
@@ -334,7 +335,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            lui(T1, 0x0000),
+            lui(T1, UHI(BSS_SIZE)),
             addiu(T1, T1, LO(BSS_SIZE)),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
@@ -462,14 +463,15 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         Games: Tsumi to Batsu
         """
         BSS_START = 0x80064A20
+        BSS_SIZE = 0x00043C20  # TODO: parse bss_size for bgtz loop
         MAIN_ADDR = 0x8004D360
         STACK_TOP = 0x80066B90
 
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            lui(T1, 0x0004),
-            addiu(T1, T1, 0x3C20),
+            lui(T1, HI(BSS_SIZE)),
+            addiu(T1, T1, LO(BSS_SIZE)),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
@@ -594,6 +596,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """
         BSS_START = 0x80002000
         BSS_END = 0x80002000
+        BSS2_START = 0x80001000
+        BSS2_END = 0x80001000
         MAIN_ADDR = 0x80047A80
         STACK_TOP = 0x803F6A10
 
@@ -610,10 +614,10 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             sltu(AT, T0, T1),
             bnez(AT, 0xFFFD),
             sw(ZERO, 0xFFFC, T0),
-            lui(T0, 0x8000),
-            addiu(T0, T0, 0x1000),
-            lui(T1, 0x8000),
-            addiu(T1, T1, 0x1000),
+            lui(T0, HI(BSS2_START)),
+            addiu(T0, T0, LO(BSS2_START)),
+            lui(T1, HI(BSS2_END)),
+            addiu(T1, T1, LO(BSS2_END)),
             beq(T0, T1, 0x0005),
             nop(),
             addiu(T0, T0, 4),
@@ -681,6 +685,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         BSS_START = 0x800C2C40
         BSS_END = 0x800F4A10
         STACK_TOP = 0x803F5B60
+        TLB_COUNT = 0x001E
+        TLB_BASE = 0x80000000
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -695,10 +701,10 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             sltu(T2, T0, T1),
             bnez(T2, 0xFFFD),
             sw(ZERO, 0xFFFC, T0),
-            addiu(A0, ZERO, 0x001E),
+            addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
-            lui(T1, 0x8000),
+            lui(T1, UHI(TLB_BASE)),
             mtc0(T1, 10),
             mtc0(ZERO, 2),
             mtc0(ZERO, 3),
@@ -874,6 +880,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         BSS_START = 0x8004B040
         BSS_END = 0x80052D60
         STACK_TOP = 0x8004C220
+        TLB_COUNT = 0x001E
+        TLB_BASE = 0x80000000
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -888,10 +896,10 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             sltu(AT, T0, T1),
             bnez(AT, 0xFFFD),
             sw(ZERO, 0xFFFC, T0),
-            addiu(A0, ZERO, 0x001E),
+            addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
-            lui(T1, 0x8000),
+            lui(T1, UHI(TLB_BASE)),
             mtc0(T1, 10),
             mtc0(ZERO, 2),
             mtc0(ZERO, 3),
@@ -910,6 +918,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with magic constant (FACEFACE) store after BSS clear.
         Games: Forsaken 64
         """
+        MAGIC = 0xFACEFACE
         BSS_START = 0x80029A40
         BSS_END = 0x800B5C60
         MAIN_ADDR = 0x80001D20
@@ -930,8 +939,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             sw(ZERO, 0xFFFC, T0),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
-            lui(AT, 0xFACE),
-            ori(AT, AT, 0xFACE),
+            lui(AT, UHI(MAGIC)),
+            ori(AT, AT, LO(MAGIC)),
             addu(T1, ZERO, AT),
             sw(T1, 0, T0),
             jal(MAIN_ADDR),
@@ -995,14 +1004,16 @@ class TestSn64Entrypoints(unittest.TestCase):
         Games: Turok 2: Seeds of Evil
         """
         STACK_TOP = 0x803FFFC0
+        TLB_COUNT = 0x001E
+        TLB_BASE = 0x80000000
 
         words = [
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
-            addiu(A0, ZERO, 0x001E),
+            addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
-            lui(T1, 0x8000),
+            lui(T1, UHI(TLB_BASE)),
             mtc0(T1, 10),
             mtc0(ZERO, 2),
             mtc0(ZERO, 3),
@@ -1020,14 +1031,16 @@ class TestSn64Entrypoints(unittest.TestCase):
         Games: South Park: Chef's Luv Shack
         """
         STACK_TOP = 0x803FFFF0
+        TLB_COUNT = 0x001E
+        TLB_BASE = 0x80000000
 
         words = [
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
-            addiu(A0, ZERO, 0x001E),
+            addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
-            lui(T1, 0x8000),
+            lui(T1, UHI(TLB_BASE)),
             mtc0(T1, 10),
             mtc0(ZERO, 2),
             mtc0(ZERO, 3),
@@ -1048,14 +1061,15 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Excitebike 64: magic constant + sltu BSS clear + jal + break.
         Games: Excitebike 64
         """
+        MAGIC = 0xBEEFDEAD
         BSS_START = 0x80011D80
         BSS_END = 0x8001BD90
         MAIN_ADDR = 0x80000450
         STACK_TOP = 0x803FFEF0
 
         words = [
-            lui(T0, 0xBEEF),
-            ori(T0, T0, 0xDEAD),
+            lui(T0, UHI(MAGIC)),
+            ori(T0, T0, LO(MAGIC)),
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             lui(T0, HI(BSS_START)),
@@ -1101,6 +1115,11 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Factor 5: multiple jals, last one overrides main_address.
         Games: SW Episode I: Battle for Naboo, Indiana Jones
         """
+        CONTROL_FLAG = 0x0001
+        A0_MASK = 0x007FE000
+        A1_BASE = 0x40000000
+        A3_BASE = 0x00400000
+        JUMP_TARGET = 0x4000044C
         FN1_ADDR = 0x80000880
         MAIN_ADDR = 0x80000F08
         STACK_TOP = 0x803FFFF0
@@ -1108,21 +1127,21 @@ class TestSpecialEntrypoints(unittest.TestCase):
         words = [
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
-            addiu(T0, ZERO, 0x0001),
+            addiu(T0, ZERO, CONTROL_FLAG),
             mtc0(T0, 6),
             mtc0(ZERO, 4),
             jal(FN1_ADDR),
             nop(),
             mtc0(ZERO, 0),
-            lui(A0, 0x007F),
-            ori(A0, A0, 0xE000),
-            lui(A1, 0x4000),
+            lui(A0, UHI(A0_MASK)),
+            ori(A0, A0, LO(A0_MASK)),
+            lui(A1, UHI(A1_BASE)),
             lui(A2, 0x0000),
-            lui(A3, 0x0040),
+            lui(A3, UHI(A3_BASE)),
             jal(MAIN_ADDR),
             nop(),
-            lui(T0, 0x4000),
-            ori(T0, T0, 0x044C),
+            lui(T0, UHI(JUMP_TARGET)),
+            ori(T0, T0, LO(JUMP_TARGET)),
             jr(T0),
             nop(),
         ]
@@ -1254,17 +1273,30 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Cheat device: DMA copy loop + cache flush + j + jal.
         Games: GameBooster 64
         """
+        DMA_SRC = 0xB0C01000
+        DMA_DST = 0x80200400
+        DMA_SIZE = 0x0003F000
+        CACHE1_START = 0x80000000
+        CACHE1_MID_OFFSET = 0x3000
+        CACHE1_END_ADJUST = 0xFFF0
+        CACHE1_LINE = 0x0010
+        CACHE2_START = 0x80000000
+        CACHE2_MID_OFFSET = 0x6000
+        CACHE2_END_ADJUST = 0xFFE0
+        CACHE2_LINE = 0x0020
+        STACK_FRAME = 0xFFE8
+        RA_SLOT = 0x0010
         JUMP_ADDR = 0x80200480
         MAIN_ADDR = 0x802029F8
         STACK_TOP = 0x803FFF00
 
         words = [
-            lui(V1, 0xB0C0),
-            ori(V1, V1, 0x1000),
-            lui(V0, 0x8020),
-            ori(V0, V0, 0x0400),
-            lui(T0, 0x0003),
-            ori(T0, T0, 0xF000),
+            lui(V1, UHI(DMA_SRC)),
+            ori(V1, V1, LO(DMA_SRC)),
+            lui(V0, UHI(DMA_DST)),
+            ori(V0, V0, LO(DMA_DST)),
+            lui(T0, UHI(DMA_SIZE)),
+            ori(T0, T0, LO(DMA_SIZE)),
             lw(AT, 0, V1),
             sync(),
             sw(AT, 0, V0),
@@ -1273,26 +1305,26 @@ class TestSpecialEntrypoints(unittest.TestCase):
             addiu(T0, T0, 0xFFFC),
             bgtz(T0, 0xFFF9),
             nop(),
-            lui(T0, 0x8000),
-            addiu(T1, T0, 0x3000),
-            addiu(T1, T1, 0xFFF0),
+            lui(T0, UHI(CACHE1_START)),
+            addiu(T1, T0, CACHE1_MID_OFFSET),
+            addiu(T1, T1, CACHE1_END_ADJUST),
             cache(1, 0, T0),
             sltu(AT, T0, T1),
             bnez(AT, 0xFFFD),
-            addiu(T0, T0, 0x0010),
-            lui(T0, 0x8000),
-            addiu(T1, T0, 0x6000),
-            addiu(T1, T1, 0xFFE0),
+            addiu(T0, T0, CACHE1_LINE),
+            lui(T0, UHI(CACHE2_START)),
+            addiu(T1, T0, CACHE2_MID_OFFSET),
+            addiu(T1, T1, CACHE2_END_ADJUST),
             cache(0, 0, T0),
             sltu(AT, T0, T1),
             bnez(AT, 0xFFFD),
-            addiu(T0, T0, 0x0020),
+            addiu(T0, T0, CACHE2_LINE),
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
             j(JUMP_ADDR),
             nop(),
-            addiu(SP, SP, 0xFFE8),
-            sw(RA, 0x0010, SP),
+            addiu(SP, SP, STACK_FRAME),
+            sw(RA, RA_SLOT, SP),
             jal(MAIN_ADDR),
             nop(),
         ]
@@ -1305,13 +1337,16 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Cheat device variant: bgezal (BAL) + DMA loop.
         Games: GameShark Pro v2.0
         """
+        DMA_SRC_BASE = 0xB0C00000
+        DMA_DST_BASE = 0x80400000
+        DMA_COUNT = 0x00040000
         bal = _w(0x04110000)  # bgezal $zero, 0
         words = [
             bal,
             addu(A0, RA, ZERO),
-            lui(V1, 0xB0C0),
-            lui(V0, 0x8040),
-            lui(T0, 0x0004),
+            lui(V1, UHI(DMA_SRC_BASE)),
+            lui(V0, UHI(DMA_DST_BASE)),
+            lui(T0, UHI(DMA_COUNT)),
             lw(AT, 0, V1),
             nop(),
             sync(),
