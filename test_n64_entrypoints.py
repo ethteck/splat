@@ -43,6 +43,18 @@ def UHI(val: int) -> int:
     return (val >> 16) & 0xFFFF
 
 
+# === Entrypoint Test Constants ===
+
+BSS_START = 0x80030000
+BSS_SIZE = 0x00020000
+BSS_END = BSS_START + BSS_SIZE
+BSS_SIZE_SMALL = 0x00004000
+BSS_END_SMALL = BSS_START + BSS_SIZE_SMALL
+
+MAIN_ADDR = 0x80001000
+STACK_TOP = 0x803F6000
+
+
 def lui(rt, imm16):
     return _w(0x3C000000 | (rt << 16) | (imm16 & 0xFFFF))
 
@@ -165,11 +177,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """SM64-style: lui/lui/addiu/ori + decrement-first BSS loop.
         Games: Super Mario 64, Mario Kart 64, GoldenEye 007, Star Fox 64
         """
-        BSS_START = 0x80334C20
-        BSS_SIZE = 0x00024A20
-        MAIN_ADDR = 0x80246B40
-        STACK_TOP = 0x80205A00
-
         words = [
             lui(T0, HI(BSS_START)),
             lui(T1, HI(BSS_SIZE)),
@@ -198,10 +205,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Zelda OoT-style: bss_size loaded via li (addiu $t1,$zero,imm).
         Games: Zelda: Ocarina of Time, Donkey Kong 64, Banjo-Kazooie
         """
-        BSS_START = 0x80006210
-        BSS_SIZE = 0x00004910  # TODO: parse bss_size from li pattern
-        MAIN_ADDR = 0x80000640
-        STACK_TOP = 0x80007050
+        BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from li pattern
 
         words = [
             lui(T0, HI(BSS_START)),
@@ -229,10 +233,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Bomberman-style: bss_size loaded via ori $t1,$zero,imm.
         Games: Zelda: Majora's Mask (EU Beta), Bomberman 64, Bomberman Hero
         """
-        BSS_START = 0x80014E60
-        BSS_SIZE = 0x0001C4A0  # TODO: parse bss_size from li/ori pattern
-        MAIN_ADDR = 0x80001B20
-        STACK_TOP = 0x800233A0
+        BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from li/ori pattern
 
         words = [
             lui(T0, HI(BSS_START)),
@@ -260,11 +261,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Mario Party-style: lui/addiu/lui/addiu + sw/sw/addi/addi/bnez/nop.
         Games: Mario Party 1/2/3, Mario Golf, WCW/nWo Revenge, WWF No Mercy
         """
-        BSS_START = 0x800C5B10
-        BSS_SIZE = 0x00024B60
-        MAIN_ADDR = 0x800006A0
-        STACK_TOP = 0x800F1E40
-
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -293,11 +289,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Ridge Racer 64: traditional_b with nop as jr delay slot.
         Games: Ridge Racer 64
         """
-        BSS_START = 0x80033620
-        BSS_SIZE = 0x00086B40
-        MAIN_ADDR = 0x80001D80
-        STACK_TOP = 0x800345C0
-
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -327,11 +318,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Mario Tennis: traditional_b with ori for $sp lo half.
         Games: Mario Tennis
         """
-        BSS_START = 0x80311240
-        BSS_SIZE = 0x00000020
-        MAIN_ADDR = 0x80300210
-        STACK_TOP = 0x803F6C00
-
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -360,11 +346,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Batman Beyond style: lui order swapped (lui/lui/addiu/addiu).
         Games: Batman Beyond, Daikatana
         """
-        BSS_START = 0x801A7840
-        BSS_SIZE = 0x00081220
-        MAIN_ADDR = 0x8019B5A0
-        STACK_TOP = 0x80224D80
-
         words = [
             lui(T0, HI(BSS_START)),
             lui(T1, HI(BSS_SIZE)),
@@ -394,11 +375,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Paper Mario style: $sp set before BSS loop.
         Games: Paper Mario
         """
-        BSS_START = 0x80097A30
-        BSS_SIZE = 0x00043840
-        MAIN_ADDR = 0x8005D220
-        STACK_TOP = 0x800B4C60
-
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -428,11 +404,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Superman: bss_size uses ori for lo half (lui+ori pair).
         Games: Superman
         """
-        BSS_START = 0x800E2A10
-        BSS_SIZE = 0x00064C80
-        MAIN_ADDR = 0x80005C10
-        STACK_TOP = 0x800E6B40
-
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -462,10 +433,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Tsumi to Batsu: uses bgtz instead of bnez for BSS loop.
         Games: Tsumi to Batsu
         """
-        BSS_START = 0x80064A20
         BSS_SIZE = 0x00043C20  # TODO: parse bss_size for bgtz loop
-        MAIN_ADDR = 0x8004D360
-        STACK_TOP = 0x80066B90
 
         words = [
             lui(T0, HI(BSS_START)),
@@ -500,9 +468,6 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         """Direct jr to main (no BSS clear).
         Games: Star Wars: Shadows of the Empire, SW Episode I: Racer, Turok
         """
-        MAIN_ADDR = 0x80001520
-        STACK_TOP = 0x80110C40
-
         words = [
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -525,11 +490,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """Basic sltu pattern: beq + sltu loop + jal + break.
         Games: Glover, Command & Conquer
         """
-        BSS_START = 0x801F3000
-        BSS_END = 0x802B5400
-        MAIN_ADDR = 0x80136D40
-        STACK_TOP = 0x80256C20
-
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -560,11 +520,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu pattern with ori for $sp lo half.
         Games: Kobe Bryant NBA Courtside, Toy Story 2
         """
-        BSS_START = 0x800D5A40
-        BSS_END = 0x80146210
-        MAIN_ADDR = 0x80000680
-        STACK_TOP = 0x803F4A20
-
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -594,12 +549,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with ori $sp and double BSS clear loop.
         Games: Extreme-G
         """
-        BSS_START = 0x80002000
-        BSS_END = 0x80002000
         BSS2_START = 0x80001000
         BSS2_END = 0x80001000
-        MAIN_ADDR = 0x80047A80
-        STACK_TOP = 0x803F6A10
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -638,11 +589,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with ori $sp, double BSS clear, and $gp setup.
         Games: Tony Hawk's Pro Skater, Namco Museum 64, South Park Rally
         """
-        BSS_START = 0x80013420
-        BSS_END = 0x80017B60
-        MAIN_ADDR = 0x80000920
-        STACK_TOP = 0x803F5C80
-
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -682,9 +628,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with ori $sp, TLB setup after loop (no jal).
         Games: South Park
         """
-        BSS_START = 0x800C2C40
-        BSS_END = 0x800F4A10
-        STACK_TOP = 0x803F5B60
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -723,11 +666,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with double BSS clear, addiu $sp.
         Games: LEGO Racers
         """
-        BSS_START = 0x80033280
-        BSS_END = 0x8003C560
-        MAIN_ADDR = 0x80002740
-        STACK_TOP = 0x80026A40
-
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -765,11 +703,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with double BSS clear and $gp.
         Games: NFL Blitz 2001
         """
-        BSS_START = 0x80054B40
-        BSS_END = 0x80081610
-        MAIN_ADDR = 0x8000A720
-        STACK_TOP = 0x80056A20
-
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -809,11 +742,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu without beq guard, jal + break.
         Games: FIFA 99
         """
-        BSS_START = 0x80015C20
-        BSS_END = 0x8003D480
-        MAIN_ADDR = 0x800006C0
-        STACK_TOP = 0x803F5E20
-
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -841,11 +769,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu where bss_end is computed via addu (bss_start + size).
         Games: NHL Breakaway
         """
-        BSS_START = 0x80064C20
-        BSS_SIZE = 0x00024000
         BSS_END = BSS_SIZE  # TODO: fix bss_end detection for addu(size) case
-        MAIN_ADDR = 0x80003D40
-        STACK_TOP = 0x800D4F20
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -877,9 +801,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         """sltu with TLB setup after BSS clear, no jal.
         Games: Shadow Man
         """
-        BSS_START = 0x8004B040
-        BSS_END = 0x80052D60
-        STACK_TOP = 0x8004C220
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -919,10 +840,6 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         Games: Forsaken 64
         """
         MAGIC = 0xFACEFACE
-        BSS_START = 0x80029A40
-        BSS_END = 0x800B5C60
-        MAIN_ADDR = 0x80001D20
-        STACK_TOP = 0x8003A120
 
         words = [
             lui(SP, HI(STACK_TOP)),
@@ -963,9 +880,6 @@ class TestSn64Entrypoints(unittest.TestCase):
         """SN64 jal to main with ori $sp.
         Games: Madden 64/99/2000/2001/2002
         """
-        MAIN_ADDR = 0x802004B8
-        STACK_TOP = 0x803FFFF0
-
         words = [
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -982,9 +896,6 @@ class TestSn64Entrypoints(unittest.TestCase):
         """SN64 jal with addiu for $sp instead of ori.
         Games: Bust-A-Move '99
         """
-        MAIN_ADDR = 0x80089EA0
-        STACK_TOP = 0x800FB768
-
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -1003,7 +914,6 @@ class TestSn64Entrypoints(unittest.TestCase):
         """SN64 TLB setup, parser breaks at nop gap.
         Games: Turok 2: Seeds of Evil
         """
-        STACK_TOP = 0x803FFFC0
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -1030,7 +940,6 @@ class TestSn64Entrypoints(unittest.TestCase):
         """SN64 TLB with li for loop counter.
         Games: South Park: Chef's Luv Shack
         """
-        STACK_TOP = 0x803FFFF0
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -1062,10 +971,6 @@ class TestSpecialEntrypoints(unittest.TestCase):
         Games: Excitebike 64
         """
         MAGIC = 0xBEEFDEAD
-        BSS_START = 0x80011D80
-        BSS_END = 0x8001BD90
-        MAIN_ADDR = 0x80000450
-        STACK_TOP = 0x803FFEF0
 
         words = [
             lui(T0, UHI(MAGIC)),
@@ -1099,7 +1004,6 @@ class TestSpecialEntrypoints(unittest.TestCase):
         Games: Star Wars: Rogue Squadron
         """
         MAIN_ADDR = 0x80001E90  # TODO: track j target as main_address
-        STACK_TOP = 0x803FFFF0
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -1121,8 +1025,6 @@ class TestSpecialEntrypoints(unittest.TestCase):
         A3_BASE = 0x00400000
         JUMP_TARGET = 0x4000044C
         FN1_ADDR = 0x80000880
-        MAIN_ADDR = 0x80000F08
-        STACK_TOP = 0x803FFFF0
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -1154,10 +1056,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Vigilante 8: sltu loop + j instruction (not tracked as main).
         Games: Vigilante 8
         """
-        BSS_START = 0x80189B60
-        BSS_END = 0x801D9B20
         MAIN_ADDR = 0x8012D260  # TODO: track j target as main_address
-        STACK_TOP = 0x803FFFF0
 
         words = [
             lui(SP, UHI(STACK_TOP)),
@@ -1198,7 +1097,6 @@ class TestSpecialEntrypoints(unittest.TestCase):
         """Army Men: complex boot with multiple jal calls.
         Games: Army Men: Sarge's Heroes
         """
-        STACK_BASE = 0x800C97D8
         RANGE1_START = 0x800B3210
         RANGE1_END = 0x800B57F0
         RANGE2_START = 0x800C97F0
@@ -1210,11 +1108,10 @@ class TestSpecialEntrypoints(unittest.TestCase):
         KSEG0_BASE = 0x80000000
         MAGIC = 0x55555555
         FN1_ADDR = 0x800004A0
-        MAIN_ADDR = 0x80050810
 
         words = [
-            lui(A1, HI(STACK_BASE)),
-            addiu(A1, A1, LO(STACK_BASE)),
+            lui(A1, HI(STACK_TOP)),
+            addiu(A1, A1, LO(STACK_TOP)),
             addu(SP, A1, ZERO),
             addu(FP, A1, ZERO),
             addiu(GP, ZERO, 0xFFFF),
@@ -1287,8 +1184,6 @@ class TestSpecialEntrypoints(unittest.TestCase):
         STACK_FRAME = 0xFFE8
         RA_SLOT = 0x0010
         JUMP_ADDR = 0x80200480
-        MAIN_ADDR = 0x802029F8
-        STACK_TOP = 0x803FFF00
 
         words = [
             lui(V1, UHI(DMA_SRC)),
