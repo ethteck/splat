@@ -174,9 +174,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
     """Traditional entrypoints: BSS clear loop + jr $t2 to main."""
 
     def test_traditional_a(self):
-        """SM64-style: lui/lui/addiu/ori + decrement-first BSS loop.
-        Games: Super Mario 64, Mario Kart 64, GoldenEye 007, Star Fox 64
-        """
+        """lui/lui/addiu/ori + decrement-first BSS loop."""
         words = [
             lui(T0, HI(BSS_START)),
             lui(T1, HI(BSS_SIZE)),
@@ -202,9 +200,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_end_address)
 
     def test_traditional_a_li(self):
-        """Zelda OoT-style: bss_size loaded via li (addiu $t1,$zero,imm).
-        Games: Zelda: Ocarina of Time, Donkey Kong 64, Banjo-Kazooie
-        """
+        """bss_size loaded via li (addiu $t1,$zero,imm)."""
         BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from li pattern
 
         words = [
@@ -230,9 +226,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_size)
 
     def test_traditional_a_li_ori(self):
-        """Bomberman-style: bss_size loaded via ori $t1,$zero,imm.
-        Games: Zelda: Majora's Mask (EU Beta), Bomberman 64, Bomberman Hero
-        """
+        """bss_size loaded via ori $t1,$zero,imm."""
         BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from li/ori pattern
 
         words = [
@@ -258,9 +252,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_size)
 
     def test_traditional_b(self):
-        """Mario Party-style: lui/addiu/lui/addiu + sw/sw/addi/addi/bnez/nop.
-        Games: Mario Party 1/2/3, Mario Golf, WCW/nWo Revenge, WWF No Mercy
-        """
+        """lui/addiu/lui/addiu + sw/sw/addi/addi/bnez/nop."""
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -286,9 +278,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_b_nop(self):
-        """Ridge Racer 64: traditional_b with nop as jr delay slot.
-        Games: Ridge Racer 64
-        """
+        """traditional_b with nop as jr delay slot."""
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -315,9 +305,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_b_ori_sp(self):
-        """Mario Tennis: traditional_b with ori for $sp lo half.
-        Games: Mario Tennis
-        """
+        """traditional_b with ori for $sp lo half."""
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -343,9 +331,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_c(self):
-        """Batman Beyond style: lui order swapped (lui/lui/addiu/addiu).
-        Games: Batman Beyond, Daikatana
-        """
+        """lui order swapped (lui/lui/addiu/addiu)."""
         words = [
             lui(T0, HI(BSS_START)),
             lui(T1, HI(BSS_SIZE)),
@@ -372,9 +358,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_d(self):
-        """Paper Mario style: $sp set before BSS loop.
-        Games: Paper Mario
-        """
+        """$sp set before BSS loop."""
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -401,9 +385,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_d_ori(self):
-        """Superman: bss_size uses ori for lo half (lui+ori pair).
-        Games: Superman
-        """
+        """bss_size uses ori for lo half (lui+ori pair)."""
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
@@ -430,9 +412,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_size.value, BSS_SIZE)
 
     def test_traditional_d_bgtz(self):
-        """Tsumi to Batsu: uses bgtz instead of bnez for BSS loop.
-        Games: Tsumi to Batsu
-        """
+        """uses bgtz instead of bnez for BSS loop."""
         BSS_SIZE = 0x00043C20  # TODO: parse bss_size for bgtz loop
 
         words = [
@@ -465,9 +445,7 @@ class TestTraditionalEntrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_size)
 
     def test_direct_jump(self):
-        """Direct jr to main (no BSS clear).
-        Games: Star Wars: Shadows of the Empire, SW Episode I: Racer, Turok
-        """
+        """Direct jr to main (no BSS clear)."""
         words = [
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -487,9 +465,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
     """Non-traditional entrypoints using sltu-based BSS clearing."""
 
     def test_sltu_clear(self):
-        """Basic sltu pattern: beq + sltu loop + jal + break.
-        Games: Glover, Command & Conquer
-        """
+        """beq + sltu loop + jal + break."""
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -517,9 +493,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 60)
 
     def test_sltu_clear_ori_sp(self):
-        """sltu pattern with ori for $sp lo half.
-        Games: Kobe Bryant NBA Courtside, Toy Story 2
-        """
+        """sltu pattern with ori for $sp lo half."""
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -546,9 +520,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 60)
 
     def test_sltu_clear_ori_sp_double(self):
-        """sltu with ori $sp and double BSS clear loop.
-        Games: Extreme-G
-        """
+        """sltu with ori $sp and double BSS clear loop."""
         BSS2_START = 0x80001000
         BSS2_END = 0x80001000
 
@@ -586,9 +558,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_sltu_clear_ori_sp_double_gp(self):
-        """sltu with ori $sp, double BSS clear, and $gp setup.
-        Games: Tony Hawk's Pro Skater, Namco Museum 64, South Park Rally
-        """
+        """sltu with ori $sp, double BSS clear, and $gp setup."""
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -625,9 +595,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_sltu_clear_ori_sp_t2(self):
-        """sltu with ori $sp, TLB setup after loop (no jal).
-        Games: South Park
-        """
+        """sltu with ori $sp, TLB setup after loop (no jal)."""
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -663,9 +631,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_end_address.value, BSS_END)
 
     def test_sltu_clear_double(self):
-        """sltu with double BSS clear, addiu $sp.
-        Games: LEGO Racers
-        """
+        """sltu with double BSS clear, addiu $sp."""
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -700,9 +666,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.main_address.value, MAIN_ADDR)
 
     def test_sltu_clear_double_gp(self):
-        """sltu with double BSS clear and $gp.
-        Games: NFL Blitz 2001
-        """
+        """sltu with double BSS clear and $gp."""
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -739,9 +703,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.main_address.value, MAIN_ADDR)
 
     def test_sltu_clear_jal(self):
-        """sltu without beq guard, jal + break.
-        Games: FIFA 99
-        """
+        """sltu without beq guard, jal + break."""
         words = [
             lui(SP, HI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -766,9 +728,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 52)
 
     def test_sltu_clear_size(self):
-        """sltu where bss_end is computed via addu (bss_start + size).
-        Games: NHL Breakaway
-        """
+        """sltu where bss_end is computed via addu (bss_start + size)."""
         BSS_END = BSS_SIZE  # TODO: fix bss_end detection for addu(size) case
 
         words = [
@@ -798,9 +758,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 64)
 
     def test_sltu_clear_tlb(self):
-        """sltu with TLB setup after BSS clear, no jal.
-        Games: Shadow Man
-        """
+        """sltu with TLB setup after BSS clear, no jal."""
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -836,9 +794,7 @@ class TestSltuClearEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_end_address.value, BSS_END)
 
     def test_sltu_clear_magic(self):
-        """sltu with magic constant (FACEFACE) store after BSS clear.
-        Games: Forsaken 64
-        """
+        """sltu with magic constant (FACEFACE) store after BSS clear."""
         MAGIC = 0xFACEFACE
 
         words = [
@@ -877,9 +833,7 @@ class TestSn64Entrypoints(unittest.TestCase):
     """SN64 SDK entrypoints (jal to main, often with TLB setup)."""
 
     def test_sn64_jal(self):
-        """SN64 jal to main with ori $sp.
-        Games: Madden 64/99/2000/2001/2002
-        """
+        """SN64 jal to main with ori $sp."""
         words = [
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -893,9 +847,7 @@ class TestSn64Entrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_start_address)
 
     def test_sn64_jal_addiu(self):
-        """SN64 jal with addiu for $sp instead of ori.
-        Games: Bust-A-Move '99
-        """
+        """SN64 jal with addiu for $sp instead of ori."""
         words = [
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -911,9 +863,7 @@ class TestSn64Entrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 20)
 
     def test_sn64_tlb(self):
-        """SN64 TLB setup, parser breaks at nop gap.
-        Games: Turok 2: Seeds of Evil
-        """
+        """SN64 TLB setup, parser breaks at nop gap."""
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -937,9 +887,7 @@ class TestSn64Entrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_sn64_tlb_li(self):
-        """SN64 TLB with li for loop counter.
-        Games: South Park: Chef's Luv Shack
-        """
+        """SN64 TLB with li for loop counter."""
         TLB_COUNT = 0x001E
         TLB_BASE = 0x80000000
 
@@ -967,9 +915,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
     """Unusual entrypoint patterns (Factor 5, Acclaim, etc.)."""
 
     def test_excitebike(self):
-        """Excitebike 64: magic constant + sltu BSS clear + jal + break.
-        Games: Excitebike 64
-        """
+        """magic constant + sltu BSS clear + jal + break."""
         MAGIC = 0xBEEFDEAD
 
         words = [
@@ -1000,9 +946,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertEqual(info.entry_size, 68)
 
     def test_factor5_jump(self):
-        """Factor 5: j instruction (not tracked by parser).
-        Games: Star Wars: Rogue Squadron
-        """
+        """j instruction (not tracked by parser)."""
         MAIN_ADDR = 0x80001E90  # TODO: track j target as main_address
 
         words = [
@@ -1016,9 +960,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_factor5_cache(self):
-        """Factor 5: multiple jals, last one overrides main_address.
-        Games: SW Episode I: Battle for Naboo, Indiana Jones
-        """
+        """multiple jals, last one overrides main_address."""
         CONTROL_FLAG = 0x0001
         A0_MASK = 0x007FE000
         A1_BASE = 0x40000000
@@ -1053,9 +995,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_vigilante8(self):
-        """Vigilante 8: sltu loop + j instruction (not tracked as main).
-        Games: Vigilante 8
-        """
+        """sltu loop + j instruction (not tracked as main)."""
         MAIN_ADDR = 0x8012D260  # TODO: track j target as main_address
 
         words = [
@@ -1080,9 +1020,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertEqual(info.bss_end_address.value, BSS_END)
 
     def test_acclaim_jump(self):
-        """Acclaim: bare j instruction (not recognized by parser).
-        Games: WWF War Zone, WWF Attitude
-        """
+        """bare j instruction (not recognized by parser)."""
         MAIN_ADDR = 0x80000430  # TODO: track j target as main_address
         words = [
             j(MAIN_ADDR),
@@ -1094,9 +1032,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertIsNone(info.stack_top)
 
     def test_army_men(self):
-        """Army Men: complex boot with multiple jal calls.
-        Games: Army Men: Sarge's Heroes
-        """
+        """complex boot with multiple jal calls."""
         RANGE1_START = 0x800B3210
         RANGE1_END = 0x800B57F0
         RANGE2_START = 0x800C97F0
@@ -1155,9 +1091,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertIsNone(info.stack_top)
 
     def test_empty_entry(self):
-        """All nops (no meaningful code at entrypoint).
-        Games: GameShark/Action Replay
-        """
+        """All nops (no meaningful code at entrypoint)."""
         words = [nop()] * 16
         info = parse(words, vram=0x80190000)
         self.assertTrue(info.traditional_entrypoint)
@@ -1167,9 +1101,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertIsNone(info.bss_size)
 
     def test_cheat_device(self):
-        """Cheat device: DMA copy loop + cache flush + j + jal.
-        Games: GameBooster 64
-        """
+        """DMA copy loop + cache flush + j + jal."""
         DMA_SRC = 0xB0C01000
         DMA_DST = 0x80200400
         DMA_SIZE = 0x0003F000
@@ -1229,9 +1161,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
         self.assertEqual(info.stack_top.value, STACK_TOP)
 
     def test_cheat_device_bal(self):
-        """Cheat device variant: bgezal (BAL) + DMA loop.
-        Games: GameShark Pro v2.0
-        """
+        """bgezal (BAL) + DMA loop."""
         DMA_SRC_BASE = 0xB0C00000
         DMA_DST_BASE = 0x80400000
         DMA_COUNT = 0x00040000
