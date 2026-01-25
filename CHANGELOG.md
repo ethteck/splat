@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.37.2
+* Add new option `sort_segments_by_vram_dependency` to help with non-matching builds for binaries with complicated memory layouts. See the wiki for details.
+* Fix create_config missing bss segments due to unsigned LO instructions.
+
 ### 0.37.1
 
 * Fix `make_full_disasm_for_code` not extracting data-only TUs.
