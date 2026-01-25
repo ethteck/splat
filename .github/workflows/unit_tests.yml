@@ -80,3 +80,4 @@ jobs:
         run: |
           ${{ matrix.os.python_venv_activate }}
           python3 test.py
+          python3 test_n64_entrypoints.py

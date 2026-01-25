@@ -162,8 +162,7 @@ class N64EntrypointInfo:
                         register_values[insn.rs.value] + insn.getProcessedImmediate()
                     )
                     completed_pair[insn.rt.value] = True
-                    if not insn.isUnsigned():
-                        lo_assignments[insn.rt.value] = current_rom
+                    lo_assignments[insn.rt.value] = current_rom
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
                         # Try to detect the zero-ing bss algorithm
