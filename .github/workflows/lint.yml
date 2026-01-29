@@ -45,14 +45,8 @@ jobs:
           pip install -r requirements.txt
           pip install types-PyYAML
 
-      - name: ruff split
-        run: ruff check split.py
-
-      - name: ruff create_config
-        run: ruff check create_config.py
-
-      - name: ruff test
-        run: ruff check test.py
+      - name: ruff
+        run: ruff check *.py
 
   mypy_splat_checks:
     runs-on: ubuntu-latest
@@ -94,11 +88,5 @@ jobs:
         pip install -r requirements.txt
         pip install types-PyYAML
 
-    - name: mypy split
-      run: mypy --show-column-numbers --hide-error-context split.py
-
-    - name: mypy create_config
-      run: mypy --show-column-numbers --hide-error-context create_config.py
-
-    - name: mypy test
-      run: mypy --show-column-numbers --hide-error-context test.py
+    - name: mypy
+      run: mypy --show-column-numbers --hide-error-context *.py

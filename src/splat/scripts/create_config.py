@@ -193,53 +193,33 @@ segments:
     file_presets.write_all_files()
 
     # Write reloc_addrs.txt file
-    reloc_addrs = []
-    if (
-        rom.entrypoint_info.main_address is not None
-        and not rom.entrypoint_info.main_address.ori
-        and rom.entrypoint_info.main_address.rom_hi
-        != rom.entrypoint_info.main_address.rom_lo
-    ):
+    reloc_addrs: list[str] = []
+
+    addresses_info: list[tuple[rominfo.EntryAddressInfo | None, str]] = [
+        (rom.entrypoint_info.main_address, "main"),
+        (rom.entrypoint_info.bss_start_address, "main_BSS_START"),
+        (rom.entrypoint_info.bss_size, "main_BSS_SIZE"),
+        (rom.entrypoint_info.bss_end_address, "main_BSS_END"),
+    ]
+
+    for addr_info, sym_name in addresses_info:
+        if addr_info is None :
+            continue
+        if addr_info.ori:
+            # Avoid emitting relocations for `ori`s since `%lo` doesn't support it.
+            continue
+        if addr_info.rom_hi == addr_info.rom_lo:
+            # hi and lo may be the same for the "main" address, i.e. a direct jal.
+            continue
+
         reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.main_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main"
+            f"rom:0x{addr_info.rom_hi:06X} reloc:MIPS_HI16 symbol:{sym_name}"
         )
         reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.main_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main"
-        )
-        reloc_addrs.append("")
-    if (
-        rom.entrypoint_info.bss_start_address is not None
-        and not rom.entrypoint_info.bss_start_address.ori
-    ):
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_start_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_START"
-        )
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_start_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_START"
-        )
-        reloc_addrs.append("")
-    if (
-        rom.entrypoint_info.bss_size is not None
-        and not rom.entrypoint_info.bss_size.ori
-    ):
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_size.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_SIZE"
-        )
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_size.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_SIZE"
+            f"rom:0x{addr_info.rom_lo:06X} reloc:MIPS_LO16 symbol:{sym_name}"
         )
         reloc_addrs.append("")
-    if (
-        rom.entrypoint_info.bss_end_address is not None
-        and not rom.entrypoint_info.bss_end_address.ori
-    ):
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_end_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_END"
-        )
-        reloc_addrs.append(
-            f"rom:0x{rom.entrypoint_info.bss_end_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_END"
-        )
-        reloc_addrs.append("")
+
     if (
         rom.entrypoint_info.stack_top is not None
         and not rom.entrypoint_info.stack_top.ori
