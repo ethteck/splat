@@ -203,7 +203,7 @@ segments:
     ]
 
     for addr_info, sym_name in addresses_info:
-        if addr_info is None :
+        if addr_info is None:
             continue
         if addr_info.ori:
             # Avoid emitting relocations for `ori`s since `%lo` doesn't support it.

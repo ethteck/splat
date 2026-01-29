@@ -46,7 +46,7 @@ jobs:
           pip install types-PyYAML
 
       - name: ruff
-        run: ruff check *.py
+        run: ruff check .
 
   mypy_splat_checks:
     runs-on: ubuntu-latest
