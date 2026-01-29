@@ -78,10 +78,10 @@ class EntryAddressInfo:
 
     @staticmethod
     def new(
-        value: Optional[int], hi: Optional[int], lo: Optional[int], ori: bool
+        value: Optional[int], hi: Optional[int], lo: Optional[int], ori: Optional[int]
     ) -> Optional["EntryAddressInfo"]:
         if value is not None and hi is not None and lo is not None:
-            return EntryAddressInfo(value, hi, lo, ori)
+            return EntryAddressInfo(value, hi, lo, ori == lo)
         return None
 
 
@@ -125,7 +125,7 @@ class N64EntrypointInfo:
         # We need to track if something was paired using an ori instead of an
         # addiu or similar, because if that's the case we can't emit normal
         # relocations in the generated symbol_addrs file for it.
-        ori_assignments: List[bool] = [False for _ in range(32)]
+        ori_assignments: List[Optional[int]] = [None for _ in range(32)]
 
         register_bss_address: Optional[int] = None
         register_bss_size: Optional[int] = None
@@ -171,7 +171,7 @@ class N64EntrypointInfo:
                     completed_pair[insn.rt.value] = True
                     lo_assignments[insn.rt.value] = current_rom
                     if insn.isUnsigned():
-                        ori_assignments[insn.rt.value] = True
+                        ori_assignments[insn.rt.value] = current_rom
                         ori_entrypoint = True
                 elif insn.doesStore():
                     if insn.rt == rabbitizer.RegGprO32.zero:
@@ -281,7 +281,7 @@ class N64EntrypointInfo:
                 register_values[register_main_address],
                 hi_assignments[register_main_address],
                 lo_assignments[register_main_address],
-                    ori_assignments[register_main_address],
+                ori_assignments[register_main_address],
             )
         else:
             main_address = None
@@ -290,7 +290,7 @@ class N64EntrypointInfo:
             register_values[rabbitizer.RegGprO32.sp.value],
             hi_assignments[rabbitizer.RegGprO32.sp.value],
             lo_assignments[rabbitizer.RegGprO32.sp.value],
-                    ori_assignments[rabbitizer.RegGprO32.sp.value],
+            ori_assignments[rabbitizer.RegGprO32.sp.value],
         )
 
         if not traditional_entrypoint:
