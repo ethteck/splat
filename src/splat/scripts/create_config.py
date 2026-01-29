@@ -194,7 +194,7 @@ segments:
 
     # Write reloc_addrs.txt file
     reloc_addrs = []
-    if rom.entrypoint_info.bss_start_address is not None:
+    if rom.entrypoint_info.bss_start_address is not None and not rom.entrypoint_info.bss_start_address.ori:
         reloc_addrs.append(
             f"rom:0x{rom.entrypoint_info.bss_start_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_START"
         )
@@ -202,7 +202,7 @@ segments:
             f"rom:0x{rom.entrypoint_info.bss_start_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_START"
         )
         reloc_addrs.append("")
-    if rom.entrypoint_info.bss_size is not None:
+    if rom.entrypoint_info.bss_size is not None and not rom.entrypoint_info.bss_size.ori:
         reloc_addrs.append(
             f"rom:0x{rom.entrypoint_info.bss_size.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_SIZE"
         )
@@ -210,7 +210,7 @@ segments:
             f"rom:0x{rom.entrypoint_info.bss_size.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_SIZE"
         )
         reloc_addrs.append("")
-    if rom.entrypoint_info.bss_end_address is not None:
+    if rom.entrypoint_info.bss_end_address is not None and not rom.entrypoint_info.bss_end_address.ori:
         reloc_addrs.append(
             f"rom:0x{rom.entrypoint_info.bss_end_address.rom_hi:06X} reloc:MIPS_HI16 symbol:main_BSS_END"
         )
@@ -218,7 +218,7 @@ segments:
             f"rom:0x{rom.entrypoint_info.bss_end_address.rom_lo:06X} reloc:MIPS_LO16 symbol:main_BSS_END"
         )
         reloc_addrs.append("")
-    if rom.entrypoint_info.stack_top is not None:
+    if rom.entrypoint_info.stack_top is not None and not rom.entrypoint_info.stack_top.ori:
         reloc_addrs.append(
             '// This entry corresponds to the "stack top", which is the end of the array used as the stack for the main segment.'
         )
