@@ -1,6 +1,11 @@
 # splat Release Notes
 
+### 0.37.3
+
+* create_config: Avoid emitting relocations for addresses paired by using `ori`
+
 ### 0.37.2
+
 * Add new option `sort_segments_by_vram_dependency` to help with non-matching builds for binaries with complicated memory layouts. See the wiki for details.
 * Fix create_config missing bss segments due to unsigned LO instructions.
 
