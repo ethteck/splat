@@ -195,7 +195,7 @@ segments:
     # Write reloc_addrs.txt file
     reloc_addrs: list[str] = []
 
-    addresses_info: list[tuple[rominfo.EntryAddressInfo | None, str]] = [
+    addresses_info: list[tuple[Optional[rominfo.EntryAddressInfo], str]] = [
         (rom.entrypoint_info.main_address, "main"),
         (rom.entrypoint_info.bss_start_address, "main_BSS_START"),
         (rom.entrypoint_info.bss_size, "main_BSS_SIZE"),
