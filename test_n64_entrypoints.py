@@ -180,10 +180,10 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             lui(T1, UHI(BSS_SIZE)),
             addiu(T0, T0, LO(BSS_START)),
             ori(T1, T1, LO(BSS_SIZE)),
-            addi(T1, T1, 0xFFF8),
+            addi(T1, T1, -0x8),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
-            bnez(T1, 0xFFFC),
+            bnez(T1, -0x4),
             addi(T0, T0, 8),
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -192,11 +192,26 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             addiu(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words, vram=0x80246000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertTrue(info.bss_size.ori)
+
         self.assertIsNone(info.bss_end_address)
 
     def test_traditional_a_li(self):
@@ -207,10 +222,10 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             addiu(T1, ZERO, LO(BSS_SIZE)),
-            addi(T1, T1, 0xFFF8),
+            addi(T1, T1, -0x8),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
-            bnez(T1, 0xFFFC),
+            bnez(T1, -0x4),
             addi(T0, T0, 8),
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -219,24 +234,36 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             addiu(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
         self.assertIsNone(info.bss_size)
 
     def test_traditional_a_li_ori(self):
         """bss_size loaded via ori $t1,$zero,imm."""
-        BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from li/ori pattern
+        BSS_SIZE = BSS_SIZE_SMALL  # TODO: parse bss_size from plain ori pattern
 
         words = [
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             ori(T1, ZERO, LO(BSS_SIZE)),
-            addi(T1, T1, 0xFFF8),
+            addi(T1, T1, -0x8),
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
-            bnez(T1, 0xFFFC),
+            bnez(T1, -0x4),
             addi(T0, T0, 8),
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -245,10 +272,22 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             addiu(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
         self.assertIsNone(info.bss_size)
 
     def test_traditional_b(self):
@@ -261,8 +300,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             addiu(T2, T2, LO(MAIN_ADDR)),
@@ -271,11 +310,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             addiu(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertFalse(info.bss_size.ori)
 
     def test_traditional_b_nop(self):
         """traditional_b with nop as jr delay slot."""
@@ -287,8 +340,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             addiu(T2, T2, LO(MAIN_ADDR)),
@@ -298,11 +351,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80000450)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertFalse(info.bss_size.ori)
 
     def test_traditional_b_ori_sp(self):
         """traditional_b with ori for $sp lo half."""
@@ -314,8 +381,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             addiu(T2, T2, LO(MAIN_ADDR)),
@@ -324,11 +391,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             ori(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words, vram=0x80300000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertFalse(info.bss_size.ori)
 
     def test_traditional_c(self):
         """lui order swapped (lui/lui/addiu/addiu)."""
@@ -340,8 +421,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             lui(SP, HI(STACK_TOP)),
@@ -351,11 +432,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80180000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertFalse(info.bss_size.ori)
 
     def test_traditional_d(self):
         """$sp set before BSS loop."""
@@ -367,8 +462,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -378,11 +473,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80125C00)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertFalse(info.bss_size.ori)
 
     def test_traditional_d_ori(self):
         """bss_size uses ori for lo half (lui+ori pair)."""
@@ -394,8 +503,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bnez(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bnez(T1, -0x5),
             nop(),
             lui(SP, HI(STACK_TOP)),
             addiu(SP, SP, LO(STACK_TOP)),
@@ -405,11 +514,25 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_size is not None
         self.assertEqual(info.bss_size.value, BSS_SIZE)
+        self.assertTrue(info.bss_size.ori)
 
     def test_traditional_d_bgtz(self):
         """uses bgtz instead of bnez for BSS loop."""
@@ -423,8 +546,8 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             sw(ZERO, 0, T0),
             sw(ZERO, 4, T0),
             addi(T0, T0, 8),
-            addi(T1, T1, 0xFFF8),
-            bgtz(T1, 0xFFFB),
+            addi(T1, T1, -0x8),
+            bgtz(T1, -0x5),
             nop(),
             lui(T2, HI(MAIN_ADDR)),
             addiu(T2, T2, LO(MAIN_ADDR)),
@@ -438,10 +561,22 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80025C00)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
         self.assertIsNone(info.bss_size)
 
     def test_direct_jump(self):
@@ -454,10 +589,20 @@ class TestTraditionalEntrypoints(unittest.TestCase):
             addiu(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
         self.assertIsNone(info.bss_start_address)
+
         self.assertIsNone(info.bss_size)
 
 
@@ -477,19 +622,34 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
             break_(),
         ]
         info = parse(words, vram=0x80100000)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
         self.assertIsNone(info.bss_size)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
         self.assertEqual(info.entry_size, 60)
 
     def test_sltu_clear_ori_sp(self):
@@ -505,18 +665,33 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
             break_(),
         ]
         info = parse(words, vram=0x80100400)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
         self.assertEqual(info.entry_size, 60)
 
     def test_sltu_clear_ori_sp_double(self):
@@ -535,8 +710,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(T0, HI(BSS2_START)),
             addiu(T0, T0, LO(BSS2_START)),
             lui(T1, HI(BSS2_END)),
@@ -545,17 +720,31 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
         ]
         info = parse(words, vram=0x8004B400)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
     def test_sltu_clear_ori_sp_double_gp(self):
         """sltu with ori $sp, double BSS clear, and $gp setup."""
@@ -570,8 +759,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             lui(T1, HI(BSS_START)),
@@ -580,19 +769,33 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(GP, 0x0000),
             addiu(GP, GP, 0x0000),
             jal(MAIN_ADDR),
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
     def test_sltu_clear_ori_sp_t2(self):
         """sltu with ori $sp, TLB setup after loop (no jal)."""
@@ -610,8 +813,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(T2, T0, T1),
-            bnez(T2, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(T2, -0x3),
+            sw(ZERO, -0x4, T0),
             addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
@@ -624,11 +827,23 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
 
     def test_sltu_clear_double(self):
         """sltu with double BSS clear, addiu $sp."""
@@ -643,8 +858,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             lui(T1, HI(BSS_START)),
@@ -653,17 +868,31 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
 
     def test_sltu_clear_double_gp(self):
         """sltu with double BSS clear and $gp."""
@@ -678,8 +907,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             lui(T1, HI(BSS_START)),
@@ -688,19 +917,33 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(GP, 0x0000),
             addiu(GP, GP, 0x0000),
             jal(MAIN_ADDR),
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
 
     def test_sltu_clear_jal(self):
         """sltu without beq guard, jal + break."""
@@ -713,18 +956,32 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             addiu(T1, T1, LO(BSS_END)),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
             break_(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
         self.assertEqual(info.entry_size, 52)
 
     def test_sltu_clear_size(self):
@@ -743,18 +1000,32 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
             break_(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
         self.assertEqual(info.entry_size, 64)
 
     def test_sltu_clear_tlb(self):
@@ -773,8 +1044,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             addiu(A0, ZERO, TLB_COUNT),
             mfc0(T0, 10),
             mtc0(A0, 0),
@@ -787,11 +1058,23 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
 
     def test_sltu_clear_magic(self):
         """sltu with magic constant (FACEFACE) store after BSS clear."""
@@ -808,8 +1091,8 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             lui(T0, HI(BSS_START)),
             addiu(T0, T0, LO(BSS_START)),
             lui(AT, UHI(MAGIC)),
@@ -821,11 +1104,25 @@ class TestSltuClearEntrypoints(unittest.TestCase):
             break_(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
         self.assertEqual(info.entry_size, 84)
 
 
@@ -841,9 +1138,18 @@ class TestSn64Entrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80200400)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
         self.assertIsNone(info.bss_start_address)
 
     def test_sn64_jal_addiu(self):
@@ -856,9 +1162,18 @@ class TestSn64Entrypoints(unittest.TestCase):
             break_(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertFalse(info.stack_top.ori)
+
         self.assertIsNone(info.bss_start_address)
         self.assertEqual(info.entry_size, 20)
 
@@ -882,9 +1197,15 @@ class TestSn64Entrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
     def test_sn64_tlb_li(self):
         """SN64 TLB with li for loop counter."""
@@ -906,9 +1227,15 @@ class TestSn64Entrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80300000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
 
 class TestSpecialEntrypoints(unittest.TestCase):
@@ -931,18 +1258,32 @@ class TestSpecialEntrypoints(unittest.TestCase):
             nop(),
             addiu(T0, T0, 4),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
-            sw(ZERO, 0xFFFC, T0),
+            bnez(AT, -0x3),
+            sw(ZERO, -0x4, T0),
             jal(MAIN_ADDR),
             nop(),
             break_(),
         ]
         info = parse(words, vram=0x80100400)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
         self.assertEqual(info.entry_size, 68)
 
     def test_factor5_jump(self):
@@ -955,9 +1296,19 @@ class TestSpecialEntrypoints(unittest.TestCase):
             ori(SP, SP, LO(STACK_TOP)),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        self.assertIsNone(info.bss_start_address)
+        self.assertIsNone(info.bss_size)
+        self.assertIsNone(info.bss_end_address)
 
     def test_factor5_cache(self):
         """multiple jals, last one overrides main_address."""
@@ -990,9 +1341,17 @@ class TestSpecialEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
     def test_vigilante8(self):
         """sltu loop + j instruction (not tracked as main)."""
@@ -1007,17 +1366,29 @@ class TestSpecialEntrypoints(unittest.TestCase):
             addiu(V1, V1, LO(BSS_END)),
             sw(ZERO, 0, V0),
             sltu(AT, V0, V1),
-            bnez(AT, 0xFFFD),
+            bnez(AT, -0x3),
             addiu(V0, V0, 4),
             j(MAIN_ADDR),
             nop(),
         ]
         info = parse(words, vram=0x80125800)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
+
+        assert info.bss_start_address is not None
         self.assertEqual(info.bss_start_address.value, BSS_START)
+        self.assertFalse(info.bss_start_address.ori)
+
+        assert info.bss_end_address is not None
         self.assertEqual(info.bss_end_address.value, BSS_END)
+        self.assertFalse(info.bss_end_address.ori)
 
     def test_acclaim_jump(self):
         """bare j instruction (not recognized by parser)."""
@@ -1027,8 +1398,12 @@ class TestSpecialEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
         self.assertIsNone(info.stack_top)
 
     def test_army_men(self):
@@ -1050,7 +1425,7 @@ class TestSpecialEntrypoints(unittest.TestCase):
             addiu(A1, A1, LO(STACK_TOP)),
             addu(SP, A1, ZERO),
             addu(FP, A1, ZERO),
-            addiu(GP, ZERO, 0xFFFF),
+            addiu(GP, ZERO, -0x1),
             lui(A0, HI(RANGE1_START)),
             addiu(A0, A0, LO(RANGE1_START)),
             lui(A0, HI(RANGE1_END)),
@@ -1086,18 +1461,30 @@ class TestSpecialEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
         self.assertIsNone(info.stack_top)
 
     def test_empty_entry(self):
         """All nops (no meaningful code at entrypoint)."""
         words = [nop()] * 16
         info = parse(words, vram=0x80190000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
         self.assertIsNone(info.stack_top)
+
         self.assertIsNone(info.bss_start_address)
+
         self.assertIsNone(info.bss_size)
 
     def test_cheat_device(self):
@@ -1129,22 +1516,22 @@ class TestSpecialEntrypoints(unittest.TestCase):
             sw(AT, 0, V0),
             addiu(V1, V1, 4),
             addiu(V0, V0, 4),
-            addiu(T0, T0, 0xFFFC),
-            bgtz(T0, 0xFFF9),
+            addiu(T0, T0, -0x4),
+            bgtz(T0, -0x7),
             nop(),
             lui(T0, UHI(CACHE1_START)),
             addiu(T1, T0, CACHE1_MID_OFFSET),
             addiu(T1, T1, CACHE1_END_ADJUST),
             cache(1, 0, T0),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
+            bnez(AT, -0x3),
             addiu(T0, T0, CACHE1_LINE),
             lui(T0, UHI(CACHE2_START)),
             addiu(T1, T0, CACHE2_MID_OFFSET),
             addiu(T1, T1, CACHE2_END_ADJUST),
             cache(0, 0, T0),
             sltu(AT, T0, T1),
-            bnez(AT, 0xFFFD),
+            bnez(AT, -0x3),
             addiu(T0, T0, CACHE2_LINE),
             lui(SP, UHI(STACK_TOP)),
             ori(SP, SP, LO(STACK_TOP)),
@@ -1156,9 +1543,17 @@ class TestSpecialEntrypoints(unittest.TestCase):
             nop(),
         ]
         info = parse(words, vram=0x80280000)
+
         self.assertFalse(info.traditional_entrypoint)
+        self.assertTrue(info.ori_entrypoint)
+
+        assert info.main_address is not None
         self.assertEqual(info.main_address.value, MAIN_ADDR)
+        self.assertFalse(info.main_address.ori)
+
+        assert info.stack_top is not None
         self.assertEqual(info.stack_top.value, STACK_TOP)
+        self.assertTrue(info.stack_top.ori)
 
     def test_cheat_device_bal(self):
         """bgezal (BAL) + DMA loop."""
@@ -1179,13 +1574,17 @@ class TestSpecialEntrypoints(unittest.TestCase):
             sw(AT, 0, V0),
             addiu(V1, V1, 4),
             addiu(V0, V0, 4),
-            addiu(T0, T0, 0xFFFC),
-            bgtz(T0, 0xFFF7),
+            addiu(T0, T0, -0x4),
+            bgtz(T0, -0x9),
             nop(),
         ]
         info = parse(words, vram=0x80401000)
+
         self.assertTrue(info.traditional_entrypoint)
+        self.assertFalse(info.ori_entrypoint)
+
         self.assertIsNone(info.main_address)
+
         self.assertIsNone(info.stack_top)
 
 
