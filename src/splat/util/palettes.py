@@ -1,17 +1,22 @@
-from typing import Dict
+from __future__ import annotations
 
-from ..util import log
+from typing import Dict, TYPE_CHECKING
 
-from ..segtypes.common.group import CommonSegGroup
-from ..segtypes.n64.ci import N64SegCi
-from ..segtypes.n64.palette import N64SegPalette
+from splat.util import log
 
-global_ids: Dict[str, N64SegPalette]
+from splat.segtypes.common.group import CommonSegGroup
+from splat.segtypes.n64.ci import N64SegCi
+from splat.segtypes.n64.palette import N64SegPalette
+
+if TYPE_CHECKING:
+    from splat.segtypes.segment import Segment
+
+global_ids: Dict[str, N64SegPalette] = {}
 
 
 # Resolve Raster#palette and Palette#raster links
-def initialize(all_segments):
-    def collect_global_ids(segments):
+def initialize(all_segments: list[Segment]) -> None:
+    def collect_global_ids(segments: list[Segment]) -> None:
         for segment in segments:
             if isinstance(segment, N64SegPalette):
                 if segment.global_id is not None:
@@ -20,7 +25,7 @@ def initialize(all_segments):
             if isinstance(segment, CommonSegGroup):
                 collect_global_ids(segment.subsegments)
 
-    def process(segments):
+    def process(segments: list[Segment]) -> None:
         raster_map: Dict[str, N64SegCi] = {}
         palette_map: Dict[str, N64SegPalette] = {}
 
@@ -73,7 +78,7 @@ def initialize(all_segments):
                 log.error(f"Palette {pal.name} has no linked rasters")
 
     global global_ids
-    global_ids = {}
+    global_ids.clear()
 
     collect_global_ids(all_segments)
 

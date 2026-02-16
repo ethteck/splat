@@ -1,5 +1,5 @@
-from ...segtypes.segment import Segment
+from splat.segtypes.segment import Segment
 
 
 class CommonSegment(Segment):
-    pass
+    __slots__ = ()

@@ -1,22 +1,28 @@
-from typing import List, Optional
+from __future__ import annotations
 
-from ...util import log
+from typing import TYPE_CHECKING, override
 
-from .segment import CommonSegment
-from ..segment import empty_statistics, Segment, SegmentStatistics
+from splat.util import log
+
+from splat.segtypes.common.segment import CommonSegment
+from splat.segtypes.segment import empty_statistics, Segment, SegmentStatistics
+
+if TYPE_CHECKING:
+    from splat.util.vram_classes import SerializedSegmentData
+    from splat.segtypes.linker_entry import LinkerEntry
 
 
 class CommonSegGroup(CommonSegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
-        args: list,
-        yaml,
-    ):
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegmentData | list[str],
+    ) -> None:
         super().__init__(
             rom_start,
             rom_end,
@@ -27,9 +33,10 @@ class CommonSegGroup(CommonSegment):
             yaml=yaml,
         )
 
-        self.subsegments: List[Segment] = self.parse_subsegments(yaml)
+        # TODO: Fix
+        self.subsegments: list[Segment] = self.parse_subsegments(yaml)  # type: ignore[arg-type]
 
-    def get_next_seg_start(self, i, subsegment_yamls) -> Optional[int]:
+    def get_next_seg_start(self, i: int, subsegment_yamls: list[SerializedSegmentData | list[str]]) -> int | None:
         j = i + 1
         while j < len(subsegment_yamls):
             ret, is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
@@ -40,13 +47,13 @@ class CommonSegGroup(CommonSegment):
         # Fallback
         return self.rom_end
 
-    def parse_subsegments(self, yaml) -> List[Segment]:
-        ret: List[Segment] = []
+    def parse_subsegments(self, yaml: dict[str, list[SerializedSegmentData | list[str]]]) -> list[Segment]:
+        ret: list[Segment] = []
 
         if not yaml or "subsegments" not in yaml:
             return ret
 
-        prev_start: Optional[int] = -1
+        prev_start: int | None = -1
         last_rom_end = 0
 
         for i, subsegment_yaml in enumerate(yaml["subsegments"]):
@@ -71,7 +78,7 @@ class CommonSegGroup(CommonSegment):
             # First, try to get the end address from the next segment's start address
             # Second, try to get the end address from the estimated size of this segment
             # Third, try to get the end address from the next segment with a start address
-            end: Optional[int] = None
+            end: int | None = None
             if i < len(yaml["subsegments"]) - 1:
                 end, end_is_auto_segment = Segment.parse_segment_start(
                     yaml["subsegments"][i + 1]
@@ -103,8 +110,12 @@ class CommonSegGroup(CommonSegment):
                 # and it has a rom size of zero
                 end = last_rom_end
 
-            segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, self, vram
+            segment: Segment = segment_class.from_yaml(
+                subsegment_yaml,
+                start,
+                end,
+                self,
+                vram,
             )
             if segment.special_vram_segment:
                 self.special_vram_segment = True
@@ -137,15 +148,15 @@ class CommonSegGroup(CommonSegment):
                 stats[ty] = stats[ty].merge(info)
         return stats
 
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> list[LinkerEntry]:
         return [entry for sub in self.subsegments for entry in sub.get_linker_entries()]
 
-    def scan(self, rom_bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         for sub in self.subsegments:
             if sub.should_scan():
                 sub.scan(rom_bytes)
 
-    def split(self, rom_bytes):
+    def split(self, rom_bytes: bytes) -> None:
         for sub in self.subsegments:
             if sub.should_split():
                 sub.split(rom_bytes)
@@ -156,7 +167,8 @@ class CommonSegGroup(CommonSegment):
     def should_scan(self) -> bool:
         return self.extract
 
-    def cache(self):
+    @override
+    def cache(self) -> list[tuple[SerializedSegmentData | list[str], int | None]]:  # type: ignore[override]
         c = []
 
         for sub in self.subsegments:
@@ -164,7 +176,7 @@ class CommonSegGroup(CommonSegment):
 
         return c
 
-    def get_subsegment_for_ram(self, addr: int) -> Optional[Segment]:
+    def get_subsegment_for_ram(self, addr: int) -> Segment | None:
         for sub in self.subsegments:
             if sub.contains_vram(addr):
                 return sub
@@ -175,8 +187,8 @@ class CommonSegGroup(CommonSegment):
         return None
 
     def get_next_subsegment_for_ram(
-        self, addr: int, current_subseg_index: Optional[int]
-    ) -> Optional[Segment]:
+        self, addr: int, current_subseg_index: int | None
+    ) -> Segment | None:
         """
         Returns the first subsegment which comes after the specified address,
         or None in case this address belongs to the last subsegment of this group
@@ -195,7 +207,7 @@ class CommonSegGroup(CommonSegment):
     def pair_subsegments_to_other_segment(
         self,
         other_segment: "CommonSegGroup",
-    ):
+    ) -> None:
         # Pair cousins with the same name
         for segment in self.subsegments:
             for sibling in other_segment.subsegments:

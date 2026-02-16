@@ -1,40 +1,43 @@
-from colorama import Fore, Style
-from typing import Dict, Optional
+from __future__ import annotations
 
-from . import log
+from colorama import Fore, Style
+
+from splat.util import log
 
 
 def fmt_size(size: int) -> str:
     if size > 1000000:
-        return str(size // 1000000) + " MB"
+        return f"{size // 1000000} MB"
     elif size > 1000:
-        return str(size // 1000) + " KB"
+        return f"{size // 1000} KB"
     else:
-        return str(size) + " B"
+        return f"{size} B"
 
 
 class Statistics:
-    def __init__(self):
-        self.seg_sizes: Dict[str, int] = {}
-        self.seg_split: Dict[str, int] = {}
-        self.seg_cached: Dict[str, int] = {}
+    __slots__ = ("seg_sizes", "seg_split", "seg_cached")
+    
+    def __init__(self) -> None:
+        self.seg_sizes: dict[str, int] = {}
+        self.seg_split: dict[str, int] = {}
+        self.seg_cached: dict[str, int] = {}
 
-    def add_size(self, typ: str, size: Optional[int]):
+    def add_size(self, typ: str, size: int | None) -> None:
         if typ not in self.seg_sizes:
             self.seg_sizes[typ] = 0
         self.seg_sizes[typ] += 0 if size is None else size
 
-    def count_split(self, typ: str, count: int = 1):
+    def count_split(self, typ: str, count: int = 1) -> None:
         if typ not in self.seg_split:
             self.seg_split[typ] = 0
         self.seg_split[typ] += count
 
-    def count_cached(self, typ: str, count: int = 1):
+    def count_cached(self, typ: str, count: int = 1) -> None:
         if typ not in self.seg_cached:
             self.seg_cached[typ] = 0
         self.seg_cached[typ] += count
 
-    def print_statistics(self, total_size: int):
+    def print_statistics(self, total_size: int) -> None:
         unk_size = self.seg_sizes.get("unk", 0)
         rest_size = 0
 

@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from math import ceil
 
-from . import options
+from splat.util import options
 
 
 # RRRRRGGG GGBBBBBA
-def unpack_color(data):
+def unpack_color(data: bytes) -> tuple[int, int, int, int]:
     s = int.from_bytes(data[0:2], byteorder=options.opts.endianness)
 
     r = (s >> 11) & 0x1F

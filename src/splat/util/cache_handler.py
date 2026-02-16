@@ -1,14 +1,16 @@
-import pickle
-from typing import Any, Dict
+from __future__ import annotations
 
-from . import options, log
-from ..segtypes.common.segment import Segment
+import pickle
+from typing import Any
+
+from splat.util import options, log
+from splat.segtypes.segment import Segment
 
 
 class Cache:
-    def __init__(self, config: Dict[str, Any], use_cache: bool, verbose: bool):
+    def __init__(self, config: dict[str, Any], use_cache: bool, verbose: bool) -> None:
         self.use_cache: bool = use_cache
-        self.cache: Dict[str, Any] = {}
+        self.cache: dict[str, Any] = {}
 
         # Load cache
         if use_cache and options.opts.cache_path.exists():
@@ -32,7 +34,7 @@ class Cache:
                 "__options__": config.get("options"),
             }
 
-    def save(self, verbose: bool):
+    def save(self, verbose: bool) -> None:
         if self.cache != {} and self.use_cache:
             if verbose:
                 log.write("Writing cache")
@@ -42,8 +44,12 @@ class Cache:
 
     def check_cache_hit(self, segment: Segment, update_on_miss: bool) -> bool:
         if self.use_cache:
+            # types: no-untyped-call error: Call to untyped function "cache" in typed context
             cached = segment.cache()
+            # types: ^^^^^^^^^^^^^^^
+            # types: no-untyped-call error: Call to untyped function "unique_id" in typed context
             segment_id = segment.unique_id()
+# types:                 ^^^^^^^^^^^^^^^^^^^
 
             if cached == self.cache.get(segment_id):
                 # Cache hit

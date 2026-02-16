@@ -1,94 +1,99 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import spimdisasm
 
-from ..util import options, symbols
+from splat.util import options, symbols
 
 
 class DisassemblerSection(ABC):
+    __slots__ = ()
+    
     @abstractmethod
-    def disassemble(self):
+    def disassemble(self) -> str:
         raise NotImplementedError("disassemble")
 
     @abstractmethod
-    def analyze(self):
+    def analyze(self) -> None:
         raise NotImplementedError("analyze")
 
     @abstractmethod
-    def set_comment_offset(self, rom_start: int):
+    def set_comment_offset(self, rom_start: int) -> None:
         raise NotImplementedError("set_comment_offset")
 
     @abstractmethod
     def make_bss_section(
         self,
-        rom_start,
-        rom_end,
-        vram_start,
-        bss_end,
-        name,
-        segment_rom_start,
-        exclusive_ram_id,
-    ):
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        bss_end: int,
+        name: str,
+        segment_rom_start: int,
+        exclusive_ram_id: str | None,
+    ) -> None:
         raise NotImplementedError("make_bss_section")
 
     @abstractmethod
     def make_data_section(
         self,
-        rom_start,
-        rom_end,
-        vram_start,
-        name,
-        rom_bytes,
-        segment_rom_start,
-        exclusive_ram_id,
-    ):
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        name: str,
+        rom_bytes: bytes,
+        segment_rom_start: int,
+        exclusive_ram_id: str | None,
+    ) -> None:
         raise NotImplementedError("make_data_section")
 
     @abstractmethod
-    def get_section(self):
+    def get_section(self) -> spimdisasm.mips.sections.SectionBase | None:
         raise NotImplementedError("get_section")
 
     @abstractmethod
     def make_rodata_section(
         self,
-        rom_start,
-        rom_end,
-        vram_start,
-        name,
-        rom_bytes,
-        segment_rom_start,
-        exclusive_ram_id,
-    ):
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        name: str,
+        rom_bytes: bytes,
+        segment_rom_start: int,
+        exclusive_ram_id: str | None,
+    ) -> None:
         raise NotImplementedError("make_rodata_section")
 
     @abstractmethod
     def make_text_section(
         self,
-        rom_start,
-        rom_end,
-        vram_start,
-        name,
-        rom_bytes,
-        segment_rom_start,
-        exclusive_ram_id,
-    ):
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        name: str,
+        rom_bytes: bytes,
+        segment_rom_start: int,
+        exclusive_ram_id: str | None,
+    ) -> None:
         raise NotImplementedError("make_text_section")
 
 
 class SpimdisasmDisassemberSection(DisassemblerSection):
-    def __init__(self):
-        self.spim_section: Optional[spimdisasm.mips.sections.SectionBase] = None
+    __slots__ = ("spim_section",)
+
+    def __init__(self) -> None:
+        self.spim_section: spimdisasm.mips.sections.SectionBase | None = None
 
     def disassemble(self) -> str:
         assert self.spim_section is not None
         return self.spim_section.disassemble()
 
-    def analyze(self):
+    def analyze(self) -> None:
         assert self.spim_section is not None
         self.spim_section.analyze()
 
-    def set_comment_offset(self, rom_start: int):
+    def set_comment_offset(self, rom_start: int) -> None:
         assert self.spim_section is not None
         self.spim_section.setCommentOffset(rom_start)
 
@@ -100,8 +105,8 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         bss_end: int,
         name: str,
         segment_rom_start: int,
-        exclusive_ram_id,
-    ):
+        exclusive_ram_id: str | None,
+    ) -> None:
         self.spim_section = spimdisasm.mips.sections.SectionBss(
             symbols.spim_context,
             rom_start,
@@ -121,8 +126,8 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         name: str,
         rom_bytes: bytes,
         segment_rom_start: int,
-        exclusive_ram_id,
-    ):
+        exclusive_ram_id: str | None,
+    ) -> None:
         self.spim_section = spimdisasm.mips.sections.SectionData(
             symbols.spim_context,
             rom_start,
@@ -134,7 +139,7 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
             exclusive_ram_id,
         )
 
-    def get_section(self) -> Optional[spimdisasm.mips.sections.SectionBase]:
+    def get_section(self) -> spimdisasm.mips.sections.SectionBase | None:
         return self.spim_section
 
     def make_rodata_section(
@@ -145,8 +150,8 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         name: str,
         rom_bytes: bytes,
         segment_rom_start: int,
-        exclusive_ram_id,
-    ):
+        exclusive_ram_id: str | None,
+    ) -> None:
         self.spim_section = spimdisasm.mips.sections.SectionRodata(
             symbols.spim_context,
             rom_start,
@@ -166,8 +171,8 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         name: str,
         rom_bytes: bytes,
         segment_rom_start: int,
-        exclusive_ram_id,
-    ):
+        exclusive_ram_id: str | None,
+    ) -> None:
         self.spim_section = spimdisasm.mips.sections.SectionText(
             symbols.spim_context,
             rom_start,
@@ -187,8 +192,8 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         name: str,
         rom_bytes: bytes,
         segment_rom_start: int,
-        exclusive_ram_id,
-    ):
+        exclusive_ram_id: str | None,
+    ) -> None:
         self.spim_section = spimdisasm.mips.sections.SectionGccExceptTable(
             symbols.spim_context,
             rom_start,
@@ -201,12 +206,11 @@ class SpimdisasmDisassemberSection(DisassemblerSection):
         )
 
 
-def make_disassembler_section() -> Optional[SpimdisasmDisassemberSection]:
+def make_disassembler_section() -> SpimdisasmDisassemberSection | None:
     if options.opts.platform in ["n64", "psx", "ps2", "psp"]:
         return SpimdisasmDisassemberSection()
 
     raise NotImplementedError("No disassembler section for requested platform")
-    return None
 
 
 def make_text_section(
@@ -216,7 +220,7 @@ def make_text_section(
     name: str,
     rom_bytes: bytes,
     segment_rom_start: int,
-    exclusive_ram_id,
+    exclusive_ram_id: str | None,
 ) -> DisassemblerSection:
     section = make_disassembler_section()
     assert section is not None
@@ -239,7 +243,7 @@ def make_data_section(
     name: str,
     rom_bytes: bytes,
     segment_rom_start: int,
-    exclusive_ram_id,
+    exclusive_ram_id: str | None,
 ) -> DisassemblerSection:
     section = make_disassembler_section()
     assert section is not None
@@ -262,7 +266,7 @@ def make_rodata_section(
     name: str,
     rom_bytes: bytes,
     segment_rom_start: int,
-    exclusive_ram_id,
+    exclusive_ram_id: str | None,
 ) -> DisassemblerSection:
     section = make_disassembler_section()
     assert section is not None
@@ -285,7 +289,7 @@ def make_bss_section(
     bss_end: int,
     name: str,
     segment_rom_start: int,
-    exclusive_ram_id,
+    exclusive_ram_id: str | None,
 ) -> DisassemblerSection:
     section = make_disassembler_section()
     assert section is not None
@@ -308,7 +312,7 @@ def make_gcc_except_table_section(
     name: str,
     rom_bytes: bytes,
     segment_rom_start: int,
-    exclusive_ram_id,
+    exclusive_ram_id: str | None,
 ) -> DisassemblerSection:
     section = make_disassembler_section()
     assert section is not None

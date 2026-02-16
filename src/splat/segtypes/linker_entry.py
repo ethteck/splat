@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import os
 import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
-from ..util import options, log
+from splat.util import options, log
 
-from .segment import Segment
-from ..util.symbols import to_cname
+from splat.segtypes.segment import Segment
+from splat.util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'
@@ -43,7 +45,7 @@ def path_to_object_path(path: Path) -> Path:
     return clean_up_path(path.with_suffix(full_suffix))
 
 
-def write_file_if_different(path: Path, new_content: str):
+def write_file_if_different(path: Path, new_content: str) -> None:
     if path.exists():
         old_content = path.read_text()
     else:
@@ -149,7 +151,7 @@ class LinkerEntry:
         else:
             return self.section_link
 
-    def emit_symbol_for_data(self, linker_writer: "LinkerWriter"):
+    def emit_symbol_for_data(self, linker_writer: LinkerWriter) -> None:
         if not options.opts.ld_generate_symbol_per_data_segment:
             return
 
@@ -161,7 +163,7 @@ class LinkerEntry:
             )
             linker_writer._write_symbol(path_cname, ".")
 
-    def emit_path(self, linker_writer: "LinkerWriter"):
+    def emit_path(self, linker_writer: LinkerWriter) -> None:
         assert self.object_path is not None, (
             f"{self.segment.name}, {self.segment.rom_start}"
         )
@@ -177,7 +179,7 @@ class LinkerEntry:
                 self.object_path, f"{self.section_link}{wildcard}"
             )
 
-    def emit_entry(self, linker_writer: "LinkerWriter"):
+    def emit_entry(self, linker_writer: LinkerWriter) -> None:
         self.emit_symbol_for_data(linker_writer)
         self.emit_path(linker_writer)
 
@@ -210,7 +212,7 @@ class LinkerWriter:
                 self._writeln(f"_gp = 0x{options.opts.gp:X};")
 
     # Write a series of statements which compute a symbol that represents the highest address among a list of segments' end addresses
-    def write_max_vram_end_sym(self, symbol: str, overlays: List[Segment]):
+    def write_max_vram_end_sym(self, symbol: str, overlays: list[Segment]) -> None:
         for segment in overlays:
             if segment == overlays[0]:
                 self._writeln(
@@ -222,7 +224,7 @@ class LinkerWriter:
                 )
 
     # Adds all the entries of a segment to the linker script buffer
-    def add(self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]):
+    def add(self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]]) -> None:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
         self.dependencies_entries.extend(entries)
@@ -296,7 +298,7 @@ class LinkerWriter:
 
         self._end_segment(segment, all_bss=not any_load)
 
-    def add_legacy(self, segment: Segment, entries: List[LinkerEntry]):
+    def add_legacy(self, segment: Segment, entries: list[LinkerEntry]) -> None:
         seg_name = segment.get_cname()
 
         # To keep track which sections has been started
@@ -360,8 +362,8 @@ class LinkerWriter:
         self._end_segment(segment, all_bss=False)
 
     def add_referenced_partial_segment(
-        self, segment: Segment, max_vram_syms: List[Tuple[str, List[Segment]]]
-    ):
+        self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]]
+    ) -> None:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
 
@@ -436,7 +438,7 @@ class LinkerWriter:
 
         self._end_segment(segment, all_bss=not any_load)
 
-    def add_partial_segment(self, segment: Segment):
+    def add_partial_segment(self, segment: Segment) -> None:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
         self.dependencies_entries.extend(entries)
@@ -482,7 +484,7 @@ class LinkerWriter:
 
             self._end_partial_segment(section_name)
 
-    def save_linker_script(self, output_path: Path):
+    def save_linker_script(self, output_path: Path) -> None:
         if len(self.sections_allowlist) > 0:
             address = " 0"
             if self.is_partial:
@@ -510,7 +512,7 @@ class LinkerWriter:
 
         write_file_if_different(output_path, "\n".join(self.buffer) + "\n")
 
-    def save_symbol_header(self):
+    def save_symbol_header(self) -> None:
         path = options.opts.ld_symbol_header_path
 
         if path:
@@ -528,7 +530,7 @@ class LinkerWriter:
                 "#endif\n",
             )
 
-    def save_dependencies_file(self, output_path: Path, target_elf_path: Path):
+    def save_dependencies_file(self, output_path: Path, target_elf_path: Path) -> None:
         output = f"{clean_up_path(target_elf_path).as_posix()}:"
 
         for entry in self.dependencies_entries:
@@ -543,21 +545,21 @@ class LinkerWriter:
             output += f"{entry.object_path.as_posix()}:\n"
         write_file_if_different(output_path, output)
 
-    def _writeln(self, line: str):
+    def _writeln(self, line: str) -> None:
         if len(line) == 0:
             self.buffer.append(line)
         else:
             self.buffer.append("    " * self._indent_level + line)
 
-    def _begin_block(self):
+    def _begin_block(self) -> None:
         self._writeln("{")
         self._indent_level += 1
 
-    def _end_block(self):
+    def _end_block(self) -> None:
         self._indent_level -= 1
         self._writeln("}")
 
-    def _write_symbol(self, symbol: str, value: Union[str, int]):
+    def _write_symbol(self, symbol: str, value: Union[str, int]) -> None:
         symbol = to_cname(symbol)
 
         if isinstance(value, int):
@@ -567,12 +569,12 @@ class LinkerWriter:
 
         self.header_symbols.add(symbol)
 
-    def _write_object_path_section(self, object_path: Path, section: str):
+    def _write_object_path_section(self, object_path: Path, section: str) -> None:
         self._writeln(f"{object_path.as_posix()}({section});")
 
     def _begin_segment(
         self, segment: Segment, seg_name: str, noload: bool, is_first: bool
-    ):
+    ) -> None:
         if (
             options.opts.ld_use_symbolic_vram_addresses
             and segment.vram_symbol is not None
@@ -608,7 +610,7 @@ class LinkerWriter:
         if segment.ld_fill_value is not None:
             self._writeln(f"FILL(0x{segment.ld_fill_value:08X});")
 
-    def _end_segment(self, segment: Segment, all_bss=False):
+    def _end_segment(self, segment: Segment, all_bss: bool = False) -> None:
         self._end_block()
 
         name = segment.get_cname()
@@ -636,7 +638,7 @@ class LinkerWriter:
 
         self._writeln("")
 
-    def _begin_partial_segment(self, section_name: str, segment: Segment, noload: bool):
+    def _begin_partial_segment(self, section_name: str, segment: Segment, noload: bool) -> None:
         line = f"{section_name}"
         if noload:
             line += " (NOLOAD)"
@@ -647,7 +649,7 @@ class LinkerWriter:
         self._writeln(line)
         self._begin_block()
 
-    def _end_partial_segment(self, section_name: str, all_bss=False):
+    def _end_partial_segment(self, section_name: str, all_bss: bool = False) -> None:
         self._end_block()
 
         self._writeln("")
@@ -672,10 +674,10 @@ class LinkerWriter:
         self,
         segment: Segment,
         seg_name: str,
-        section_entries: OrderedDict[str, List[LinkerEntry]],
+        section_entries: OrderedDict[str, list[LinkerEntry]],
         noload: bool,
         is_first: bool,
-    ):
+    ) -> None:
         if not is_first:
             self._end_block()
 

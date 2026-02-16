@@ -1,32 +1,50 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional, List
 
 import spimdisasm
 import rabbitizer
 
-from ...util import options, symbols, log
+from splat.util import options, symbols, log
 
-from .code import CommonSegCode
+from splat.segtypes.common.code import CommonSegCode
 
-from ..segment import Segment, parse_segment_vram
+from splat.segtypes.segment import Segment, parse_segment_vram, SerializedSegment
 
-from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
+from splat.disassembler.disassembler_section import DisassemblerSection, make_text_section
 
 
 # abstract class for c, asm, data, etc
 class CommonSegCodeSubsegment(Segment):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        rom_start: int | None,
+        rom_end: int | None,
+        type: str,
+        name: str,
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegment,
+    ) -> None:
+        super().__init__(
+            rom_start=rom_start,
+            rom_end=rom_end,
+            type=type,
+            name=name,
+            vram_start=vram_start,
+            args=args,
+            yaml=yaml,
+        )
 
         vram = parse_segment_vram(self.yaml)
         if vram is not None:
             self.vram_start = vram
 
-        self.str_encoding: Optional[str] = (
+        self.str_encoding: str | None = (
             self.yaml.get("str_encoding", None) if isinstance(self.yaml, dict) else None
         )
 
-        self.spim_section: Optional[DisassemblerSection] = None
+        self.spim_section: DisassemblerSection | None = None
         self.instr_category = rabbitizer.InstrCategory.CPU
         if options.opts.platform == "ps2":
             self.instr_category = rabbitizer.InstrCategory.R5900
@@ -35,7 +53,7 @@ class CommonSegCodeSubsegment(Segment):
         elif options.opts.platform == "psp":
             self.instr_category = rabbitizer.InstrCategory.R4000ALLEGREX
 
-        self.detect_redundant_function_end: Optional[bool] = (
+        self.detect_redundant_function_end: bool | None = (
             self.yaml.get("detect_redundant_function_end", None)
             if isinstance(self.yaml, dict)
             else None
@@ -57,13 +75,14 @@ class CommonSegCodeSubsegment(Segment):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
+        assert section is not None
 
         section.isHandwritten = self.is_hasm
         section.instrCat = self.instr_category
         section.detectRedundantFunctionEnd = self.detect_redundant_function_end
         section.setGpRelHack(not self.use_gp_rel_macro)
 
-    def scan_code(self, rom_bytes, is_hasm=False):
+    def scan_code(self, rom_bytes: bytes, is_hasm: bool = False) -> None:
         self.is_hasm = is_hasm
 
         if self.is_auto_segment:
@@ -103,7 +122,11 @@ class CommonSegCodeSubsegment(Segment):
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
 
-        for func in self.spim_section.get_section().symbolList:
+        section = self.spim_section.get_section()
+
+        assert section is not None
+
+        for func in section.symbolList:
             assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
 
             self.process_insns(func)
@@ -111,7 +134,7 @@ class CommonSegCodeSubsegment(Segment):
     def process_insns(
         self,
         func_spim: spimdisasm.mips.symbols.SymbolFunction,
-    ):
+    ) -> None:
         assert isinstance(self.parent, CommonSegCode)
         assert func_spim.vram is not None
         assert func_spim.vramEnd is not None
@@ -124,7 +147,9 @@ class CommonSegCodeSubsegment(Segment):
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
         for referenced_vram in func_spim.referencedVrams:
-            context_sym = self.spim_section.get_section().getSymbol(
+            section = self.spim_section.get_section()
+            assert section is not None
+            context_sym = section.getSymbol(
                 referenced_vram, tryPlusOffset=False
             )
             if context_sym is not None:
@@ -150,27 +175,32 @@ class CommonSegCodeSubsegment(Segment):
             if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
                 sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
 
-                context_sym = self.spim_section.get_section().getSymbol(sym_address)
+                section = self.spim_section.get_section()
+                assert section is not None
+                context_sym = section.getSymbol(sym_address)
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
                         self.get_most_parent(), context_sym, force_in_segment=False
                     )
 
-    def print_file_boundaries(self):
+    def print_file_boundaries(self) -> None:
         if not self.show_file_boundaries or not self.spim_section:
             return
 
         assert isinstance(self.rom_start, int)
 
-        for in_file_offset in self.spim_section.get_section().fileBoundaries:
+        section = self.spim_section.get_section()
+        assert section is not None
+
+        for in_file_offset in section.fileBoundaries:
             if not self.parent.reported_file_split:
                 self.parent.reported_file_split = True
 
                 # Look up for the last symbol in this boundary
                 sym_addr = 0
-                for sym in self.spim_section.get_section().symbolList:
+                for sym in section.symbolList:
                     symOffset = (
-                        sym.inFileOffset - self.spim_section.get_section().inFileOffset
+                        sym.inFileOffset - section.inFileOffset
                     )
                     if in_file_offset == symOffset:
                         break
@@ -199,7 +229,7 @@ class CommonSegCodeSubsegment(Segment):
     def should_self_split(self) -> bool:
         return self.should_split()
 
-    def get_asm_file_header(self) -> List[str]:
+    def get_asm_file_header(self) -> list[str]:
         ret = []
 
         ret.append('.include "macro.inc"')
@@ -217,7 +247,7 @@ class CommonSegCodeSubsegment(Segment):
 
         return ret
 
-    def get_asm_file_extra_directives(self) -> List[str]:
+    def get_asm_file_extra_directives(self) -> list[str]:
         ret = []
 
         ret.append(".set noat")  # allow manual use of $at
@@ -231,10 +261,10 @@ class CommonSegCodeSubsegment(Segment):
     def asm_out_path(self) -> Path:
         return options.opts.asm_path / self.dir / f"{self.name}.s"
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         return self.asm_out_path()
 
-    def split_as_asm_file(self, out_path: Optional[Path]):
+    def split_as_asm_file(self, out_path: Path | None) -> None:
         if self.spim_section is None:
             return
 
@@ -252,7 +282,7 @@ class CommonSegCodeSubsegment(Segment):
             f.write(self.spim_section.disassemble())
 
     # Same as above but write all sections from siblings
-    def split_as_asmtu_file(self, out_path: Path):
+    def split_as_asmtu_file(self, out_path: Path) -> None:
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.print_file_boundaries()

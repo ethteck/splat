@@ -168,7 +168,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     return ret
 
 
-def assign_symbols_to_segments():
+def assign_symbols_to_segments() -> None:
     for symbol in symbols.all_symbols:
         if symbol.segment:
             continue
