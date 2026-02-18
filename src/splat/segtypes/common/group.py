@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 from ...util import log
 from ..segment import Segment, SegmentStatistics, empty_statistics
@@ -161,7 +161,6 @@ class CommonSegGroup(CommonSegment):
     def should_scan(self) -> bool:
         return self.extract
 
-    @override
     def cache(self) -> list[tuple[SerializedSegmentData | list[str], int | None]]:  # type: ignore[override]
         c = []
 
