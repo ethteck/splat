@@ -1,5 +1,4 @@
 from ...util import options
-
 from ..common.header import CommonSegHeader
 
 
@@ -10,13 +9,13 @@ class N64SegHeader(CommonSegHeader):
         header_lines = []
         header_lines.append(".section .data\n")
         header_lines.append(
-            self.get_line("word", rom_bytes[0x00:0x04], "PI BSB Domain 1 register")
+            self.get_line("word", rom_bytes[0x00:0x04], "PI BSB Domain 1 register"),
         )
         header_lines.append(
-            self.get_line("word", rom_bytes[0x04:0x08], "Clockrate setting")
+            self.get_line("word", rom_bytes[0x04:0x08], "Clockrate setting"),
         )
         header_lines.append(
-            self.get_line("word", rom_bytes[0x08:0x0C], "Entrypoint address")
+            self.get_line("word", rom_bytes[0x08:0x0C], "Entrypoint address"),
         )
         header_lines.append(self.get_line("word", rom_bytes[0x0C:0x10], "Revision"))
         header_lines.append(self.get_line("word", rom_bytes[0x10:0x14], "Checksum 1"))
@@ -28,21 +27,21 @@ class N64SegHeader(CommonSegHeader):
             header_lines.append(
                 '.ascii "'
                 + rom_bytes[0x20:0x34].decode(encoding).strip().ljust(20)
-                + '" /* Internal name */'
+                + '" /* Internal name */',
             )
         else:
             for i in range(0x20, 0x34, 4):
                 header_lines.append(
-                    self.get_line("word", rom_bytes[i : i + 4], "Internal name")
+                    self.get_line("word", rom_bytes[i : i + 4], "Internal name"),
                 )
 
         header_lines.append(self.get_line("word", rom_bytes[0x34:0x38], "Unknown 3"))
         header_lines.append(self.get_line("word", rom_bytes[0x38:0x3C], "Cartridge"))
         header_lines.append(
-            self.get_line("ascii", rom_bytes[0x3C:0x3E], "Cartridge ID")
+            self.get_line("ascii", rom_bytes[0x3C:0x3E], "Cartridge ID"),
         )
         header_lines.append(
-            self.get_line("ascii", rom_bytes[0x3E:0x3F], "Country code")
+            self.get_line("ascii", rom_bytes[0x3E:0x3F], "Country code"),
         )
         header_lines.append(self.get_line("byte", rom_bytes[0x3F:0x40], "Version"))
         header_lines.append("")

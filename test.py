@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import difflib
 import filecmp
-import io
-from pathlib import Path
-import spimdisasm
 import unittest
-from typing import List, Tuple
+from pathlib import Path
+
+import spimdisasm
 
 from src.splat import __version__
 from src.splat.disassembler import disassembler_instance
 from src.splat.scripts.split import main
-from src.splat.util import symbols, options
-from src.splat.segtypes.common.rodata import CommonSegRodata
-from src.splat.segtypes.common.code import CommonSegCode
-from src.splat.segtypes.common.c import CommonSegC
 from src.splat.segtypes.common.bss import CommonSegBss
+from src.splat.segtypes.common.c import CommonSegC
+from src.splat.segtypes.common.code import CommonSegCode
+from src.splat.segtypes.common.rodata import CommonSegRodata
 from src.splat.segtypes.segment import Segment
+from src.splat.util import options, symbols
 
 
 class Testing(unittest.TestCase):
     def compare_files(self, test_path, ref_path):
-        with io.open(test_path) as test_f, io.open(ref_path) as ref_f:
+        with open(test_path) as test_f, open(ref_path) as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
-    def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_same_files(self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]):
         for name in dcmp.same_files:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_same_files(sub_dcmp, out)
 
-    def get_diff_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_diff_files(self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]):
         for name in dcmp.diff_files:
             out.append((name, dcmp.left, dcmp.right))
 
@@ -39,7 +40,7 @@ class Testing(unittest.TestCase):
             self.get_diff_files(sub_dcmp, out)
 
     def get_left_only_files(
-        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+        self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]],
     ):
         for name in dcmp.left_only:
             out.append((name, dcmp.left, dcmp.right))
@@ -48,7 +49,7 @@ class Testing(unittest.TestCase):
             self.get_left_only_files(sub_dcmp, out)
 
     def get_right_only_files(
-        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+        self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]],
     ):
         for name in dcmp.right_only:
             out.append((name, dcmp.left, dcmp.right))
@@ -61,19 +62,19 @@ class Testing(unittest.TestCase):
         main([Path("test/basic_app/splat.yaml")], None, False)
 
         comparison = filecmp.dircmp(
-            "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
+            "test/basic_app/split", "test/basic_app/expected", [".gitkeep"],
         )
 
-        diff_files: List[Tuple[str, str, str]] = []
+        diff_files: list[tuple[str, str, str]] = []
         self.get_diff_files(comparison, diff_files)
 
-        same_files: List[Tuple[str, str, str]] = []
+        same_files: list[tuple[str, str, str]] = []
         self.get_same_files(comparison, same_files)
 
-        left_only_files: List[Tuple[str, str, str]] = []
+        left_only_files: list[tuple[str, str, str]] = []
         self.get_left_only_files(comparison, left_only_files)
 
-        right_only_files: List[Tuple[str, str, str]] = []
+        right_only_files: list[tuple[str, str, str]] = []
         self.get_right_only_files(comparison, right_only_files)
 
         print("same_files", same_files)
@@ -108,7 +109,7 @@ class Testing(unittest.TestCase):
                 file2_lines = file2.readlines()
 
             for line in difflib.unified_diff(
-                file1_lines, file2_lines, fromfile="file1", tofile="file2", lineterm=""
+                file1_lines, file2_lines, fromfile="file1", tofile="file2", lineterm="",
             ):
                 print(line)
 
@@ -162,8 +163,8 @@ class Symbols(unittest.TestCase):
 
         splat_sym_types = {"func", "jtbl", "jtbl_label", "label"}
 
-        for type in splat_sym_types:
-            assert symbols.check_valid_type(type)
+        for type_ in splat_sym_types:
+            assert symbols.check_valid_type(type_)
 
         spim_types = [
             "char*",
@@ -182,8 +183,8 @@ class Symbols(unittest.TestCase):
             "s32",
         ]
 
-        for type in spim_types:
-            assert symbols.check_valid_type(type)
+        for type_ in spim_types:
+            assert symbols.check_valid_type(type_)
 
     def test_add_symbol_to_spim_segment(self):
         segment = spimdisasm.common.SymbolsSegment(
@@ -240,7 +241,7 @@ class Symbols(unittest.TestCase):
         )
         context_sym = spimdisasm.common.ContextSymbol(address=0)
         result = symbols.create_symbol_from_spim_symbol(
-            segment, context_sym, force_in_segment=False
+            segment, context_sym, force_in_segment=False,
         )
         assert result.referenced
         assert result.extract
@@ -362,7 +363,7 @@ class Bss(unittest.TestCase):
         assert bss.spim_section is not None
 
         assert isinstance(
-            bss.spim_section.get_section(), spimdisasm.mips.sections.SectionBss
+            bss.spim_section.get_section(), spimdisasm.mips.sections.SectionBss,
         )
         assert bss.spim_section.get_section().bssVramStart == 0x40000000
         assert bss.spim_section.get_section().bssVramEnd == 0x300
@@ -374,7 +375,7 @@ class SymbolsInitialize(unittest.TestCase):
         test_init()
 
         sym_addrs_lines = [
-            "func_1 = 0x100; // type:func size:10 rom:100 segment:test_segment name_end:the_name_end "
+            "func_1 = 0x100; // type:func size:10 rom:100 segment:test_segment name_end:the_name_end ",
         ]
 
         all_segments = [
@@ -386,7 +387,7 @@ class SymbolsInitialize(unittest.TestCase):
                 vram_start=0x300,
                 args=[],
                 yaml={},
-            )
+            ),
         ]
 
         symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
@@ -403,7 +404,7 @@ class SymbolsInitialize(unittest.TestCase):
 
         sym_addrs_lines = [
             "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True "
-            "allow_addend:True dont_allow_addend:True"
+            "allow_addend:True dont_allow_addend:True",
         ]
 
         all_segments = [
@@ -415,7 +416,7 @@ class SymbolsInitialize(unittest.TestCase):
                 vram_start=0x300,
                 args=[],
                 yaml={},
-            )
+            ),
         ]
 
         symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
@@ -441,7 +442,7 @@ class SymbolsInitialize(unittest.TestCase):
                 vram_start=0x300,
                 args=[],
                 yaml={},
-            )
+            ),
         ]
 
         symbols.handle_sym_addrs(Path("/tmp/thing"), sym_addrs_lines, all_segments)
@@ -470,7 +471,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List["Segment"] = [
+        all_segments: list[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,
@@ -479,7 +480,7 @@ class InitializeSpimContext(unittest.TestCase):
                 vram_start=0x80000400,
                 args=[],
                 yaml=yaml,
-            )
+            ),
         ]
 
         # force this since it's hard to set up
@@ -512,7 +513,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List["Segment"] = [
+        all_segments: list[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,
@@ -521,7 +522,7 @@ class InitializeSpimContext(unittest.TestCase):
                 vram_start=0x100,
                 args=[],
                 yaml=yaml,
-            )
+            ),
         ]
 
         assert symbols.spim_context.globalSegment.vramStart == 0x80000000

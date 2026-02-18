@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import sys
-from typing import NoReturn, Optional, TypeAlias, TextIO
-from pathlib import Path
+from typing import TYPE_CHECKING, NoReturn, Optional, TextIO, TypeAlias
 
-from colorama import Fore, init, Style
+from colorama import Fore, Style, init
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 init(autoreset=True)
 
@@ -45,14 +47,13 @@ def parsing_error_preamble(path: Path, line_num: int, line: str) -> None:
 def status_to_ansi(status: Status) -> Fore | str:
     if status == "ok":
         return Fore.GREEN
-    elif status == "warn":
+    if status == "warn":
         return Fore.YELLOW + Style.BRIGHT
-    elif status == "error":
+    if status == "error":
         return Fore.RED + Style.BRIGHT
-    elif status == "skip":
+    if status == "skip":
         return Style.DIM
-    else:
-        return ""
+    return ""
 
 
 def output_file(status: Status) -> TextIO:

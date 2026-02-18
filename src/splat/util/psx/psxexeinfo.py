@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import argparse
-
+import dataclasses
 import hashlib
 import struct
-
-import dataclasses
-
 from pathlib import Path
 
 import rabbitizer
@@ -74,20 +71,14 @@ UNSUPPORTED_OPS = {
 
 def is_valid(insn) -> bool:
     if not insn.isValid():
-        if insn.instrIdType.name in ("CPU_SPECIAL", "CPU_COP2"):
-            return True
-        else:
-            return False
+        return insn.instrIdType.name in ("CPU_SPECIAL", "CPU_COP2")
 
     opcode = insn.getOpcodeName()
-    if opcode in UNSUPPORTED_OPS:
-        return False
-
-    return True
+    return opcode not in UNSUPPORTED_OPS
 
 
 def try_find_text(
-    rom_bytes, start_offset=PAYLOAD_OFFSET, valid_threshold=32
+    rom_bytes, start_offset=PAYLOAD_OFFSET, valid_threshold=32,
 ) -> tuple[int, int]:
     start = end = 0
     good_count = valid_count = 0

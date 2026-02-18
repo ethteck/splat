@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import pickle
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from . import options, log
-from ..segtypes.common.segment import Segment
+from . import log, options
+
+if TYPE_CHECKING:
+    from ..segtypes.common.segment import Segment
 
 
 class Cache:
@@ -22,7 +24,7 @@ class Cache:
                     log.write(f"Loaded cache ({len(self.cache.keys())} items)")
             except Exception:
                 log.write(
-                    "Not able to load cache file. Discarding old cache", status="warn"
+                    "Not able to load cache file. Discarding old cache", status="warn",
                 )
 
         # invalidate entire cache if options change

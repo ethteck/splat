@@ -1,7 +1,6 @@
-from typing import Optional
+from __future__ import annotations
 
 from ...util import log, options
-
 from .textbin import CommonSegTextbin
 
 
@@ -17,13 +16,13 @@ class CommonSegDatabin(CommonSegTextbin):
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "wa"
 
     def split(self, rom_bytes):
         if self.rom_end is None:
             log.error(
-                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
+                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it",
             )
 
         self.write_bin(rom_bytes)

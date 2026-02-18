@@ -1,10 +1,14 @@
-from pathlib import Path
-from typing import Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from ...util import log, options
-
 from .segment import CommonSegment
-from ..segment import SegmentType
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from ..segment import SegmentType
 
 
 class CommonSegBin(CommonSegment):
@@ -12,7 +16,7 @@ class CommonSegBin(CommonSegment):
     def is_data() -> bool:
         return True
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         return options.opts.asset_path / self.dir / f"{self.name}.bin"
 
     def split(self, rom_bytes):
@@ -22,7 +26,7 @@ class CommonSegBin(CommonSegment):
 
         if self.rom_end is None:
             log.error(
-                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
+                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it",
             )
 
         if self.size is None or self.size <= 0:

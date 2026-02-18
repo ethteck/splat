@@ -1,11 +1,17 @@
-from pathlib import Path
-from typing import Optional, List
-from ...util import options, symbols, log
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from ...disassembler.disassembler_section import (
+    DisassemblerSection,
+    make_data_section,
+)
+from ...util import log, options, symbols
 from .codesubsegment import CommonSegCodeSubsegment
 from .group import CommonSegGroup
 
-from ...disassembler.disassembler_section import DisassemblerSection, make_data_section
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
@@ -20,17 +26,15 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         return options.opts.data_path / self.dir / f"{self.name}.{typ}.s"
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         if self.type.startswith("."):
             if self.sibling:
                 # C file
                 return self.sibling.out_path()
-            else:
-                # Implied C file
-                return options.opts.src_path / self.dir / f"{self.name}.c"
-        else:
-            # ASM
-            return self.asm_out_path()
+            # Implied C file
+            return options.opts.src_path / self.dir / f"{self.name}.c"
+        # ASM
+        return self.asm_out_path()
 
     def scan(self, rom_bytes: bytes):
         CommonSegGroup.scan(self, rom_bytes)
@@ -38,7 +42,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if self.rom_start is not None and self.rom_end is not None:
             self.disassemble_data(rom_bytes)
 
-    def get_asm_file_extra_directives(self) -> List[str]:
+    def get_asm_file_extra_directives(self) -> list[str]:
         return []
 
     def split(self, rom_bytes: bytes):
@@ -66,14 +70,14 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "wa"
 
     def get_linker_entries(self):
         return CommonSegCodeSubsegment.get_linker_entries(self)
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection
+        self, disassembler_section: DisassemblerSection,
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 
@@ -94,7 +98,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         if not isinstance(self.rom_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'",
             )
 
         # Supposedly logic error, not user error
@@ -106,7 +110,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         if not isinstance(self.vram_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'",
             )
 
         self.spim_section = make_data_section(
@@ -130,17 +134,17 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         for symbol in self.spim_section.get_section().symbolList:
             symbols.create_symbol_from_spim_symbol(
-                self.get_most_parent(), symbol.contextSym, force_in_segment=True
+                self.get_most_parent(), symbol.contextSym, force_in_segment=True,
             )
 
             # Gather symbols found by spimdisasm and create those symbols in splat's side
             for referenced_vram in symbol.referencedVrams:
                 context_sym = self.spim_section.get_section().getSymbol(
-                    referenced_vram, tryPlusOffset=False
+                    referenced_vram, tryPlusOffset=False,
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym, force_in_segment=False
+                        self.get_most_parent(), context_sym, force_in_segment=False,
                     )
 
             # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)
@@ -148,14 +152,14 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 self.suggestion_rodata_section_start
                 and not rodata_encountered
                 and self.get_most_parent().rodata_follows_data
+                and symbol.contextSym.isJumpTable()
             ):
-                if symbol.contextSym.isJumpTable():
                     rodata_encountered = True
                     print(
-                        f"\n\nData segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here."
+                        f"\n\nData segment {self.name}, symbol at vram {symbol.contextSym.vram:X} is a jumptable, indicating the start of the rodata section _may_ be near here.",
                     )
                     print(
-                        "Please note the real start of the rodata section may be way before this point."
+                        "Please note the real start of the rodata section may be way before this point.",
                     )
                     if symbol.contextSym.vromAddress is not None:
                         print(f"      - [0x{symbol.contextSym.vromAddress:X}, rodata]")

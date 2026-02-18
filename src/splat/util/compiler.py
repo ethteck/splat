@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional, Dict
 
 
 @dataclass
@@ -15,7 +16,7 @@ class Compiler:
     asm_nonmatching_label_macro: str = "nonmatching"
     c_newline: str = "\n"
     asm_inc_header: str = ""
-    asm_emit_size_directive: Optional[bool] = None
+    asm_emit_size_directive: bool | None = None
     j_as_branch: bool = False
     uses_include_asm: bool = True
     align_on_branch_labels: bool = False
@@ -64,7 +65,7 @@ PSYQ = Compiler(
 MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
 EEGCC = Compiler("EEGCC", align_on_branch_labels=True)
 
-compiler_for_name: Dict[str, Compiler] = {
+compiler_for_name: dict[str, Compiler] = {
     x.name: x
     for x in [
         GCC,

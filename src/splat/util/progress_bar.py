@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import tqdm
 import sys
+
+import tqdm
 
 out_file = sys.stderr
 

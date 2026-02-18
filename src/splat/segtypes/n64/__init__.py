@@ -1,21 +1,23 @@
-from . import ci as ci
-from . import ci4 as ci4
-from . import ci8 as ci8
-from . import decompressor as decompressor
-from . import gfx as gfx
-from . import header as header
-from . import i1 as i1
-from . import i4 as i4
-from . import i8 as i8
-from . import ia16 as ia16
-from . import ia4 as ia4
-from . import ia8 as ia8
-from . import img as img
-from . import ipl3 as ipl3
-from . import mio0 as mio0
-from . import palette as palette
-from . import rgba16 as rgba16
-from . import rgba32 as rgba32
-from . import rsp as rsp
-from . import vtx as vtx
-from . import yay0 as yay0
+from . import (
+    ci as ci,
+    ci4 as ci4,
+    ci8 as ci8,
+    decompressor as decompressor,
+    gfx as gfx,
+    header as header,
+    i1 as i1,
+    i4 as i4,
+    i8 as i8,
+    ia4 as ia4,
+    ia8 as ia8,
+    ia16 as ia16,
+    img as img,
+    ipl3 as ipl3,
+    mio0 as mio0,
+    palette as palette,
+    rgba16 as rgba16,
+    rgba32 as rgba32,
+    rsp as rsp,
+    vtx as vtx,
+    yay0 as yay0,
+)

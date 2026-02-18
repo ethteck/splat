@@ -1,45 +1,55 @@
 #! /usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from pathlib import Path
-
+import sys
 from collections import defaultdict, deque
-
-from .. import __package_name__, __version__
-from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
+from pathlib import Path
+from typing import Any
 
 from colorama import Style
 from intervaltree import Interval, IntervalTree
-import sys
 
+from .. import __package_name__, __version__
+from ..disassembler import disassembler_instance
+from ..segtypes.common.group import CommonSegGroup
 from ..segtypes.linker_entry import (
     LinkerWriter,
     get_segment_vram_end_symbol_name,
 )
 from ..segtypes.segment import Segment
-from ..segtypes.common.group import CommonSegGroup
-from ..util import conf, log, options, palettes, symbols, relocs
+from ..util import (
+    cache_handler,
+    conf,
+    file_presets,
+    log,
+    options,
+    palettes,
+    progress_bar,
+    relocs,
+    statistics,
+    symbols,
+    vram_classes,
+)
 
 linker_writer: LinkerWriter
-config: Dict[str, Any]
+config: dict[str, Any]
 
 segment_roms: IntervalTree = IntervalTree()
 segment_rams: IntervalTree = IntervalTree()
 
 
-def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
+def initialize_segments(config_segments: dict | list) -> list[Segment]:
     global segment_roms
     global segment_rams
 
     segment_roms = IntervalTree()
     segment_rams = IntervalTree()
 
-    segments_by_name: Dict[str, Segment] = {}
-    ret: List[Segment] = []
+    segments_by_name: dict[str, Segment] = {}
+    ret: list[Segment] = []
 
     # Cross segment pairing can be quite expensive, so we try to avoid it if the user haven't requested it.
     do_cross_segment_pairing = False
@@ -55,19 +65,19 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         segment_class = Segment.get_class_for_type(seg_type)
 
-        this_start, is_auto_segment = Segment.parse_segment_start(seg_yaml)
+        this_start, _is_auto_segment = Segment.parse_segment_start(seg_yaml)
 
         j = i + 1
         while j < len(config_segments):
-            next_start, next_is_auto_segment = Segment.parse_segment_start(
-                config_segments[j]
+            next_start, _next_is_auto_segment = Segment.parse_segment_start(
+                config_segments[j],
             )
             if next_start is not None:
                 break
             j += 1
         if next_start is None:
             log.error(
-                "Next segment address could not be found. Segments list must end with a rom end pos marker ([0x10000000])"
+                "Next segment address could not be found. Segments list must end with a rom end pos marker ([0x10000000])",
             )
 
         if segment_class.is_noload():
@@ -77,7 +87,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             next_start = last_rom_end
 
         segment: Segment = Segment.from_yaml(
-            segment_class, seg_yaml, this_start, next_start, None
+            segment_class, seg_yaml, this_start, next_start, None,
         )
 
         if segment.require_unique_name:
@@ -110,15 +120,15 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
         if segment.given_follows_vram:
             if segment.given_follows_vram not in segments_by_name:
                 log.error(
-                    f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist"
+                    f"segment '{segment.given_follows_vram}', the 'follows_vram' value for segment '{segment.name}', does not exist",
                 )
             segment.given_vram_symbol = get_segment_vram_end_symbol_name(
-                segments_by_name[segment.given_follows_vram]
+                segments_by_name[segment.given_follows_vram],
             )
 
     if ret[-1].type == "pad":
         log.error(
-            "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad"
+            "Last segment in config cannot be a pad segment; see https://github.com/ethteck/splat/wiki/Segments#pad",
         )
 
     if do_cross_segment_pairing:
@@ -130,13 +140,13 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
                     if seg == other_seg:
                         continue
                     if seg.pair_segment_name == other_seg.name and isinstance(
-                        other_seg, CommonSegGroup
+                        other_seg, CommonSegGroup,
                     ):
                         # We found the other segment specified by `pair_segment`
 
                         if other_seg.pair_segment_name is not None:
                             log.error(
-                                f"Both segments '{seg.name}' and '{other_seg.name}' have a `pair_segment` value, when only at most one of the cross-paired segments can have this attribute."
+                                f"Both segments '{seg.name}' and '{other_seg.name}' have a `pair_segment` value, when only at most one of the cross-paired segments can have this attribute.",
                             )
 
                         # Not user error, hopefully...
@@ -153,7 +163,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
                         other_seg.paired_segment = seg
 
                         if isinstance(seg, CommonSegGroup) and isinstance(
-                            other_seg, CommonSegGroup
+                            other_seg, CommonSegGroup,
                         ):
                             # Pair the subsegments
                             seg.pair_subsegments_to_other_segment(other_seg)
@@ -162,7 +172,7 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
                 if not found:
                     log.error(
-                        f"Segment '{seg.pair_segment_name}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute."
+                        f"Segment '{seg.pair_segment_name}' not found.\n    It is referenced by segment '{seg.name}', because of the `pair_segment` attribute.",
                     )
 
     return ret
@@ -174,7 +184,7 @@ def assign_symbols_to_segments() -> None:
             continue
 
         if symbol.rom:
-            cands: Set[Interval] = segment_roms[symbol.rom]
+            cands: set[Interval] = segment_roms[symbol.rom]
             if len(cands) > 1:
                 log.error("multiple segments rom overlap symbol", symbol)
             elif len(cands) == 0:
@@ -185,7 +195,7 @@ def assign_symbols_to_segments() -> None:
                 seg.add_symbol(symbol)
         else:
             cands = segment_rams[symbol.vram_start]
-            segs: List[Segment] = [cand.data for cand in cands]
+            segs: list[Segment] = [cand.data for cand in cands]
             for seg in segs:
                 if not seg.get_exclusive_ram_id():
                     seg.add_symbol(symbol)
@@ -200,10 +210,10 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 
 # Return a mapping of vram classes to segments that need to be part of their vram symbol's calculation
 def calc_segment_dependences(
-    all_segments: List[Segment],
-) -> Dict[vram_classes.VramClass, List[Segment]]:
+    all_segments: list[Segment],
+) -> dict[vram_classes.VramClass, list[Segment]]:
     # Map vram class names to segments that have that vram class
-    vram_class_to_segments: Dict[str, List[Segment]] = {}
+    vram_class_to_segments: dict[str, list[Segment]] = {}
     for seg in all_segments:
         if seg.vram_class is not None:
             if seg.vram_class.name not in vram_class_to_segments:
@@ -211,7 +221,7 @@ def calc_segment_dependences(
             vram_class_to_segments[seg.vram_class.name].append(seg)
 
     # Map vram class names to segments that the vram class follows
-    vram_class_to_follows_segments: Dict[vram_classes.VramClass, List[Segment]] = {}
+    vram_class_to_follows_segments: dict[vram_classes.VramClass, list[Segment]] = {}
     for vram_class in vram_classes._vram_classes.values():
         if vram_class.follows_classes:
             vram_class_to_follows_segments[vram_class] = []
@@ -225,16 +235,16 @@ def calc_segment_dependences(
 
 
 def sort_segments_by_vram_class_dependency(
-    all_segments: List[Segment],
-) -> List[Segment]:
+    all_segments: list[Segment],
+) -> list[Segment]:
     # map all "_VRAM_END" strings to segments
-    end_sym_to_seg: Dict[str, Segment] = {}
+    end_sym_to_seg: dict[str, Segment] = {}
     for seg in all_segments:
         end_sym_to_seg[get_segment_vram_end_symbol_name(seg)] = seg
 
     # build dependency graph: A -> B means "A must come before B"
-    graph: Dict[Segment, List[Segment]] = defaultdict(list)
-    indeg: Dict[Segment, int] = {seg: 0 for seg in all_segments}
+    graph: dict[Segment, list[Segment]] = defaultdict(list)
+    indeg: dict[Segment, int] = {seg: 0 for seg in all_segments}
 
     for seg in all_segments:
         sym = seg.vram_symbol
@@ -248,7 +258,7 @@ def sort_segments_by_vram_class_dependency(
 
     # stable topo sort with queue seeded in original order
     q = deque([seg for seg in all_segments if indeg[seg] == 0])
-    out: List[Segment] = []
+    out: list[Segment] = []
 
     while q:
         n = q.popleft()
@@ -281,7 +291,7 @@ def read_target_binary() -> bytes:
 
 def initialize_platform(rom_bytes: bytes):
     platform_module = importlib.import_module(
-        f"{__package_name__}.platforms.{options.opts.platform}"
+        f"{__package_name__}.platforms.{options.opts.platform}",
     )
     platform_init = getattr(platform_module, "init")
     platform_init(rom_bytes)
@@ -289,7 +299,7 @@ def initialize_platform(rom_bytes: bytes):
     return platform_module
 
 
-def initialize_all_symbols(all_segments: List[Segment]):
+def initialize_all_symbols(all_segments: list[Segment]):
     # Load and process symbols
     symbols.initialize(all_segments)
     relocs.initialize()
@@ -303,12 +313,12 @@ def initialize_all_symbols(all_segments: List[Segment]):
 
 
 def do_scan(
-    all_segments: List[Segment],
+    all_segments: list[Segment],
     rom_bytes: bytes,
     stats: statistics.Statistics,
     cache: cache_handler.Cache,
 ):
-    processed_segments: List[Segment] = []
+    processed_segments: list[Segment] = []
 
     scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
@@ -336,7 +346,7 @@ def do_scan(
 
 
 def do_split(
-    all_segments: List[Segment],
+    all_segments: list[Segment],
     rom_bytes: bytes,
     stats: statistics.Statistics,
     cache: cache_handler.Cache,
@@ -359,14 +369,14 @@ def do_split(
             segment.split(segment_bytes)
 
 
-def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
+def write_linker_script(all_segments: list[Segment]) -> LinkerWriter:
     if options.opts.ld_sort_segments_by_vram_class_dependency:
         all_segments = sort_segments_by_vram_class_dependency(all_segments)
 
     vram_class_dependencies = calc_segment_dependences(all_segments)
     vram_classes_to_search = set(vram_class_dependencies.keys())
 
-    max_vram_end_insertion_points: Dict[Segment, List[Tuple[str, List[Segment]]]] = {}
+    max_vram_end_insertion_points: dict[Segment, list[tuple[str, list[Segment]]]] = {}
     for seg in reversed(all_segments):
         if seg.vram_class in vram_classes_to_search:
             assert seg.vram_class.vram_symbol is not None
@@ -376,7 +386,7 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
                 (
                     seg.vram_class.vram_symbol,
                     vram_class_dependencies[seg.vram_class],
-                )
+                ),
             )
             vram_classes_to_search.remove(seg.vram_class)
 
@@ -390,11 +400,11 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
     if partial_linking:
         if partial_scripts_path is None:
             log.error(
-                "Partial linking is enabled but `ld_partial_scripts_path` has not been set"
+                "Partial linking is enabled but `ld_partial_scripts_path` has not been set",
             )
         if options.opts.ld_partial_build_segments_path is None:
             log.error(
-                "Partial linking is enabled but `ld_partial_build_segments_path` has not been set"
+                "Partial linking is enabled but `ld_partial_build_segments_path` has not been set",
             )
 
     for segment in linker_bar:
@@ -415,7 +425,7 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
             seg_name = segment.get_cname()
 
             sub_linker_writer.save_linker_script(
-                partial_scripts_path / f"{seg_name}.ld"
+                partial_scripts_path / f"{seg_name}.ld",
             )
             if options.opts.ld_dependencies:
                 sub_linker_writer.save_dependencies_file(
@@ -432,10 +442,10 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
         elf_path = options.opts.elf_path
         if elf_path is None:
             log.error(
-                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
+                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options",
             )
         linker_writer.save_dependencies_file(
-            options.opts.ld_script_path.with_suffix(".d"), elf_path
+            options.opts.ld_script_path.with_suffix(".d"), elf_path,
         )
 
     return linker_writer
@@ -446,14 +456,14 @@ def write_ld_dependencies(linker_writer: LinkerWriter):
         elf_path = options.opts.elf_path
         if elf_path is None:
             log.error(
-                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options"
+                "Generation of dependency file for linker script requested but `elf_path` was not provided in the yaml options",
             )
         linker_writer.save_dependencies_file(
-            options.opts.ld_script_path.with_suffix(".d"), elf_path
+            options.opts.ld_script_path.with_suffix(".d"), elf_path,
         )
 
 
-def write_elf_sections_file(all_segments: List[Segment]):
+def write_elf_sections_file(all_segments: list[Segment]):
     # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
     # that the elf combines into one section
     if options.opts.elf_section_list_path:
@@ -465,7 +475,7 @@ def write_elf_sections_file(all_segments: List[Segment]):
             f.write(section_list)
 
 
-def write_undefined_auto(to_write: List[symbols.Symbol], file_path: Path):
+def write_undefined_auto(to_write: list[symbols.Symbol], file_path: Path):
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open("w", newline="\n") as f:
         for symbol in to_write:
@@ -498,11 +508,11 @@ def write_undefined_syms_auto():
         write_undefined_auto(to_write, options.opts.undefined_syms_auto_path)
 
 
-def print_segment_warnings(all_segments: List[Segment]):
+def print_segment_warnings(all_segments: list[Segment]):
     for segment in all_segments:
         if len(segment.warnings) > 0:
             log.write(
-                f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:"
+                f"{Style.DIM}0x{segment.rom_start:06X}{Style.RESET_ALL} {segment.type} {Style.BRIGHT}{segment.name}{Style.RESET_ALL}:",
             )
 
             for warn in segment.warnings:
@@ -520,7 +530,7 @@ def dump_symbols() -> None:
 
     with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
         f.write(
-            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
+            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n",
         )
         for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
             f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
@@ -539,8 +549,8 @@ def dump_symbols() -> None:
 
 
 def main(
-    config_path: List[Path],
-    modes: Optional[List[str]],
+    config_path: list[Path],
+    modes: list[str] | None,
     verbose: bool,
     use_cache: bool = True,
     skip_version_check: bool = False,
@@ -592,7 +602,7 @@ def main(
     do_split(all_segments, rom_bytes, stats, cache)
 
     if options.opts.is_mode_active(
-        "ld"
+        "ld",
     ):  # TODO move this to platform initialization when it gets implemented
         global linker_writer
         linker_writer = write_linker_script(all_segments)
@@ -630,7 +640,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
     parser.add_argument("--modes", nargs="+", default=["all"])
     parser.add_argument("--verbose", action="store_true", help="Enable debug logging")
     parser.add_argument(
-        "--use-cache", action="store_true", help="Only split changed segments in config"
+        "--use-cache", action="store_true", help="Only split changed segments in config",
     )
     parser.add_argument(
         "--skip-version-check",
@@ -672,7 +682,7 @@ script_description = "Split a rom given a rom, a config, and output directory"
 
 def add_subparser(subparser: argparse._SubParsersAction):
     parser = subparser.add_parser(
-        "split", help=script_description, description=script_description
+        "split", help=script_description, description=script_description,
     )
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)

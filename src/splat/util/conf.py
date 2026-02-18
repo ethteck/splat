@@ -5,15 +5,18 @@ A config dict can be loaded using `load`.
 
     config = conf.load("path/to/splat.yaml")
 """
+from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 # This unused import makes the yaml library faster. don't remove
 import pylibyaml  # noqa: F401
 import yaml
 
 from . import options, vram_classes
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _merge_configs(main_config, additional_config, additional_config_path):
@@ -28,7 +31,7 @@ def _merge_configs(main_config, additional_config, additional_config_path):
             main_config[curkey] = additional_config[curkey]
         elif type(main_config[curkey]) is not type(additional_config[curkey]):
             raise TypeError(
-                f"Could not merge {str(additional_config_path)}: type for key '{curkey}' in configs does not match"
+                f"Could not merge {additional_config_path!s}: type for key '{curkey}' in configs does not match",
             )
         else:
             # keys exist and match, see if a list to append
@@ -49,12 +52,12 @@ def _merge_configs(main_config, additional_config, additional_config_path):
 
 
 def load(
-    config_path: List[Path],
-    modes: Optional[List[str]] = None,
+    config_path: list[Path],
+    modes: list[str] | None = None,
     verbose: bool = False,
     disassemble_all: bool = False,
     make_full_disasm_for_code=False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Returns a `dict` with resolved splat config.
 
@@ -76,7 +79,7 @@ def load(
     Config with invalid options may raise an error.
     """
 
-    config: Dict[str, Any] = {}
+    config: dict[str, Any] = {}
     for entry in config_path:
         with entry.open() as f:
             additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)

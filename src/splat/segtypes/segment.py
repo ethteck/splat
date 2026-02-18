@@ -5,38 +5,32 @@ import dataclasses
 import importlib
 import importlib.util
 from pathlib import Path
-
-from typing import Optional, Type, TYPE_CHECKING, Union, Dict, TypeAlias, List
+from typing import TYPE_CHECKING, TypeAlias, Union
 
 from intervaltree import Interval, IntervalTree
-from ..util import vram_classes
-
-
-from ..util.vram_classes import VramClass, SerializedSegmentData
-from ..util import log, options, symbols
-from ..util.symbols import Symbol, to_cname
 
 from .. import __package_name__
+from ..util import log, options, symbols, vram_classes
+from ..util.symbols import Symbol, to_cname
+from ..util.vram_classes import SerializedSegmentData, VramClass
 
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
 
 
-SerializedSegment: TypeAlias = Union[SerializedSegmentData, List[str]]
+SerializedSegment: TypeAlias = Union[SerializedSegmentData, list[str]]
 
 def parse_segment_vram(segment: SerializedSegment) -> int | None:
     if isinstance(segment, dict) and "vram" in segment:
         return int(segment["vram"])
-    else:
-        return None
+    return None
 
 
 def parse_segment_vram_symbol(segment: SerializedSegment) -> str | None:
     if isinstance(segment, dict) and "vram_symbol" in segment:
         return str(segment["vram_symbol"])
-    else:
-        return None
+    return None
 
 
 def parse_segment_vram_class(segment: SerializedSegment) -> VramClass | None:
@@ -83,9 +77,9 @@ class SegmentStatisticsInfo:
     size: int
     count: int
 
-    def merge(self, other: "SegmentStatisticsInfo") -> "SegmentStatisticsInfo":
+    def merge(self, other: SegmentStatisticsInfo) -> SegmentStatisticsInfo:
         return SegmentStatisticsInfo(
-            size=self.size + other.size, count=self.count + other.count
+            size=self.size + other.size, count=self.count + other.count,
         )
 
 
@@ -117,7 +111,7 @@ class Segment:
 
         if segment_class is None:
             log.error(
-                f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)"
+                f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)",
             )
 
         return segment_class
@@ -130,13 +124,13 @@ class Segment:
         # heirarchy is platform -> common -> fail
         try:
             segmodule = importlib.import_module(
-                f".segtypes.{platform}.{seg_type}", package=__package_name__
+                f".segtypes.{platform}.{seg_type}", package=__package_name__,
             )
             is_platform_seg = True
         except ModuleNotFoundError:
             try:
                 segmodule = importlib.import_module(
-                    f".segtypes.common.{seg_type}", package=__package_name__
+                    f".segtypes.common.{seg_type}", package=__package_name__,
                 )
             except ModuleNotFoundError:
                 return None
@@ -144,7 +138,7 @@ class Segment:
         seg_prefix = platform.capitalize() if is_platform_seg else "Common"
         return getattr(  # type: ignore[no-any-return]
             segmodule,
-            f"{seg_prefix}Seg{seg_type.capitalize()}"
+            f"{seg_prefix}Seg{seg_type.capitalize()}",
         )
 
     @staticmethod
@@ -154,7 +148,7 @@ class Segment:
         ext_path = options.opts.extensions_path
         if not ext_path:
             log.error(
-                f"could not load presumed extended segment type '{seg_type}' because no extensions path is configured"
+                f"could not load presumed extended segment type '{seg_type}' because no extensions path is configured",
             )
         assert ext_path is not None
 
@@ -171,7 +165,7 @@ class Segment:
             return None
 
         return getattr(  # type: ignore[no-any-return]
-            ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}"
+            ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}",
         )
 
     @staticmethod
@@ -195,22 +189,20 @@ class Segment:
             return None, False
         if s == "auto":
             return None, True
-        else:
-            return int(s), False
+        return int(s), False
 
     @staticmethod
     def parse_segment_type(segment: SerializedSegment) -> str:
         if isinstance(segment, dict):
             return str(segment["type"])
-        else:
-            return str(segment[1])
+        return str(segment[1])
 
     @classmethod
     def parse_segment_name(cls, rom_start: int | None, segment: SerializedSegment) -> str:
         if isinstance(segment, dict):
             if "name" in segment:
                 return str(segment["name"])
-            elif "dir" in segment:
+            if "dir" in segment:
                 return str(segment["dir"])
         elif isinstance(segment, list) and len(segment) >= 3:
             return str(segment[2])
@@ -221,15 +213,13 @@ class Segment:
     def parse_segment_symbol_name_format(segment: SerializedSegment) -> str:
         if isinstance(segment, dict) and "symbol_name_format" in segment:
             return str(segment["symbol_name_format"])
-        else:
-            return options.opts.symbol_name_format
+        return options.opts.symbol_name_format
 
     @staticmethod
     def parse_segment_symbol_name_format_no_rom(segment: SerializedSegment) -> str:
         if isinstance(segment, dict) and "symbol_name_format_no_rom" in segment:
             return str(segment["symbol_name_format_no_rom"])
-        else:
-            return options.opts.symbol_name_format_no_rom
+        return options.opts.symbol_name_format_no_rom
 
     @staticmethod
     def parse_segment_file_path(segment: SerializedSegment) -> Path | None:
@@ -239,7 +229,7 @@ class Segment:
 
     @staticmethod
     def parse_segment_bss_contains_common(
-        segment: SerializedSegment, default: bool
+        segment: SerializedSegment, default: bool,
     ) -> bool:
         if isinstance(segment, dict) and "bss_contains_common" in segment:
             return bool(segment["bss_contains_common"])
@@ -259,7 +249,7 @@ class Segment:
 
     @staticmethod
     def parse_ld_fill_value(
-        yaml: SerializedSegment, default: int | None
+        yaml: SerializedSegment, default: int | None,
     ) -> int | None:
         if isinstance(yaml, dict) and "ld_fill_value" in yaml:
             return yaml["ld_fill_value"]
@@ -277,7 +267,7 @@ class Segment:
     ) -> bool | None:
         if isinstance(yaml, dict):
             suggestion_rodata_section_start = yaml.get(
-                "suggestion_rodata_section_start"
+                "suggestion_rodata_section_start",
             )
             if suggestion_rodata_section_start is not None:
                 assert isinstance(suggestion_rodata_section_start, bool)
@@ -294,7 +284,7 @@ class Segment:
         self,
         rom_start: int | None,
         rom_end: int | None,
-        type: str,
+        type: str,  # noqa: A002  # `type` is shadowing a builtin
         name: str,
         vram_start: int | None,
         args: list[str],
@@ -345,15 +335,13 @@ class Segment:
 
         self.extract: bool = True
         self.has_linker_entry: bool = True
-        if self.rom_start is None:
-            self.extract = False
-        elif self.type.startswith("."):
+        if self.rom_start is None or self.type.startswith("."):
             self.extract = False
 
         self.warnings: list[str] = []
         self.did_run = False
         self.bss_contains_common = Segment.parse_segment_bss_contains_common(
-            yaml, options.opts.ld_bss_contains_common
+            yaml, options.opts.ld_bss_contains_common,
         )
 
         # For segments which are not in the usual VRAM segment space, like N64's IPL3 which lives in 0xA4...
@@ -364,11 +352,11 @@ class Segment:
 
         # If not defined on the segment then default to the global option
         self.ld_fill_value: int | None = self.parse_ld_fill_value(
-            yaml, options.opts.ld_fill_value
+            yaml, options.opts.ld_fill_value,
         )
 
         self.ld_align_segment_start: int | None = self.parse_ld_align_segment_start(
-            yaml
+            yaml,
         )
 
         # True if this segment was generated based on auto_link_sections
@@ -383,11 +371,14 @@ class Segment:
 
         self.index_within_group: int | None = None
 
-        if self.rom_start is not None and self.rom_end is not None:
-            if self.rom_start > self.rom_end:
-                log.error(
-                    f"Error: segments out of order - ({self.name} starts at 0x{self.rom_start:X}, but next segment starts at 0x{self.rom_end:X})"
-                )
+        if (
+            self.rom_start is not None
+            and self.rom_end is not None
+            and self.rom_start > self.rom_end
+        ):
+            log.error(
+                f"Error: segments out of order - ({self.name} starts at 0x{self.rom_start:X}, but next segment starts at 0x{self.rom_end:X})",
+            )
 
     @classmethod
     def from_yaml(
@@ -398,7 +389,7 @@ class Segment:
         parent: Segment | None,
         vram: int | None = None,
     ) -> Segment:
-        type = cls.parse_segment_type(yaml)
+        type_ = cls.parse_segment_type(yaml)
         name = cls.parse_segment_name(rom_start, yaml)
 
         vram_class = parse_segment_vram_class(yaml)
@@ -417,7 +408,7 @@ class Segment:
         ret = cls(
             rom_start=rom_start,
             rom_end=rom_end,
-            type=type,
+            type=type_,
             name=name,
             vram_start=vram_start,
             args=args,
@@ -426,34 +417,33 @@ class Segment:
         if parent is not None:
             if "subalign" in yaml:
                 log.error(
-                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments"
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `subalign`. `subalign` is valid only for top-level segments",
                 )
             if "ld_fill_value" in yaml:
                 log.error(
-                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments"
+                    f"Non top-level segment '{name}' (rom address 0x{rom_start:X}) specified a `ld_fill_value`. `ld_fill_value` is valid only for top-level segments",
                 )
 
         ret.parent = parent
 
         # Import here to avoid circular imports
-        from .common.code import CommonSegCode
         from .common.bss import CommonSegBss
+        from .common.code import CommonSegCode
 
-        if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss):
+        if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss) and isinstance(parent, CommonSegCode):
             # We need to know the bss space for the segment.
-            if isinstance(parent, CommonSegCode):
-                if parent.bss_size <= 0:
-                    log.error(
-                        f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section)."
-                    )
-                if (
-                    isinstance(ret.vram_start, int)
-                    and isinstance(parent.vram_end, int)
-                    and ret.vram_start >= parent.vram_end
-                ):
-                    log.error(
-                        f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small."
-                    )
+            if parent.bss_size <= 0:
+                log.error(
+                    f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section).",
+                )
+            if (
+                isinstance(ret.vram_start, int)
+                and isinstance(parent.vram_end, int)
+                and ret.vram_start >= parent.vram_end
+            ):
+                log.error(
+                    f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small.",
+                )
 
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
@@ -472,7 +462,7 @@ class Segment:
         ret.file_path = Segment.parse_segment_file_path(yaml)
 
         ret.bss_contains_common = Segment.parse_segment_bss_contains_common(
-            yaml, options.opts.ld_bss_contains_common
+            yaml, options.opts.ld_bss_contains_common,
         )
 
         ret.given_follows_vram = parse_segment_follows_vram(yaml)
@@ -482,11 +472,11 @@ class Segment:
             ret.vram_class = vram_class
             if ret.given_follows_vram:
                 log.error(
-                    f"Error: segment {ret.name} has both a vram class and a follows_vram property"
+                    f"Error: segment {ret.name} has both a vram class and a follows_vram property",
                 )
             if ret.given_vram_symbol:
                 log.error(
-                    f"Error: segment {ret.name} has both a vram class and a vram_symbol property"
+                    f"Error: segment {ret.name} has both a vram class and a vram_symbol property",
                 )
 
         if not ret.align:
@@ -525,8 +515,7 @@ class Segment:
     def dir(self) -> Path:
         if self.parent:
             return self.parent.dir / self.given_dir
-        else:
-            return self.given_dir
+        return self.given_dir
 
     @property
     def show_file_boundaries(self) -> bool:
@@ -559,10 +548,9 @@ class Segment:
     def vram_symbol(self) -> str | None:
         if self.vram_class and self.vram_class.vram_symbol:
             return self.vram_class.vram_symbol
-        elif self.given_vram_symbol:
+        if self.given_vram_symbol:
             return self.given_vram_symbol
-        else:
-            return None
+        return None
 
     def get_exclusive_ram_id(self) -> str | None:
         if self.parent:
@@ -584,15 +572,13 @@ class Segment:
     def seg_symbols(self) -> dict[int, list[Symbol]]:
         if self.parent:
             return self.parent.seg_symbols
-        else:
-            return self.given_seg_symbols
+        return self.given_seg_symbols
 
     @property
     def size(self) -> int | None:
         if self.rom_start is not None and self.rom_end is not None:
             return self.rom_end - self.rom_start
-        else:
-            return None
+        return None
 
     @property
     def statistics(self) -> SegmentStatistics:
@@ -609,8 +595,7 @@ class Segment:
     def vram_end(self) -> int | None:
         if self.vram_start is not None and self.size is not None:
             return self.vram_start + self.size
-        else:
-            return None
+        return None
 
     @property
     def section_order(self) -> list[str]:
@@ -642,20 +627,17 @@ class Segment:
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
             return vram >= self.vram_start and vram < self.vram_end
-        else:
-            return False
+        return False
 
     def contains_rom(self, rom: int) -> bool:
         if self.rom_start is not None and self.rom_end is not None:
             return rom >= self.rom_start and rom < self.rom_end
-        else:
-            return False
+        return False
 
     def rom_to_ram(self, rom_addr: int) -> int | None:
         if self.vram_start is not None and self.rom_start is not None:
             return self.vram_start + rom_addr - self.rom_start
-        else:
-            return None
+        return None
 
     def ram_to_rom(self, ram_addr: int) -> int | None:
         if not self.contains_vram(ram_addr) and ram_addr != self.vram_end:
@@ -663,8 +645,7 @@ class Segment:
 
         if self.vram_start is not None and self.rom_start is not None:
             return self.rom_start + ram_addr - self.vram_start
-        else:
-            return None
+        return None
 
     def should_scan(self) -> bool:
         return self.should_split()
@@ -738,7 +719,7 @@ class Segment:
 
         return seg
 
-    def get_linker_entries(self) -> "list[LinkerEntry]":
+    def get_linker_entries(self) -> list[LinkerEntry]:
         from ..segtypes.linker_entry import LinkerEntry
 
         if not self.has_linker_entry:
@@ -755,10 +736,9 @@ class Segment:
                     self.get_linker_section_order(),
                     self.get_linker_section_linksection(),
                     self.is_noload(),
-                )
+                ),
             ]
-        else:
-            return []
+        return []
 
     def log(self, msg: str) -> None:
         if options.opts.verbose:
@@ -776,10 +756,7 @@ class Segment:
         return self.name == self.get_default_name(self.rom_start)
 
     def unique_id(self) -> str:
-        if self.parent:
-            s = self.parent.unique_id() + "_"
-        else:
-            s = ""
+        s = self.parent.unique_id() + "_" if self.parent else ""
 
         return s + self.type + "_" + self.name
 
@@ -792,7 +769,7 @@ class Segment:
         return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
 
     def retrieve_symbol(
-        self, syms: dict[int, list[Symbol]], addr: int
+        self, syms: dict[int, list[Symbol]], addr: int,
     ) -> Symbol | None:
         if addr not in syms:
             return None
@@ -814,7 +791,10 @@ class Segment:
         return items[0]
 
     def retrieve_sym_type(
-        self, syms: dict[int, list[Symbol]], addr: int, type: str
+        self,
+        syms: dict[int, list[Symbol]],
+        addr: int,
+        type: str,  # noqa: A002  # `type` is shadowing a builtin
     ) -> symbols.Symbol | None:
         if addr not in syms:
             return None
@@ -837,7 +817,7 @@ class Segment:
         self,
         addr: int,
         in_segment: bool = False,
-        type: str | None = None,
+        type: str | None = None,  # noqa: A002  # `type` is shadowing a builtin
         create: bool = False,
         define: bool = False,
         reference: bool = False,
@@ -893,9 +873,8 @@ class Segment:
                 ret.type = type
             if ret.rom is None:
                 ret.rom = rom
-            if in_segment:
-                if ret.segment is None:
-                    ret.segment = most_parent
+            if in_segment and ret.segment is None:
+                ret.segment = most_parent
 
         return ret
 
@@ -903,7 +882,7 @@ class Segment:
         self,
         addr: int,
         in_segment: bool,
-        type: str | None = None,
+        type: str | None = None,  # noqa: A002  # `type` is shadowing a builtin
         define: bool = False,
         reference: bool = False,
         search_ranges: bool = False,

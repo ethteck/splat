@@ -12,11 +12,11 @@ def splat_main() -> None:
     )
 
     parser.add_argument(
-        "-V", "--version", action="version", version=f"%(prog)s {splat.__version__}"
+        "-V", "--version", action="version", version=f"%(prog)s {splat.__version__}",
     )
 
     subparsers = parser.add_subparsers(
-        description="action", help="The CLI utility to run", required=True
+        description="action", help="The CLI utility to run", required=True,
     )
 
     splat.scripts.split.add_subparser(subparsers)

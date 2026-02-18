@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from .asm import CommonSegAsm
-
 from ...util import options
+from .asm import CommonSegAsm
 
 
 class CommonSegHasm(CommonSegAsm):

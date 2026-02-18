@@ -1,8 +1,9 @@
-from . import disassembler
-import spimdisasm
+
 import rabbitizer
-from ..util import log, compiler, options
-from typing import Set
+import spimdisasm
+
+from ..util import compiler, log, options
+from . import disassembler
 
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
@@ -43,10 +44,10 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         rabbitizer.config.misc_opcodeLJust = options.opts.mnemonic_ljust - 1
 
         rabbitizer.config.regNames_gprAbiNames = rabbitizer.Abi.fromStr(
-            options.opts.mips_abi_gpr
+            options.opts.mips_abi_gpr,
         )
         rabbitizer.config.regNames_fprAbiNames = rabbitizer.Abi.fromStr(
-            options.opts.mips_abi_float_regs
+            options.opts.mips_abi_float_regs,
         )
 
         if options.opts.endianness == "big":
@@ -64,7 +65,7 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
                 status="error",
             )
             log.error(
-                f"The following options are supported: {list(spimdisasm.common.compilerOptions.keys())}"
+                f"The following options are supported: {list(spimdisasm.common.compilerOptions.keys())}",
             )
         spimdisasm.common.GlobalConfig.COMPILER = spimdisasm_compiler
         if selected_compiler == compiler.SN64:
@@ -130,12 +131,12 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
     def check_version(self, skip_version_check: bool, splat_version: str):
         if not skip_version_check and spimdisasm.__version_info__ < self.SPIMDISASM_MIN:
             log.error(
-                f"splat {splat_version} requires as minimum spimdisasm {self.SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}"
+                f"splat {splat_version} requires as minimum spimdisasm {self.SPIMDISASM_MIN}, but the installed version is {spimdisasm.__version_info__}",
             )
 
         log.write(
-            f"splat {splat_version} (powered by spimdisasm {spimdisasm.__version__})"
+            f"splat {splat_version} (powered by spimdisasm {spimdisasm.__version__})",
         )
 
-    def known_types(self) -> Set[str]:
+    def known_types(self) -> set[str]:
         return spimdisasm.common.gKnownTypes

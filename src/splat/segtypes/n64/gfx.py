@@ -2,18 +2,23 @@
 N64 f3dex display list splitter
 Dumps out Gfx[] as a .inc.c file.
 """
+from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Union
-
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pygfxd import (
+    GfxdEndian,
     gfxd_buffer_to_string,
     gfxd_cimg_callback,
     gfxd_dl_callback,
     gfxd_endian,
     gfxd_execute,
+    gfxd_f3d,
+    gfxd_f3db,
+    gfxd_f3dex,
+    gfxd_f3dex2,
+    gfxd_f3dexb,
     gfxd_input_buffer,
     gfxd_light_callback,
     gfxd_lookat_callback,
@@ -29,20 +34,14 @@ from pygfxd import (
     gfxd_vp_callback,
     gfxd_vtx_callback,
     gfxd_zimg_callback,
-    GfxdEndian,
-    gfxd_f3d,
-    gfxd_f3db,
-    gfxd_f3dex,
-    gfxd_f3dexb,
-    gfxd_f3dex2,
 )
 
-from ...util import log, options
+from ...util import log, options, symbols
 from ...util.log import error
-
 from ..common.codesubsegment import CommonSegCodeSubsegment
 
-from ...util import symbols
+if TYPE_CHECKING:
+    from pathlib import Path
 
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 
@@ -50,11 +49,11 @@ LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 class N64SegGfx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
-        type: str,
+        rom_start: int | None,
+        rom_end: int | None,
+        type: str,  # noqa: A002  # `type` is shadowing a builtin
         name: str,
-        vram_start: Optional[int],
+        vram_start: int | None,
         args: list,
         yaml,
     ):
@@ -88,41 +87,41 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
         if opt == "f3d":
             return gfxd_f3d
-        elif opt == "f3db":
+        if opt == "f3db":
             return gfxd_f3db
-        elif opt == "f3dex":
+        if opt == "f3dex":
             return gfxd_f3dex
-        elif opt == "f3dexb":
+        if opt == "f3dexb":
             return gfxd_f3dexb
-        elif opt == "f3dex2":
+        if opt == "f3dex2":
             return gfxd_f3dex2
-        else:
-            log.error(f"Unknown target {opt}")
+        log.error(f"Unknown target {opt}")
+        return None
 
     def tlut_handler(self, addr, idx, count):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def timg_handler(self, addr, fmt, size, width, height, pal):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def cimg_handler(self, addr, fmt, size, width):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def zimg_handler(self, addr):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
@@ -133,28 +132,28 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
         if not sym:
             sym = self.create_symbol(
-                addr=addr, in_segment=self.in_segment, type="data", reference=True
+                addr=addr, in_segment=self.in_segment, type="data", reference=True,
             )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def mtx_handler(self, addr):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
 
     def lookat_handler(self, addr, count):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def light_handler(self, addr, count):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
@@ -178,7 +177,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def vp_handler(self, addr):
         sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+            addr=addr, in_segment=self.in_segment, type="data", reference=True,
         )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
@@ -198,13 +197,13 @@ class N64SegGfx(CommonSegCodeSubsegment):
         segment_length = len(gfx_data)
         if (segment_length) % 8 != 0:
             error(
-                f"Error: gfx segment {self.name} length ({segment_length}) is not a multiple of 8!"
+                f"Error: gfx segment {self.name} length ({segment_length}) is not a multiple of 8!",
             )
 
         out_str = "" if self.data_only else options.opts.generated_c_preamble + "\n\n"
 
         sym = self.create_symbol(
-            addr=self.vram_start, in_segment=True, type="data", define=True
+            addr=self.vram_start, in_segment=True, type="data", define=True,
         )
 
         gfxd_input_buffer(gfx_data)
@@ -215,7 +214,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
         gfxd_target(self.get_gfxd_target())
         gfxd_endian(
-            GfxdEndian.big if options.opts.endianness == "big" else GfxdEndian.little, 4
+            GfxdEndian.big if options.opts.endianness == "big" else GfxdEndian.little, 4,
         )
 
         # Callbacks
@@ -250,13 +249,12 @@ class N64SegGfx(CommonSegCodeSubsegment):
             light = match.group(0)
             addr = int(light[12:], 0)
             sym = self.create_symbol(
-                addr=addr, in_segment=self.in_segment, type="data", reference=True
+                addr=addr, in_segment=self.in_segment, type="data", reference=True,
             )
             return self.format_sym_name(sym)
 
-        out_str = re.sub(LIGHTS_RE, light_sub_func, out_str)
+        return re.sub(LIGHTS_RE, light_sub_func, out_str)
 
-        return out_str
 
     def split(self, rom_bytes: bytes):
         if self.file_text and self.out_path():
@@ -276,7 +274,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
         return self.extract and options.opts.is_mode_active("gfx")
 
     @staticmethod
-    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
+    def estimate_size(yaml: dict | list) -> int | None:
         if isinstance(yaml, dict) and "length" in yaml:
             return yaml["length"] * 0x10
         return None

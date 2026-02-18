@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import spimdisasm
 import rabbitizer
+import spimdisasm
 
-from ...util import options, symbols, log
-
+from ...disassembler.disassembler_section import (
+    DisassemblerSection,
+    make_text_section,
+)
+from ...util import log, options, symbols
+from ..segment import Segment, SerializedSegment, parse_segment_vram
 from .code import CommonSegCode
 
-from ..segment import Segment, parse_segment_vram, SerializedSegment
-
-from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 # abstract class for c, asm, data, etc
@@ -20,7 +23,7 @@ class CommonSegCodeSubsegment(Segment):
         self,
         rom_start: int | None,
         rom_end: int | None,
-        type: str,
+        type: str,  # noqa: A002  # `type` is shadowing a builtin
         name: str,
         vram_start: int | None,
         args: list[str],
@@ -70,7 +73,7 @@ class CommonSegCodeSubsegment(Segment):
         return ".text"
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection
+        self, disassembler_section: DisassemblerSection,
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 
@@ -90,7 +93,7 @@ class CommonSegCodeSubsegment(Segment):
 
         if not isinstance(self.rom_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'",
             )
 
         # Supposedly logic error, not user error
@@ -102,7 +105,7 @@ class CommonSegCodeSubsegment(Segment):
 
         if not isinstance(self.vram_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'",
             )
 
         self.spim_section = make_text_section(
@@ -142,7 +145,7 @@ class CommonSegCodeSubsegment(Segment):
         self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(
-            self.get_most_parent(), func_spim.contextSym, force_in_segment=False
+            self.get_most_parent(), func_spim.contextSym, force_in_segment=False,
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
@@ -150,18 +153,19 @@ class CommonSegCodeSubsegment(Segment):
             section = self.spim_section.get_section()
             assert section is not None
             context_sym = section.getSymbol(
-                referenced_vram, tryPlusOffset=False
+                referenced_vram, tryPlusOffset=False,
             )
             if context_sym is not None:
                 symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym, force_in_segment=False
+                    self.get_most_parent(), context_sym, force_in_segment=False,
                 )
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):
             if options.opts.platform == "ps2":
-                from .c import CommonSegC
                 from rabbitizer import TrinaryValue
+
+                from .c import CommonSegC
 
                 if isinstance(self, CommonSegC):
                     insn.flag_r5900UseDollar = TrinaryValue.FALSE
@@ -180,7 +184,7 @@ class CommonSegCodeSubsegment(Segment):
                 context_sym = section.getSymbol(sym_address)
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym, force_in_segment=False
+                        self.get_most_parent(), context_sym, force_in_segment=False,
                     )
 
     def print_file_boundaries(self) -> None:
@@ -207,10 +211,10 @@ class CommonSegCodeSubsegment(Segment):
                     sym_addr = sym.vram
 
                 print(
-                    f"\nSegment {self.name}, symbol at vram {sym_addr:X} ends with extra nops, indicating a likely file split."
+                    f"\nSegment {self.name}, symbol at vram {sym_addr:X} ends with extra nops, indicating a likely file split.",
                 )
                 print(
-                    "File split suggestions for this segment will follow in config yaml format:"
+                    "File split suggestions for this segment will follow in config yaml format:",
                 )
             print(f"      - [0x{self.rom_start + in_file_offset:X}, {self.type}]")
 

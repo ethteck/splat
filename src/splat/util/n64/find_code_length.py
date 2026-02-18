@@ -11,7 +11,7 @@ def int_any_base(x):
 
 
 parser = argparse.ArgumentParser(
-    description="Given a rom and start offset, find where the code ends"
+    description="Given a rom and start offset, find where the code ends",
 )
 parser.add_argument("rom", help="path to a .z64 rom")
 parser.add_argument("start", help="start offset", type=int_any_base)

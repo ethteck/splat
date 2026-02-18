@@ -1,12 +1,11 @@
-from typing import Optional
-
-from .data import CommonSegData
-from ...util import log
+from __future__ import annotations
 
 from ...disassembler.disassembler_section import (
     DisassemblerSection,
     make_gcc_except_table_section,
 )
+from ...util import log
+from .data import CommonSegData
 
 
 class CommonSegGcc_except_table(CommonSegData):
@@ -15,11 +14,11 @@ class CommonSegGcc_except_table(CommonSegData):
     def get_linker_section(self) -> str:
         return ".gcc_except_table"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "aw"
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection
+        self, disassembler_section: DisassemblerSection,
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 
@@ -35,7 +34,7 @@ class CommonSegGcc_except_table(CommonSegData):
 
         if not isinstance(self.rom_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'",
             )
 
         # Supposedly logic error, not user error
@@ -47,7 +46,7 @@ class CommonSegGcc_except_table(CommonSegData):
 
         if not isinstance(self.vram_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
+                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'",
             )
 
         self.spim_section = make_gcc_except_table_section(

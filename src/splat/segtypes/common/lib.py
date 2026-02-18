@@ -1,26 +1,25 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional, List
 
 from ...util import log, options
-
 from ..linker_entry import LinkerEntry, LinkerWriter
-from .segment import CommonSegment
-
 from ..segment import Segment, parse_segment_vram
+from .segment import CommonSegment
 
 
 class LinkerEntryLib(LinkerEntry):
     def __init__(
         self,
         segment: Segment,
-        src_paths: List[Path],
+        src_paths: list[Path],
         object_path: Path,
         section_order: str,
         section_link: str,
         noload: bool,
     ):
         super().__init__(
-            segment, src_paths, object_path, section_order, section_link, noload
+            segment, src_paths, object_path, section_order, section_link, noload,
         )
         self.object_path = object_path
 
@@ -31,11 +30,11 @@ class LinkerEntryLib(LinkerEntry):
 class CommonSegLib(CommonSegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
-        type: str,
+        rom_start: int | None,
+        rom_end: int | None,
+        type: str,  # noqa: A002  # `type` is shadowing a builtin
         name: str,
-        vram_start: Optional[int],
+        vram_start: int | None,
         args: list,
         yaml,
     ):
@@ -73,7 +72,7 @@ class CommonSegLib(CommonSegment):
     def get_linker_section(self) -> str:
         return self.section
 
-    def get_linker_entries(self) -> List[LinkerEntry]:
+    def get_linker_entries(self) -> list[LinkerEntry]:
         path = options.opts.lib_path / self.name
 
         object_path = Path(f"{path}.a:{self.object}.o")
@@ -86,5 +85,5 @@ class CommonSegLib(CommonSegment):
                 self.get_linker_section_order(),
                 self.get_linker_section_linksection(),
                 self.is_noload(),
-            )
+            ),
         ]

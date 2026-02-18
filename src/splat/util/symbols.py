@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import spimdisasm
-
 from intervaltree import IntervalTree
+
 from ..disassembler import disassembler_instance
-from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ..segtypes.segment import Segment
 
 from . import log, options, progress_bar
@@ -40,18 +41,15 @@ def check_valid_type(typename: str) -> bool:
     if typename in splat_sym_types:
         return True
 
-    if typename in disassembler_instance.get_instance().known_types():
-        return True
-
-    return False
+    return typename in disassembler_instance.get_instance().known_types()
 
 
-def is_truey(str: str) -> bool:
-    return str.lower() in TRUEY_VALS
+def is_truey(string: str) -> bool:
+    return string.lower() in TRUEY_VALS
 
 
-def is_falsey(str: str) -> bool:
-    return str.lower() in FALSEY_VALS
+def is_falsey(string: str) -> bool:
+    return string.lower() in FALSEY_VALS
 
 
 def add_symbol(sym: Symbol) -> None:
@@ -76,7 +74,7 @@ def to_cname(symbol_name: str) -> str:
 
 
 def handle_sym_addrs(
-    path: Path, sym_addrs_lines: list[str], all_segments: list[Segment]
+    path: Path, sym_addrs_lines: list[str], all_segments: list[Segment],
 ) -> None:
     def get_seg_for_name(name: str) -> Segment | None:
         for segment in all_segments:
@@ -96,7 +94,7 @@ def handle_sym_addrs(
     line: str
     for line_num, line in enumerate(prog_bar):
         line = line.strip()
-        if not line == "" and not line.startswith("//"):
+        if line != "" and not line.startswith("//"):
             comment_loc = line.find("//")
             line_main = line
             line_ext = ""
@@ -133,13 +131,13 @@ def handle_sym_addrs(
                         if attr_name == "":
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
-                                f"Missing attribute name in '{info}', is there extra whitespace?"
+                                f"Missing attribute name in '{info}', is there extra whitespace?",
                             )
                             log.error("")
                         if attr_val == "":
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
-                                f"Missing attribute value in '{info}', is there extra whitespace?"
+                                f"Missing attribute value in '{info}', is there extra whitespace?",
                             )
                             log.error("")
 
@@ -149,20 +147,20 @@ def handle_sym_addrs(
                                 if not check_valid_type(attr_val):
                                     log.parsing_error_preamble(path, line_num, line)
                                     log.write(
-                                        f"Unrecognized symbol type in '{info}', it should be one of"
+                                        f"Unrecognized symbol type in '{info}', it should be one of",
                                     )
                                     log.write(
                                         [
                                             *splat_sym_types,
                                             *spimdisasm.common.gKnownTypes,
-                                        ]
+                                        ],
                                     )
                                     log.write(
-                                        "You may use a custom type that starts with a capital letter"
+                                        "You may use a custom type that starts with a capital letter",
                                     )
                                     log.error("")
-                                type = attr_val
-                                sym.type = type
+                                type_ = attr_val
+                                sym.type = type_
                                 continue
                             if attr_name == "size":
                                 size = int(attr_val, 0)
@@ -200,18 +198,18 @@ def handle_sym_addrs(
                                 if align < 0:
                                     log.parsing_error_preamble(path, line_num, line)
                                     log.error(
-                                        f"The given alignment for '{sym.name}' (0x{sym.vram_start:08X}) is negative."
+                                        f"The given alignment for '{sym.name}' (0x{sym.vram_start:08X}) is negative.",
                                     )
                                 align_shift = (align & (-align)).bit_length() - 1
                                 if (1 << align_shift) != align:
                                     log.parsing_error_preamble(path, line_num, line)
                                     log.error(
-                                        f"The given alignment '0x{align:X}' for symbol '{sym.name}' (0x{sym.vram_start:08X}) is not a power of two."
+                                        f"The given alignment '0x{align:X}' for symbol '{sym.name}' (0x{sym.vram_start:08X}) is not a power of two.",
                                     )
                                 if sym.vram_start % align != 0:
                                     log.parsing_error_preamble(path, line_num, line)
                                     log.error(
-                                        f"The symbol '{sym.name}' (0x{sym.vram_start:08X}) is not aligned already to the given alignment '0x{align:X}'."
+                                        f"The symbol '{sym.name}' (0x{sym.vram_start:08X}) is not aligned already to the given alignment '0x{align:X}'.",
                                     )
 
                                 sym.given_align = align
@@ -219,7 +217,7 @@ def handle_sym_addrs(
                         except:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
-                                f"value of attribute '{attr_name}' could not be read:"
+                                f"value of attribute '{attr_name}' could not be read:",
                             )
                             log.write("")
                             raise
@@ -235,7 +233,7 @@ def handle_sym_addrs(
                         if tf_val is None:
                             log.parsing_error_preamble(path, line_num, line)
                             log.write(
-                                f"Invalid Boolean value '{attr_val}' for attribute '{attr_name}', should be one of"
+                                f"Invalid Boolean value '{attr_val}' for attribute '{attr_name}', should be one of",
                             )
                             log.write([*TRUEY_VALS, *FALSEY_VALS])
                             log.error("")
@@ -276,7 +274,7 @@ def handle_sym_addrs(
                     ignored_addresses.add(sym.vram_start)
                 else:
                     spim_context.addBannedSymbolRangeBySize(
-                        sym.vram_start, sym.given_size
+                        sym.vram_start, sym.given_size,
                     )
 
                 continue
@@ -294,7 +292,7 @@ def handle_sym_addrs(
                 if not sym.allow_duplicated or not item.allow_duplicated:
                     log.parsing_error_preamble(path, line_num, line)
                     log.error(
-                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}",
                     )
 
             if addr in all_symbols_dict:
@@ -303,12 +301,14 @@ def handle_sym_addrs(
                     have_same_rom_addresses = sym.rom == item.rom
                     same_segment = sym.segment == item.segment
 
-                    if have_same_rom_addresses and same_segment:
-                        if not sym.allow_duplicated or not item.allow_duplicated:
-                            log.parsing_error_preamble(path, line_num, line)
-                            log.error(
-                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
-                            )
+                    if (
+                        have_same_rom_addresses and same_segment
+                        and (not sym.allow_duplicated or not item.allow_duplicated)
+                    ):
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.error(
+                            f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol",
+                        )
 
             if len(sym.filename) > 253 or any(
                 c in ILLEGAL_FILENAME_CHARS for c in sym.filename
@@ -324,7 +324,7 @@ def handle_sym_addrs(
                     f"  which will be a problem when writing the symbol to its own file.\n"
                     f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
                     f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
-                    f"    {ILLEGAL_FILENAME_CHARS}"
+                    f"    {ILLEGAL_FILENAME_CHARS}",
                 )
 
             seen_symbols[sym.name] = sym
@@ -382,9 +382,7 @@ def initialize_spim_context(all_segments: list[Segment]) -> None:
         ram_id = segment.get_exclusive_ram_id()
 
         if ram_id is None:
-            if global_vram_start is None:
-                global_vram_start = segment.vram_start
-            elif segment.vram_start < global_vram_start:
+            if global_vram_start is None or segment.vram_start < global_vram_start:
                 global_vram_start = segment.vram_start
 
             if global_vram_end is None:
@@ -396,14 +394,10 @@ def initialize_spim_context(all_segments: list[Segment]) -> None:
                     # Global segment *after* overlay segments?
                     global_segments_after_overlays.append(segment)
 
-            if global_vrom_start is None:
-                global_vrom_start = segment.rom_start
-            elif segment.rom_start < global_vrom_start:
+            if global_vrom_start is None or segment.rom_start < global_vrom_start:
                 global_vrom_start = segment.rom_start
 
-            if global_vrom_end is None:
-                global_vrom_end = segment.rom_end
-            elif global_vrom_end < segment.rom_end:
+            if global_vrom_end is None or global_vrom_end < segment.rom_end:
                 global_vrom_end = segment.rom_end
 
         elif segment.vram_start != segment.vram_end:
@@ -430,7 +424,7 @@ def initialize_spim_context(all_segments: list[Segment]) -> None:
         and global_vrom_end is not None
     ):
         spim_context.changeGlobalSegmentRanges(
-            global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
+            global_vrom_start, global_vrom_end, global_vram_start, global_vram_end,
         )
 
         overlaps_found = False
@@ -453,7 +447,7 @@ def initialize_spim_context(all_segments: list[Segment]) -> None:
                 "Many overlaps between non-global and global segments were found.",
             )
             log.write(
-                "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
+                "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments",
             )
             if len(global_segments_after_overlays) > 0:
                 log.write(
@@ -495,27 +489,27 @@ def initialize_spim_context(all_segments: list[Segment]) -> None:
 
 
 def add_symbol_to_spim_segment(
-    segment: spimdisasm.common.SymbolsSegment, sym: Symbol
+    segment: spimdisasm.common.SymbolsSegment, sym: Symbol,
 ) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
         context_sym = segment.addFunction(
-            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom,
         )
     elif sym.type == "jtbl":
         context_sym = segment.addJumpTable(
-            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom,
         )
     elif sym.type == "jtbl_label":
         context_sym = segment.addJumpTableLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom,
         )
     elif sym.type == "label":
         context_sym = segment.addBranchLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom,
         )
     else:
         context_sym = segment.addSymbol(
-            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom,
         )
         if sym.type is not None:
             context_sym.type = sym.type
@@ -553,27 +547,27 @@ def add_symbol_to_spim_segment(
 
 
 def add_symbol_to_spim_section(
-    section: spimdisasm.mips.sections.SectionBase, sym: Symbol
+    section: spimdisasm.mips.sections.SectionBase, sym: Symbol,
 ) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
         context_sym = section.addFunction(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom,
         )
     elif sym.type == "jtbl":
         context_sym = section.addJumpTable(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom,
         )
     elif sym.type == "jtbl_label":
         context_sym = section.addJumpTableLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom,
         )
     elif sym.type == "label":
         context_sym = section.addBranchLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom,
         )
     else:
         context_sym = section.addSymbol(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
+            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom,
         )
         if sym.type is not None:
             context_sym.type = sym.type
@@ -638,7 +632,7 @@ def create_symbol_from_spim_symbol(
                 in_segment = segment.contains_vram(context_sym.vram)
 
     sym = segment.create_symbol(
-        context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True
+        context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True,
     )
 
     if sym.given_name is None and context_sym.name is not None:
@@ -719,15 +713,15 @@ class Symbol:
     def __hash__(self) -> int:
         return hash((self.vram_start, self.segment))
 
-    def format_name(self, format: str) -> str:
-        ret = format
+    def format_name(self, format_: str) -> str:
+        ret = format_
 
         ret = ret.replace("$VRAM", f"{self.vram_start:08X}")
 
         if "$ROM" in ret:
             if not isinstance(self.rom, int):
                 log.error(
-                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:08X} typed {self.type}"
+                    f"Attempting to rom-name a symbol with no ROM address: {self.vram_start:08X} typed {self.type}",
                 )
             ret = ret.replace("$ROM", f"{self.rom:X}")
 
@@ -742,9 +736,11 @@ class Symbol:
 
     @property
     def default_name(self) -> str:
-        if self._generated_default_name is not None:
-            if self.type == self._last_type:
-                return self._generated_default_name
+        if (
+            self._generated_default_name is not None
+            and self.type == self._last_type
+        ):
+            return self._generated_default_name
 
         if self.segment:
             if isinstance(self.rom, int):

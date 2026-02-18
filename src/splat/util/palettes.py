@@ -1,33 +1,31 @@
 from __future__ import annotations
 
-from typing import Dict, TYPE_CHECKING
-
-from ..util import log
+from typing import TYPE_CHECKING
 
 from ..segtypes.common.group import CommonSegGroup
 from ..segtypes.n64.ci import N64SegCi
 from ..segtypes.n64.palette import N64SegPalette
+from ..util import log
 
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
 
-global_ids: Dict[str, N64SegPalette] = {}
+global_ids: dict[str, N64SegPalette] = {}
 
 
 # Resolve Raster#palette and Palette#raster links
 def initialize(all_segments: list[Segment]) -> None:
     def collect_global_ids(segments: list[Segment]) -> None:
         for segment in segments:
-            if isinstance(segment, N64SegPalette):
-                if segment.global_id is not None:
-                    global_ids[segment.global_id] = segment
+            if isinstance(segment, N64SegPalette) and segment.global_id is not None:
+                global_ids[segment.global_id] = segment
 
             if isinstance(segment, CommonSegGroup):
                 collect_global_ids(segment.subsegments)
 
     def process(segments: list[Segment]) -> None:
-        raster_map: Dict[str, N64SegCi] = {}
-        palette_map: Dict[str, N64SegPalette] = {}
+        raster_map: dict[str, N64SegCi] = {}
+        palette_map: dict[str, N64SegPalette] = {}
 
         for segment in segments:
             if isinstance(segment, N64SegPalette):
@@ -43,13 +41,13 @@ def initialize(all_segments: list[Segment]) -> None:
 
         for raster in raster_map.values():
             for pal_name in raster.palette_names:
-                pal = global_ids.get(pal_name, None)
+                pal = global_ids.get(pal_name)
                 if pal is not None:
                     global_ids_not_seen.discard(pal_name)
                     palettes_seen.discard(pal_name)
                     raster.palettes.append(pal)
                 else:
-                    pal = palette_map.get(pal_name, None)
+                    pal = palette_map.get(pal_name)
 
                     if pal is not None:
                         palettes_seen.discard(pal_name)
@@ -59,7 +57,7 @@ def initialize(all_segments: list[Segment]) -> None:
                             "Could not find palette: "
                             + pal_name
                             + ", referenced by raster: "
-                            + raster.name
+                            + raster.name,
                         )
 
             # Resolve "." palette links
@@ -88,5 +86,5 @@ def initialize(all_segments: list[Segment]) -> None:
 
     if len(global_ids_not_seen) > 0:
         log.error(
-            f"Found no ci links to palettes with global_ids: {', '.join(global_ids_not_seen)}"
+            f"Found no ci links to palettes with global_ids: {', '.join(global_ids_not_seen)}",
         )

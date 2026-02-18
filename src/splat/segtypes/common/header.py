@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...util import options
-
 from .segment import CommonSegment
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class CommonSegHeader(CommonSegment):
