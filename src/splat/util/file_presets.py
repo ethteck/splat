@@ -15,7 +15,7 @@ from pathlib import Path
 from . import log, options
 
 
-def write_all_files():
+def write_all_files() -> None:
     if not options.opts.generate_asm_macros_files:
         return
 
@@ -36,7 +36,7 @@ def _write(filepath: str, contents: str):
         f.write(contents)
 
 
-def write_include_asm_h():
+def write_include_asm_h() -> None:
     if not options.opts.compiler.uses_include_asm:
         # These compilers do not use the `INCLUDE_ASM` macro.
         return
@@ -115,7 +115,7 @@ __asm__(".include \\"{directory}/labels.inc\\"\\n");
     _write(f"{directory}/include_asm.h", file_data)
 
 
-def write_assembly_inc_files():
+def write_assembly_inc_files() -> None:
     directory = options.opts.generated_asm_macros_directory.as_posix()
 
     func_macros = f"""\
@@ -352,7 +352,7 @@ def write_assembly_inc_files():
     _write(f"{directory}/macro.inc", f"{preamble}\n{gas}")
 
 
-def write_gte_macros():
+def write_gte_macros() -> None:
     # Taken directly from https://github.com/Decompollaborate/rabbitizer/blob/-/docs/r3000gte/gte_macros.s
     # Please try to upstream any fix/update done here.
     gte_macros = """\

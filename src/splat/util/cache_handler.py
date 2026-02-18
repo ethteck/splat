@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from . import log, options
 
 if TYPE_CHECKING:
-    from ..segtypes.common.segment import Segment
+    from ..segtypes.segment import Segment
 
 
 class Cache:
@@ -46,12 +46,8 @@ class Cache:
 
     def check_cache_hit(self, segment: Segment, update_on_miss: bool) -> bool:
         if self.use_cache:
-            # types: no-untyped-call error: Call to untyped function "cache" in typed context
             cached = segment.cache()
-            # types: ^^^^^^^^^^^^^^^
-            # types: no-untyped-call error: Call to untyped function "unique_id" in typed context
             segment_id = segment.unique_id()
-# types:                 ^^^^^^^^^^^^^^^^^^^
 
             if cached == self.cache.get(segment_id):
                 # Cache hit

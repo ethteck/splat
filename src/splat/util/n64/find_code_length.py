@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 
@@ -6,7 +7,7 @@ import rabbitizer
 import spimdisasm
 
 
-def int_any_base(x):
+def int_any_base(x: str) -> int:
     return int(x, 0)
 
 
@@ -24,7 +25,7 @@ parser.add_argument(
 )
 
 
-def run(rom_bytes, start_offset, vram, end_offset=None):
+def run(rom_bytes: bytes, start_offset: int, vram: int, end_offset: int | None = None) -> int:
     rom_addr = start_offset
     last_return = rom_addr
 
@@ -46,7 +47,7 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
     return end
 
 
-def main():
+def main() -> None:
     args = parser.parse_args()
 
     with open(args.rom, "rb") as f:

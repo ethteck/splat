@@ -69,7 +69,7 @@ UNSUPPORTED_OPS = {
 }
 
 
-def is_valid(insn) -> bool:
+def is_valid(insn: rabbitizer.Instruction) -> bool:
     if not insn.isValid():
         return insn.instrIdType.name in ("CPU_SPECIAL", "CPU_COP2")
 
@@ -78,7 +78,7 @@ def is_valid(insn) -> bool:
 
 
 def try_find_text(
-    rom_bytes, start_offset=PAYLOAD_OFFSET, valid_threshold=32,
+    rom_bytes: bytes, start_offset: int = PAYLOAD_OFFSET, valid_threshold: int = 32,
 ) -> tuple[int, int]:
     start = end = 0
     good_count = valid_count = 0
@@ -114,7 +114,7 @@ def try_find_text(
     return (start, end)
 
 
-def try_get_gp(rom_bytes, start_offset, max_instructions=50) -> int:
+def try_get_gp(rom_bytes: bytes, start_offset: int, max_instructions: int = 50) -> int:
     # $gp is set like this:
     # /* A7738 800B7138 0E801C3C */  lui        $gp, (0x800E0000 >> 16)
     # /* A773C 800B713C 90409C27 */  addiu      $gp, $gp, 0x4090
@@ -133,7 +133,7 @@ def try_get_gp(rom_bytes, start_offset, max_instructions=50) -> int:
     return gp
 
 
-def read_word(exe_bytes, offset) -> int:
+def read_word(exe_bytes: bytes, offset: int) -> int:
     return struct.unpack("<I", exe_bytes[offset : offset + 4])[0]
 
 
@@ -193,7 +193,7 @@ class PsxExe:
         )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Gives information on PSX EXEs")
     parser.add_argument("exe", help="Path to an PSX EXE")
 

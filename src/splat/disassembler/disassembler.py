@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 
 class Disassembler(ABC):
+    __slots__ = ()
+
     @abstractmethod
-    def configure(self):
+    def configure(self) -> None:
         raise NotImplementedError("configure")
 
     @abstractmethod

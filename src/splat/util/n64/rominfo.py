@@ -108,7 +108,7 @@ class N64EntrypointInfo:
 
     @staticmethod
     def parse_rom_bytes(
-        rom_bytes, vram: int, offset: int = 0x1000, size: int = 0x60,
+        rom_bytes: bytes, vram: int, offset: int = 0x1000, size: int = 0x60,
     ) -> N64EntrypointInfo:
         word_list = spimdisasm.common.Utils.bytesToWords(
             rom_bytes, offset, offset + size,
@@ -384,7 +384,7 @@ class N64Rom:
         return country_codes[self.country_code]
 
 
-def swap_bytes(data):
+def swap_bytes(data: bytes) -> bytes:
     return bytes(
         itertools.chain.from_iterable(
             struct.pack(">H", x) for (x,) in struct.iter_unpack("<H", data)
@@ -392,7 +392,7 @@ def swap_bytes(data):
     )
 
 
-def read_rom(rom_path: Path):
+def read_rom(rom_path: Path) -> bytes:
     rom_bytes = rom_path.read_bytes()
 
     if rom_path.suffix.lower() == ".n64":
@@ -405,17 +405,17 @@ def read_rom(rom_path: Path):
     return rom_bytes
 
 
-def get_cic(rom_bytes: bytes):
+def get_cic(rom_bytes: bytes) -> CIC:
     ipl3_crc = zlib.crc32(rom_bytes[0x40:0x1000])
 
     return crc_to_cic.get(ipl3_crc, unknown_cic)
 
 
-def get_entry_point(program_counter: int, cic: CIC):
+def get_entry_point(program_counter: int, cic: CIC) -> int:
     return program_counter - cic.offset
 
 
-def guess_header_encoding(rom_bytes: bytes):
+def guess_header_encoding(rom_bytes: bytes) -> str:
     header = rom_bytes[0x20:0x34]
     encodings = ["ASCII", "shift_jis", "euc-jp"]
     for encoding in encodings:
@@ -430,7 +430,7 @@ def guess_header_encoding(rom_bytes: bytes):
 
 
 def get_info(
-    rom_path: Path, rom_bytes: bytes | None = None, header_encoding=None,
+    rom_path: Path, rom_bytes: bytes | None = None, header_encoding: str | None = None,
 ) -> N64Rom:
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
@@ -483,7 +483,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     )
 
 
-def get_compiler_info(rom_bytes, entry_point, print_result=True):
+def get_compiler_info(rom_bytes: bytes, entry_point: int, print_result: bool = True) -> str:
     jumps = 0
     branches = 0
 
@@ -507,7 +507,7 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
     return compiler
 
 
-def main():
+def main() -> None:
     rabbitizer.config.pseudos_pseudoB = True
 
     args = parser.parse_args()
