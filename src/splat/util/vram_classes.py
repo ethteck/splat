@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import NotRequired, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from . import log
+
+if TYPE_CHECKING:
+    from typing_extensions import NotRequired
 
 
 @dataclass(frozen=True)
