@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING
 import spimdisasm
 
 from intervaltree import IntervalTree
-from splat.disassembler import disassembler_instance
+from ..disassembler import disassembler_instance
 from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
-    from splat.segtypes.segment import Segment
+    from ..segtypes.segment import Segment
 
-from splat.util import log, options, progress_bar
+from . import log, options, progress_bar
 
 all_symbols: list[Symbol] = []
 all_symbols_dict: dict[int, list[Symbol]] = {}

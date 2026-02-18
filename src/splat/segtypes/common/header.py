@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from splat.util import options
+from ...util import options
 
-from splat.segtypes.segment import CommonSegment
+from .segment import CommonSegment
 
 
 class CommonSegHeader(CommonSegment):

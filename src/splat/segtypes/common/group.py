@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from splat.util import log
+from ...util import log
 
-from splat.segtypes.common.segment import CommonSegment
-from splat.segtypes.segment import empty_statistics, Segment, SegmentStatistics
+from .segment import CommonSegment
+from ..segment import empty_statistics, Segment, SegmentStatistics
 
 if TYPE_CHECKING:
-    from splat.util.vram_classes import SerializedSegmentData
-    from splat.segtypes.linker_entry import LinkerEntry
+    from ...util.vram_classes import SerializedSegmentData
+    from ..linker_entry import LinkerEntry
 
 
 class CommonSegGroup(CommonSegment):

@@ -6,10 +6,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
-from splat.util import options, log
+from ..util import options, log
 
-from splat.segtypes.segment import Segment
-from splat.util.symbols import to_cname
+from .segment import Segment
+from ..util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'

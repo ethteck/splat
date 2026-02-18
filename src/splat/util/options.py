@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import cast, Literal, Type, TypeVar
 from collections.abc import Mapping
 
-from splat.util import compiler
-from splat.util.compiler import Compiler
+from . import compiler
+from .compiler import Compiler
 
 
 @dataclass

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import spimdisasm
 
-from splat.util import options, symbols
+from ..util import options, symbols
 
 
 class DisassemblerSection(ABC):

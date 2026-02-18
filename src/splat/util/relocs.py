@@ -5,7 +5,7 @@ from typing import Dict
 
 import spimdisasm
 
-from splat.util import log, options, symbols, progress_bar
+from . import log, options, symbols, progress_bar
 
 
 @dataclass

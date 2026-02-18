@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections import OrderedDict
 from typing import List, Optional, Type, Tuple
 
-from splat.util import log, options, utils
+from ...util import log, options, utils
 
-from splat.segtypes.common.group import CommonSegGroup
+from .group import CommonSegGroup
 from ..segment import Segment, parse_segment_align
 
 

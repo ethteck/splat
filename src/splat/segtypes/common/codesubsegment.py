@@ -5,13 +5,13 @@ from pathlib import Path
 import spimdisasm
 import rabbitizer
 
-from splat.util import options, symbols, log
+from ...util import options, symbols, log
 
-from splat.segtypes.common.code import CommonSegCode
+from .code import CommonSegCode
 
-from splat.segtypes.segment import Segment, parse_segment_vram, SerializedSegment
+from ..segment import Segment, parse_segment_vram, SerializedSegment
 
-from splat.disassembler.disassembler_section import DisassemblerSection, make_text_section
+from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
 
 
 # abstract class for c, asm, data, etc

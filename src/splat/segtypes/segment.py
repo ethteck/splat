@@ -9,17 +9,18 @@ from pathlib import Path
 from typing import Optional, Type, TYPE_CHECKING, Union, Dict, TypeAlias, List
 
 from intervaltree import Interval, IntervalTree
-from splat.util import vram_classes
+from ..util import vram_classes
 
-from splat.util.vram_classes import VramClass, SerializedSegmentData
-from splat.util import log, options, symbols
-from splat.util.symbols import Symbol, to_cname
 
-from splat import __package_name__
+from ..util.vram_classes import VramClass, SerializedSegmentData
+from ..util import log, options, symbols
+from ..util.symbols import Symbol, to_cname
+
+from .. import __package_name__
 
 # circular import
 if TYPE_CHECKING:
-    from splat.segtypes.linker_entry import LinkerEntry
+    from ..segtypes.linker_entry import LinkerEntry
 
 
 SerializedSegment: TypeAlias = Union[SerializedSegmentData, List[str]]
@@ -435,8 +436,8 @@ class Segment:
         ret.parent = parent
 
         # Import here to avoid circular imports
-        from splat.segtypes.common.code import CommonSegCode
-        from splat.segtypes.common.bss import CommonSegBss
+        from .common.code import CommonSegCode
+        from .common.bss import CommonSegBss
 
         if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss):
             # We need to know the bss space for the segment.

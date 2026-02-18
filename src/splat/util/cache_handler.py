@@ -3,8 +3,8 @@ from __future__ import annotations
 import pickle
 from typing import Any
 
-from splat.util import options, log
-from splat.segtypes.segment import Segment
+from . import options, log
+from ..segtypes.common.segment import Segment
 
 
 class Cache:

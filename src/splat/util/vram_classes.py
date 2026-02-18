@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TypedDict, NotRequired
 
-from splat.util import log
+from . import log
 
 
 @dataclass(frozen=True)

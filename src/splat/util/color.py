@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from math import ceil
 
-from splat.util import options
+from . import options
 
 
 # RRRRRGGG GGBBBBBA

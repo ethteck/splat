@@ -1,4 +1,4 @@
-from splat.segtypes.segment import Segment
+from ..segment import Segment
 
 
 class CommonSegment(Segment):

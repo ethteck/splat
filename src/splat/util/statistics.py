@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from colorama import Fore, Style
 
-from splat.util import log
+from . import log
 
 
 def fmt_size(size: int) -> str:

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Dict, TYPE_CHECKING
 
-from splat.util import log
+from ..util import log
 
-from splat.segtypes.common.group import CommonSegGroup
-from splat.segtypes.n64.ci import N64SegCi
-from splat.segtypes.n64.palette import N64SegPalette
+from ..segtypes.common.group import CommonSegGroup
+from ..segtypes.n64.ci import N64SegCi
+from ..segtypes.n64.palette import N64SegPalette
 
 if TYPE_CHECKING:
-    from splat.segtypes.segment import Segment
+    from ..segtypes.segment import Segment
 
 global_ids: Dict[str, N64SegPalette] = {}
 

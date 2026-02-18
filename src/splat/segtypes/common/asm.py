@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-from splat.segtypes.common.codesubsegment import CommonSegCodeSubsegment
+from .codesubsegment import CommonSegCodeSubsegment
 
 
 class CommonSegAsm(CommonSegCodeSubsegment):
