@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, NoReturn, Optional, TextIO, TypeAlias
+from typing import TYPE_CHECKING, NoReturn, Optional, TextIO
 
 from colorama import Fore, Style, init
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from typing_extensions import TypeAlias
 
 init(autoreset=True)
 
