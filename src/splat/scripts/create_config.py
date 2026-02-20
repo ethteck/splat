@@ -1,19 +1,19 @@
 #! /usr/bin/env python3
-from __future__ import annotations
 
 import argparse
 import hashlib
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
+from typing import Optional
 
-from ..util import conf, file_presets, log
 from ..util.n64 import find_code_length, rominfo
-from ..util.ps2 import ps2elfinfo
 from ..util.psx import psxexeinfo
+from ..util.ps2 import ps2elfinfo
+from ..util import log, file_presets, conf
 
 
-def main(file_path: Path, objcopy: str | None):
+def main(file_path: Path, objcopy: Optional[str]):
     if not file_path.exists():
         sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
     if file_path.is_dir():
@@ -103,7 +103,7 @@ options:
 
     # Start analysing after the entrypoint segment.
     first_section_end = find_code_length.run(
-        rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point,
+        rom_bytes, 0x1000 + rom.entrypoint_info.segment_size(), rom.entry_point
     )
 
     extra_message = ""
@@ -195,7 +195,7 @@ segments:
     # Write reloc_addrs.txt file
     reloc_addrs: list[str] = []
 
-    addresses_info: list[tuple[rominfo.EntryAddressInfo | None, str]] = [
+    addresses_info: list[tuple[Optional[rominfo.EntryAddressInfo], str]] = [
         (rom.entrypoint_info.main_address, "main"),
         (rom.entrypoint_info.bss_start_address, "main_BSS_START"),
         (rom.entrypoint_info.bss_size, "main_BSS_SIZE"),
@@ -213,10 +213,10 @@ segments:
             continue
 
         reloc_addrs.append(
-            f"rom:0x{addr_info.rom_hi:06X} reloc:MIPS_HI16 symbol:{sym_name}",
+            f"rom:0x{addr_info.rom_hi:06X} reloc:MIPS_HI16 symbol:{sym_name}"
         )
         reloc_addrs.append(
-            f"rom:0x{addr_info.rom_lo:06X} reloc:MIPS_LO16 symbol:{sym_name}",
+            f"rom:0x{addr_info.rom_lo:06X} reloc:MIPS_LO16 symbol:{sym_name}"
         )
         reloc_addrs.append("")
 
@@ -225,32 +225,32 @@ segments:
         and not rom.entrypoint_info.stack_top.ori
     ):
         reloc_addrs.append(
-            '// This entry corresponds to the "stack top", which is the end of the array used as the stack for the main segment.',
+            '// This entry corresponds to the "stack top", which is the end of the array used as the stack for the main segment.'
         )
         reloc_addrs.append(
-            "// It is commented out because it was not possible to infer what the start of the stack symbol is, so you'll have to figure it out by yourself.",
+            "// It is commented out because it was not possible to infer what the start of the stack symbol is, so you'll have to figure it out by yourself."
         )
         reloc_addrs.append(
-            "// Once you have found it you can properly name it and specify the length of this stack as the addend value here.",
+            "// Once you have found it you can properly name it and specify the length of this stack as the addend value here."
         )
         reloc_addrs.append(
-            f"// The address of the end of the stack is 0x{rom.entrypoint_info.stack_top.value:08X}.",
+            f"// The address of the end of the stack is 0x{rom.entrypoint_info.stack_top.value:08X}."
         )
         reloc_addrs.append(
-            f"// A common size for this stack is 0x2000, so try checking for the address 0x{rom.entrypoint_info.stack_top.value - 0x2000:08X}. Note the stack may have a different size.",
+            f"// A common size for this stack is 0x2000, so try checking for the address 0x{rom.entrypoint_info.stack_top.value - 0x2000:08X}. Note the stack may have a different size."
         )
         reloc_addrs.append(
-            f"// rom:0x{rom.entrypoint_info.stack_top.rom_hi:06X} reloc:MIPS_HI16 symbol:main_stack addend:0xXXXX",
+            f"// rom:0x{rom.entrypoint_info.stack_top.rom_hi:06X} reloc:MIPS_HI16 symbol:main_stack addend:0xXXXX"
         )
         reloc_addrs.append(
-            f"// rom:0x{rom.entrypoint_info.stack_top.rom_lo:06X} reloc:MIPS_LO16 symbol:main_stack addend:0xXXXX",
+            f"// rom:0x{rom.entrypoint_info.stack_top.rom_lo:06X} reloc:MIPS_LO16 symbol:main_stack addend:0xXXXX"
         )
         reloc_addrs.append("")
     if reloc_addrs:
         with Path("reloc_addrs.txt").open("w", newline="\n") as f:
             print("Writing reloc_addrs.txt")
             f.write(
-                "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file\n",
+                "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file\n"
             )
             f.write("// entrypoint relocs\n")
             contents = "\n".join(reloc_addrs)
@@ -261,14 +261,14 @@ segments:
     symbol_addrs.append(f"entrypoint = 0x{rom.entry_point:08X}; // type:func")
     if rom.entrypoint_info.main_address is not None:
         symbol_addrs.append(
-            f"main = 0x{rom.entrypoint_info.main_address.value:08X}; // type:func",
+            f"main = 0x{rom.entrypoint_info.main_address.value:08X}; // type:func"
         )
     if symbol_addrs:
         symbol_addrs.append("")
         with Path("symbol_addrs.txt").open("w", newline="\n") as f:
             print("Writing symbol_addrs.txt")
             f.write(
-                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n",
+                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
             )
             contents = "\n".join(symbol_addrs)
             f.write(contents)
@@ -374,7 +374,7 @@ segments:
     file_presets.write_all_files()
 
 
-def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: str | None):
+def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: Optional[str]):
     elf = ps2elfinfo.Ps2Elf.get_info(elf_path, elf_bytes)
     if elf is None:
         log.error(f"Unsupported elf file '{elf_path}'")
@@ -496,7 +496,7 @@ options:
         with Path("symbol_addrs.txt").open("w", newline="\n") as f:
             print("Writing symbol_addrs.txt")
             f.write(
-                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n",
+                "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
             )
             contents = "\n".join(symbol_addrs)
             f.write(contents)
@@ -509,21 +509,21 @@ options:
         with Path("linker_script_extra.ld").open("w", newline="\n") as f:
             print("Writing linker_script_extra.ld")
             f.write(
-                "/* Pass this file to the linker with the `-T linker_script_extra.ld` flag */\n",
+                "/* Pass this file to the linker with the `-T linker_script_extra.ld` flag */\n"
             )
             contents = "\n".join(linker_script)
             f.write(contents)
 
     print()
     print(
-        "The generated yaml does not use the actual ELF file as input, but instead it",
+        "The generated yaml does not use the actual ELF file as input, but instead it"
     )
     print(
-        'uses a "rom" generated from said ELF, which contains the game code without any',
+        'uses a "rom" generated from said ELF, which contains the game code without any'
     )
     print("of the elf metadata.")
     print(
-        'Use the following command to generate this "rom". It is recommended to include',
+        'Use the following command to generate this "rom". It is recommended to include'
     )
     print("this command into your setup/configure script.")
     print("```")
@@ -550,7 +550,6 @@ def find_objcopy() -> str:
         msg += f"  - {name}\n"
     msg += "\nTry to install one of those or use the `--objcopy` flag to pass the name to your own objcopy to me."
     log.error(msg)
-    return None
 
 
 def run_objcopy(objcopy_name: str, elf_path: str, rom: str) -> list[str]:
@@ -584,7 +583,7 @@ script_description = "Create a splat config from an N64 ROM or PSX executable."
 
 def add_subparser(subparser: argparse._SubParsersAction):
     parser = subparser.add_parser(
-        "create_config", help=script_description, description=script_description,
+        "create_config", help=script_description, description=script_description
     )
     add_arguments_to_parser(parser)
     parser.set_defaults(func=process_arguments)

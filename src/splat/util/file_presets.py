@@ -12,7 +12,7 @@ The directory where these files are written to can be controlled with
 
 from pathlib import Path
 
-from . import log, options
+from . import options, log
 
 
 def write_all_files() -> None:
@@ -250,7 +250,7 @@ def write_assembly_inc_files() -> None:
         # names when using modern gas to avoid build errors.
         # This means we can't reuse the labels.inc file.
         gas = macros_inc.replace("\\label", '"\\label"').replace(
-            '"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"',
+            '"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"'
         )
     elif not options.opts.is_unsupported_platform:
         log.error(f"Unknown platform '{options.opts.platform}'")

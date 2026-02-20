@@ -1,11 +1,7 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import Optional
 
 from .data import CommonSegData
-
-if TYPE_CHECKING:
-    from ...disassembler.disassembler_section import DisassemblerSection
+from ...disassembler.disassembler_section import DisassemblerSection
 
 
 class CommonSegEh_frame(CommonSegData):
@@ -14,11 +10,11 @@ class CommonSegEh_frame(CommonSegData):
     def get_linker_section(self) -> str:
         return ".eh_frame"
 
-    def get_section_flags(self) -> str | None:
+    def get_section_flags(self) -> Optional[str]:
         return "aw"
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection,
+        self, disassembler_section: DisassemblerSection
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 

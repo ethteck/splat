@@ -1,4 +1,5 @@
 from ...util import log, options
+
 from ..segment import Segment
 
 
@@ -9,7 +10,7 @@ class CommonSegDecompressor(Segment):
 
         if self.rom_end is None:
             log.error(
-                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it",
+                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
             )
 
         out_path = out_dir / f"{self.name}.bin"
@@ -36,16 +37,16 @@ class CommonSegDecompressor(Segment):
                 self.get_linker_section_order(),
                 self.get_linker_section_linksection(),
                 self.is_noload(),
-            ),
+            )
         ]
 
     @property
     def compression_type(self) -> str:
         log.error(
-            f"Segment {self.__class__.__name__} needs to define a compression type",
+            f"Segment {self.__class__.__name__} needs to define a compression type"
         )
 
     def decompress(self, compressed_bytes: bytes) -> bytes:
         log.error(
-            f"Segment {self.__class__.__name__} needs to define a decompression method",
+            f"Segment {self.__class__.__name__} needs to define a decompression method"
         )

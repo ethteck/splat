@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
+import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypeVar, cast
+from typing import cast, Literal, Type, TypeVar
+from collections.abc import Mapping
 
 from . import compiler
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-    from .compiler import Compiler
+from .compiler import Compiler
 
 
 @dataclass
@@ -319,7 +316,7 @@ class OptParser:
         if isinstance(value, t):
             return value
         if t is float and isinstance(value, int):
-            return cast("T", float(value))
+            return cast(T, float(value))
         raise ValueError(f"Expected {opt} to have type {t}, got {type(value)}")
 
     def parse_optional_opt(self, opt: str, t: type[T]) -> T | None:
@@ -328,7 +325,7 @@ class OptParser:
         return self.parse_opt(opt, t)
 
     def parse_optional_opt_with_default(
-        self, opt: str, t: type[T], default: T | None,
+        self, opt: str, t: type[T], default: T | None
     ) -> T | None:
         if opt not in self._yaml:
             return default
@@ -337,11 +334,11 @@ class OptParser:
         if value is None or isinstance(value, t):
             return value
         if t is float and isinstance(value, int):
-            return cast("T", float(value))
+            return cast(T, float(value))
         raise ValueError(f"Expected {opt} to have type {t}, got {type(value)}")
 
     def parse_opt_within(
-        self, opt: str, t: type[T], within: list[T], default: T | None = None,
+        self, opt: str, t: type[T], within: list[T], default: T | None = None
     ) -> T:
         value = self.parse_opt(opt, t, default)
         if value not in within:
@@ -349,7 +346,7 @@ class OptParser:
         return value
 
     def parse_path(
-        self, base_path: Path, opt: str, default: str | None = None,
+        self, base_path: Path, opt: str, default: str | None = None
     ) -> Path:
         return Path(os.path.normpath(base_path / self.parse_opt(opt, str, default)))
 
@@ -363,9 +360,10 @@ class OptParser:
 
         if isinstance(paths, str):
             return [base_path / paths]
-        if isinstance(paths, list):
+        elif isinstance(paths, list):
             return [base_path / path for path in paths]
-        raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
+        else:
+            raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
 
     def check_no_unread_opts(self) -> None:
         opts = [opt for opt in self._yaml if opt not in self._read_opts]
@@ -394,7 +392,7 @@ def _parse_yaml(
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
     base_path = Path(
-        os.path.normpath(config_paths[0].parent / p.parse_opt("base_path", str)),
+        os.path.normpath(config_paths[0].parent / p.parse_opt("base_path", str))
     )
     asm_path: Path = p.parse_path(base_path, "asm_path", "asm")
 
@@ -418,9 +416,10 @@ def _parse_yaml(
 
         if endianness == "big":
             return "big"
-        if endianness == "little":
+        elif endianness == "little":
             return "little"
-        raise ValueError(f"Invalid endianness: {endianness}")
+        else:
+            raise ValueError(f"Invalid endianness: {endianness}")
 
     def parse_include_asm_macro_style() -> Literal["default", "maspsx_hack"]:
         include_asm_macro_style = p.parse_opt_within(
@@ -432,9 +431,10 @@ def _parse_yaml(
 
         if include_asm_macro_style == "default":
             return "default"
-        if include_asm_macro_style == "maspsx_hack":
+        elif include_asm_macro_style == "maspsx_hack":
             return "maspsx_hack"
-        raise ValueError(f"Invalid endianness: {include_asm_macro_style}")
+        else:
+            raise ValueError(f"Invalid endianness: {include_asm_macro_style}")
 
     default_ld_bss_is_noload = True
     if platform == "psx":
@@ -457,31 +457,31 @@ def _parse_yaml(
         compiler=comp,
         endianness=parse_endianness(),
         section_order=p.parse_opt(
-            "section_order", list, [".text", ".data", ".rodata", ".bss"],
+            "section_order", list, [".text", ".data", ".rodata", ".bss"]
         ),
         generated_c_preamble=p.parse_opt(
-            "generated_c_preamble", str, '#include "common.h"',
+            "generated_c_preamble", str, '#include "common.h"'
         ),
         generated_s_preamble=p.parse_opt("generated_s_preamble", str, ""),
         generated_macro_inc_content=p.parse_optional_opt(
-            "generated_macro_inc_content", str,
+            "generated_macro_inc_content", str
         ),
         generate_asm_macros_files=p.parse_opt("generate_asm_macros_files", bool, True),
         include_asm_macro_style=parse_include_asm_macro_style(),
         generated_asm_macros_directory=p.parse_path(
-            base_path, "generated_asm_macros_directory", "include",
+            base_path, "generated_asm_macros_directory", "include"
         ),
         use_o_as_suffix=p.parse_opt("o_as_suffix", bool, False),
         gp=p.parse_optional_opt("gp_value", int),
         check_consecutive_segment_types=p.parse_opt(
-            "check_consecutive_segment_types", bool, True,
+            "check_consecutive_segment_types", bool, True
         ),
         asset_path=p.parse_path(base_path, "asset_path", "assets"),
         symbol_addrs_paths=p.parse_path_list(
-            base_path, "symbol_addrs_path", "symbol_addrs.txt",
+            base_path, "symbol_addrs_path", "symbol_addrs.txt"
         ),
         reloc_addrs_paths=p.parse_path_list(
-            base_path, "reloc_addrs_path", "reloc_addrs.txt",
+            base_path, "reloc_addrs_path", "reloc_addrs.txt"
         ),
         build_path=p.parse_path(base_path, "build_path", "build"),
         src_path=p.parse_path(base_path, "src_path", "src"),
@@ -492,16 +492,16 @@ def _parse_yaml(
         cache_path=p.parse_path(base_path, "cache_path", ".splache"),
         hasm_in_src_path=p.parse_opt("hasm_in_src_path", bool, False),
         create_undefined_funcs_auto=p.parse_opt(
-            "create_undefined_funcs_auto", bool, True,
+            "create_undefined_funcs_auto", bool, True
         ),
         undefined_funcs_auto_path=p.parse_path(
-            base_path, "undefined_funcs_auto_path", "undefined_funcs_auto.txt",
+            base_path, "undefined_funcs_auto_path", "undefined_funcs_auto.txt"
         ),
         create_undefined_syms_auto=p.parse_opt(
-            "create_undefined_syms_auto", bool, True,
+            "create_undefined_syms_auto", bool, True
         ),
         undefined_syms_auto_path=p.parse_path(
-            base_path, "undefined_syms_auto_path", "undefined_syms_auto.txt",
+            base_path, "undefined_syms_auto_path", "undefined_syms_auto.txt"
         ),
         extensions_path=p.parse_optional_path(base_path, "extensions_path"),
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
@@ -509,7 +509,7 @@ def _parse_yaml(
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
         emit_subalign=p.parse_opt("emit_subalign", bool, True),
         auto_link_sections=p.parse_opt(
-            "auto_link_sections", list, [".data", ".rodata", ".bss"],
+            "auto_link_sections", list, [".data", ".rodata", ".bss"]
         ),
         ld_script_path=p.parse_path(base_path, "ld_script_path", f"{basename}.ld"),
         ld_symbol_header_path=p.parse_optional_path(base_path, "ld_symbol_header_path"),
@@ -518,76 +518,76 @@ def _parse_yaml(
         ld_sections_denylist=p.parse_opt("ld_sections_denylist", list, []),
         ld_wildcard_sections=p.parse_opt("ld_wildcard_sections", bool, False),
         ld_sort_segments_by_vram_class_dependency=p.parse_opt(
-            "ld_sort_segments_by_vram_class_dependency", bool, False,
+            "ld_sort_segments_by_vram_class_dependency", bool, False
         ),
         ld_use_symbolic_vram_addresses=p.parse_opt(
-            "ld_use_symbolic_vram_addresses", bool, True,
+            "ld_use_symbolic_vram_addresses", bool, True
         ),
         ld_partial_linking=p.parse_opt("ld_partial_linking", bool, False),
         ld_partial_scripts_path=p.parse_optional_path(
-            base_path, "ld_partial_scripts_path",
+            base_path, "ld_partial_scripts_path"
         ),
         ld_partial_build_segments_path=p.parse_optional_path(
-            base_path, "ld_partial_build_segments_path",
+            base_path, "ld_partial_build_segments_path"
         ),
         ld_dependencies=p.parse_opt("ld_dependencies", bool, False),
         ld_legacy_generation=p.parse_opt("ld_legacy_generation", bool, False),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         segment_symbols_style=p.parse_opt_within(
-            "segment_symbols_style", str, ["splat", "makerom"], "splat",
+            "segment_symbols_style", str, ["splat", "makerom"], "splat"
         ),
         ld_rom_start=p.parse_opt("ld_rom_start", int, 0),
         ld_fill_value=p.parse_optional_opt_with_default("ld_fill_value", int, 0),
         ld_bss_is_noload=p.parse_opt(
-            "ld_bss_is_noload", bool, default_ld_bss_is_noload,
+            "ld_bss_is_noload", bool, default_ld_bss_is_noload
         ),
         ld_align_segment_start=p.parse_optional_opt_with_default(
-            "ld_align_segment_start", int, None,
+            "ld_align_segment_start", int, None
         ),
         ld_align_segment_vram_end=p.parse_opt("ld_align_segment_vram_end", bool, True),
         ld_align_section_vram_end=p.parse_opt("ld_align_section_vram_end", bool, True),
         ld_generate_symbol_per_data_segment=p.parse_opt(
-            "ld_generate_symbol_per_data_segment", bool, False,
+            "ld_generate_symbol_per_data_segment", bool, False
         ),
         ld_bss_contains_common=p.parse_opt("ld_bss_contains_common", bool, False),
         ld_gp_expression=p.parse_optional_opt_with_default(
-            "ld_gp_expression", str, None,
+            "ld_gp_expression", str, None
         ),
         create_c_files=p.parse_opt("create_c_files", bool, True),
         auto_decompile_empty_functions=p.parse_opt(
-            "auto_decompile_empty_functions", bool, True,
+            "auto_decompile_empty_functions", bool, True
         ),
         do_c_func_detection=p.parse_opt("do_c_func_detection", bool, True),
         c_newline=p.parse_opt("c_newline", str, comp.c_newline),
         symbol_name_format=p.parse_opt("symbol_name_format", str, "$VRAM"),
         symbol_name_format_no_rom=p.parse_opt(
-            "symbol_name_format_no_rom", str, "$VRAM_$SEG",
+            "symbol_name_format_no_rom", str, "$VRAM_$SEG"
         ),
         find_file_boundaries=p.parse_opt("find_file_boundaries", bool, True),
         pair_rodata_to_text=p.parse_opt("pair_rodata_to_text", bool, True),
         migrate_rodata_to_functions=p.parse_opt(
-            "migrate_rodata_to_functions", bool, True,
+            "migrate_rodata_to_functions", bool, True
         ),
         asm_inc_header=p.parse_opt("asm_inc_header", str, comp.asm_inc_header),
         asm_function_macro=p.parse_opt(
-            "asm_function_macro", str, comp.asm_function_macro,
+            "asm_function_macro", str, comp.asm_function_macro
         ),
         asm_function_alt_macro=p.parse_opt(
-            "asm_function_alt_macro", str, comp.asm_function_alt_macro,
+            "asm_function_alt_macro", str, comp.asm_function_alt_macro
         ),
         asm_jtbl_label_macro=p.parse_opt(
-            "asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro,
+            "asm_jtbl_label_macro", str, comp.asm_jtbl_label_macro
         ),
         asm_data_macro=p.parse_opt("asm_data_macro", str, comp.asm_data_macro),
         asm_end_label=p.parse_opt("asm_end_label", str, comp.asm_end_label),
         asm_data_end_label=p.parse_opt(
-            "asm_data_end_label", str, comp.asm_data_end_label,
+            "asm_data_end_label", str, comp.asm_data_end_label
         ),
         asm_ehtable_label_macro=p.parse_opt(
-            "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro,
+            "asm_ehtable_label_macro", str, comp.asm_ehtable_label_macro
         ),
         asm_nonmatching_label_macro=p.parse_opt(
-            "asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro,
+            "asm_nonmatching_label_macro", str, comp.asm_nonmatching_label_macro
         ),
         asm_emit_size_directive=asm_emit_size_directive,
         mnemonic_ljust=p.parse_opt("mnemonic_ljust", int, 11),
@@ -610,10 +610,10 @@ def _parse_yaml(
         string_encoding=p.parse_optional_opt("string_encoding", str),
         data_string_encoding=p.parse_optional_opt("data_string_encoding", str),
         rodata_string_guesser_level=p.parse_optional_opt(
-            "rodata_string_guesser_level", int,
+            "rodata_string_guesser_level", int
         ),
         data_string_guesser_level=p.parse_optional_opt(
-            "data_string_guesser_level", int,
+            "data_string_guesser_level", int
         ),
         allow_data_addends=p.parse_opt("allow_data_addends", bool, True),
         header_encoding=p.parse_opt("header_encoding", str, "ASCII"),
@@ -631,7 +631,7 @@ def _parse_yaml(
         align_on_branch_labels=align_on_branch_labels,
         disasm_unknown=p.parse_opt("disasm_unknown", bool, False),
         detect_redundant_function_end=p.parse_opt(
-            "detect_redundant_function_end", bool, True,
+            "detect_redundant_function_end", bool, True
         ),
         # Setting either option will produce a full disassembly,
         # but we still have to check the yaml option first to avoid leaving option unparsed,
@@ -642,11 +642,11 @@ def _parse_yaml(
         global_vram_start=p.parse_optional_opt("global_vram_start", int),
         global_vram_end=p.parse_optional_opt("global_vram_end", int),
         use_gp_rel_macro_nonmatching=p.parse_opt(
-            "use_gp_rel_macro_nonmatching", bool, True,
+            "use_gp_rel_macro_nonmatching", bool, True
         ),
         use_gp_rel_macro=p.parse_opt("use_gp_rel_macro", bool, True),
         suggestion_rodata_section_start=p.parse_opt(
-            "suggestion_rodata_section_start", bool, True,
+            "suggestion_rodata_section_start", bool, True
         ),
     )
     p.check_no_unread_opts()

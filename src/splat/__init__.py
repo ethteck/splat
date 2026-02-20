@@ -4,10 +4,9 @@ __package_name__ = __name__
 __version__ = "0.37.3"
 __author__ = "ethteck"
 
-from . import (
-    disassembler as disassembler,
-    platforms as platforms,
-    scripts as scripts,
-    segtypes as segtypes,
-    util as util,
-)
+from . import util as util
+from . import disassembler as disassembler
+from . import platforms as platforms
+from . import segtypes as segtypes
+
+from . import scripts as scripts

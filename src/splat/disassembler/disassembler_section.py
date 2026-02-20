@@ -9,7 +9,7 @@ from ..util import options, symbols
 
 class DisassemblerSection(ABC):
     __slots__ = ()
-
+    
     @abstractmethod
     def disassemble(self) -> str:
         raise NotImplementedError("disassemble")

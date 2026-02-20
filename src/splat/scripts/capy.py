@@ -40,6 +40,6 @@ script_description = "Capybara"
 
 def add_subparser(subparser: argparse._SubParsersAction) -> None:
     parser = subparser.add_parser(
-        "capy", help=script_description, description=script_description,
+        "capy", help=script_description, description=script_description
     )
     parser.set_defaults(func=process_arguments)

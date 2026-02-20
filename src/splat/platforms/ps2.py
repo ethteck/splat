@@ -1,5 +1,5 @@
-import rabbitizer
 import spimdisasm
+import rabbitizer
 
 
 def init(target_bytes: bytes):

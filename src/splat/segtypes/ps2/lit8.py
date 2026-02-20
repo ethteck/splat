@@ -1,11 +1,7 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import Optional
 
 from ..common.data import CommonSegData
-
-if TYPE_CHECKING:
-    from ...disassembler.disassembler_section import DisassemblerSection
+from ...disassembler.disassembler_section import DisassemblerSection
 
 
 class Ps2SegLit8(CommonSegData):
@@ -14,11 +10,11 @@ class Ps2SegLit8(CommonSegData):
     def get_linker_section(self) -> str:
         return ".lit8"
 
-    def get_section_flags(self) -> str | None:
+    def get_section_flags(self) -> Optional[str]:
         return "wa"
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection,
+        self, disassembler_section: DisassemblerSection
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 

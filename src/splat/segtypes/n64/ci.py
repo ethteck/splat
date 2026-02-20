@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from ...util import log, options
+
 from .img import N64SegImg
 
 if TYPE_CHECKING:
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
 
 # Base class for CI4/CI8
 class N64SegCi(N64SegImg):
-    def parse_palette_names(self, yaml, args) -> list[str]:
+    def parse_palette_names(self, yaml, args) -> List[str]:
         ret = [self.name]
         if isinstance(yaml, dict):
             if "palettes" in yaml:
@@ -25,7 +26,7 @@ class N64SegCi(N64SegImg):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.palettes: list[N64SegPalette] = []
+        self.palettes: "List[N64SegPalette]" = []
         self.palette_names = self.parse_palette_names(self.yaml, self.args)
 
     def scan(self, rom_bytes: bytes) -> None:
@@ -53,7 +54,7 @@ class N64SegCi(N64SegImg):
         if len(self.palettes) == 0:
             # TODO: output with blank palette
             log.error(
-                f"no palettes have been mapped to ci segment `{self.name}`\n(hint: add a palette segment with the same name or use the `palettes:` field of this segment to specify palettes by name')",
+                f"no palettes have been mapped to ci segment `{self.name}`\n(hint: add a palette segment with the same name or use the `palettes:` field of this segment to specify palettes by name')"
             )
 
         assert isinstance(self.rom_start, int)

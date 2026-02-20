@@ -24,7 +24,7 @@ class Cache:
                     log.write(f"Loaded cache ({len(self.cache.keys())} items)")
             except Exception:
                 log.write(
-                    "Not able to load cache file. Discarding old cache", status="warn",
+                    "Not able to load cache file. Discarding old cache", status="warn"
                 )
 
         # invalidate entire cache if options change

@@ -1,23 +1,20 @@
-from __future__ import annotations
-
+from pathlib import Path
 import re
-from typing import TYPE_CHECKING, TextIO
+from typing import Optional, TextIO
 
 from ...util import log, options
-from .segment import CommonSegment
 
-if TYPE_CHECKING:
-    from pathlib import Path
+from .segment import CommonSegment
 
 
 class CommonSegTextbin(CommonSegment):
     def __init__(
         self,
-        rom_start: int | None,
-        rom_end: int | None,
-        type: str,  # noqa: A002  # `type` is shadowing a builtin
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
         name: str,
-        vram_start: int | None,
+        vram_start: Optional[int],
         args: list,
         yaml,
     ):
@@ -31,7 +28,7 @@ class CommonSegTextbin(CommonSegment):
             yaml=yaml,
         )
         self.use_src_path: bool = isinstance(yaml, dict) and yaml.get(
-            "use_src_path", False,
+            "use_src_path", False
         )
 
     @staticmethod
@@ -41,10 +38,10 @@ class CommonSegTextbin(CommonSegment):
     def get_linker_section(self) -> str:
         return ".text"
 
-    def get_section_flags(self) -> str | None:
+    def get_section_flags(self) -> Optional[str]:
         return "ax"
 
-    def out_path(self) -> Path | None:
+    def out_path(self) -> Optional[Path]:
         if self.use_src_path:
             return options.opts.src_path / self.dir / f"{self.name}.s"
 
@@ -143,7 +140,7 @@ class CommonSegTextbin(CommonSegment):
     def split(self, rom_bytes):
         if self.rom_end is None:
             log.error(
-                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it",
+                f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
             )
 
         self.write_bin(rom_bytes)

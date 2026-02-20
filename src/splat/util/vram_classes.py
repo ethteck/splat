@@ -54,7 +54,6 @@ class SerializedSegmentData(TypedDict):
     find_file_boundaries: NotRequired[bool]
 
 
-
 def initialize(yaml: list[SerializedSegmentData | list[str]] | None) -> None:
     global _vram_classes
 
@@ -94,24 +93,20 @@ def initialize(yaml: list[SerializedSegmentData | list[str]] | None) -> None:
                 vram_symbol = vram_class["vram_symbol"]
                 if not isinstance(vram_symbol, str):
                     log.error(
-                        f"vram_symbol ({vram_symbol})must be a string, got {type(vram_symbol)}",
                     )
 
             if "follows_classes" in vram_class:
                 follows_classes = vram_class["follows_classes"]
                 if not isinstance(follows_classes, list):
                     log.error(
-                        f"vram_symbol ({follows_classes})must be a list, got {type(follows_classes)}",
                     )
                 for follows_class in follows_classes:
                     if follows_class not in class_names:
                         log.error(
-                            f"follows_class ({follows_class}) not found in vram_classes",
                         )
         elif isinstance(vram_class, list):
             if len(vram_class) != 2:
                 log.error(
-                    f"vram_class ({vram_class}) must have 2 elements, got {len(vram_class)}",
                 )
             name = vram_class[0]
             vram = int(vram_class[1])

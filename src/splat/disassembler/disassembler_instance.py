@@ -1,7 +1,8 @@
-from ..util import options
 from .disassembler import Disassembler
-from .null_disassembler import NullDisassembler
 from .spimdisasm_disassembler import SpimdisasmDisassembler
+from .null_disassembler import NullDisassembler
+
+from ..util import options
 
 __instance: Disassembler = NullDisassembler()
 __initialized = False

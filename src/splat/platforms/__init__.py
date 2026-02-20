@@ -1,1 +1,4 @@
-from . import n64 as n64, ps2 as ps2, psp as psp, psx as psx
+from . import n64 as n64
+from . import ps2 as ps2
+from . import psx as psx
+from . import psp as psp

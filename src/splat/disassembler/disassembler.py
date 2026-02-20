@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Set
 
 
 class Disassembler(ABC):
@@ -15,5 +16,5 @@ class Disassembler(ABC):
         raise NotImplementedError("check_version")
 
     @abstractmethod
-    def known_types(self) -> set[str]:
+    def known_types(self) -> Set[str]:
         raise NotImplementedError("known_types")

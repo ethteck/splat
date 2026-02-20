@@ -2,20 +2,18 @@ from __future__ import annotations
 
 import os
 import re
-from collections import OrderedDict
-from functools import cache
+from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
-from ..util import log, options
+from ..util import options, log
+
+from .segment import Segment
 from ..util.symbols import to_cname
-
-if TYPE_CHECKING:
-    from .segment import Segment
 
 
 # clean 'foo/../bar' to 'bar'
-@cache
+@lru_cache(maxsize=None)
 def clean_up_path(path: Path) -> Path:
     path_resolved = path.resolve()
     base_resolved = options.opts.base_path.resolve()
@@ -37,7 +35,10 @@ def clean_up_path(path: Path) -> Path:
 
 def path_to_object_path(path: Path) -> Path:
     path = clean_up_path(path)
-    full_suffix = ".o" if options.opts.use_o_as_suffix else path.suffix + ".o"
+    if options.opts.use_o_as_suffix:
+        full_suffix = ".o"
+    else:
+        full_suffix = path.suffix + ".o"
 
     if not str(path).startswith(str(options.opts.build_path)):
         path = options.opts.build_path / path
@@ -45,7 +46,10 @@ def path_to_object_path(path: Path) -> Path:
 
 
 def write_file_if_different(path: Path, new_content: str) -> None:
-    old_content = path.read_text() if path.exists() else ""
+    if path.exists():
+        old_content = path.read_text()
+    else:
+        old_content = ""
 
     if old_content != new_content:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -119,7 +123,7 @@ class LinkerEntry:
     def __init__(
         self,
         segment: Segment,
-        src_paths: list[Path],
+        src_paths: List[Path],
         object_path: Path,
         section_order: str,
         section_link: str,
@@ -131,19 +135,21 @@ class LinkerEntry:
         self.section_link = section_link
         self.noload = noload
         self.bss_contains_common = segment.bss_contains_common
-        self.object_path: Path | None = path_to_object_path(object_path)
+        self.object_path: Optional[Path] = path_to_object_path(object_path)
 
     @property
     def section_order_type(self) -> str:
         if self.section_order == ".rdata":
             return ".rodata"
-        return self.section_order
+        else:
+            return self.section_order
 
     @property
     def section_link_type(self) -> str:
         if self.section_link == ".rdata":
             return ".rodata"
-        return self.section_link
+        else:
+            return self.section_link
 
     def emit_symbol_for_data(self, linker_writer: LinkerWriter) -> None:
         if not options.opts.ld_generate_symbol_per_data_segment:
@@ -164,13 +170,13 @@ class LinkerEntry:
 
         if self.noload and self.bss_contains_common:
             linker_writer._write_object_path_section(
-                self.object_path, f"{self.section_link} COMMON .scommon",
+                self.object_path, f"{self.section_link} COMMON .scommon"
             )
         else:
             wildcard = "*" if options.opts.ld_wildcard_sections else ""
 
             linker_writer._write_object_path_section(
-                self.object_path, f"{self.section_link}{wildcard}",
+                self.object_path, f"{self.section_link}{wildcard}"
             )
 
     def emit_entry(self, linker_writer: LinkerWriter) -> None:
@@ -181,14 +187,14 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self, is_partial: bool = False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
-        self.sections_allowlist: list[str] = options.opts.ld_sections_allowlist
-        self.sections_denylist: list[str] = options.opts.ld_sections_denylist
+        self.sections_allowlist: List[str] = options.opts.ld_sections_allowlist
+        self.sections_denylist: List[str] = options.opts.ld_sections_denylist
         # Used to store all the linker entries - build tools may want this information
-        self.entries: list[LinkerEntry] = []
-        self.dependencies_entries: list[LinkerEntry] = []
+        self.entries: List[LinkerEntry] = []
+        self.dependencies_entries: List[LinkerEntry] = []
 
-        self.buffer: list[str] = []
-        self.header_symbols: set[str] = set()
+        self.buffer: List[str] = []
+        self.header_symbols: Set[str] = set()
 
         self.is_partial: bool = is_partial
 
@@ -210,11 +216,11 @@ class LinkerWriter:
         for segment in overlays:
             if segment == overlays[0]:
                 self._writeln(
-                    f"{symbol} = {get_segment_vram_end_symbol_name(segment)};",
+                    f"{symbol} = {get_segment_vram_end_symbol_name(segment)};"
                 )
             else:
                 self._writeln(
-                    f"{symbol} = MAX({symbol}, {get_segment_vram_end_symbol_name(segment)});",
+                    f"{symbol} = MAX({symbol}, {get_segment_vram_end_symbol_name(segment)});"
                 )
 
     # Adds all the entries of a segment to the linker script buffer
@@ -232,7 +238,7 @@ class LinkerWriter:
             self.add_legacy(segment, entries)
             return
 
-        section_entries: OrderedDict[str, list[LinkerEntry]] = OrderedDict()
+        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for section_name in segment.section_order:
             if section_name in options.opts.section_order:
                 section_entries[section_name] = []
@@ -252,14 +258,14 @@ class LinkerWriter:
             if entry.section_order_type in section_entries:
                 if entry.section_order_type not in section_entries:
                     log.error(
-                        f"\nError on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options.",
+                        f"\nError on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options."
                     )
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
                 if prev_entry not in section_entries:
                     log.error(
-                        f"\nError on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options.",
+                        f"\nError on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options."
                     )
                 section_entries[prev_entry].append(entry)
             any_load = any_load or not entry.noload
@@ -268,7 +274,7 @@ class LinkerWriter:
 
         if segment.ld_align_segment_start:
             self._write_symbol(
-                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})",
+                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})"
             )
             self._write_symbol(".", f"ALIGN(., 0x{segment.ld_align_segment_start:X})")
 
@@ -279,14 +285,14 @@ class LinkerWriter:
         if any_load:
             # Only emit normal segment if there's at least one normal entry
             self._write_segment_sections(
-                segment, seg_name, section_entries, noload=False, is_first=is_first,
+                segment, seg_name, section_entries, noload=False, is_first=is_first
             )
             is_first = False
 
         if any_noload:
             # Only emit NOLOAD segment if there is at least one noload entry
             self._write_segment_sections(
-                segment, seg_name, section_entries, noload=True, is_first=is_first,
+                segment, seg_name, section_entries, noload=True, is_first=is_first
             )
             is_first = False
 
@@ -296,12 +302,12 @@ class LinkerWriter:
         seg_name = segment.get_cname()
 
         # To keep track which sections has been started
-        started_sections: dict[str, bool] = {
+        started_sections: Dict[str, bool] = {
             section_name: False for section_name in options.opts.section_order
         }
 
         # Find where sections are last seen
-        last_seen_sections: dict[LinkerEntry, str] = {}
+        last_seen_sections: Dict[LinkerEntry, str] = {}
         for entry in reversed(entries):
             if (
                 entry.section_order_type in options.opts.section_order
@@ -311,7 +317,7 @@ class LinkerWriter:
 
         if segment.ld_align_segment_start:
             self._write_symbol(
-                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})",
+                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})"
             )
             self._write_symbol(".", f"ALIGN(., 0x{segment.ld_align_segment_start:X})")
 
@@ -356,7 +362,7 @@ class LinkerWriter:
         self._end_segment(segment, all_bss=False)
 
     def add_referenced_partial_segment(
-        self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]],
+        self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]]
     ) -> None:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
@@ -371,7 +377,7 @@ class LinkerWriter:
 
         if segment.ld_align_segment_start:
             self._write_symbol(
-                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})",
+                "__romPos", f"ALIGN(__romPos, 0x{segment.ld_align_segment_start:X})"
             )
             self._write_symbol(".", f"ALIGN(., 0x{segment.ld_align_segment_start:X})")
 
@@ -439,7 +445,7 @@ class LinkerWriter:
 
         seg_name = segment.get_cname()
 
-        section_entries: OrderedDict[str, list[LinkerEntry]] = OrderedDict()
+        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
         for section_name in segment.section_order:
             if section_name in options.opts.section_order:
                 section_entries[section_name] = []
@@ -450,14 +456,14 @@ class LinkerWriter:
             if entry.section_order_type in section_entries:
                 if entry.section_order_type not in section_entries:
                     log.error(
-                        f"\nError on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options.",
+                        f"\nError on linker script generation: section '{entry.section_order_type}' not found.\n  Make sure the section '{entry.section_order_type}' is listed on 'section_order' of the yaml options."
                     )
                 section_entries[entry.section_order_type].append(entry)
             elif prev_entry is not None:
                 # If this section is not present in section_order or section_order then pretend it is part of the last seen section, mainly for handling linker_offset
                 if prev_entry not in section_entries:
                     log.error(
-                        f"\nError on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options.",
+                        f"\nError on linker script generation: section '{prev_entry}' not found.\n  Make sure the section '{prev_entry}' is listed on 'section_order' of the yaml options."
                     )
                 section_entries[prev_entry].append(entry)
             prev_entry = entry.section_order_type
@@ -553,7 +559,7 @@ class LinkerWriter:
         self._indent_level -= 1
         self._writeln("}")
 
-    def _write_symbol(self, symbol: str, value: str | int) -> None:
+    def _write_symbol(self, symbol: str, value: Union[str, int]) -> None:
         symbol = to_cname(symbol)
 
         if isinstance(value, int):
@@ -567,7 +573,7 @@ class LinkerWriter:
         self._writeln(f"{object_path.as_posix()}({section});")
 
     def _begin_segment(
-        self, segment: Segment, seg_name: str, noload: bool, is_first: bool,
+        self, segment: Segment, seg_name: str, noload: bool, is_first: bool
     ) -> None:
         if (
             options.opts.ld_use_symbolic_vram_addresses
@@ -613,20 +619,22 @@ class LinkerWriter:
             self._writeln(f"__romPos += SIZEOF(.{name});")
 
         # Align directive
-        if not options.opts.segment_end_before_align and segment.align:
-            self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
-            if options.opts.ld_align_segment_vram_end:
-                self._writeln(f". = ALIGN(., {segment.align});")
+        if not options.opts.segment_end_before_align:
+            if segment.align:
+                self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
+                if options.opts.ld_align_segment_vram_end:
+                    self._writeln(f". = ALIGN(., {segment.align});")
 
         seg_rom_end = get_segment_rom_end(name)
         self._write_symbol(seg_rom_end, "__romPos")
         self._write_symbol(get_segment_vram_end_symbol_name(segment), ".")
 
         # Align directive
-        if options.opts.segment_end_before_align and segment.align:
-            self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
-            if options.opts.ld_align_segment_vram_end:
-                self._writeln(f". = ALIGN(., {segment.align});")
+        if options.opts.segment_end_before_align:
+            if segment.align:
+                self._writeln(f"__romPos = ALIGN(__romPos, {segment.align});")
+                if options.opts.ld_align_segment_vram_end:
+                    self._writeln(f". = ALIGN(., {segment.align});")
 
         self._writeln("")
 

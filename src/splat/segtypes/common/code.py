@@ -1,28 +1,30 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from typing import List, Optional, Type, Tuple
 
 from ...util import log, options, utils
-from ..segment import Segment, parse_segment_align
+
 from .group import CommonSegGroup
+from ..segment import Segment, parse_segment_align
 
 
-def dotless_type(type_: str) -> str:
-    return type_[1:] if type_[0] == "." else type_
+def dotless_type(type: str) -> str:
+    return type[1:] if type[0] == "." else type
 
 
 # code group
 class CommonSegCode(CommonSegGroup):
     def __init__(
         self,
-        rom_start: int | None,
-        rom_end: int | None,
-        type: str,  # noqa: A002  # `type` is shadowing a builtin
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
         name: str,
-        vram_start: int | None,
-        args: list[str],
+        vram_start: Optional[int],
+        args: list,
         yaml,
-    ) -> None:
+    ):
         self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
 
         super().__init__(
@@ -46,21 +48,22 @@ class CommonSegCode(CommonSegGroup):
         return True
 
     @property
-    def vram_end(self) -> int | None:
+    def vram_end(self) -> Optional[int]:
         if self.vram_start is not None and self.size is not None:
             return self.vram_start + self.size + self.bss_size
-        return None
+        else:
+            return None
 
     # Generates a placeholder segment for the auto_link_sections option
     def _generate_segment_from_all(
         self,
         rep_type: str,
-        replace_class: type[Segment],
+        replace_class: Type[Segment],
         base_name: str,
         base_seg: Segment,
-        rom_start: int | None = None,
-        rom_end: int | None = None,
-        vram_start: int | None = None,
+        rom_start: Optional[int] = None,
+        rom_end: Optional[int] = None,
+        vram_start: Optional[int] = None,
     ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
@@ -89,20 +92,24 @@ class CommonSegCode(CommonSegGroup):
 
     def _insert_all_auto_sections(
         self,
-        ret: list[Segment],
+        ret: List[Segment],
         base_segments: OrderedDict[str, Segment],
         readonly_before: bool,
-    ) -> list[Segment]:
+    ) -> List[Segment]:
         if len(options.opts.auto_link_sections) == 0:
             return ret
 
-        base_segments_list: list[tuple[str, Segment]] = list(base_segments.items())
+        base_segments_list: List[Tuple[str, Segment]] = list(base_segments.items())
 
         # Determine what will be the min insertion index
         last_inserted_index = len(base_segments_list) - 1
         for i, seg in enumerate(ret):
-            if seg.is_text() or (readonly_before and seg.is_rodata()):
+            if seg.is_text():
                 last_inserted_index = i
+
+            elif readonly_before:
+                if seg.is_rodata():
+                    last_inserted_index = i
 
         for i, sect in enumerate(options.opts.auto_link_sections):
             for name, seg in base_segments_list:
@@ -117,7 +124,7 @@ class CommonSegCode(CommonSegGroup):
                 if sibling is None:
                     replace_class = Segment.get_class_for_type(sect)
                     sibling = self._generate_segment_from_all(
-                        sect, replace_class, seg.name, seg,
+                        sect, replace_class, seg.name, seg
                     )
                     seg.siblings[sect] = sibling
                     last_inserted_index += 1
@@ -140,18 +147,18 @@ class CommonSegCode(CommonSegGroup):
 
         return ret
 
-    def parse_subsegments(self, segment_yaml: dict) -> list[Segment]:
+    def parse_subsegments(self, segment_yaml) -> List[Segment]:
         if "subsegments" not in segment_yaml:
             if not self.parent:
                 raise Exception(
-                    f"No subsegments provided in top-level code segment {self.name}",
+                    f"No subsegments provided in top-level code segment {self.name}"
                 )
             return []
 
         base_segments: OrderedDict[str, Segment] = OrderedDict()
-        ret: list[Segment] = []
-        prev_start: int | None = -1
-        prev_vram: int | None = -1
+        ret: List[Segment] = []
+        prev_start: Optional[int] = -1
+        prev_vram: Optional[int] = -1
 
         last_rom_end = None
 
@@ -179,18 +186,20 @@ class CommonSegCode(CommonSegGroup):
 
             if start is None:
                 # Attempt to infer the start address
-                # The start address of this segment either
-                # - the start address of the group
-                # - end address of the previous segment
-                start = self.rom_start if i == 0 else last_rom_end
+                if i == 0:
+                    # The start address of this segment is the start address of the group
+                    start = self.rom_start
+                else:
+                    # The start address is the end address of the previous segment
+                    start = last_rom_end
 
             # First, try to get the end address from the next segment's start address
             # Second, try to get the end address from the estimated size of this segment
             # Third, try to get the end address from the next segment with a start address
-            end: int | None = None
+            end: Optional[int] = None
             if i < len(segment_yaml["subsegments"]) - 1:
-                end, _end_is_auto_segment = Segment.parse_segment_start(
-                    segment_yaml["subsegments"][i + 1],
+                end, end_is_auto_segment = Segment.parse_segment_start(
+                    segment_yaml["subsegments"][i + 1]
                 )
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
@@ -201,7 +210,7 @@ class CommonSegCode(CommonSegGroup):
 
             if start is not None and prev_start is not None and start < prev_start:
                 log.error(
-                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})",
+                    f"Error: Group segment '{self.name}' contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})"
                 )
 
             vram = None
@@ -216,7 +225,7 @@ class CommonSegCode(CommonSegGroup):
                 end = last_rom_end
 
             segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, self, vram,
+                segment_class, subsegment_yaml, start, end, self, vram
             )
             segment.is_auto_segment = is_auto_segment
 
@@ -227,7 +236,7 @@ class CommonSegCode(CommonSegGroup):
             ):
                 log.error(
                     f"Error: Group segment '{self.name}' contains subsegments which are out of ascending vram order (0x{prev_vram:X} followed by 0x{segment.vram_start:X}).\n"
-                    + f"Detected when processing file '{segment.name}' of type '{segment.type}'",
+                    + f"Detected when processing file '{segment.name}' of type '{segment.type}'"
                 )
 
             ret.append(segment)
@@ -235,8 +244,9 @@ class CommonSegCode(CommonSegGroup):
             if segment.is_text():
                 base_segments[segment.name] = segment
 
-            if readonly_before and segment.is_rodata() and segment.sibling is None:
-                base_segments[segment.name] = segment
+            if readonly_before:
+                if segment.is_rodata() and segment.sibling is None:
+                    base_segments[segment.name] = segment
 
             if segment.special_vram_segment:
                 self.special_vram_segment = True

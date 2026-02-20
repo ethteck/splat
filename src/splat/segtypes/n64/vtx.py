@@ -4,26 +4,24 @@ Dumps out Vtx as a .inc.c file.
 
 Originally written by Mark Street (https://github.com/mkst)
 """
-from __future__ import annotations
 
 import struct
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
-from ...util import log, options
+from ...util import options, log
+
 from ..common.codesubsegment import CommonSegCodeSubsegment
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class N64SegVtx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: int | None,
-        rom_end: int | None,
-        type: str,  # noqa: A002  # `type` is shadowing a builtin
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
         name: str,
-        vram_start: int | None,
+        vram_start: Optional[int],
         args: list,
         yaml,
     ):
@@ -36,7 +34,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
             args=args,
             yaml=yaml,
         )
-        self.file_text: str | None = None
+        self.file_text: Optional[str] = None
         self.data_only = isinstance(yaml, dict) and yaml.get("data_only", False)
 
     def format_sym_name(self, sym) -> str:
@@ -60,7 +58,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         segment_length = len(vertex_data)
         if (segment_length) % 16 != 0:
             log.error(
-                f"Error: Vtx segment {self.name} length ({segment_length}) is not a multiple of 16!",
+                f"Error: Vtx segment {self.name} length ({segment_length}) is not a multiple of 16!"
             )
 
         lines = []
@@ -70,7 +68,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
 
         vertex_count = segment_length // 16
         sym = self.create_symbol(
-            addr=self.vram_start, in_segment=True, type="data", define=True,
+            addr=self.vram_start, in_segment=True, type="data", define=True
         )
 
         if not self.data_only:
@@ -104,7 +102,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         return self.extract and options.opts.is_mode_active("vtx")
 
     @staticmethod
-    def estimate_size(yaml: dict | list) -> int | None:
+    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
         if isinstance(yaml, dict) and "length" in yaml:
             return yaml["length"] * 0x10
         return None

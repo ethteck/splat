@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...util import log
-from ..segment import Segment, SegmentStatistics, empty_statistics
+
 from .segment import CommonSegment
+from ..segment import empty_statistics, Segment, SegmentStatistics
 
 if TYPE_CHECKING:
     from ...util.vram_classes import SerializedSegmentData
@@ -16,7 +17,7 @@ class CommonSegGroup(CommonSegment):
         self,
         rom_start: int | None,
         rom_end: int | None,
-        type: str,  # noqa: A002  # `type` is shadowing a builtin
+        type: str,
         name: str,
         vram_start: int | None,
         args: list[str],
@@ -38,7 +39,7 @@ class CommonSegGroup(CommonSegment):
     def get_next_seg_start(self, i: int, subsegment_yamls: list[SerializedSegmentData | list[str]]) -> int | None:
         j = i + 1
         while j < len(subsegment_yamls):
-            ret, _is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
+            ret, is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
             if ret is not None:
                 return ret
             j += 1
@@ -67,18 +68,20 @@ class CommonSegGroup(CommonSegment):
 
             if start is None:
                 # Attempt to infer the start address
-                # The start address of this segment is one of the following
-                # - the start address of the group
-                # - the end address of the previous segment
-                start = self.rom_start if i == 0 else last_rom_end
+                if i == 0:
+                    # The start address of this segment is the start address of the group
+                    start = self.rom_start
+                else:
+                    # The start address is the end address of the previous segment
+                    start = last_rom_end
 
             # First, try to get the end address from the next segment's start address
             # Second, try to get the end address from the estimated size of this segment
             # Third, try to get the end address from the next segment with a start address
             end: int | None = None
             if i < len(yaml["subsegments"]) - 1:
-                end, _end_is_auto_segment = Segment.parse_segment_start(
-                    yaml["subsegments"][i + 1],
+                end, end_is_auto_segment = Segment.parse_segment_start(
+                    yaml["subsegments"][i + 1]
                 )
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
@@ -89,7 +92,7 @@ class CommonSegGroup(CommonSegment):
 
             if start is not None and prev_start is not None and start < prev_start:
                 log.error(
-                    f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})",
+                    f"Error: Group segment {self.name} contains subsegments which are out of ascending rom order (0x{prev_start:X} followed by 0x{start:X})"
                 )
 
             vram = None
@@ -132,7 +135,10 @@ class CommonSegGroup(CommonSegment):
 
     @property
     def needs_symbols(self) -> bool:
-        return any(seg.needs_symbols for seg in self.subsegments)
+        for seg in self.subsegments:
+            if seg.needs_symbols:
+                return True
+        return False
 
     @property
     def statistics(self) -> SegmentStatistics:
@@ -180,7 +186,7 @@ class CommonSegGroup(CommonSegment):
         return None
 
     def get_next_subsegment_for_ram(
-        self, addr: int, current_subseg_index: int | None,
+        self, addr: int, current_subseg_index: int | None
     ) -> Segment | None:
         """
         Returns the first subsegment which comes after the specified address,
@@ -199,7 +205,7 @@ class CommonSegGroup(CommonSegment):
 
     def pair_subsegments_to_other_segment(
         self,
-        other_segment: CommonSegGroup,
+        other_segment: "CommonSegGroup",
     ) -> None:
         # Pair cousins with the same name
         for segment in self.subsegments:

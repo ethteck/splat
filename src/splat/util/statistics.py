@@ -8,14 +8,15 @@ from . import log
 def fmt_size(size: int) -> str:
     if size > 1000000:
         return f"{size // 1000000} MB"
-    if size > 1000:
+    elif size > 1000:
         return f"{size // 1000} KB"
-    return f"{size} B"
+    else:
+        return f"{size} B"
 
 
 class Statistics:
-    __slots__ = ("seg_cached", "seg_sizes", "seg_split")
-
+    __slots__ = ("seg_sizes", "seg_split", "seg_cached")
+    
     def __init__(self) -> None:
         self.seg_sizes: dict[str, int] = {}
         self.seg_split: dict[str, int] = {}
@@ -48,14 +49,14 @@ class Statistics:
         unk_ratio = unk_size / total_size
 
         log.write(
-            f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments",
+            f"Split {fmt_size(rest_size)} ({known_ratio:.2%}) in defined segments"
         )
         for typ, size in self.seg_sizes.items():
             if typ != "unk":
                 tmp_ratio = size / total_size
                 log.write(
-                    f"{typ:>20}: {fmt_size(size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{self.seg_split.get(typ, 0)} split{Style.RESET_ALL}, {Style.DIM}{self.seg_cached.get(typ, 0)} cached",
+                    f"{typ:>20}: {fmt_size(size):>8} ({tmp_ratio:.2%}) {Fore.GREEN}{self.seg_split.get(typ, 0)} split{Style.RESET_ALL}, {Style.DIM}{self.seg_cached.get(typ, 0)} cached"
                 )
         log.write(
-            f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files",
+            f"{'unknown':>20}: {fmt_size(unk_size):>8} ({unk_ratio:.2%}) from unknown bin files"
         )

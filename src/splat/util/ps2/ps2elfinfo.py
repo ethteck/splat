@@ -3,20 +3,18 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING
-
+from pathlib import Path
 import spimdisasm
 from spimdisasm.elf32 import (
-    Elf32Constants,
     Elf32File,
-    Elf32ObjectFileType,
+    Elf32Constants,
     Elf32SectionHeaderFlag,
+    Elf32ObjectFileType,
 )
+from typing import Optional
 
 from .. import log
 
-if TYPE_CHECKING:
-    from pathlib import Path
 
 ELF_SECTION_MAPPING: dict[str, str] = {
     ".text": "asm",
@@ -58,11 +56,11 @@ class Ps2Elf:
     size: int
     compiler: str
     elf_section_names: list[tuple[str, bool]]
-    gp: int | None
-    ld_gp_expression: str | None
+    gp: Optional[int]
+    ld_gp_expression: Optional[str]
 
     @staticmethod
-    def get_info(elf_path: Path, elf_bytes: bytes) -> Ps2Elf | None:
+    def get_info(elf_path: Path, elf_bytes: bytes) -> Optional[Ps2Elf]:
         # Avoid spimdisasm from complaining about unknown sections.
         spimdisasm.common.GlobalConfig.QUIET = True
 
@@ -83,7 +81,7 @@ class Ps2Elf:
             gp = elf.reginfo.gpValue
         else:
             gp = None
-        first_small_section_info: tuple[str, int] | None = None
+        first_small_section_info: Optional[tuple[str, int]] = None
 
         first_segment_name = "cod"
         segs = [FakeSegment(first_segment_name, 0, 0, [])]
@@ -93,7 +91,7 @@ class Ps2Elf:
 
         elf_section_names: list[tuple[str, bool]] = []
 
-        first_offset: int | None = None
+        first_offset: Optional[int] = None
         rom_size = 0
 
         previous_type = Elf32Constants.Elf32SectionHeaderType.PROGBITS

@@ -1,11 +1,10 @@
-from __future__ import annotations
+from typing import Optional
 
-from ...disassembler.disassembler_section import (
-    DisassemblerSection,
-    make_bss_section,
-)
-from ...util import log, options, symbols
+from ...util import options, symbols, log
+
 from .data import CommonSegData
+
+from ...disassembler.disassembler_section import DisassemblerSection, make_bss_section
 
 # If `options.opts.ld_bss_is_noload` is False, then this segment behaves like a `CommonSegData`
 
@@ -14,19 +13,23 @@ class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"
 
-    def get_section_flags(self) -> str | None:
+    def get_section_flags(self) -> Optional[str]:
         return "wa"
 
     @staticmethod
     def is_data() -> bool:
-        return bool(not options.opts.ld_bss_is_noload)
+        if not options.opts.ld_bss_is_noload:
+            return True
+        return False
 
     @staticmethod
     def is_noload() -> bool:
-        return options.opts.ld_bss_is_noload
+        if not options.opts.ld_bss_is_noload:
+            return False
+        return True
 
     def configure_disassembler_section(
-        self, disassembler_section: DisassemblerSection,
+        self, disassembler_section: DisassemblerSection
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 
@@ -42,7 +45,7 @@ class CommonSegBss(CommonSegData):
 
         if not isinstance(self.rom_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'",
+                f"Segment '{self.name}' (type '{self.type}') requires a rom_start. Got '{self.rom_start}'"
             )
 
         # Supposedly logic error, not user error
@@ -54,11 +57,11 @@ class CommonSegBss(CommonSegData):
 
         if not isinstance(self.vram_start, int):
             log.error(
-                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'",
+                f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
         next_subsegment = self.parent.get_next_subsegment_for_ram(
-            self.vram_start, self.index_within_group,
+            self.vram_start, self.index_within_group
         )
         if next_subsegment is None:
             bss_end = self.get_most_parent().vram_end
@@ -85,7 +88,7 @@ class CommonSegBss(CommonSegData):
 
         for spim_sym in self.spim_section.get_section().symbolList:
             symbols.create_symbol_from_spim_symbol(
-                self.get_most_parent(), spim_sym.contextSym, force_in_segment=True,
+                self.get_most_parent(), spim_sym.contextSym, force_in_segment=True
             )
 
     def should_scan(self) -> bool:

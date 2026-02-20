@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Dict
 
 import spimdisasm
 
-from . import log, options, progress_bar, symbols
+from . import log, options, symbols, progress_bar
 
 
 @dataclass
@@ -16,7 +17,7 @@ class Reloc:
     addend: int = 0
 
 
-all_relocs: dict[int, Reloc] = {}
+all_relocs: Dict[int, Reloc] = {}
 
 
 def add_reloc(reloc: Reloc) -> None:
@@ -63,13 +64,13 @@ def initialize() -> None:
                 if attr_name == "":
                     log.parsing_error_preamble(path, line_num, line)
                     log.write(
-                        f"Missing attribute name in '{info}', is there extra whitespace?",
+                        f"Missing attribute name in '{info}', is there extra whitespace?"
                     )
                     log.error("")
                 if attr_val == "":
                     log.parsing_error_preamble(path, line_num, line)
                     log.write(
-                        f"Missing attribute value in '{info}', is there extra whitespace?",
+                        f"Missing attribute value in '{info}', is there extra whitespace?"
                     )
                     log.error("")
 
@@ -110,7 +111,7 @@ def initialize() -> None:
             if reloc.rom_address in all_relocs:
                 log.parsing_error_preamble(path, line_num, line)
                 log.error(
-                    f"Duplicated 'rom' address for reloc: 0x{reloc.rom_address:X}",
+                    f"Duplicated 'rom' address for reloc: 0x{reloc.rom_address:X}"
                 )
             add_reloc(reloc)
 
@@ -121,9 +122,9 @@ def initialize_spim_context() -> None:
 
         if reloc_type is None:
             log.error(
-                f"Reloc type '{reloc.reloc_type}' is not valid. Rom address: 0x{rom_address:X}",
+                f"Reloc type '{reloc.reloc_type}' is not valid. Rom address: 0x{rom_address:X}"
             )
 
         symbols.spim_context.addGlobalReloc(
-            rom_address, reloc_type, reloc.symbol_name, addend=reloc.addend,
+            rom_address, reloc_type, reloc.symbol_name, addend=reloc.addend
         )

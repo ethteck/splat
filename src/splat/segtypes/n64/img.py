@@ -1,35 +1,32 @@
-from __future__ import annotations
+from pathlib import Path
+from typing import Dict, List, Tuple, Type, Optional, Union
 
-from typing import TYPE_CHECKING
-
+from n64img.image import Image
 from ...util import log, options
+
 from ..segment import Segment
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
-    from n64img.image import Image
 
 
 class N64SegImg(Segment):
     @staticmethod
-    def parse_dimensions(yaml: dict | list) -> tuple[int, int]:
+    def parse_dimensions(yaml: Union[Dict, List]) -> Tuple[int, int]:
         if isinstance(yaml, dict):
             return yaml["width"], yaml["height"]
-        if len(yaml) < 5:
-            log.error(f"Error: {yaml} is missing width and height parameters")
-        return yaml[3], yaml[4]
+        else:
+            if len(yaml) < 5:
+                log.error(f"Error: {yaml} is missing width and height parameters")
+            return yaml[3], yaml[4]
 
     def __init__(
         self,
-        rom_start: int | None,
-        rom_end: int | None,
-        type: str,  # noqa: A002  # `type` is shadowing a builtin
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
         name: str,
-        vram_start: int | None,
-        args: list[str],
+        vram_start: Optional[int],
+        args: list,
         yaml,
-        img_cls: type[Image],
+        img_cls: Type[Image],
     ):
         super().__init__(
             rom_start,
@@ -65,11 +62,11 @@ class N64SegImg(Segment):
         actual_len = self.rom_end - self.rom_start
         if actual_len > expected_len:
             log.error(
-                f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)",
+                f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}\n(hint: add a 'bin' segment after it)"
             )
         elif actual_len < expected_len:
             log.error(
-                f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}",
+                f"Error: {self.name} should end at 0x{self.rom_start + expected_len:X}, but it ends at 0x{self.rom_end:X}"
             )
 
     def out_path(self) -> Path:
@@ -93,14 +90,15 @@ class N64SegImg(Segment):
         self.log(f"Wrote {self.name} to {path}")
 
     @staticmethod
-    def estimate_size(yaml: dict | list) -> int:
+    def estimate_size(yaml: Union[Dict, List]) -> int:
         width, height = N64SegImg.parse_dimensions(yaml)
         typ = Segment.parse_segment_type(yaml)
 
         if typ == "ci4" or typ == "i4" or typ == "ia4":
             return width * height // 2
-        if typ in ("ia16", "rgba16"):
+        elif typ in ("ia16", "rgba16"):
             return width * height * 2
-        if typ == "rgba32":
+        elif typ == "rgba32":
             return width * height * 4
-        return width * height
+        else:
+            return width * height

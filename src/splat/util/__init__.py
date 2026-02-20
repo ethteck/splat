@@ -1,18 +1,16 @@
-from . import (
-    cache_handler as cache_handler,
-    color as color,
-    compiler as compiler,
-    file_presets as file_presets,
-    log as log,
-    n64 as n64,
-    options as options,
-    palettes as palettes,
-    progress_bar as progress_bar,
-    ps2 as ps2,
-    psx as psx,
-    relocs as relocs,
-    statistics as statistics,
-    symbols as symbols,
-    utils as utils,
-    vram_classes as vram_classes,
-)
+from . import cache_handler as cache_handler
+from . import color as color
+from . import compiler as compiler
+from . import file_presets as file_presets
+from . import log as log
+from . import n64 as n64
+from . import options as options
+from . import palettes as palettes
+from . import progress_bar as progress_bar
+from . import ps2 as ps2
+from . import psx as psx
+from . import relocs as relocs
+from . import statistics as statistics
+from . import symbols as symbols
+from . import utils as utils
+from . import vram_classes as vram_classes

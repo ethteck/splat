@@ -1,14 +1,12 @@
-from __future__ import annotations
-
 from itertools import zip_longest
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 from ...util import log, options
 from ...util.color import unpack_color
+
 from ..segment import Segment
 
-if TYPE_CHECKING:
-    from pathlib import Path
 
 VALID_SIZES = [0x20, 0x40, 0x80, 0x100, 0x200]
 
@@ -22,7 +20,7 @@ class N64SegPalette(Segment):
         if self.extract:
             if self.rom_end is None:
                 log.error(
-                    f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it",
+                    f"segment {self.name} needs to know where it ends; add a position marker [0xDEADBEEF] after it"
                 )
 
             if isinstance(self.yaml, dict) and "size" in self.yaml:
@@ -31,7 +29,7 @@ class N64SegPalette(Segment):
                     rom_len = self.rom_end - self.rom_start
                     if rom_len < yaml_size:
                         log.error(
-                            f"Error: {self.name} has a `size` value of 0x{yaml_size:X}, but this is smaller than the actual rom size of the palette (0x{rom_len:X}, start: 0x{self.rom_start:X}, end: 0x{self.rom_end:X})",
+                            f"Error: {self.name} has a `size` value of 0x{yaml_size:X}, but this is smaller than the actual rom size of the palette (0x{rom_len:X}, start: 0x{self.rom_start:X}, end: 0x{self.rom_end:X})"
                         )
                     elif rom_len > yaml_size:
                         log.error(
@@ -48,19 +46,19 @@ class N64SegPalette(Segment):
 
                 if actual_len > VALID_SIZES[-1]:
                     log.error(
-                        f"Error: {self.name} (0x{actual_len:X} bytes) is too long, max 0x{VALID_SIZES[-1]:X})\n{hint_msg}",
+                        f"Error: {self.name} (0x{actual_len:X} bytes) is too long, max 0x{VALID_SIZES[-1]:X})\n{hint_msg}"
                     )
 
                 if actual_len not in VALID_SIZES:
                     log.error(
-                        f"Error: {self.name} (0x{actual_len:X} bytes) is not a valid palette size ({', '.join(hex(s) for s in VALID_SIZES)})\n{hint_msg}",
+                        f"Error: {self.name} (0x{actual_len:X} bytes) is not a valid palette size ({', '.join(hex(s) for s in VALID_SIZES)})\n{hint_msg}"
                     )
                 size = actual_len
         else:
             size = 0
 
         self.palette_size: int = size
-        self.global_id: str | None = (
+        self.global_id: Optional[str] = (
             self.yaml.get("global_id") if isinstance(self.yaml, dict) else None
         )
 
@@ -68,7 +66,7 @@ class N64SegPalette(Segment):
         return super().get_cname() + "_pal"
 
     @staticmethod
-    def parse_palette_bytes(data) -> list[tuple[int, int, int, int]]:
+    def parse_palette_bytes(data) -> List[Tuple[int, int, int, int]]:
         def iter_in_groups(iterable, n, fillvalue=None):
             args = [iter(iterable)] * n
             return zip_longest(*args, fillvalue=fillvalue)
@@ -80,7 +78,7 @@ class N64SegPalette(Segment):
 
         return palette
 
-    def parse_palette(self, rom_bytes) -> list[tuple[int, int, int, int]]:
+    def parse_palette(self, rom_bytes) -> List[Tuple[int, int, int, int]]:
         assert self.rom_start is not None
         data = rom_bytes[self.rom_start : self.rom_start + self.palette_size]
 
@@ -104,11 +102,12 @@ class N64SegPalette(Segment):
                 self.get_linker_section_order(),
                 self.get_linker_section_linksection(),
                 self.is_noload(),
-            ),
+            )
         ]
 
     @staticmethod
-    def estimate_size(yaml: dict | list) -> int:
-        if isinstance(yaml, dict) and "size" in yaml:
-            return int(yaml["size"])
+    def estimate_size(yaml: Union[Dict, List]) -> int:
+        if isinstance(yaml, dict):
+            if "size" in yaml:
+                return int(yaml["size"])
         return 0x20

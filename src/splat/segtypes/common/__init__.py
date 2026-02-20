@@ -1,23 +1,21 @@
-from . import (
-    asm as asm,
-    bin as bin,  # noqa: A004  # Import `bin` is shadowing a Python builtin
-    bss as bss,
-    c as c,
-    code as code,
-    codesubsegment as codesubsegment,
-    cpp as cpp,
-    data as data,
-    databin as databin,
-    group as group,
-    hasm as hasm,
-    header as header,
-    lib as lib,
-    linker_offset as linker_offset,
-    rdata as rdata,
-    rodata as rodata,
-    rodatabin as rodatabin,
-    sbss as sbss,
-    sdata as sdata,
-    segment as segment,
-    textbin as textbin,
-)
+from . import asm as asm
+from . import bin as bin
+from . import bss as bss
+from . import code as code
+from . import codesubsegment as codesubsegment
+from . import cpp as cpp
+from . import c as c
+from . import databin as databin
+from . import data as data
+from . import group as group
+from . import hasm as hasm
+from . import header as header
+from . import lib as lib
+from . import linker_offset as linker_offset
+from . import rdata as rdata
+from . import rodatabin as rodatabin
+from . import rodata as rodata
+from . import sbss as sbss
+from . import sdata as sdata
+from . import segment as segment
+from . import textbin as textbin
