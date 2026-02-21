@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
+from __future__ import annotations
+
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, TYPE_CHECKING
 from pathlib import Path
 
 from collections import defaultdict, deque
@@ -24,22 +26,25 @@ from ..segtypes.segment import Segment
 from ..segtypes.common.group import CommonSegGroup
 from ..util import conf, log, options, palettes, symbols, relocs
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 linker_writer: LinkerWriter
-config: Dict[str, Any]
+config: dict[str, Any]
 
 segment_roms: IntervalTree = IntervalTree()
 segment_rams: IntervalTree = IntervalTree()
 
 
-def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
+def initialize_segments(config_segments: dict | list) -> list[Segment]:
     global segment_roms
     global segment_rams
 
     segment_roms = IntervalTree()
     segment_rams = IntervalTree()
 
-    segments_by_name: Dict[str, Segment] = {}
-    ret: List[Segment] = []
+    segments_by_name: dict[str, Segment] = {}
+    ret: list[Segment] = []
 
     # Cross segment pairing can be quite expensive, so we try to avoid it if the user haven't requested it.
     do_cross_segment_pairing = False
@@ -77,7 +82,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
             next_start = last_rom_end
 
         segment: Segment = Segment.from_yaml(
-            segment_class, seg_yaml, this_start, next_start, None
+            segment_class,
+            seg_yaml,
+            this_start,
+            next_start,
+            None,
         )
 
         if segment.require_unique_name:
@@ -174,7 +183,7 @@ def assign_symbols_to_segments() -> None:
             continue
 
         if symbol.rom:
-            cands: Set[Interval] = segment_roms[symbol.rom]
+            cands: set[Interval] = segment_roms[symbol.rom]
             if len(cands) > 1:
                 log.error("multiple segments rom overlap symbol", symbol)
             elif len(cands) == 0:
@@ -191,7 +200,7 @@ def assign_symbols_to_segments() -> None:
                     seg.add_symbol(symbol)
 
 
-def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
+def brief_seg_name(seg: Segment, limit: int, ellipsis: str = "…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
         return s[:limit].strip() + ellipsis
@@ -200,8 +209,8 @@ def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
 
 # Return a mapping of vram classes to segments that need to be part of their vram symbol's calculation
 def calc_segment_dependences(
-    all_segments: List[Segment],
-) -> Dict[vram_classes.VramClass, List[Segment]]:
+    all_segments: list[Segment],
+) -> dict[vram_classes.VramClass, list[Segment]]:
     # Map vram class names to segments that have that vram class
     vram_class_to_segments: Dict[str, List[Segment]] = {}
     for seg in all_segments:
@@ -225,8 +234,8 @@ def calc_segment_dependences(
 
 
 def sort_segments_by_vram_class_dependency(
-    all_segments: List[Segment],
-) -> List[Segment]:
+    all_segments: list[Segment],
+) -> list[Segment]:
     # map all "_VRAM_END" strings to segments
     end_sym_to_seg: Dict[str, Segment] = {}
     for seg in all_segments:
@@ -279,7 +288,7 @@ def read_target_binary() -> bytes:
     return rom_bytes
 
 
-def initialize_platform(rom_bytes: bytes):
+def initialize_platform(rom_bytes: bytes) -> ModuleType:
     platform_module = importlib.import_module(
         f"{__package_name__}.platforms.{options.opts.platform}"
     )
@@ -289,7 +298,7 @@ def initialize_platform(rom_bytes: bytes):
     return platform_module
 
 
-def initialize_all_symbols(all_segments: List[Segment]):
+def initialize_all_symbols(all_segments: list[Segment]) -> None:
     # Load and process symbols
     symbols.initialize(all_segments)
     relocs.initialize()
@@ -303,12 +312,12 @@ def initialize_all_symbols(all_segments: List[Segment]):
 
 
 def do_scan(
-    all_segments: List[Segment],
+    all_segments: list[Segment],
     rom_bytes: bytes,
     stats: statistics.Statistics,
     cache: cache_handler.Cache,
-):
-    processed_segments: List[Segment] = []
+) -> list[Segment]:
+    processed_segments: list[Segment] = []
 
     scan_bar = progress_bar.get_progress_bar(all_segments)
     for segment in scan_bar:
@@ -336,11 +345,11 @@ def do_scan(
 
 
 def do_split(
-    all_segments: List[Segment],
+    all_segments: list[Segment],
     rom_bytes: bytes,
     stats: statistics.Statistics,
     cache: cache_handler.Cache,
-):
+) -> None:
     split_bar = progress_bar.get_progress_bar(all_segments)
     for segment in split_bar:
         assert isinstance(segment, Segment)
@@ -441,7 +450,7 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
     return linker_writer
 
 
-def write_ld_dependencies(linker_writer: LinkerWriter):
+def write_ld_dependencies(linker_writer: LinkerWriter) -> None:
     if options.opts.ld_dependencies:
         elf_path = options.opts.elf_path
         if elf_path is None:
@@ -453,7 +462,7 @@ def write_ld_dependencies(linker_writer: LinkerWriter):
         )
 
 
-def write_elf_sections_file(all_segments: List[Segment]):
+def write_elf_sections_file(all_segments: list[Segment]) -> None:
     # write elf_sections.txt - this only lists the generated sections in the elf, not subsections
     # that the elf combines into one section
     if options.opts.elf_section_list_path:
@@ -465,40 +474,44 @@ def write_elf_sections_file(all_segments: List[Segment]):
             f.write(section_list)
 
 
-def write_undefined_auto(to_write: List[symbols.Symbol], file_path: Path):
+def write_undefined_auto(to_write: list[symbols.Symbol], file_path: Path) -> None:
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open("w", newline="\n") as f:
         for symbol in to_write:
             f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
 
-def write_undefined_funcs_auto():
-    if options.opts.create_undefined_funcs_auto:
-        to_write = [
-            s
-            for s in symbols.all_symbols
-            if s.referenced and not s.defined and s.type == "func"
-        ]
-        to_write.sort(key=lambda x: x.vram_start)
+def write_undefined_funcs_auto() -> None:
+    if not options.opts.create_undefined_funcs_auto:
+        return
 
-        write_undefined_auto(to_write, options.opts.undefined_funcs_auto_path)
+    to_write = [
+        s
+        for s in symbols.all_symbols
+        if s.referenced and not s.defined and s.type == "func"
+    ]
+    to_write.sort(key=lambda x: x.vram_start)
 
-
-def write_undefined_syms_auto():
-    if options.opts.create_undefined_syms_auto:
-        to_write = [
-            s
-            for s in symbols.all_symbols
-            if s.referenced
-            and not s.defined
-            and s.type not in {"func", "label", "jtbl_label"}
-        ]
-        to_write.sort(key=lambda x: x.vram_start)
-
-        write_undefined_auto(to_write, options.opts.undefined_syms_auto_path)
+    write_undefined_auto(to_write, options.opts.undefined_funcs_auto_path)
 
 
-def print_segment_warnings(all_segments: List[Segment]):
+def write_undefined_syms_auto() -> None:
+    if not options.opts.create_undefined_syms_auto:
+        return
+
+    to_write = [
+        s
+        for s in symbols.all_symbols
+        if s.referenced
+        and not s.defined
+        and s.type not in {"func", "label", "jtbl_label"}
+    ]
+    to_write.sort(key=lambda x: x.vram_start)
+
+    write_undefined_auto(to_write, options.opts.undefined_syms_auto_path)
+
+
+def print_segment_warnings(all_segments: list[Segment]) -> None:
     for segment in all_segments:
         if len(segment.warnings) > 0:
             log.write(
@@ -539,15 +552,15 @@ def dump_symbols() -> None:
 
 
 def main(
-    config_path: List[Path],
-    modes: Optional[List[str]],
+    config_path: list[Path],
+    modes: list[str] | None,
     verbose: bool,
     use_cache: bool = True,
     skip_version_check: bool = False,
     stdout_only: bool = False,
     disassemble_all: bool = False,
-    make_full_disasm_for_code=False,
-):
+    make_full_disasm_for_code: Any = False,
+) -> None:
     if stdout_only:
         log.write("--stdout-only flag is deprecated", status="warn")
     progress_bar.out_file = sys.stdout
@@ -620,7 +633,7 @@ def main(
         file_presets.write_all_files()
 
 
-def add_arguments_to_parser(parser: argparse.ArgumentParser):
+def add_arguments_to_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "config",
         help="path to a compatible config .yaml file",
@@ -654,7 +667,7 @@ def add_arguments_to_parser(parser: argparse.ArgumentParser):
     )
 
 
-def process_arguments(args: argparse.Namespace):
+def process_arguments(args: argparse.Namespace) -> None:
     main(
         args.config,
         args.modes,
@@ -670,7 +683,7 @@ def process_arguments(args: argparse.Namespace):
 script_description = "Split a rom given a rom, a config, and output directory"
 
 
-def add_subparser(subparser: argparse._SubParsersAction):
+def add_subparser(subparser: argparse._SubParsersAction) -> None:
     parser = subparser.add_parser(
         "split", help=script_description, description=script_description
     )

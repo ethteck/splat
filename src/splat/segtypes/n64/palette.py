@@ -1,20 +1,31 @@
+from __future__ import annotations
+
 from itertools import zip_longest
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, TypeVar
 
 from ...util import log, options
 from ...util.color import unpack_color
 
 from ..segment import Segment
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from typing_extensions import Final
 
-VALID_SIZES = [0x20, 0x40, 0x80, 0x100, 0x200]
+    from ..linker_entry import LinkerEntry
+    from ...util.vram_classes import SerializedSegmentData
+
+T = TypeVar("T")
+
+
+VALID_SIZES: Final = (0x20, 0x40, 0x80, 0x100, 0x200)
 
 
 class N64SegPalette(Segment):
     require_unique_name = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         if self.extract:
@@ -58,7 +69,7 @@ class N64SegPalette(Segment):
             size = 0
 
         self.palette_size: int = size
-        self.global_id: Optional[str] = (
+        self.global_id: str | None = (
             self.yaml.get("global_id") if isinstance(self.yaml, dict) else None
         )
 
@@ -66,8 +77,8 @@ class N64SegPalette(Segment):
         return super().get_cname() + "_pal"
 
     @staticmethod
-    def parse_palette_bytes(data) -> List[Tuple[int, int, int, int]]:
-        def iter_in_groups(iterable, n, fillvalue=None):
+    def parse_palette_bytes(data: bytes) -> list[tuple[int, int, int, int]]:
+        def iter_in_groups(iterable: Iterable[T], n: int, fillvalue: object=None) -> zip_longest[tuple[T, ...]]:
             args = [iter(iterable)] * n
             return zip_longest(*args, fillvalue=fillvalue)
 
@@ -78,7 +89,7 @@ class N64SegPalette(Segment):
 
         return palette
 
-    def parse_palette(self, rom_bytes) -> List[Tuple[int, int, int, int]]:
+    def parse_palette(self, rom_bytes: bytes) -> list[tuple[int, int, int, int]]:
         assert self.rom_start is not None
         data = rom_bytes[self.rom_start : self.rom_start + self.palette_size]
 
@@ -91,7 +102,7 @@ class N64SegPalette(Segment):
         return options.opts.asset_path / self.dir / f"{self.name}.png"
 
     # TODO NEED NAMES...
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> list[LinkerEntry]:
         from ..linker_entry import LinkerEntry
 
         return [
@@ -106,7 +117,7 @@ class N64SegPalette(Segment):
         ]
 
     @staticmethod
-    def estimate_size(yaml: Union[Dict, List]) -> int:
+    def estimate_size(yaml: SerializedSegmentData | list[str]) -> int:
         if isinstance(yaml, dict):
             if "size" in yaml:
                 return int(yaml["size"])

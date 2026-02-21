@@ -1,30 +1,33 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import List, Optional, Type, Tuple
+from typing import TYPE_CHECKING, cast
 
 from ...util import log, options, utils
 
 from .group import CommonSegGroup
 from ..segment import Segment, parse_segment_align
 
+if TYPE_CHECKING:
+    from ...util.vram_classes import SerializedSegmentData
 
-def dotless_type(type: str) -> str:
-    return type[1:] if type[0] == "." else type
+
+def dotless_type(type_: str) -> str:
+    return type_[1:] if type_[0] == "." else type_
 
 
 # code group
 class CommonSegCode(CommonSegGroup):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
-        args: list,
-        yaml,
-    ):
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegmentData | list[str],
+    ) -> None:
         self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
 
         super().__init__(
@@ -48,7 +51,7 @@ class CommonSegCode(CommonSegGroup):
         return True
 
     @property
-    def vram_end(self) -> Optional[int]:
+    def vram_end(self) -> int | None:
         if self.vram_start is not None and self.size is not None:
             return self.vram_start + self.size + self.bss_size
         else:
@@ -58,12 +61,12 @@ class CommonSegCode(CommonSegGroup):
     def _generate_segment_from_all(
         self,
         rep_type: str,
-        replace_class: Type[Segment],
+        replace_class: type[Segment],
         base_name: str,
         base_seg: Segment,
-        rom_start: Optional[int] = None,
-        rom_end: Optional[int] = None,
-        vram_start: Optional[int] = None,
+        rom_start: int | None = None,
+        rom_end: int | None = None,
+        vram_start: int | None = None,
     ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
@@ -72,7 +75,7 @@ class CommonSegCode(CommonSegGroup):
             name=base_name,
             vram_start=vram_start,
             args=[],
-            yaml={},
+            yaml=cast(SerializedSegmentData, {}),
         )
         rep.extract = False
         rep.given_subalign = self.given_subalign
@@ -92,14 +95,14 @@ class CommonSegCode(CommonSegGroup):
 
     def _insert_all_auto_sections(
         self,
-        ret: List[Segment],
+        ret: list[Segment],
         base_segments: OrderedDict[str, Segment],
         readonly_before: bool,
-    ) -> List[Segment]:
+    ) -> list[Segment]:
         if len(options.opts.auto_link_sections) == 0:
             return ret
 
-        base_segments_list: List[Tuple[str, Segment]] = list(base_segments.items())
+        base_segments_list: list[tuple[str, Segment]] = list(base_segments.items())
 
         # Determine what will be the min insertion index
         last_inserted_index = len(base_segments_list) - 1
@@ -147,7 +150,7 @@ class CommonSegCode(CommonSegGroup):
 
         return ret
 
-    def parse_subsegments(self, segment_yaml) -> List[Segment]:
+    def parse_subsegments(self, segment_yaml: dict[str, list[SerializedSegmentData | list[str]]]) -> list[Segment]:
         if "subsegments" not in segment_yaml:
             if not self.parent:
                 raise Exception(
@@ -156,9 +159,9 @@ class CommonSegCode(CommonSegGroup):
             return []
 
         base_segments: OrderedDict[str, Segment] = OrderedDict()
-        ret: List[Segment] = []
-        prev_start: Optional[int] = -1
-        prev_vram: Optional[int] = -1
+        ret: list[Segment] = []
+        prev_start: int | None = -1
+        prev_vram: int | None = -1
 
         last_rom_end = None
 
@@ -196,7 +199,7 @@ class CommonSegCode(CommonSegGroup):
             # First, try to get the end address from the next segment's start address
             # Second, try to get the end address from the estimated size of this segment
             # Third, try to get the end address from the next segment with a start address
-            end: Optional[int] = None
+            end: int | None = None
             if i < len(segment_yaml["subsegments"]) - 1:
                 end, end_is_auto_segment = Segment.parse_segment_start(
                     segment_yaml["subsegments"][i + 1]
@@ -277,7 +280,7 @@ class CommonSegCode(CommonSegGroup):
 
         return ret
 
-    def scan(self, rom_bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         # Always scan code first
         for sub in self.subsegments:
             if sub.is_text() and sub.should_scan():

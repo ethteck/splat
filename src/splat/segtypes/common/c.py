@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
 import re
 from pathlib import Path
-from typing import Optional, Set, List
+from typing import TYPE_CHECKING
 
 import rabbitizer
 import spimdisasm
@@ -12,6 +14,9 @@ from ...util.symbols import Symbol
 
 from .codesubsegment import CommonSegCodeSubsegment
 from .rodata import CommonSegRodata
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 STRIP_C_COMMENTS_RE = re.compile(
@@ -27,37 +32,36 @@ C_GLOBAL_ASM_IDO_RE = re.compile(r"GLOBAL_ASM\(\"(\w+\/)*(\w+)\.s\"\)", re.MULTI
 
 
 class CommonSegC(CommonSegCodeSubsegment):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.defined_funcs: Set[str] = set()
-        self.global_asm_funcs: Set[str] = set()
-        self.global_asm_rodata_syms: Set[str] = set()
+        self.defined_funcs: set[str] = set()
+        self.global_asm_funcs: set[str] = set()
+        self.global_asm_rodata_syms: set[str] = set()
 
         self.file_extension = "c"
 
         self.use_gp_rel_macro = options.opts.use_gp_rel_macro_nonmatching
 
     @staticmethod
-    def strip_c_comments(text):
-        def replacer(match):
+    def strip_c_comments(text: str) -> str:
+        def replacer(match: re.Match[str]) -> str:
             s = match.group(0)
             if s.startswith("/"):
                 return " "
-            else:
-                return s
+            return s
 
         return re.sub(STRIP_C_COMMENTS_RE, replacer, text)
 
     @staticmethod
-    def get_funcs_defined_in_c(c_file: Path) -> Set[str]:
+    def get_funcs_defined_in_c(c_file: Path) -> set[str]:
         with open(c_file, "r", encoding="utf-8") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
         return set(m.group(1) for m in C_FUNC_RE.finditer(text))
 
     @staticmethod
-    def find_all_instances(string: str, sub: str):
+    def find_all_instances(string: str, sub: str) -> Generator[int, None, None]:
         start = 0
         while True:
             start = string.find(sub, start)
@@ -67,7 +71,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             start += len(sub)
 
     @staticmethod
-    def get_close_parenthesis(string: str, pos: int):
+    def get_close_parenthesis(string: str, pos: int) -> int:
         paren_count = 0
         while True:
             cur_char = string[pos]
@@ -80,10 +84,10 @@ class CommonSegC(CommonSegCodeSubsegment):
                     paren_count -= 1
             pos += 1
 
-    @staticmethod
-    def find_include_macro(text: str, macro_name: str):
-        for pos in CommonSegC.find_all_instances(text, f"{macro_name}("):
-            close_paren_pos = CommonSegC.get_close_parenthesis(
+    @classmethod
+    def find_include_macro(cls, text: str, macro_name: str) -> Generator[str, None, None]:
+        for pos in cls.find_all_instances(text, f"{macro_name}("):
+            close_paren_pos = cls.get_close_parenthesis(
                 text, pos + len(f"{macro_name}(")
             )
             macro_contents = text[pos:close_paren_pos]
@@ -95,43 +99,43 @@ class CommonSegC(CommonSegCodeSubsegment):
                 if len(macro_args) >= 2:
                     yield macro_args[1].strip(" )")
 
-    @staticmethod
-    def find_include_asm(text: str):
-        return CommonSegC.find_include_macro(text, "INCLUDE_ASM")
+    @classmethod
+    def find_include_asm(cls, text: str) -> Generator[str, None, None]:
+        return cls.find_include_macro(text, "INCLUDE_ASM")
 
-    @staticmethod
-    def find_include_rodata(text: str):
-        return CommonSegC.find_include_macro(text, "INCLUDE_RODATA")
+    @classmethod
+    def find_include_rodata(cls, text: str) -> Generator[str, None, None]:
+        return cls.find_include_macro(text, "INCLUDE_RODATA")
 
-    @staticmethod
-    def get_global_asm_funcs(c_file: Path) -> Set[str]:
+    @classmethod
+    def get_global_asm_funcs(cls, c_file: Path) -> set[str]:
         with c_file.open(encoding="utf-8") as f:
-            text = CommonSegC.strip_c_comments(f.read())
+            text = cls.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
         else:
-            return set(CommonSegC.find_include_asm(text))
+            return set(cls.find_include_asm(text))
 
-    @staticmethod
-    def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
+    @classmethod
+    def get_global_asm_rodata_syms(cls, c_file: Path) -> set[str]:
         with c_file.open(encoding="utf-8") as f:
-            text = CommonSegC.strip_c_comments(f.read())
+            text = cls.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
         else:
-            return set(CommonSegC.find_include_rodata(text))
+            return set(cls.find_include_rodata(text))
 
     @staticmethod
     def is_text() -> bool:
         return True
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "ax"
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         return options.opts.src_path / self.dir / f"{self.name}.{self.file_extension}"
 
-    def scan(self, rom_bytes: bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         if (
             self.rom_start is not None
             and self.rom_end is not None
@@ -150,7 +154,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             self.scan_code(rom_bytes)
 
-    def split(self, rom_bytes: bytes):
+    def split(self, rom_bytes: bytes) -> None:
         if self.is_auto_segment:
             if options.opts.make_full_disasm_for_code:
                 self.split_as_asmtu_file(self.asm_out_path())
@@ -168,7 +172,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             # We want to know if this C section has a corresponding rodata section so we can migrate its rodata
             rodata_section_type = ""
-            rodata_spim_segment: Optional[spimdisasm.mips.sections.SectionRodata] = None
+            rodata_spim_segment: spimdisasm.mips.sections.SectionRodata | spimdisasm.mips.sections.SectionBase | None = None
             if options.opts.migrate_rodata_to_functions:
                 # We don't know if the rodata section is .rodata or .rdata, so we need to check both
                 for sect in [".rodata", ".rdata"]:
@@ -283,6 +287,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             if options.opts.make_full_disasm_for_code:
                 # Disable gpRelHack since this file is expected to be built with modern gas
                 section = self.spim_section.get_section()
+                assert section is not None
                 old_value = section.getGpRelHack()
                 section.setGpRelHack(False)
 
@@ -305,7 +310,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
                 section.setGpRelHack(old_value)
 
-    def get_c_preamble(self):
+    def get_c_preamble(self) -> list[str]:
         ret = []
 
         preamble = options.opts.generated_c_preamble
@@ -317,8 +322,8 @@ class CommonSegC(CommonSegCodeSubsegment):
     def check_gaps_in_migrated_rodata(
         self,
         func: spimdisasm.mips.symbols.SymbolFunction,
-        rodata_list: List[spimdisasm.mips.symbols.SymbolBase],
-    ):
+        rodata_list: list[spimdisasm.mips.symbols.SymbolBase],
+    ) -> None:
         for index in range(len(rodata_list) - 1):
             rodata_sym = rodata_list[index]
             next_rodata_sym = rodata_list[index + 1]
@@ -342,7 +347,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         func_rodata_entry: spimdisasm.mips.FunctionRodataEntry,
         out_dir: Path,
         func_sym: Symbol,
-    ):
+    ) -> None:
         outpath = out_dir / self.name / f"{func_sym.filename}.s"
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -380,7 +385,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         spim_rodata_sym: spimdisasm.mips.symbols.SymbolBase,
         out_dir: Path,
         rodata_sym: Symbol,
-    ):
+    ) -> None:
         outpath = out_dir / self.name / f"{rodata_sym.filename}.s"
 
         # Skip extraction if the file exists and the symbol is marked as extract=false
@@ -389,7 +394,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
-        with outpath.open("w", newline="\n") as f:
+        with outpath.open("w", encoding="utf-8", newline="\n") as f:
             preamble = options.opts.generated_s_preamble
             if preamble:
                 f.write(preamble + "\n")
@@ -425,7 +430,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         sym: Symbol,
         spim_sym: spimdisasm.mips.symbols.SymbolFunction,
         asm_out_dir: Path,
-    ) -> List[str]:
+    ) -> list[str]:
         c_lines = []
 
         # Terrible hack to "auto-decompile" empty functions
@@ -444,7 +449,7 @@ class CommonSegC(CommonSegCodeSubsegment):
         c_lines.append("")
         return c_lines
 
-    def get_c_lines_for_rodata_sym(self, sym: Symbol, asm_out_dir: Path):
+    def get_c_lines_for_rodata_sym(self, sym: Symbol, asm_out_dir: Path) -> list[str]:
         c_lines = [self.get_c_line_include_macro(sym, asm_out_dir, "INCLUDE_RODATA")]
         c_lines.append("")
         return c_lines
@@ -453,8 +458,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         self,
         asm_out_dir: Path,
         c_path: Path,
-        symbols_entries: List[spimdisasm.mips.FunctionRodataEntry],
-    ):
+        symbols_entries: list[spimdisasm.mips.FunctionRodataEntry],
+    ) -> None:
         c_lines = self.get_c_preamble()
 
         for entry in symbols_entries:
@@ -489,8 +494,8 @@ class CommonSegC(CommonSegCodeSubsegment):
         c_path: Path,
         asm_out_dir: Path,
         is_new_c_file: bool,
-        symbols_entries: List[spimdisasm.mips.FunctionRodataEntry],
-    ):
+        symbols_entries: list[spimdisasm.mips.FunctionRodataEntry],
+    ) -> None:
         if not options.opts.create_asm_dependencies:
             return
         if (
@@ -536,3 +541,4 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             for depend_file in depend_list:
                 f.write(f"{depend_file.as_posix()}:\n")
+

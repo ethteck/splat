@@ -1,4 +1,5 @@
-from typing import Optional, Set, Tuple, List
+from __future__ import annotations
+
 import spimdisasm
 from ..segment import Segment
 from ...util import log, options, symbols
@@ -15,7 +16,7 @@ class CommonSegRodata(CommonSegData):
     def get_linker_section(self) -> str:
         return ".rodata"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "a"
 
     @staticmethod
@@ -28,7 +29,7 @@ class CommonSegRodata(CommonSegData):
 
     def get_possible_text_subsegment_for_symbol(
         self, rodata_sym: spimdisasm.mips.symbols.SymbolBase
-    ) -> Optional[Tuple[Segment, spimdisasm.common.ContextSymbol]]:
+    ) -> tuple[Segment, spimdisasm.common.ContextSymbol] | None:
         # Check if this rodata segment does not have a corresponding code file, try to look for one
 
         if self.sibling is not None or not options.opts.pair_rodata_to_text:
@@ -53,6 +54,7 @@ class CommonSegRodata(CommonSegData):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
+        assert section is not None
 
         # Set rodata string encoding
         # First check the global configuration
@@ -63,7 +65,7 @@ class CommonSegRodata(CommonSegData):
         if self.str_encoding is not None:
             section.stringEncoding = self.str_encoding
 
-    def disassemble_data(self, rom_bytes):
+    def disassemble_data(self, rom_bytes: bytes) -> None:
         if self.is_auto_segment:
             return
 
@@ -101,12 +103,15 @@ class CommonSegRodata(CommonSegData):
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
 
-        possible_text_segments: Set[Segment] = set()
+        possible_text_segments: set[Segment] = set()
 
         last_jumptable_addr_remainder = 0
-        misaligned_jumptable_offsets: List[int] = []
+        misaligned_jumptable_offsets: list[int] = []
 
-        for symbol in self.spim_section.get_section().symbolList:
+        section = self.spim_section.get_section()
+        assert section is not None
+
+        for symbol in section.symbolList:
             generated_symbol = symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym, force_in_segment=True
             )
@@ -114,7 +119,7 @@ class CommonSegRodata(CommonSegData):
 
             # Gather symbols found by spimdisasm and create those symbols in splat's side
             for referenced_vram in symbol.referencedVrams:
-                context_sym = self.spim_section.get_section().getSymbol(
+                context_sym = section.getSymbol(
                     referenced_vram, tryPlusOffset=False
                 )
                 if context_sym is not None:

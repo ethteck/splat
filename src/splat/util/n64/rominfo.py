@@ -332,6 +332,7 @@ def find_code_after_data(
         if insn.isValid() and insn.isReturn():
             # Check the instruction on the delay slot of the `jr $ra` is valid too.
             next_word = spimdisasm.common.Utils.bytesToWords(
+                rom_bytes, offset + 4, offset + 4 + 4,
             )[0]
             if rabbitizer.Instruction(next_word, vram + 4).isValid():
                 jr_ra_found = True
@@ -451,6 +452,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
         sys.exit(
             "splat could not decode the game name;"
             " try using a different encoding by passing the --header-encoding argument"
+            " (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)",
         )
 
     country_code = rom_bytes[0x3E]
@@ -463,6 +465,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
     entrypoint_info = N64EntrypointInfo.parse_rom_bytes(
+        rom_bytes, entry_point, size=0x100,
     )
 
     return N64Rom(
@@ -499,6 +502,7 @@ def get_compiler_info(rom_bytes: bytes, entry_point: int, print_result: bool = T
     if print_result:
         print(
             f"{branches} branches and {jumps} jumps detected in the first code segment."
+            f" Compiler is most likely {compiler}",
         )
     return compiler
 

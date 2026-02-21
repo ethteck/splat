@@ -52,6 +52,16 @@ class SerializedSegmentData(TypedDict):
     pair_segment: NotRequired[str]
     exclusive_ram_id: NotRequired[str]
     find_file_boundaries: NotRequired[bool]
+    size: NotRequired[int]
+    global_id: NotRequired[str]
+    length: NotRequired[int]
+    in_segment: NotRequired[bool]
+    data_only: NotRequired[bool]
+    bss_size: NotRequired[int]
+    str_encoding: NotRequired[str]
+    detect_redundant_function_end: NotRequired[bool]
+    width: NotRequired[int]
+    height: NotRequired[int]
 
 
 def initialize(yaml: list[SerializedSegmentData | list[str]] | None) -> None:

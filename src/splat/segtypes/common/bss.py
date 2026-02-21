@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 from ...util import options, symbols, log
 
@@ -13,7 +13,7 @@ class CommonSegBss(CommonSegData):
     def get_linker_section(self) -> str:
         return ".bss"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "wa"
 
     @staticmethod
@@ -35,7 +35,7 @@ class CommonSegBss(CommonSegData):
 
         pass
 
-    def disassemble_data(self, rom_bytes: bytes):
+    def disassemble_data(self, rom_bytes: bytes) -> None:
         if not options.opts.ld_bss_is_noload:
             super().disassemble_data(rom_bytes)
             return
@@ -86,7 +86,10 @@ class CommonSegBss(CommonSegData):
         self.spim_section.analyze()
         self.spim_section.set_comment_offset(self.rom_start)
 
-        for spim_sym in self.spim_section.get_section().symbolList:
+        section = self.spim_section.get_section()
+        assert section is not None
+
+        for spim_sym in section.symbolList:
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), spim_sym.contextSym, force_in_segment=True
             )

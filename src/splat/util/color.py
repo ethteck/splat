@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from math import ceil
 
 from . import options
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 # RRRRRGGG GGBBBBBA
-def unpack_color(data: bytes) -> tuple[int, int, int, int]:
+def unpack_color(data: Sequence[int]) -> tuple[int, int, int, int]:
     s = int.from_bytes(data[0:2], byteorder=options.opts.endianness)
 
     r = (s >> 11) & 0x1F

@@ -110,7 +110,8 @@ class CommonSegGroup(CommonSegment):
                 # and it has a rom size of zero
                 end = last_rom_end
 
-            segment: Segment = segment_class.from_yaml(
+            segment: Segment = Segment.from_yaml(
+                segment_class,
                 subsegment_yaml,
                 start,
                 end,

@@ -1,33 +1,38 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, List, Tuple, Type, Optional, Union
+from typing import TYPE_CHECKING
 
 from n64img.image import Image
 from ...util import log, options
 
 from ..segment import Segment
 
+if TYPE_CHECKING:
+    from ...util.vram_classes import SerializedSegmentData
+
 
 class N64SegImg(Segment):
     @staticmethod
-    def parse_dimensions(yaml: Union[Dict, List]) -> Tuple[int, int]:
+    def parse_dimensions(yaml: SerializedSegmentData | list[str]) -> tuple[int, int]:
         if isinstance(yaml, dict):
             return yaml["width"], yaml["height"]
         else:
             if len(yaml) < 5:
                 log.error(f"Error: {yaml} is missing width and height parameters")
-            return yaml[3], yaml[4]
+            return int(yaml[3]), int(yaml[4])
 
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
-        args: list,
-        yaml,
-        img_cls: Type[Image],
-    ):
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegmentData | list[str],
+        img_cls: type[Image],
+    ) -> None:
         super().__init__(
             rom_start,
             rom_end,
@@ -77,7 +82,7 @@ class N64SegImg(Segment):
     def should_split(self) -> bool:
         return options.opts.is_mode_active("img")
 
-    def split(self, rom_bytes):
+    def split(self, rom_bytes: bytes) -> None:
         self.check_len()
 
         path = self.out_path()
@@ -90,7 +95,7 @@ class N64SegImg(Segment):
         self.log(f"Wrote {self.name} to {path}")
 
     @staticmethod
-    def estimate_size(yaml: Union[Dict, List]) -> int:
+    def estimate_size(yaml: SerializedSegmentData | list[str]) -> int:
         width, height = N64SegImg.parse_dimensions(yaml)
         typ = Segment.parse_segment_type(yaml)
 

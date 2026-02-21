@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ...util import log, options
 
@@ -7,12 +9,13 @@ from .img import N64SegImg
 
 if TYPE_CHECKING:
     from .palette import N64SegPalette
+    from ...utils.vram_classes import SerializedSegmentData
 
 
 # Base class for CI4/CI8
 class N64SegCi(N64SegImg):
-    def parse_palette_names(self, yaml, args) -> List[str]:
-        ret = [self.name]
+    def parse_palette_names(self, yaml: SerializedSegmentData | list[str], args: list[str]) -> list[str]:
+        ret: list[str] | str = [self.name]
         if isinstance(yaml, dict):
             if "palettes" in yaml:
                 ret = yaml["palettes"]
@@ -20,19 +23,19 @@ class N64SegCi(N64SegImg):
             ret = args[2]
 
         if isinstance(ret, str):
-            ret = [ret]
+            return [ret]
         return ret
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.palettes: "List[N64SegPalette]" = []
+        self.palettes: "list[N64SegPalette]" = []
         self.palette_names = self.parse_palette_names(self.yaml, self.args)
 
     def scan(self, rom_bytes: bytes) -> None:
         self.n64img.data = rom_bytes[self.rom_start : self.rom_end]
 
-    def out_path_pal(self, pal_name) -> Path:
+    def out_path_pal(self, pal_name: str) -> Path:
         type_extension = f".{self.type}" if options.opts.image_type_in_extension else ""
 
         if len(self.palettes) == 1:
@@ -47,7 +50,7 @@ class N64SegCi(N64SegImg):
 
         return options.opts.asset_path / self.dir / f"{out_name}{type_extension}.png"
 
-    def split(self, rom_bytes):
+    def split(self, rom_bytes: bytes) -> None:
         self.check_len()
 
         assert self.palettes is not None

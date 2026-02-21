@@ -389,7 +389,7 @@ class Segment:
                     f"Error: segments out of order - ({self.name} starts at 0x{self.rom_start:X}, but next segment starts at 0x{self.rom_end:X})"
                 )
 
-    @classmethod
+    @staticmethod
     def from_yaml(
         cls: type[Segment],
         yaml: SerializedSegment,
