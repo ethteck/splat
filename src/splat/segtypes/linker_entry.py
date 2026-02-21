@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import os
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
+from typing import Dict, List, Set, Union, Optional
+from collections import OrderedDict
 
 from ..util import options, log
 
@@ -13,7 +14,7 @@ from ..util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'
-@lru_cache(maxsize=None)
+@cache
 def clean_up_path(path: Path) -> Path:
     path_resolved = path.resolve()
     base_resolved = options.opts.base_path.resolve()
@@ -141,15 +142,13 @@ class LinkerEntry:
     def section_order_type(self) -> str:
         if self.section_order == ".rdata":
             return ".rodata"
-        else:
-            return self.section_order
+        return self.section_order
 
     @property
     def section_link_type(self) -> str:
         if self.section_link == ".rdata":
             return ".rodata"
-        else:
-            return self.section_link
+        return self.section_link
 
     def emit_symbol_for_data(self, linker_writer: LinkerWriter) -> None:
         if not options.opts.ld_generate_symbol_per_data_segment:

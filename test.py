@@ -2,7 +2,6 @@
 
 import difflib
 import filecmp
-import io
 from pathlib import Path
 import spimdisasm
 import unittest
@@ -21,7 +20,7 @@ from src.splat.segtypes.segment import Segment
 
 class Testing(unittest.TestCase):
     def compare_files(self, test_path, ref_path):
-        with io.open(test_path) as test_f, io.open(ref_path) as ref_f:
+        with open(test_path) as test_f, open(ref_path) as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
     def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
@@ -470,7 +469,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List["Segment"] = [
+        all_segments: List[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,
@@ -512,7 +511,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List["Segment"] = [
+        all_segments: List[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,

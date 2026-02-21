@@ -30,12 +30,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             if self.sibling:
                 # C file
                 return self.sibling.out_path()
-            else:
-                # Implied C file
-                return options.opts.src_path / self.dir / f"{self.name}.c"
-        else:
-            # ASM
-            return self.asm_out_path()
+            # Implied C file
+            return options.opts.src_path / self.dir / f"{self.name}.c"
+        # ASM
+        return self.asm_out_path()
 
     def scan(self, rom_bytes: bytes) -> None:
         CommonSegGroup.scan(self, rom_bytes)

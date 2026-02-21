@@ -8,14 +8,13 @@ from . import log
 def fmt_size(size: int) -> str:
     if size > 1000000:
         return f"{size // 1000000} MB"
-    elif size > 1000:
+    if size > 1000:
         return f"{size // 1000} KB"
-    else:
-        return f"{size} B"
+    return f"{size} B"
 
 
 class Statistics:
-    __slots__ = ("seg_sizes", "seg_split", "seg_cached")
+    __slots__ = ("seg_cached", "seg_sizes", "seg_split")
 
     def __init__(self) -> None:
         self.seg_sizes: dict[str, int] = {}

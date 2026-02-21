@@ -17,10 +17,9 @@ class N64SegImg(Segment):
     def parse_dimensions(yaml: SerializedSegmentData | list[str]) -> tuple[int, int]:
         if isinstance(yaml, dict):
             return yaml["width"], yaml["height"]
-        else:
-            if len(yaml) < 5:
-                log.error(f"Error: {yaml} is missing width and height parameters")
-            return int(yaml[3]), int(yaml[4])
+        if len(yaml) < 5:
+            log.error(f"Error: {yaml} is missing width and height parameters")
+        return int(yaml[3]), int(yaml[4])
 
     def __init__(
         self,
@@ -101,9 +100,8 @@ class N64SegImg(Segment):
 
         if typ == "ci4" or typ == "i4" or typ == "ia4":
             return width * height // 2
-        elif typ in ("ia16", "rgba16"):
+        if typ in ("ia16", "rgba16"):
             return width * height * 2
-        elif typ == "rgba32":
+        if typ == "rgba32":
             return width * height * 4
-        else:
-            return width * height
+        return width * height

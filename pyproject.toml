@@ -72,9 +72,6 @@ no_implicit_optional = true
 warn_unreachable = true
 check_untyped_defs = false  # TODO: change true
 
-[tool.ruff.lint.isort]
-combine-as-imports = true
-
 [tool.ruff]
 #line-length = 79
 fix = true
@@ -87,7 +84,7 @@ extend-select = [
     #"COM",   # flake8-commas
     "E",     # Error
     "FA",    # flake8-future-annotations
-    "I",     # isort
+    #"I",     # isort
     "ICN",   # flake8-import-conventions
     "PYI",   # flake8-pyi
     "R",     # Refactor

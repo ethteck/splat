@@ -31,7 +31,7 @@ class N64SegCi(N64SegImg):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.palettes: "list[N64SegPalette]" = []
+        self.palettes: list[N64SegPalette] = []
         self.palette_names = self.parse_palette_names(self.yaml, self.args)
 
     def scan(self, rom_bytes: bytes) -> None:

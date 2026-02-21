@@ -54,8 +54,7 @@ class CommonSegCode(CommonSegGroup):
     def vram_end(self) -> int | None:
         if self.vram_start is not None and self.size is not None:
             return self.vram_start + self.size + self.bss_size
-        else:
-            return None
+        return None
 
     # Generates a placeholder segment for the auto_link_sections option
     def _generate_segment_from_all(

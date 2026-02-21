@@ -93,16 +93,15 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
         if opt == "f3d":
             return gfxd_f3d
-        elif opt == "f3db":
+        if opt == "f3db":
             return gfxd_f3db
-        elif opt == "f3dex":
+        if opt == "f3dex":
             return gfxd_f3dex
-        elif opt == "f3dexb":
+        if opt == "f3dexb":
             return gfxd_f3dexb
-        elif opt == "f3dex2":
+        if opt == "f3dex2":
             return gfxd_f3dex2
-        else:
-            log.error(f"Unknown target {opt}")
+        log.error(f"Unknown target {opt}")
 
     def tlut_handler(self, addr: int, idx: int, count: int) -> int:
         sym = self.create_symbol(

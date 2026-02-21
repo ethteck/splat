@@ -11,7 +11,7 @@ from ..segment import Segment
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing_extensions import Final
+    from typing import Final
 
     from ..linker_entry import LinkerEntry
     from ...util.vram_classes import SerializedSegmentData

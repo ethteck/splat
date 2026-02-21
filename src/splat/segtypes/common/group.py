@@ -210,7 +210,7 @@ class CommonSegGroup(CommonSegment):
 
     def pair_subsegments_to_other_segment(
         self,
-        other_segment: "CommonSegGroup",
+        other_segment: CommonSegGroup,
     ) -> None:
         # Pair cousins with the same name
         for segment in self.subsegments:

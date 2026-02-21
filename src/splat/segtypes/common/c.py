@@ -55,7 +55,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_funcs_defined_in_c(c_file: Path) -> set[str]:
-        with open(c_file, "r", encoding="utf-8") as f:
+        with open(c_file, encoding="utf-8") as f:
             text = CommonSegC.strip_c_comments(f.read())
 
         return set(m.group(1) for m in C_FUNC_RE.finditer(text))
@@ -80,8 +80,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             elif cur_char == ")":
                 if paren_count == 0:
                     return pos + 1
-                else:
-                    paren_count -= 1
+                paren_count -= 1
             pos += 1
 
     @classmethod
@@ -115,8 +114,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             text = cls.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
-        else:
-            return set(cls.find_include_asm(text))
+        return set(cls.find_include_asm(text))
 
     @classmethod
     def get_global_asm_rodata_syms(cls, c_file: Path) -> set[str]:
@@ -124,8 +122,7 @@ class CommonSegC(CommonSegCodeSubsegment):
             text = cls.strip_c_comments(f.read())
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
-        else:
-            return set(cls.find_include_rodata(text))
+        return set(cls.find_include_rodata(text))
 
     @staticmethod
     def is_text() -> bool:

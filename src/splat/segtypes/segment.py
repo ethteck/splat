@@ -6,7 +6,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import Optional, Type, TYPE_CHECKING, Union, Dict, TypeAlias, List
+from typing import TYPE_CHECKING, Union, TypeAlias, List
 
 from intervaltree import Interval, IntervalTree
 from ..util import vram_classes
@@ -29,15 +29,13 @@ SerializedSegment: TypeAlias = Union[SerializedSegmentData, List[str]]
 def parse_segment_vram(segment: SerializedSegment) -> int | None:
     if isinstance(segment, dict) and "vram" in segment:
         return int(segment["vram"])
-    else:
-        return None
+    return None
 
 
 def parse_segment_vram_symbol(segment: SerializedSegment) -> str | None:
     if isinstance(segment, dict) and "vram_symbol" in segment:
         return str(segment["vram_symbol"])
-    else:
-        return None
+    return None
 
 
 def parse_segment_vram_class(segment: SerializedSegment) -> VramClass | None:
@@ -84,7 +82,7 @@ class SegmentStatisticsInfo:
     size: int
     count: int
 
-    def merge(self, other: "SegmentStatisticsInfo") -> "SegmentStatisticsInfo":
+    def merge(self, other: SegmentStatisticsInfo) -> SegmentStatisticsInfo:
         return SegmentStatisticsInfo(
             size=self.size + other.size, count=self.count + other.count
         )
@@ -195,15 +193,13 @@ class Segment:
             return None, False
         if s == "auto":
             return None, True
-        else:
-            return int(s), False
+        return int(s), False
 
     @staticmethod
     def parse_segment_type(segment: SerializedSegment) -> str:
         if isinstance(segment, dict):
             return str(segment["type"])
-        else:
-            return str(segment[1])
+        return str(segment[1])
 
     @classmethod
     def parse_segment_name(
@@ -212,7 +208,7 @@ class Segment:
         if isinstance(segment, dict):
             if "name" in segment:
                 return str(segment["name"])
-            elif "dir" in segment:
+            if "dir" in segment:
                 return str(segment["dir"])
         elif isinstance(segment, list) and len(segment) >= 3:
             return str(segment[2])
@@ -223,15 +219,13 @@ class Segment:
     def parse_segment_symbol_name_format(segment: SerializedSegment) -> str:
         if isinstance(segment, dict) and "symbol_name_format" in segment:
             return str(segment["symbol_name_format"])
-        else:
-            return options.opts.symbol_name_format
+        return options.opts.symbol_name_format
 
     @staticmethod
     def parse_segment_symbol_name_format_no_rom(segment: SerializedSegment) -> str:
         if isinstance(segment, dict) and "symbol_name_format_no_rom" in segment:
             return str(segment["symbol_name_format_no_rom"])
-        else:
-            return options.opts.symbol_name_format_no_rom
+        return options.opts.symbol_name_format_no_rom
 
     @staticmethod
     def parse_segment_file_path(segment: SerializedSegment) -> Path | None:
@@ -525,8 +519,7 @@ class Segment:
     def dir(self) -> Path:
         if self.parent:
             return self.parent.dir / self.given_dir
-        else:
-            return self.given_dir
+        return self.given_dir
 
     @property
     def show_file_boundaries(self) -> bool:
@@ -559,10 +552,9 @@ class Segment:
     def vram_symbol(self) -> str | None:
         if self.vram_class and self.vram_class.vram_symbol:
             return self.vram_class.vram_symbol
-        elif self.given_vram_symbol:
+        if self.given_vram_symbol:
             return self.given_vram_symbol
-        else:
-            return None
+        return None
 
     def get_exclusive_ram_id(self) -> str | None:
         if self.parent:
@@ -584,15 +576,13 @@ class Segment:
     def seg_symbols(self) -> dict[int, list[Symbol]]:
         if self.parent:
             return self.parent.seg_symbols
-        else:
-            return self.given_seg_symbols
+        return self.given_seg_symbols
 
     @property
     def size(self) -> int | None:
         if self.rom_start is not None and self.rom_end is not None:
             return self.rom_end - self.rom_start
-        else:
-            return None
+        return None
 
     @property
     def statistics(self) -> SegmentStatistics:
@@ -609,8 +599,7 @@ class Segment:
     def vram_end(self) -> int | None:
         if self.vram_start is not None and self.size is not None:
             return self.vram_start + self.size
-        else:
-            return None
+        return None
 
     @property
     def section_order(self) -> list[str]:
@@ -642,20 +631,17 @@ class Segment:
     def contains_vram(self, vram: int) -> bool:
         if self.vram_start is not None and self.vram_end is not None:
             return vram >= self.vram_start and vram < self.vram_end
-        else:
-            return False
+        return False
 
     def contains_rom(self, rom: int) -> bool:
         if self.rom_start is not None and self.rom_end is not None:
             return rom >= self.rom_start and rom < self.rom_end
-        else:
-            return False
+        return False
 
     def rom_to_ram(self, rom_addr: int) -> int | None:
         if self.vram_start is not None and self.rom_start is not None:
             return self.vram_start + rom_addr - self.rom_start
-        else:
-            return None
+        return None
 
     def ram_to_rom(self, ram_addr: int) -> int | None:
         if not self.contains_vram(ram_addr) and ram_addr != self.vram_end:
@@ -663,8 +649,7 @@ class Segment:
 
         if self.vram_start is not None and self.rom_start is not None:
             return self.rom_start + ram_addr - self.vram_start
-        else:
-            return None
+        return None
 
     def should_scan(self) -> bool:
         return self.should_split()
@@ -738,7 +723,7 @@ class Segment:
 
         return seg
 
-    def get_linker_entries(self) -> "list[LinkerEntry]":
+    def get_linker_entries(self) -> list[LinkerEntry]:
         from ..segtypes.linker_entry import LinkerEntry
 
         if not self.has_linker_entry:
@@ -757,8 +742,7 @@ class Segment:
                     self.is_noload(),
                 )
             ]
-        else:
-            return []
+        return []
 
     def log(self, msg: str) -> None:
         if options.opts.verbose:

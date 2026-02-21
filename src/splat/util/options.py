@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
-from typing import cast, Literal, Type, TypeVar
+from typing import cast, Literal, TypeVar
 from collections.abc import Mapping
 
 from . import compiler
@@ -316,7 +316,7 @@ class OptParser:
         if isinstance(value, t):
             return value
         if t is float and isinstance(value, int):
-            return cast(T, float(value))
+            return cast("T", float(value))
         raise ValueError(f"Expected {opt} to have type {t}, got {type(value)}")
 
     def parse_optional_opt(self, opt: str, t: type[T]) -> T | None:
@@ -334,7 +334,7 @@ class OptParser:
         if value is None or isinstance(value, t):
             return value
         if t is float and isinstance(value, int):
-            return cast(T, float(value))
+            return cast("T", float(value))
         raise ValueError(f"Expected {opt} to have type {t}, got {type(value)}")
 
     def parse_opt_within(
@@ -358,10 +358,9 @@ class OptParser:
 
         if isinstance(paths, str):
             return [base_path / paths]
-        elif isinstance(paths, list):
+        if isinstance(paths, list):
             return [base_path / path for path in paths]
-        else:
-            raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
+        raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
 
     def check_no_unread_opts(self) -> None:
         opts = [opt for opt in self._yaml if opt not in self._read_opts]
@@ -414,10 +413,9 @@ def _parse_yaml(
 
         if endianness == "big":
             return "big"
-        elif endianness == "little":
+        if endianness == "little":
             return "little"
-        else:
-            raise ValueError(f"Invalid endianness: {endianness}")
+        raise ValueError(f"Invalid endianness: {endianness}")
 
     def parse_include_asm_macro_style() -> Literal["default", "maspsx_hack"]:
         include_asm_macro_style = p.parse_opt_within(
@@ -429,10 +427,9 @@ def _parse_yaml(
 
         if include_asm_macro_style == "default":
             return "default"
-        elif include_asm_macro_style == "maspsx_hack":
+        if include_asm_macro_style == "maspsx_hack":
             return "maspsx_hack"
-        else:
-            raise ValueError(f"Invalid endianness: {include_asm_macro_style}")
+        raise ValueError(f"Invalid endianness: {include_asm_macro_style}")
 
     default_ld_bss_is_noload = True
     if platform == "psx":
