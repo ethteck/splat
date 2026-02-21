@@ -1,17 +1,14 @@
 #! /usr/bin/env python3
+from __future__ import annotations
 
 import argparse
-
 import hashlib
 import itertools
 import struct
-
 import sys
 import zlib
 from dataclasses import dataclass
-
 from pathlib import Path
-from typing import Optional, List
 
 import rabbitizer
 import spimdisasm
@@ -78,8 +75,11 @@ class EntryAddressInfo:
 
     @staticmethod
     def new(
-        value: Optional[int], hi: Optional[int], lo: Optional[int], ori: Optional[int]
-    ) -> Optional["EntryAddressInfo"]:
+        value: int | None,
+        hi: int | None,
+        lo: int | None,
+        ori: int | None,
+    ) -> EntryAddressInfo | None:
         if value is not None and hi is not None and lo is not None:
             return EntryAddressInfo(value, hi, lo, ori == lo)
         return None
@@ -88,12 +88,12 @@ class EntryAddressInfo:
 @dataclass
 class N64EntrypointInfo:
     entry_size: int
-    data_size: Optional[int]
-    bss_start_address: Optional[EntryAddressInfo]
-    bss_size: Optional[EntryAddressInfo]
-    bss_end_address: Optional[EntryAddressInfo]
-    main_address: Optional[EntryAddressInfo]
-    stack_top: Optional[EntryAddressInfo]
+    data_size: int | None
+    bss_start_address: EntryAddressInfo | None
+    bss_size: EntryAddressInfo | None
+    bss_end_address: EntryAddressInfo | None
+    main_address: EntryAddressInfo | None
+    stack_top: EntryAddressInfo | None
     traditional_entrypoint: bool
     ori_entrypoint: bool
 
@@ -102,7 +102,7 @@ class N64EntrypointInfo:
             return self.entry_size + self.data_size
         return self.entry_size
 
-    def get_bss_size(self) -> Optional[int]:
+    def get_bss_size(self) -> int | None:
         if self.bss_size is not None:
             return self.bss_size.value
         if self.bss_start_address is not None and self.bss_end_address is not None:
@@ -111,35 +111,40 @@ class N64EntrypointInfo:
 
     @staticmethod
     def parse_rom_bytes(
-        rom_bytes, vram: int, offset: int = 0x1000, size: int = 0x60
-    ) -> "N64EntrypointInfo":
+        rom_bytes: bytes,
+        vram: int,
+        offset: int = 0x1000,
+        size: int = 0x60,
+    ) -> N64EntrypointInfo:
         word_list = spimdisasm.common.Utils.bytesToWords(
-            rom_bytes, offset, offset + size
+            rom_bytes,
+            offset,
+            offset + size,
         )
         nops_count = 0
 
         register_values = [0 for _ in range(32)]
         completed_pair = [False for _ in range(32)]
-        hi_assignments: List[Optional[int]] = [None for _ in range(32)]
-        lo_assignments: List[Optional[int]] = [None for _ in range(32)]
+        hi_assignments: list[int | None] = [None for _ in range(32)]
+        lo_assignments: list[int | None] = [None for _ in range(32)]
         # We need to track if something was paired using an ori instead of an
         # addiu or similar, because if that's the case we can't emit normal
         # relocations in the generated symbol_addrs file for it.
-        ori_assignments: List[Optional[int]] = [None for _ in range(32)]
+        ori_assignments: list[int | None] = [None for _ in range(32)]
 
-        register_bss_address: Optional[int] = None
-        register_bss_size: Optional[int] = None
-        register_main_address: Optional[int] = None
+        register_bss_address: int | None = None
+        register_bss_size: int | None = None
+        register_main_address: int | None = None
 
-        bss_address: Optional[EntryAddressInfo] = None
-        bss_size: Optional[EntryAddressInfo] = None
-        bss_end_address: Optional[EntryAddressInfo] = None
+        bss_address: EntryAddressInfo | None = None
+        bss_size: EntryAddressInfo | None = None
+        bss_end_address: EntryAddressInfo | None = None
 
         traditional_entrypoint = True
         ori_entrypoint = False
         decrementing_bss_routine = True
-        data_size: Optional[int] = None
-        func_call_target: Optional[EntryAddressInfo] = None
+        data_size: int | None = None
+        func_call_target: EntryAddressInfo | None = None
 
         size = 0
         i = 0
@@ -173,11 +178,10 @@ class N64EntrypointInfo:
                     if insn.isUnsigned():
                         ori_assignments[insn.rt.value] = current_rom
                         ori_entrypoint = True
-                elif insn.doesStore():
-                    if insn.rt == rabbitizer.RegGprO32.zero:
-                        # Try to detect the zero-ing bss algorithm
-                        # sw          $zero, 0x0($t0)
-                        register_bss_address = insn.rs.value
+                elif insn.doesStore() and insn.rt == rabbitizer.RegGprO32.zero:
+                    # Try to detect the zero-ing bss algorithm
+                    # sw          $zero, 0x0($t0)
+                    register_bss_address = insn.rs.value
             elif insn.isBranch():
                 if insn.uniqueId == rabbitizer.InstrId.cpu_beq:
                     traditional_entrypoint = False
@@ -233,7 +237,10 @@ class N64EntrypointInfo:
                 # entrypoint to actual code.
                 traditional_entrypoint = False
                 func_call_target = EntryAddressInfo(
-                    insn.getInstrIndexAsVram(), current_rom, current_rom, False
+                    insn.getInstrIndexAsVram(),
+                    current_rom,
+                    current_rom,
+                    False,
                 )
 
             elif insn.uniqueId == rabbitizer.InstrId.cpu_break:
@@ -293,18 +300,17 @@ class N64EntrypointInfo:
             ori_assignments[rabbitizer.RegGprO32.sp.value],
         )
 
-        if not traditional_entrypoint:
-            if func_call_target is not None:
-                main_address = func_call_target
-                if func_call_target.value > vram:
-                    # Some weird-entrypoint games have non-code between the
-                    # entrypoint and the actual user code.
-                    # We try to find where actual code may begin, and tag
-                    # everything in between as "entrypoint data".
+        if not traditional_entrypoint and func_call_target is not None:
+            main_address = func_call_target
+            if func_call_target.value > vram:
+                # Some weird-entrypoint games have non-code between the
+                # entrypoint and the actual user code.
+                # We try to find where actual code may begin, and tag
+                # everything in between as "entrypoint data".
 
-                    code_start = find_code_after_data(rom_bytes, offset + i * 4, vram)
-                    if code_start is not None and code_start > offset + size:
-                        data_size = code_start - (offset + size)
+                code_start = find_code_after_data(rom_bytes, offset + i * 4, vram)
+                if code_start is not None and code_start > offset + size:
+                    data_size = code_start - (offset + size)
 
         return N64EntrypointInfo(
             size,
@@ -320,9 +326,12 @@ class N64EntrypointInfo:
 
 
 def find_code_after_data(
-    rom_bytes: bytes, offset: int, vram: int, threshold: int = 0x18000
-) -> Optional[int]:
-    code_offset: Optional[int] = None
+    rom_bytes: bytes,
+    offset: int,
+    vram: int,
+    threshold: int = 0x18000,
+) -> int | None:
+    code_offset: int | None = None
 
     # We loop through every word until we find a valid `jr $ra` instruction and
     # hope for it to be part of valid code.
@@ -337,7 +346,9 @@ def find_code_after_data(
         if insn.isValid() and insn.isReturn():
             # Check the instruction on the delay slot of the `jr $ra` is valid too.
             next_word = spimdisasm.common.Utils.bytesToWords(
-                rom_bytes, offset + 4, offset + 4 + 4
+                rom_bytes,
+                offset + 4,
+                offset + 4 + 4,
             )[0]
             if rabbitizer.Instruction(next_word, vram + 4).isValid():
                 jr_ra_found = True
@@ -389,7 +400,7 @@ class N64Rom:
         return country_codes[self.country_code]
 
 
-def swap_bytes(data):
+def swap_bytes(data: bytes) -> bytes:
     return bytes(
         itertools.chain.from_iterable(
             struct.pack(">H", x) for (x,) in struct.iter_unpack("<H", data)
@@ -397,7 +408,7 @@ def swap_bytes(data):
     )
 
 
-def read_rom(rom_path: Path):
+def read_rom(rom_path: Path) -> bytes:
     rom_bytes = rom_path.read_bytes()
 
     if rom_path.suffix.lower() == ".n64":
@@ -410,17 +421,17 @@ def read_rom(rom_path: Path):
     return rom_bytes
 
 
-def get_cic(rom_bytes: bytes):
+def get_cic(rom_bytes: bytes) -> CIC:
     ipl3_crc = zlib.crc32(rom_bytes[0x40:0x1000])
 
     return crc_to_cic.get(ipl3_crc, unknown_cic)
 
 
-def get_entry_point(program_counter: int, cic: CIC):
+def get_entry_point(program_counter: int, cic: CIC) -> int:
     return program_counter - cic.offset
 
 
-def guess_header_encoding(rom_bytes: bytes):
+def guess_header_encoding(rom_bytes: bytes) -> str:
     header = rom_bytes[0x20:0x34]
     encodings = ["ASCII", "shift_jis", "euc-jp"]
     for encoding in encodings:
@@ -435,7 +446,9 @@ def guess_header_encoding(rom_bytes: bytes):
 
 
 def get_info(
-    rom_path: Path, rom_bytes: Optional[bytes] = None, header_encoding=None
+    rom_path: Path,
+    rom_bytes: bytes | None = None,
+    header_encoding: str | None = None,
 ) -> N64Rom:
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
@@ -457,7 +470,7 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
         sys.exit(
             "splat could not decode the game name;"
             " try using a different encoding by passing the --header-encoding argument"
-            " (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)"
+            " (see docs.python.org/3/library/codecs.html#standard-encodings for valid encodings)",
         )
 
     country_code = rom_bytes[0x3E]
@@ -470,7 +483,9 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
     entrypoint_info = N64EntrypointInfo.parse_rom_bytes(
-        rom_bytes, entry_point, size=0x100
+        rom_bytes,
+        entry_point,
+        size=0x100,
     )
 
     return N64Rom(
@@ -488,7 +503,9 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     )
 
 
-def get_compiler_info(rom_bytes, entry_point, print_result=True):
+def get_compiler_info(
+    rom_bytes: bytes, entry_point: int, print_result: bool = True
+) -> str:
     jumps = 0
     branches = 0
 
@@ -507,12 +524,12 @@ def get_compiler_info(rom_bytes, entry_point, print_result=True):
     if print_result:
         print(
             f"{branches} branches and {jumps} jumps detected in the first code segment."
-            f" Compiler is most likely {compiler}"
+            f" Compiler is most likely {compiler}",
         )
     return compiler
 
 
-def main():
+def main() -> None:
     rabbitizer.config.pseudos_pseudoB = True
 
     args = parser.parse_args()

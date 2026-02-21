@@ -27,18 +27,18 @@ capybara = """\
 """
 
 
-def print_capybara():
+def print_capybara() -> None:
     print(capybara)
 
 
-def process_arguments(args: argparse.Namespace):
+def process_arguments(args: argparse.Namespace) -> None:
     print_capybara()
 
 
 script_description = "Capybara"
 
 
-def add_subparser(subparser: argparse._SubParsersAction):
+def add_subparser(subparser: argparse._SubParsersAction) -> None:
     parser = subparser.add_parser(
         "capy", help=script_description, description=script_description
     )

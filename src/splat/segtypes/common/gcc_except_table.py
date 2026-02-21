@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 from .data import CommonSegData
 from ...util import log
@@ -15,7 +15,7 @@ class CommonSegGcc_except_table(CommonSegData):
     def get_linker_section(self) -> str:
         return ".gcc_except_table"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "aw"
 
     def configure_disassembler_section(
@@ -26,10 +26,11 @@ class CommonSegGcc_except_table(CommonSegData):
         super().configure_disassembler_section(disassembler_section)
 
         section = disassembler_section.get_section()
+        assert section is not None
 
         section.enableStringGuessing = False
 
-    def disassemble_data(self, rom_bytes):
+    def disassemble_data(self, rom_bytes: bytes) -> None:
         if self.is_auto_segment:
             return
 

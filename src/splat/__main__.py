@@ -5,7 +5,7 @@ import argparse
 import splat
 
 
-def splat_main():
+def splat_main() -> None:
     parser = argparse.ArgumentParser(
         description="A binary splitting tool to assist with decompilation and modding projects",
         prog="splat",

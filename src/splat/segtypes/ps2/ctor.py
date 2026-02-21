@@ -1,7 +1,10 @@
-from typing import Optional
+from __future__ import annotations
 
 from ..common.data import CommonSegData
-from ...disassembler.disassembler_section import DisassemblerSection
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...disassembler.disassembler_section import DisassemblerSection
 
 
 class Ps2SegCtor(CommonSegData):
@@ -10,7 +13,7 @@ class Ps2SegCtor(CommonSegData):
     def get_linker_section(self) -> str:
         return ".ctor"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "a"
 
     def configure_disassembler_section(
@@ -21,6 +24,7 @@ class Ps2SegCtor(CommonSegData):
         super().configure_disassembler_section(disassembler_section)
 
         section = disassembler_section.get_section()
+        assert section is not None
 
         # We use s32 to make sure spimdisasm disassembles the data from this section as words/references to other symbols
         section.enableStringGuessing = False

@@ -2,14 +2,13 @@ from . import disassembler
 import spimdisasm
 import rabbitizer
 from ..util import log, compiler, options
-from typing import Set
 
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
     SPIMDISASM_MIN = (1, 39, 0)
 
-    def configure(self):
+    def configure(self) -> None:
         # Configure spimdisasm
         spimdisasm.common.GlobalConfig.PRODUCE_SYMBOLS_PLUS_OFFSET = True
         spimdisasm.common.GlobalConfig.TRUST_USER_FUNCTIONS = True
@@ -137,5 +136,5 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             f"splat {splat_version} (powered by spimdisasm {spimdisasm.__version__})"
         )
 
-    def known_types(self) -> Set[str]:
+    def known_types(self) -> set[str]:
         return spimdisasm.common.gKnownTypes

@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Dict
 
 import spimdisasm
 
@@ -15,14 +16,14 @@ class Reloc:
     addend: int = 0
 
 
-all_relocs: Dict[int, Reloc] = {}
+all_relocs: dict[int, Reloc] = {}
 
 
-def add_reloc(reloc: Reloc):
+def add_reloc(reloc: Reloc) -> None:
     all_relocs[reloc.rom_address] = reloc
 
 
-def initialize():
+def initialize() -> None:
     global all_relocs
 
     all_relocs = {}
@@ -114,7 +115,7 @@ def initialize():
             add_reloc(reloc)
 
 
-def initialize_spim_context():
+def initialize_spim_context() -> None:
     for rom_address, reloc in all_relocs.items():
         reloc_type = spimdisasm.common.RelocType.fromStr(reloc.reloc_type)
 

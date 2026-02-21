@@ -4,7 +4,7 @@ from ..common.header import CommonSegHeader
 class PsxSegHeader(CommonSegHeader):
     # little endian so reverse words, TODO: use struct.unpack("<i",...) ?
     # breakdown from https://psx-spx.consoledev.net/cdromdrive/#filenameexe-general-purpose-executable
-    def parse_header(self, rom_bytes):
+    def parse_header(self, rom_bytes: bytes) -> list[str]:
         header_lines = []
         header_lines.append(".section .data\n")
         header_lines.append(

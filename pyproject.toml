@@ -51,3 +51,61 @@ features = ["dev"]
 
 [project.scripts]
 splat = "splat.__main__:splat_main"
+
+
+[tool.mypy]
+files = ["src"]
+enable_error_code = [
+    "truthy-bool",
+    "mutable-override",
+    "exhaustive-match",
+]
+show_column_numbers = true
+show_error_codes = true
+show_traceback = true
+disallow_any_decorated = true
+disallow_any_unimported = false  # TODO: change true
+ignore_missing_imports = true
+local_partial_types = true
+no_implicit_optional = true
+#strict = true
+warn_unreachable = true
+check_untyped_defs = false  # TODO: change true
+
+[tool.ruff]
+#line-length = 79
+fix = true
+
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+
+[tool.ruff.lint]
+extend-select = [
+    #"A",     # flake8-builtins
+    #"COM",   # flake8-commas
+    "E",     # Error
+    "FA",    # flake8-future-annotations
+    #"I",     # isort
+    "ICN",   # flake8-import-conventions
+    "PYI",   # flake8-pyi
+    "R",     # Refactor
+    "RET",   # flake8-return
+    "RUF",   # Ruff-specific rules
+    #"SIM",   # flake8-simplify
+    "SLOT",  # flake8-slots
+    "TCH",   # flake8-type-checking
+    "UP",    # pyupgrade
+    "W",     # Warning
+    "YTT",   # flake8-2020
+]
+extend-ignore = [
+    "E501",   # line-too-long
+    "PYI041", # redundant-numeric-union
+    "SIM117", # multiple-with-statements
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "D100",  # undocumented-public-module
+    "D103",  # undocumented-public-function
+    "D107",  # undocumented-public-init
+]

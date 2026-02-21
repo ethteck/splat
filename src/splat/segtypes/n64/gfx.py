@@ -3,10 +3,11 @@ N64 f3dex display list splitter
 Dumps out Gfx[] as a .inc.c file.
 """
 
-import re
-from typing import Dict, List, Optional, Union
+from __future__ import annotations
 
-from pathlib import Path
+import re
+from typing import TYPE_CHECKING
+
 
 from pygfxd import (
     gfxd_buffer_to_string,
@@ -44,20 +45,24 @@ from ..common.codesubsegment import CommonSegCodeSubsegment
 
 from ...util import symbols
 
+if TYPE_CHECKING:
+    from pathlib import Path
+    from ...util.vram_classes import SerializedSegmentData
+
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 
 
 class N64SegGfx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
-        args: list,
-        yaml,
-    ):
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegmentData | list[str],
+    ) -> None:
         super().__init__(
             rom_start,
             rom_end,
@@ -67,11 +72,11 @@ class N64SegGfx(CommonSegCodeSubsegment):
             args=args,
             yaml=yaml,
         )
-        self.file_text = None
+        self.file_text: str | None = None
         self.data_only = isinstance(yaml, dict) and yaml.get("data_only", False)
         self.in_segment = not isinstance(yaml, dict) or yaml.get("in_segment", True)
 
-    def format_sym_name(self, sym) -> str:
+    def format_sym_name(self, sym: symbols.Symbol) -> str:
         return sym.name
 
     def get_linker_section(self) -> str:
@@ -80,54 +85,55 @@ class N64SegGfx(CommonSegCodeSubsegment):
     def out_path(self) -> Path:
         return options.opts.asset_path / self.dir / f"{self.name}.gfx.inc.c"
 
-    def scan(self, rom_bytes: bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         self.file_text = self.disassemble_data(rom_bytes)
 
-    def get_gfxd_target(self):
+    def get_gfxd_target(self) -> gfxd_f3d:  # noqa: RET503
         opt = options.opts.gfx_ucode
 
         if opt == "f3d":
             return gfxd_f3d
-        elif opt == "f3db":
+        if opt == "f3db":
             return gfxd_f3db
-        elif opt == "f3dex":
+        if opt == "f3dex":
             return gfxd_f3dex
-        elif opt == "f3dexb":
+        if opt == "f3dexb":
             return gfxd_f3dexb
-        elif opt == "f3dex2":
+        if opt == "f3dex2":
             return gfxd_f3dex2
-        else:
-            log.error(f"Unknown target {opt}")
+        log.error(f"Unknown target {opt}")
 
-    def tlut_handler(self, addr, idx, count):
+    def tlut_handler(self, addr: int, idx: int, count: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def timg_handler(self, addr, fmt, size, width, height, pal):
+    def timg_handler(
+        self, addr: int, fmt, size: int, width: int, height: int, pal
+    ) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def cimg_handler(self, addr, fmt, size, width):
+    def cimg_handler(self, addr: int, fmt, size: int, width: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def zimg_handler(self, addr):
+    def zimg_handler(self, addr: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def dl_handler(self, addr):
+    def dl_handler(self, addr: int) -> int:
         # Look for 'Gfx'-typed symbols first
         sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Gfx")
 
@@ -138,28 +144,28 @@ class N64SegGfx(CommonSegCodeSubsegment):
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def mtx_handler(self, addr):
+    def mtx_handler(self, addr: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
 
-    def lookat_handler(self, addr, count):
+    def lookat_handler(self, addr: int, count: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def light_handler(self, addr, count):
+    def light_handler(self, addr: int, count: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def vtx_handler(self, addr, count):
+    def vtx_handler(self, addr: int, count: int) -> int:
         # Look for 'Vtx'-typed symbols first
         sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Vtx")
 
@@ -176,20 +182,20 @@ class N64SegGfx(CommonSegCodeSubsegment):
         gfxd_printf(f"&{self.format_sym_name(sym)}[{index}]")
         return 1
 
-    def vp_handler(self, addr):
+    def vp_handler(self, addr: int) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
 
-    def macro_fn(self):
+    def macro_fn(self) -> int:
         gfxd_puts("    ")
         gfxd_macro_dflt()
         gfxd_puts(",\n")
         return 0
 
-    def disassemble_data(self, rom_bytes):
+    def disassemble_data(self, rom_bytes: bytes) -> str:
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
         assert isinstance(self.vram_start, int)
@@ -246,7 +252,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
             out_str += "};\n"
 
         # Poor man's light fix until we get my libgfxd PR merged
-        def light_sub_func(match):
+        def light_sub_func(match: re.Match[str]) -> str:
             light = match.group(0)
             addr = int(light[12:], 0)
             sym = self.create_symbol(
@@ -254,15 +260,14 @@ class N64SegGfx(CommonSegCodeSubsegment):
             )
             return self.format_sym_name(sym)
 
-        out_str = re.sub(LIGHTS_RE, light_sub_func, out_str)
+        return re.sub(LIGHTS_RE, light_sub_func, out_str)
 
-        return out_str
+    def split(self, rom_bytes: bytes) -> None:
+        out_path = self.out_path()
+        if self.file_text and out_path is not None:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def split(self, rom_bytes: bytes):
-        if self.file_text and self.out_path():
-            self.out_path().parent.mkdir(parents=True, exist_ok=True)
-
-            with open(self.out_path(), "w", newline="\n") as f:
+            with open(self.out_path(), "w", encoding="utf-8", newline="\n") as f:
                 f.write(self.file_text)
 
     def should_scan(self) -> bool:
@@ -276,7 +281,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
         return self.extract and options.opts.is_mode_active("gfx")
 
     @staticmethod
-    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
+    def estimate_size(yaml: SerializedSegmentData | list[str]) -> int | None:
         if isinstance(yaml, dict) and "length" in yaml:
-            return yaml["length"] * 0x10
+            return int(yaml["length"]) * 0x10
         return None

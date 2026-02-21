@@ -1,24 +1,26 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 import re
-from typing import Dict, List, Optional, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import spimdisasm
 
 from intervaltree import IntervalTree
 from ..disassembler import disassembler_instance
-from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
+    from pathlib import Path
     from ..segtypes.segment import Segment
 
 from . import log, options, progress_bar
 
-all_symbols: List["Symbol"] = []
-all_symbols_dict: Dict[int, List["Symbol"]] = {}
+all_symbols: list[Symbol] = []
+all_symbols_dict: dict[int, list[Symbol]] = {}
 all_symbols_ranges = IntervalTree()
-ignored_addresses: Set[int] = set()
-to_mark_as_defined: Set[str] = set()
+ignored_addresses: set[int] = set()
+to_mark_as_defined: set[str] = set()
 
 # Initialize a spimdisasm context, used to store symbols and functions
 spim_context = spimdisasm.common.Context()
@@ -52,7 +54,7 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def add_symbol(sym: "Symbol"):
+def add_symbol(sym: Symbol) -> None:
     all_symbols.append(sym)
     if sym.vram_start is not None:
         if sym.vram_start not in all_symbols_dict:
@@ -74,21 +76,21 @@ def to_cname(symbol_name: str) -> str:
 
 
 def handle_sym_addrs(
-    path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]"
-):
-    def get_seg_for_name(name: str) -> Optional["Segment"]:
+    path: Path, sym_addrs_lines: list[str], all_segments: list[Segment]
+) -> None:
+    def get_seg_for_name(name: str) -> Segment | None:
         for segment in all_segments:
             if segment.name == name:
                 return segment
         return None
 
-    def get_seg_for_rom(rom: int) -> Optional["Segment"]:
+    def get_seg_for_rom(rom: int) -> Segment | None:
         for segment in all_segments:
             if segment.contains_rom(rom):
                 return segment
         return None
 
-    seen_symbols: Dict[str, "Symbol"] = dict()
+    seen_symbols: dict[str, Symbol] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
@@ -330,7 +332,7 @@ def handle_sym_addrs(
             add_symbol(sym)
 
 
-def initialize(all_segments: "List[Segment]"):
+def initialize(all_segments: list[Segment]) -> None:
     global all_symbols
     global all_symbols_dict
     global all_symbols_ranges
@@ -342,23 +344,23 @@ def initialize(all_segments: "List[Segment]"):
     # Manual list of func name / addrs
     for path in options.opts.symbol_addrs_paths:
         if path.exists():
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 sym_addrs_lines = f.readlines()
                 handle_sym_addrs(path, sym_addrs_lines, all_segments)
 
 
-def initialize_spim_context(all_segments: "List[Segment]") -> None:
+def initialize_spim_context(all_segments: list[Segment]) -> None:
     global_vrom_start = None
     global_vrom_end = None
     global_vram_start = options.opts.global_vram_start
     global_vram_end = options.opts.global_vram_end
-    overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
+    overlay_segments: set[spimdisasm.common.SymbolsSegment] = set()
 
     spim_context.bannedSymbols |= ignored_addresses
 
     from ..segtypes.common.code import CommonSegCode
 
-    global_segments_after_overlays: List[CommonSegCode] = []
+    global_segments_after_overlays: list[CommonSegCode] = []
 
     for segment in all_segments:
         if not isinstance(segment, CommonSegCode):
@@ -493,7 +495,7 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
 
 
 def add_symbol_to_spim_segment(
-    segment: spimdisasm.common.SymbolsSegment, sym: "Symbol"
+    segment: spimdisasm.common.SymbolsSegment, sym: Symbol
 ) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
         context_sym = segment.addFunction(
@@ -551,7 +553,7 @@ def add_symbol_to_spim_segment(
 
 
 def add_symbol_to_spim_section(
-    section: spimdisasm.mips.sections.SectionBase, sym: "Symbol"
+    section: spimdisasm.mips.sections.SectionBase, sym: Symbol
 ) -> spimdisasm.common.ContextSymbol:
     if sym.type == "func":
         context_sym = section.addFunction(
@@ -603,11 +605,11 @@ def add_symbol_to_spim_section(
 # force_in_segment=True when the symbol belongs to this specific segment.
 # force_in_segment=False when this symbol is just a reference.
 def create_symbol_from_spim_symbol(
-    segment: "Segment",
+    segment: Segment,
     context_sym: spimdisasm.common.ContextSymbol,
     *,
     force_in_segment: bool,
-) -> "Symbol":
+) -> Symbol:
     in_segment = False
 
     sym_type = None
@@ -657,7 +659,7 @@ def create_symbol_from_spim_symbol(
     return sym
 
 
-def mark_c_funcs_as_defined():
+def mark_c_funcs_as_defined() -> None:
     for symbol in all_symbols:
         if len(to_mark_as_defined) == 0:
             return
@@ -671,12 +673,12 @@ def mark_c_funcs_as_defined():
 class Symbol:
     vram_start: int
 
-    given_name: Optional[str] = None
-    given_name_end: Optional[str] = None
-    rom: Optional[int] = None
-    type: Optional[str] = None
-    given_size: Optional[int] = None
-    segment: Optional["Segment"] = None
+    given_name: str | None = None
+    given_name_end: str | None = None
+    rom: int | None = None
+    type: str | None = None
+    given_size: int | None = None
+    segment: Segment | None = None
 
     defined: bool = False
     referenced: bool = False
@@ -685,27 +687,27 @@ class Symbol:
 
     force_migration: bool = False
     force_not_migration: bool = False
-    function_owner: Optional[str] = None
+    function_owner: str | None = None
 
     allow_addend: bool = False
     dont_allow_addend: bool = False
 
-    can_reference: Optional[bool] = None
-    can_be_referenced: Optional[bool] = None
+    can_reference: bool | None = None
+    can_be_referenced: bool | None = None
 
-    linker_section: Optional[str] = None
+    linker_section: str | None = None
 
     allow_duplicated: bool = False
 
-    given_filename: Optional[str] = None
-    given_visibility: Optional[str] = None
+    given_filename: str | None = None
+    given_visibility: str | None = None
 
-    given_align: Optional[int] = None
+    given_align: int | None = None
 
-    _generated_default_name: Optional[str] = None
-    _last_type: Optional[str] = None
+    _generated_default_name: str | None = None
+    _last_type: str | None = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def __eq__(self, other: object) -> bool:
@@ -714,7 +716,7 @@ class Symbol:
         return self.vram_start == other.vram_start and self.segment == other.segment
 
     # https://stackoverflow.com/a/56915493/6292472
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.vram_start, self.segment))
 
     def format_name(self, format: str) -> str:
@@ -769,11 +771,11 @@ class Symbol:
         return self._generated_default_name
 
     @property
-    def rom_end(self):
+    def rom_end(self) -> int | None:
         return None if not self.rom else self.rom + self.size
 
     @property
-    def vram_end(self):
+    def vram_end(self) -> int:
         return self.vram_start + self.size
 
     @property
@@ -792,19 +794,21 @@ class Symbol:
             return self.given_filename
         return self.name
 
-    def contains_vram(self, offset):
+    def contains_vram(self, offset: int) -> bool:
         return offset >= self.vram_start and offset < self.vram_end
 
-    def contains_rom(self, offset):
+    def contains_rom(self, offset: int) -> bool:
+        if self.rom is None or self.rom_end is None:
+            return False
         return offset >= self.rom and offset < self.rom_end
 
 
-def get_all_symbols():
+def get_all_symbols() -> list[Symbol]:
     global all_symbols
     return all_symbols
 
 
-def reset_symbols():
+def reset_symbols() -> None:
     global all_symbols
     global all_symbols_dict
     global all_symbols_ranges
