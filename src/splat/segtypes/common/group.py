@@ -41,7 +41,7 @@ class CommonSegGroup(CommonSegment):
     ) -> int | None:
         j = i + 1
         while j < len(subsegment_yamls):
-            ret, is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
+            ret, _is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
             if ret is not None:
                 return ret
             j += 1
@@ -84,7 +84,7 @@ class CommonSegGroup(CommonSegment):
             # Third, try to get the end address from the next segment with a start address
             end: int | None = None
             if i < len(yaml["subsegments"]) - 1:
-                end, end_is_auto_segment = Segment.parse_segment_start(
+                end, _end_is_auto_segment = Segment.parse_segment_start(
                     yaml["subsegments"][i + 1]
                 )
             if start is not None and end is None:

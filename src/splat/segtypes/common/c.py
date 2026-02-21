@@ -10,12 +10,12 @@ import spimdisasm
 
 from ...util import log, options, symbols
 from ...util.compiler import IDO
-from ...util.symbols import Symbol
 
 from .codesubsegment import CommonSegCodeSubsegment
 from .rodata import CommonSegRodata
 
 if TYPE_CHECKING:
+    from ...util.symbols import Symbol
     from collections.abc import Generator
 
 

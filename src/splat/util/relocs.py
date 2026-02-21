@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 import spimdisasm
 
@@ -17,7 +16,7 @@ class Reloc:
     addend: int = 0
 
 
-all_relocs: Dict[int, Reloc] = {}
+all_relocs: dict[int, Reloc] = {}
 
 
 def add_reloc(reloc: Reloc) -> None:

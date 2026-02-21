@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from n64img.image import Image
 from ...util import log, options
 
 from ..segment import Segment
 
 if TYPE_CHECKING:
+    from n64img.image import Image
+    from pathlib import Path
     from ...util.vram_classes import SerializedSegmentData
 
 

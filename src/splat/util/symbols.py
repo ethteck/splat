@@ -8,10 +8,10 @@ import spimdisasm
 
 from intervaltree import IntervalTree
 from ..disassembler import disassembler_instance
-from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
+    from pathlib import Path
     from ..segtypes.segment import Segment
 
 from . import log, options, progress_bar

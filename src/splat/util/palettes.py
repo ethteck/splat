@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ..util import log
 
@@ -11,7 +11,7 @@ from ..segtypes.n64.palette import N64SegPalette
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
 
-global_ids: Dict[str, N64SegPalette] = {}
+global_ids: dict[str, N64SegPalette] = {}
 
 
 # Resolve Raster#palette and Palette#raster links
@@ -26,8 +26,8 @@ def initialize(all_segments: list[Segment]) -> None:
                 collect_global_ids(segment.subsegments)
 
     def process(segments: list[Segment]) -> None:
-        raster_map: Dict[str, N64SegCi] = {}
-        palette_map: Dict[str, N64SegPalette] = {}
+        raster_map: dict[str, N64SegCi] = {}
+        palette_map: dict[str, N64SegPalette] = {}
 
         for segment in segments:
             if isinstance(segment, N64SegPalette):

@@ -6,7 +6,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Union, TypeAlias, List
+from typing import TYPE_CHECKING, Union, TypeAlias
 
 from intervaltree import Interval, IntervalTree
 from ..util import vram_classes
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
 
 
-SerializedSegment: TypeAlias = Union[SerializedSegmentData, List[str]]
+SerializedSegment: TypeAlias = Union[SerializedSegmentData, list[str]]
 
 
 def parse_segment_vram(segment: SerializedSegment) -> int | None:

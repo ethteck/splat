@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import spimdisasm
-from ..segment import Segment
 from ...util import log, options, symbols
 
 from .data import CommonSegData
@@ -10,6 +8,11 @@ from ...disassembler.disassembler_section import (
     DisassemblerSection,
     make_rodata_section,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..segment import Segment
+    import spimdisasm
 
 
 class CommonSegRodata(CommonSegData):
@@ -41,7 +44,7 @@ class CommonSegRodata(CommonSegData):
         if len(rodata_sym.contextSym.referenceFunctions) != 1:
             return None
 
-        func = list(rodata_sym.contextSym.referenceFunctions)[0]
+        func = next(iter(rodata_sym.contextSym.referenceFunctions))
         text_segment = self.parent.get_subsegment_for_ram(func.vram)
 
         if text_segment is None or not text_segment.is_text():

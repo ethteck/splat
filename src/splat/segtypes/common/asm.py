@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -9,7 +9,7 @@ class CommonSegAsm(CommonSegCodeSubsegment):
     def is_text() -> bool:
         return True
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "ax"
 
     def scan(self, rom_bytes: bytes):

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from pathlib import Path
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
@@ -10,6 +9,7 @@ from .group import CommonSegGroup
 from ...disassembler.disassembler_section import DisassemblerSection, make_data_section
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from ...segtypes.linker_entry import LinkerEntry
 
 

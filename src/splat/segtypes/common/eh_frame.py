@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from .data import CommonSegData
-from ...disassembler.disassembler_section import DisassemblerSection
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...disassembler.disassembler_section import DisassemblerSection
 
 
 class CommonSegEh_frame(CommonSegData):

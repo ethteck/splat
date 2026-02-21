@@ -1,5 +1,5 @@
+from __future__ import annotations
 from pathlib import Path
-from typing import Optional, List
 
 from ...util import log, options
 
@@ -13,7 +13,7 @@ class LinkerEntryLib(LinkerEntry):
     def __init__(
         self,
         segment: Segment,
-        src_paths: List[Path],
+        src_paths: list[Path],
         object_path: Path,
         section_order: str,
         section_link: str,
@@ -31,11 +31,11 @@ class LinkerEntryLib(LinkerEntry):
 class CommonSegLib(CommonSegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
+        vram_start: int | None,
         args: list,
         yaml,
     ):
@@ -73,7 +73,7 @@ class CommonSegLib(CommonSegment):
     def get_linker_section(self) -> str:
         return self.section
 
-    def get_linker_entries(self) -> List[LinkerEntry]:
+    def get_linker_entries(self) -> list[LinkerEntry]:
         path = options.opts.lib_path / self.name
 
         object_path = Path(f"{path}.a:{self.object}.o")

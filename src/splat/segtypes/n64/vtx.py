@@ -8,7 +8,6 @@ Originally written by Mark Street (https://github.com/mkst)
 from __future__ import annotations
 
 import struct
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...util import options, log
@@ -16,6 +15,7 @@ from ...util import options, log
 from ..common.codesubsegment import CommonSegCodeSubsegment
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from ...util.vram_classes import SerializedSegmentData
     from ...util.symbols import Symbol
 

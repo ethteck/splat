@@ -4,13 +4,15 @@ import os
 import re
 from functools import cache
 from pathlib import Path
-from typing import Dict, List, Set, Union, Optional
+from typing import TYPE_CHECKING
 from collections import OrderedDict
 
 from ..util import options, log
 
-from .segment import Segment
 from ..util.symbols import to_cname
+
+if TYPE_CHECKING:
+    from .segment import Segment
 
 
 # clean 'foo/../bar' to 'bar'
@@ -124,7 +126,7 @@ class LinkerEntry:
     def __init__(
         self,
         segment: Segment,
-        src_paths: List[Path],
+        src_paths: list[Path],
         object_path: Path,
         section_order: str,
         section_link: str,
@@ -136,7 +138,7 @@ class LinkerEntry:
         self.section_link = section_link
         self.noload = noload
         self.bss_contains_common = segment.bss_contains_common
-        self.object_path: Optional[Path] = path_to_object_path(object_path)
+        self.object_path: Path | None = path_to_object_path(object_path)
 
     @property
     def section_order_type(self) -> str:
@@ -186,14 +188,14 @@ class LinkerEntry:
 class LinkerWriter:
     def __init__(self, is_partial: bool = False):
         self.linker_discard_section: bool = options.opts.ld_discard_section
-        self.sections_allowlist: List[str] = options.opts.ld_sections_allowlist
-        self.sections_denylist: List[str] = options.opts.ld_sections_denylist
+        self.sections_allowlist: list[str] = options.opts.ld_sections_allowlist
+        self.sections_denylist: list[str] = options.opts.ld_sections_denylist
         # Used to store all the linker entries - build tools may want this information
-        self.entries: List[LinkerEntry] = []
-        self.dependencies_entries: List[LinkerEntry] = []
+        self.entries: list[LinkerEntry] = []
+        self.dependencies_entries: list[LinkerEntry] = []
 
-        self.buffer: List[str] = []
-        self.header_symbols: Set[str] = set()
+        self.buffer: list[str] = []
+        self.header_symbols: set[str] = set()
 
         self.is_partial: bool = is_partial
 
@@ -239,7 +241,7 @@ class LinkerWriter:
             self.add_legacy(segment, entries)
             return
 
-        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
+        section_entries: OrderedDict[str, list[LinkerEntry]] = OrderedDict()
         for section_name in segment.section_order:
             if section_name in options.opts.section_order:
                 section_entries[section_name] = []
@@ -303,12 +305,12 @@ class LinkerWriter:
         seg_name = segment.get_cname()
 
         # To keep track which sections has been started
-        started_sections: Dict[str, bool] = {
+        started_sections: dict[str, bool] = {
             section_name: False for section_name in options.opts.section_order
         }
 
         # Find where sections are last seen
-        last_seen_sections: Dict[LinkerEntry, str] = {}
+        last_seen_sections: dict[LinkerEntry, str] = {}
         for entry in reversed(entries):
             if (
                 entry.section_order_type in options.opts.section_order
@@ -446,7 +448,7 @@ class LinkerWriter:
 
         seg_name = segment.get_cname()
 
-        section_entries: OrderedDict[str, List[LinkerEntry]] = OrderedDict()
+        section_entries: OrderedDict[str, list[LinkerEntry]] = OrderedDict()
         for section_name in segment.section_order:
             if section_name in options.opts.section_order:
                 section_entries[section_name] = []
@@ -560,7 +562,7 @@ class LinkerWriter:
         self._indent_level -= 1
         self._writeln("}")
 
-    def _write_symbol(self, symbol: str, value: Union[str, int]) -> None:
+    def _write_symbol(self, symbol: str, value: str | int) -> None:
         symbol = to_cname(symbol)
 
         if isinstance(value, int):

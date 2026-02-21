@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
-from typing import cast, Literal, TypeVar
-from collections.abc import Mapping
+from typing import cast, Literal, TypeVar, TYPE_CHECKING
 
 from . import compiler
-from .compiler import Compiler
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from .compiler import Compiler
 
 
 @dataclass

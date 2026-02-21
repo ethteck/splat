@@ -5,7 +5,6 @@ import filecmp
 from pathlib import Path
 import spimdisasm
 import unittest
-from typing import List, Tuple
 
 from src.splat import __version__
 from src.splat.disassembler import disassembler_instance
@@ -23,14 +22,14 @@ class Testing(unittest.TestCase):
         with open(test_path) as test_f, open(ref_path) as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
-    def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_same_files(self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]):
         for name in dcmp.same_files:
             out.append((name, dcmp.left, dcmp.right))
 
         for sub_dcmp in dcmp.subdirs.values():
             self.get_same_files(sub_dcmp, out)
 
-    def get_diff_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
+    def get_diff_files(self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]):
         for name in dcmp.diff_files:
             out.append((name, dcmp.left, dcmp.right))
 
@@ -38,7 +37,7 @@ class Testing(unittest.TestCase):
             self.get_diff_files(sub_dcmp, out)
 
     def get_left_only_files(
-        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+        self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]
     ):
         for name in dcmp.left_only:
             out.append((name, dcmp.left, dcmp.right))
@@ -47,7 +46,7 @@ class Testing(unittest.TestCase):
             self.get_left_only_files(sub_dcmp, out)
 
     def get_right_only_files(
-        self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]
+        self, dcmp: filecmp.dircmp, out: list[tuple[str, str, str]]
     ):
         for name in dcmp.right_only:
             out.append((name, dcmp.left, dcmp.right))
@@ -63,16 +62,16 @@ class Testing(unittest.TestCase):
             "test/basic_app/split", "test/basic_app/expected", [".gitkeep"]
         )
 
-        diff_files: List[Tuple[str, str, str]] = []
+        diff_files: list[tuple[str, str, str]] = []
         self.get_diff_files(comparison, diff_files)
 
-        same_files: List[Tuple[str, str, str]] = []
+        same_files: list[tuple[str, str, str]] = []
         self.get_same_files(comparison, same_files)
 
-        left_only_files: List[Tuple[str, str, str]] = []
+        left_only_files: list[tuple[str, str, str]] = []
         self.get_left_only_files(comparison, left_only_files)
 
-        right_only_files: List[Tuple[str, str, str]] = []
+        right_only_files: list[tuple[str, str, str]] = []
         self.get_right_only_files(comparison, right_only_files)
 
         print("same_files", same_files)
@@ -469,7 +468,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List[Segment] = [
+        all_segments: list[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,
@@ -511,7 +510,7 @@ class InitializeSpimContext(unittest.TestCase):
             ],
         }
 
-        all_segments: List[Segment] = [
+        all_segments: list[Segment] = [
             CommonSegCode(
                 rom_start=0x1000,
                 rom_end=0x1140,

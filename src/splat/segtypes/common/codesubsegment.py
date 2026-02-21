@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 
 import spimdisasm
 import rabbitizer
@@ -12,6 +11,10 @@ from .code import CommonSegCode
 from ..segment import Segment, parse_segment_vram, SerializedSegment
 
 from ...disassembler.disassembler_section import DisassemblerSection, make_text_section
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 # abstract class for c, asm, data, etc

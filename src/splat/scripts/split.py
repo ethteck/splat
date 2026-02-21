@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Tuple, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from pathlib import Path
 
 from collections import defaultdict, deque
@@ -60,11 +60,11 @@ def initialize_segments(config_segments: dict | list) -> list[Segment]:
 
         segment_class = Segment.get_class_for_type(seg_type)
 
-        this_start, is_auto_segment = Segment.parse_segment_start(seg_yaml)
+        this_start, _is_auto_segment = Segment.parse_segment_start(seg_yaml)
 
         j = i + 1
         while j < len(config_segments):
-            next_start, next_is_auto_segment = Segment.parse_segment_start(
+            next_start, _next_is_auto_segment = Segment.parse_segment_start(
                 config_segments[j]
             )
             if next_start is not None:
@@ -194,7 +194,7 @@ def assign_symbols_to_segments() -> None:
                 seg.add_symbol(symbol)
         else:
             cands = segment_rams[symbol.vram_start]
-            segs: List[Segment] = [cand.data for cand in cands]
+            segs: list[Segment] = [cand.data for cand in cands]
             for seg in segs:
                 if not seg.get_exclusive_ram_id():
                     seg.add_symbol(symbol)
@@ -212,7 +212,7 @@ def calc_segment_dependences(
     all_segments: list[Segment],
 ) -> dict[vram_classes.VramClass, list[Segment]]:
     # Map vram class names to segments that have that vram class
-    vram_class_to_segments: Dict[str, List[Segment]] = {}
+    vram_class_to_segments: dict[str, list[Segment]] = {}
     for seg in all_segments:
         if seg.vram_class is not None:
             if seg.vram_class.name not in vram_class_to_segments:
@@ -220,7 +220,7 @@ def calc_segment_dependences(
             vram_class_to_segments[seg.vram_class.name].append(seg)
 
     # Map vram class names to segments that the vram class follows
-    vram_class_to_follows_segments: Dict[vram_classes.VramClass, List[Segment]] = {}
+    vram_class_to_follows_segments: dict[vram_classes.VramClass, list[Segment]] = {}
     for vram_class in vram_classes._vram_classes.values():
         if vram_class.follows_classes:
             vram_class_to_follows_segments[vram_class] = []
@@ -237,13 +237,13 @@ def sort_segments_by_vram_class_dependency(
     all_segments: list[Segment],
 ) -> list[Segment]:
     # map all "_VRAM_END" strings to segments
-    end_sym_to_seg: Dict[str, Segment] = {}
+    end_sym_to_seg: dict[str, Segment] = {}
     for seg in all_segments:
         end_sym_to_seg[get_segment_vram_end_symbol_name(seg)] = seg
 
     # build dependency graph: A -> B means "A must come before B"
-    graph: Dict[Segment, List[Segment]] = defaultdict(list)
-    indeg: Dict[Segment, int] = {seg: 0 for seg in all_segments}
+    graph: dict[Segment, list[Segment]] = defaultdict(list)
+    indeg: dict[Segment, int] = {seg: 0 for seg in all_segments}
 
     for seg in all_segments:
         sym = seg.vram_symbol
@@ -257,7 +257,7 @@ def sort_segments_by_vram_class_dependency(
 
     # stable topo sort with queue seeded in original order
     q = deque([seg for seg in all_segments if indeg[seg] == 0])
-    out: List[Segment] = []
+    out: list[Segment] = []
 
     while q:
         n = q.popleft()
@@ -368,14 +368,14 @@ def do_split(
             segment.split(segment_bytes)
 
 
-def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
+def write_linker_script(all_segments: list[Segment]) -> LinkerWriter:
     if options.opts.ld_sort_segments_by_vram_class_dependency:
         all_segments = sort_segments_by_vram_class_dependency(all_segments)
 
     vram_class_dependencies = calc_segment_dependences(all_segments)
     vram_classes_to_search = set(vram_class_dependencies.keys())
 
-    max_vram_end_insertion_points: Dict[Segment, List[Tuple[str, List[Segment]]]] = {}
+    max_vram_end_insertion_points: dict[Segment, list[tuple[str, list[Segment]]]] = {}
     for seg in reversed(all_segments):
         if seg.vram_class in vram_classes_to_search:
             assert seg.vram_class.vram_symbol is not None

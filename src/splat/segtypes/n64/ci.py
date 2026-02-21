@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...util import log, options
@@ -8,6 +7,7 @@ from ...util import log, options
 from .img import N64SegImg
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from .palette import N64SegPalette
     from ...utils.vram_classes import SerializedSegmentData
 

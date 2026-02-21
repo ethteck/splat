@@ -8,7 +8,6 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from pathlib import Path
 
 from pygfxd import (
     gfxd_buffer_to_string,
@@ -47,6 +46,7 @@ from ..common.codesubsegment import CommonSegCodeSubsegment
 from ...util import symbols
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from ...util.vram_classes import SerializedSegmentData
 
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
@@ -102,6 +102,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
         if opt == "f3dex2":
             return gfxd_f3dex2
         log.error(f"Unknown target {opt}")
+        return None
 
     def tlut_handler(self, addr: int, idx: int, count: int) -> int:
         sym = self.create_symbol(
@@ -260,9 +261,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
             )
             return self.format_sym_name(sym)
 
-        out_str = re.sub(LIGHTS_RE, light_sub_func, out_str)
-
-        return out_str
+        return re.sub(LIGHTS_RE, light_sub_func, out_str)
 
     def split(self, rom_bytes: bytes) -> None:
         out_path = self.out_path()

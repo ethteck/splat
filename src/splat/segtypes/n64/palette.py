@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import zip_longest
-from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
 from ...util import log, options
@@ -10,6 +9,7 @@ from ...util.color import unpack_color
 from ..segment import Segment
 
 if TYPE_CHECKING:
+    from pathlib import Path
     from collections.abc import Iterable
     from typing import Final
 

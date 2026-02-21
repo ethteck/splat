@@ -2,7 +2,6 @@ from . import disassembler
 import spimdisasm
 import rabbitizer
 from ..util import log, compiler, options
-from typing import Set
 
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
@@ -137,5 +136,5 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
             f"splat {splat_version} (powered by spimdisasm {spimdisasm.__version__})"
         )
 
-    def known_types(self) -> Set[str]:
+    def known_types(self) -> set[str]:
         return spimdisasm.common.gKnownTypes
