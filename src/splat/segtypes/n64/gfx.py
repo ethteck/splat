@@ -88,7 +88,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
     def scan(self, rom_bytes: bytes) -> None:
         self.file_text = self.disassemble_data(rom_bytes)
 
-    def get_gfxd_target(self) -> gfxd_f3d:
+    def get_gfxd_target(self) -> gfxd_f3d:  # noqa: RET503
         opt = options.opts.gfx_ucode
 
         if opt == "f3d":
@@ -102,7 +102,6 @@ class N64SegGfx(CommonSegCodeSubsegment):
         if opt == "f3dex2":
             return gfxd_f3dex2
         log.error(f"Unknown target {opt}")
-        return None
 
     def tlut_handler(self, addr: int, idx: int, count: int) -> int:
         sym = self.create_symbol(

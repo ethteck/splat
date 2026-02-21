@@ -64,6 +64,7 @@ class CommonSegCodeSubsegment(Segment):
 
         self.is_hasm = False
         self.use_gp_rel_macro = options.opts.use_gp_rel_macro
+        # self.parent: CommonSegCode
 
     @property
     def needs_symbols(self) -> bool:
@@ -80,10 +81,11 @@ class CommonSegCodeSubsegment(Segment):
         section = disassembler_section.get_section()
         assert section is not None
 
+        # TODO: Figure out why mypy thinks these attributes don't exist
         section.isHandwritten = self.is_hasm
-        section.instrCat = self.instr_category
-        section.detectRedundantFunctionEnd = self.detect_redundant_function_end
-        section.setGpRelHack(not self.use_gp_rel_macro)
+        section.instrCat = self.instr_category  # type: ignore[attr-defined]
+        section.detectRedundantFunctionEnd = self.detect_redundant_function_end  # type: ignore[attr-defined]
+        section.setGpRelHack(not self.use_gp_rel_macro)  # type: ignore[attr-defined]
 
     def scan_code(self, rom_bytes: bytes, is_hasm: bool = False) -> None:
         self.is_hasm = is_hasm
@@ -142,7 +144,6 @@ class CommonSegCodeSubsegment(Segment):
         assert func_spim.vram is not None
         assert func_spim.vramEnd is not None
         assert self.spim_section is not None
-        self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(
             self.get_most_parent(), func_spim.contextSym, force_in_segment=False
@@ -188,6 +189,7 @@ class CommonSegCodeSubsegment(Segment):
         if not self.show_file_boundaries or not self.spim_section:
             return
 
+        assert isinstance(self.parent, CommonSegCode)
         assert isinstance(self.rom_start, int)
 
         section = self.spim_section.get_section()

@@ -3,6 +3,7 @@ from __future__ import annotations
 from ...util import options, symbols, log
 
 from .data import CommonSegData
+from .group import CommonSegGroup
 
 from ...disassembler.disassembler_section import DisassemblerSection, make_bss_section
 
@@ -60,6 +61,7 @@ class CommonSegBss(CommonSegData):
                 f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
+        assert isinstance(self.parent, CommonSegGroup)
         next_subsegment = self.parent.get_next_subsegment_for_ram(
             self.vram_start, self.index_within_group
         )

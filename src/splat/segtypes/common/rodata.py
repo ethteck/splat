@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ...util import log, options, symbols
 
+from .code import CommonSegCode
 from .data import CommonSegData
 
 from ...disassembler.disassembler_section import (
@@ -45,6 +46,7 @@ class CommonSegRodata(CommonSegData):
             return None
 
         func = next(iter(rodata_sym.contextSym.referenceFunctions))
+        assert isinstance(self.parent, CommonSegCode)
         text_segment = self.parent.get_subsegment_for_ram(func.vram)
 
         if text_segment is None or not text_segment.is_text():

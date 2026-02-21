@@ -531,7 +531,7 @@ options:
     print("```")
 
 
-def find_objcopy() -> str:
+def find_objcopy() -> str:  # noqa: RET503
     # First we try to figure out if the user has objcopy on their pc, and under
     # which name.
     # We just try a bunch and hope for the best
@@ -550,7 +550,6 @@ def find_objcopy() -> str:
         msg += f"  - {name}\n"
     msg += "\nTry to install one of those or use the `--objcopy` flag to pass the name to your own objcopy to me."
     log.error(msg)
-    return None
 
 
 def run_objcopy(objcopy_name: str, elf_path: str, rom: str) -> list[str]:

@@ -165,9 +165,14 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             self.print_file_boundaries()
 
-            assert self.spim_section is not None and isinstance(
-                self.spim_section.get_section(), spimdisasm.mips.sections.SectionText
-            ), f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
+            assert self.spim_section is not None, (
+                f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
+            )
+            spim_section = self.spim_section.get_section()
+
+            assert isinstance(spim_section, spimdisasm.mips.sections.SectionText), (
+                f"{self.name}, rom_start:{self.rom_start}, rom_end:{self.rom_end}"
+            )
 
             # We want to know if this C section has a corresponding rodata section so we can migrate its rodata
             rodata_section_type = ""
@@ -211,19 +216,23 @@ class CommonSegC(CommonSegCodeSubsegment):
                     )
 
                     assert rodata_sibling.spim_section is not None, f"{rodata_sibling}"
+                    rodata_spim_segment = rodata_sibling.spim_section.get_section()
                     assert isinstance(
-                        rodata_sibling.spim_section.get_section(),
+                        rodata_spim_segment,
                         spimdisasm.mips.sections.SectionRodata,
                     )
-                    rodata_spim_segment = rodata_sibling.spim_section.get_section()
 
                     # Stop searching
                     break
 
+            assert rodata_spim_segment is None or isinstance(
+                rodata_spim_segment, spimdisasm.mips.sections.SectionRodata
+            ), rodata_spim_segment
+
             # Precompute function-rodata pairings
             symbols_entries = (
                 spimdisasm.mips.FunctionRodataEntry.getAllEntriesFromSections(
-                    self.spim_section.get_section(), rodata_spim_segment
+                    spim_section, rodata_spim_segment
                 )
             )
 
@@ -288,17 +297,16 @@ class CommonSegC(CommonSegCodeSubsegment):
                             )
 
             if options.opts.make_full_disasm_for_code:
+                # TODO: Figure out why mypy thinks these attributes don't exist
                 # Disable gpRelHack since this file is expected to be built with modern gas
-                section = self.spim_section.get_section()
-                assert section is not None
-                old_value = section.getGpRelHack()
-                section.setGpRelHack(False)
+                old_value = spim_section.getGpRelHack()  # type: ignore[attr-defined]
+                spim_section.setGpRelHack(False)  # type: ignore[attr-defined]
 
                 if options.opts.platform == "ps2":
                     # Modern gas requires `$` on the special r5900 registers.
                     from rabbitizer import TrinaryValue
 
-                    for func in section.symbolList:
+                    for func in spim_section.symbolList:
                         assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
                         for inst in func.instructions:
                             inst.flag_r5900UseDollar = TrinaryValue.TRUE
@@ -306,12 +314,13 @@ class CommonSegC(CommonSegCodeSubsegment):
                 self.split_as_asmtu_file(self.asm_out_path())
 
                 if options.opts.platform == "ps2":
-                    for func in section.symbolList:
+                    for func in spim_section.symbolList:
                         assert isinstance(func, spimdisasm.mips.symbols.SymbolFunction)
                         for inst in func.instructions:
                             inst.flag_r5900UseDollar = TrinaryValue.FALSE
 
-                section.setGpRelHack(old_value)
+                # See comment above
+                spim_section.setGpRelHack(old_value)  # type: ignore[attr-defined]
 
     def get_c_preamble(self) -> list[str]:
         ret = []
