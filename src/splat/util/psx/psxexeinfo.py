@@ -78,7 +78,9 @@ def is_valid(insn: rabbitizer.Instruction) -> bool:
 
 
 def try_find_text(
-    rom_bytes: bytes, start_offset: int = PAYLOAD_OFFSET, valid_threshold: int = 32,
+    rom_bytes: bytes,
+    start_offset: int = PAYLOAD_OFFSET,
+    valid_threshold: int = 32,
 ) -> tuple[int, int]:
     start = end = 0
     good_count = valid_count = 0

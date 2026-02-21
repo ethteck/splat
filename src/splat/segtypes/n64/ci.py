@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 # Base class for CI4/CI8
 class N64SegCi(N64SegImg):
-    def parse_palette_names(self, yaml: SerializedSegmentData | list[str], args: list[str]) -> list[str]:
+    def parse_palette_names(
+        self, yaml: SerializedSegmentData | list[str], args: list[str]
+    ) -> list[str]:
         ret: list[str] | str = [self.name]
         if isinstance(yaml, dict):
             if "palettes" in yaml:

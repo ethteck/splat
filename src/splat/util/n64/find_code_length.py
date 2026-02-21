@@ -25,7 +25,9 @@ parser.add_argument(
 )
 
 
-def run(rom_bytes: bytes, start_offset: int, vram: int, end_offset: int | None = None) -> int:
+def run(
+    rom_bytes: bytes, start_offset: int, vram: int, end_offset: int | None = None
+) -> int:
     rom_addr = start_offset
     last_return = rom_addr
 

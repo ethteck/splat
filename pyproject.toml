@@ -76,15 +76,15 @@ check_untyped_defs = false  # TODO: change true
 combine-as-imports = true
 
 [tool.ruff]
-line-length = 79
+#line-length = 79
 fix = true
 
 include = ["*.py", "*.pyi", "**/pyproject.toml"]
 
 [tool.ruff.lint]
 extend-select = [
-    "A",     # flake8-builtins
-    "COM",   # flake8-commas
+    #"A",     # flake8-builtins
+    #"COM",   # flake8-commas
     "E",     # Error
     "FA",    # flake8-future-annotations
     "I",     # isort
@@ -93,7 +93,7 @@ extend-select = [
     "R",     # Refactor
     "RET",   # flake8-return
     "RUF",   # Ruff-specific rules
-    "SIM",   # flake8-simplify
+    #"SIM",   # flake8-simplify
     "SLOT",  # flake8-slots
     "TCH",   # flake8-type-checking
     "UP",    # pyupgrade

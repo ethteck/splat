@@ -17,7 +17,13 @@ newline = True
 Status: TypeAlias = Optional[str]
 
 
-def write(*args: object, status: Status = None, sep: str | None = None, end: str | None = None, flush: bool = False) -> None:
+def write(
+    *args: object,
+    status: Status = None,
+    sep: str | None = None,
+    end: str | None = None,
+    flush: bool = False,
+) -> None:
     global newline
 
     if not newline:
@@ -34,7 +40,9 @@ def write(*args: object, status: Status = None, sep: str | None = None, end: str
     )
 
 
-def error(*args: object, sep: str | None = None, end: str | None = None, flush: bool = False) -> NoReturn:
+def error(
+    *args: object, sep: str | None = None, end: str | None = None, flush: bool = False
+) -> NoReturn:
     write(*args, status="error", sep=sep, end=end, flush=flush)
     sys.exit(2)
 

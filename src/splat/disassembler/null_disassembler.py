@@ -5,6 +5,7 @@ from . import disassembler
 
 class NullDisassembler(disassembler.Disassembler):
     __slots__ = ()
+
     def configure(self) -> None:
         pass
 

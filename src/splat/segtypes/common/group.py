@@ -36,7 +36,9 @@ class CommonSegGroup(CommonSegment):
         # TODO: Fix
         self.subsegments: list[Segment] = self.parse_subsegments(yaml)  # type: ignore[arg-type]
 
-    def get_next_seg_start(self, i: int, subsegment_yamls: list[SerializedSegmentData | list[str]]) -> int | None:
+    def get_next_seg_start(
+        self, i: int, subsegment_yamls: list[SerializedSegmentData | list[str]]
+    ) -> int | None:
         j = i + 1
         while j < len(subsegment_yamls):
             ret, is_auto_segment = Segment.parse_segment_start(subsegment_yamls[j])
@@ -47,7 +49,9 @@ class CommonSegGroup(CommonSegment):
         # Fallback
         return self.rom_end
 
-    def parse_subsegments(self, yaml: dict[str, list[SerializedSegmentData | list[str]]]) -> list[Segment]:
+    def parse_subsegments(
+        self, yaml: dict[str, list[SerializedSegmentData | list[str]]]
+    ) -> list[Segment]:
         ret: list[Segment] = []
 
         if not yaml or "subsegments" not in yaml:

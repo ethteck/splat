@@ -111,7 +111,9 @@ class N64SegGfx(CommonSegCodeSubsegment):
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
-    def timg_handler(self, addr: int, fmt, size: int, width: int, height: int, pal) -> int:
+    def timg_handler(
+        self, addr: int, fmt, size: int, width: int, height: int, pal
+    ) -> int:
         sym = self.create_symbol(
             addr=addr, in_segment=self.in_segment, type="data", reference=True
         )

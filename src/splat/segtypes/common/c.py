@@ -85,7 +85,9 @@ class CommonSegC(CommonSegCodeSubsegment):
             pos += 1
 
     @classmethod
-    def find_include_macro(cls, text: str, macro_name: str) -> Generator[str, None, None]:
+    def find_include_macro(
+        cls, text: str, macro_name: str
+    ) -> Generator[str, None, None]:
         for pos in cls.find_all_instances(text, f"{macro_name}("):
             close_paren_pos = cls.get_close_parenthesis(
                 text, pos + len(f"{macro_name}(")
@@ -172,7 +174,11 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             # We want to know if this C section has a corresponding rodata section so we can migrate its rodata
             rodata_section_type = ""
-            rodata_spim_segment: spimdisasm.mips.sections.SectionRodata | spimdisasm.mips.sections.SectionBase | None = None
+            rodata_spim_segment: (
+                spimdisasm.mips.sections.SectionRodata
+                | spimdisasm.mips.sections.SectionBase
+                | None
+            ) = None
             if options.opts.migrate_rodata_to_functions:
                 # We don't know if the rodata section is .rodata or .rdata, so we need to check both
                 for sect in [".rodata", ".rdata"]:
@@ -541,4 +547,3 @@ class CommonSegC(CommonSegCodeSubsegment):
 
             for depend_file in depend_list:
                 f.write(f"{depend_file.as_posix()}:\n")
-

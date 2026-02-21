@@ -16,7 +16,7 @@ def fmt_size(size: int) -> str:
 
 class Statistics:
     __slots__ = ("seg_sizes", "seg_split", "seg_cached")
-    
+
     def __init__(self) -> None:
         self.seg_sizes: dict[str, int] = {}
         self.seg_split: dict[str, int] = {}

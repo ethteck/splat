@@ -150,7 +150,9 @@ class CommonSegCode(CommonSegGroup):
 
         return ret
 
-    def parse_subsegments(self, segment_yaml: dict[str, list[SerializedSegmentData | list[str]]]) -> list[Segment]:
+    def parse_subsegments(
+        self, segment_yaml: dict[str, list[SerializedSegmentData | list[str]]]
+    ) -> list[Segment]:
         if "subsegments" not in segment_yaml:
             if not self.parent:
                 raise Exception(

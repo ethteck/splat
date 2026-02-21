@@ -78,7 +78,9 @@ class N64SegPalette(Segment):
 
     @staticmethod
     def parse_palette_bytes(data: bytes) -> list[tuple[int, int, int, int]]:
-        def iter_in_groups(iterable: Iterable[T], n: int, fillvalue: object=None) -> zip_longest[tuple[T, ...]]:
+        def iter_in_groups(
+            iterable: Iterable[T], n: int, fillvalue: object = None
+        ) -> zip_longest[tuple[T, ...]]:
             args = [iter(iterable)] * n
             return zip_longest(*args, fillvalue=fillvalue)
 

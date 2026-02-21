@@ -224,7 +224,9 @@ class LinkerWriter:
                 )
 
     # Adds all the entries of a segment to the linker script buffer
-    def add(self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]]) -> None:
+    def add(
+        self, segment: Segment, max_vram_syms: list[tuple[str, list[Segment]]]
+    ) -> None:
         entries = segment.get_linker_entries()
         self.entries.extend(entries)
         self.dependencies_entries.extend(entries)
@@ -638,7 +640,9 @@ class LinkerWriter:
 
         self._writeln("")
 
-    def _begin_partial_segment(self, section_name: str, segment: Segment, noload: bool) -> None:
+    def _begin_partial_segment(
+        self, section_name: str, segment: Segment, noload: bool
+    ) -> None:
         line = f"{section_name}"
         if noload:
             line += " (NOLOAD)"

@@ -345,9 +345,7 @@ class OptParser:
             raise ValueError(f"Invalid value for {opt}: {value}")
         return value
 
-    def parse_path(
-        self, base_path: Path, opt: str, default: str | None = None
-    ) -> Path:
+    def parse_path(self, base_path: Path, opt: str, default: str | None = None) -> Path:
         return Path(os.path.normpath(base_path / self.parse_opt(opt, str, default)))
 
     def parse_optional_path(self, base_path: Path, opt: str) -> Path | None:

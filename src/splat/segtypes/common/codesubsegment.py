@@ -149,9 +149,7 @@ class CommonSegCodeSubsegment(Segment):
         for referenced_vram in func_spim.referencedVrams:
             section = self.spim_section.get_section()
             assert section is not None
-            context_sym = section.getSymbol(
-                referenced_vram, tryPlusOffset=False
-            )
+            context_sym = section.getSymbol(referenced_vram, tryPlusOffset=False)
             if context_sym is not None:
                 symbols.create_symbol_from_spim_symbol(
                     self.get_most_parent(), context_sym, force_in_segment=False
@@ -199,9 +197,7 @@ class CommonSegCodeSubsegment(Segment):
                 # Look up for the last symbol in this boundary
                 sym_addr = 0
                 for sym in section.symbolList:
-                    symOffset = (
-                        sym.inFileOffset - section.inFileOffset
-                    )
+                    symOffset = sym.inFileOffset - section.inFileOffset
                     if in_file_offset == symOffset:
                         break
                     sym_addr = sym.vram

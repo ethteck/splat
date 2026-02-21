@@ -75,7 +75,10 @@ class EntryAddressInfo:
 
     @staticmethod
     def new(
-        value: int | None, hi: int | None, lo: int | None, ori: int | None,
+        value: int | None,
+        hi: int | None,
+        lo: int | None,
+        ori: int | None,
     ) -> EntryAddressInfo | None:
         if value is not None and hi is not None and lo is not None:
             return EntryAddressInfo(value, hi, lo, ori == lo)
@@ -108,10 +111,15 @@ class N64EntrypointInfo:
 
     @staticmethod
     def parse_rom_bytes(
-        rom_bytes: bytes, vram: int, offset: int = 0x1000, size: int = 0x60,
+        rom_bytes: bytes,
+        vram: int,
+        offset: int = 0x1000,
+        size: int = 0x60,
     ) -> N64EntrypointInfo:
         word_list = spimdisasm.common.Utils.bytesToWords(
-            rom_bytes, offset, offset + size,
+            rom_bytes,
+            offset,
+            offset + size,
         )
         nops_count = 0
 
@@ -229,7 +237,10 @@ class N64EntrypointInfo:
                 # entrypoint to actual code.
                 traditional_entrypoint = False
                 func_call_target = EntryAddressInfo(
-                    insn.getInstrIndexAsVram(), current_rom, current_rom, False,
+                    insn.getInstrIndexAsVram(),
+                    current_rom,
+                    current_rom,
+                    False,
                 )
 
             elif insn.uniqueId == rabbitizer.InstrId.cpu_break:
@@ -315,7 +326,10 @@ class N64EntrypointInfo:
 
 
 def find_code_after_data(
-    rom_bytes: bytes, offset: int, vram: int, threshold: int = 0x18000,
+    rom_bytes: bytes,
+    offset: int,
+    vram: int,
+    threshold: int = 0x18000,
 ) -> int | None:
     code_offset: int | None = None
 
@@ -332,7 +346,9 @@ def find_code_after_data(
         if insn.isValid() and insn.isReturn():
             # Check the instruction on the delay slot of the `jr $ra` is valid too.
             next_word = spimdisasm.common.Utils.bytesToWords(
-                rom_bytes, offset + 4, offset + 4 + 4,
+                rom_bytes,
+                offset + 4,
+                offset + 4 + 4,
             )[0]
             if rabbitizer.Instruction(next_word, vram + 4).isValid():
                 jr_ra_found = True
@@ -430,7 +446,9 @@ def guess_header_encoding(rom_bytes: bytes) -> str:
 
 
 def get_info(
-    rom_path: Path, rom_bytes: bytes | None = None, header_encoding: str | None = None,
+    rom_path: Path,
+    rom_bytes: bytes | None = None,
+    header_encoding: str | None = None,
 ) -> N64Rom:
     if rom_bytes is None:
         rom_bytes = read_rom(rom_path)
@@ -465,7 +483,9 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     sha1 = hashlib.sha1(rom_bytes).hexdigest()
 
     entrypoint_info = N64EntrypointInfo.parse_rom_bytes(
-        rom_bytes, entry_point, size=0x100,
+        rom_bytes,
+        entry_point,
+        size=0x100,
     )
 
     return N64Rom(
@@ -483,7 +503,9 @@ def get_info_bytes(rom_bytes: bytes, header_encoding: str) -> N64Rom:
     )
 
 
-def get_compiler_info(rom_bytes: bytes, entry_point: int, print_result: bool = True) -> str:
+def get_compiler_info(
+    rom_bytes: bytes, entry_point: int, print_result: bool = True
+) -> str:
     jumps = 0
     branches = 0
 

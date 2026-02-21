@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 SerializedSegment: TypeAlias = Union[SerializedSegmentData, List[str]]
 
+
 def parse_segment_vram(segment: SerializedSegment) -> int | None:
     if isinstance(segment, dict) and "vram" in segment:
         return int(segment["vram"])
@@ -143,8 +144,7 @@ class Segment:
 
         seg_prefix = platform.capitalize() if is_platform_seg else "Common"
         return getattr(  # type: ignore[no-any-return]
-            segmodule,
-            f"{seg_prefix}Seg{seg_type.capitalize()}"
+            segmodule, f"{seg_prefix}Seg{seg_type.capitalize()}"
         )
 
     @staticmethod
@@ -206,7 +206,9 @@ class Segment:
             return str(segment[1])
 
     @classmethod
-    def parse_segment_name(cls, rom_start: int | None, segment: SerializedSegment) -> str:
+    def parse_segment_name(
+        cls, rom_start: int | None, segment: SerializedSegment
+    ) -> str:
         if isinstance(segment, dict):
             if "name" in segment:
                 return str(segment["name"])
@@ -258,9 +260,7 @@ class Segment:
         return None
 
     @staticmethod
-    def parse_ld_fill_value(
-        yaml: SerializedSegment, default: int | None
-    ) -> int | None:
+    def parse_ld_fill_value(yaml: SerializedSegment, default: int | None) -> int | None:
         if isinstance(yaml, dict) and "ld_fill_value" in yaml:
             return yaml["ld_fill_value"]
         return default
