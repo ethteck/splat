@@ -6,7 +6,7 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Union, TypeAlias
+from typing import TYPE_CHECKING, Union
 
 from intervaltree import Interval, IntervalTree
 from ..util import vram_classes
@@ -21,6 +21,7 @@ from .. import __package_name__
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
+    from typing_extensions import TypeAlias
 
 
 SerializedSegment: TypeAlias = Union[SerializedSegmentData, list[str]]
