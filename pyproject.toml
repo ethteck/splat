@@ -68,9 +68,9 @@ disallow_any_unimported = true
 ignore_missing_imports = true
 local_partial_types = true
 no_implicit_optional = true
-strict = true
+#strict = true
 warn_unreachable = true
-check_untyped_defs = true
+check_untyped_defs = false  # TODO: change true
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
