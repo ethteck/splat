@@ -387,6 +387,7 @@ def swap_bytes(data: bytes) -> bytes:
     return bytes(
         itertools.chain.from_iterable(
             struct.pack(">H", x) for (x,) in struct.iter_unpack("<H", data)
+        )
     )
 
 
