@@ -75,7 +75,7 @@ class CommonSegCode(CommonSegGroup):
             name=base_name,
             vram_start=vram_start,
             args=[],
-            yaml=cast(SerializedSegmentData, {}),
+            yaml=cast("SerializedSegmentData", {}),
         )
         rep.extract = False
         rep.given_subalign = self.given_subalign
