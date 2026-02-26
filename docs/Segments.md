@@ -290,6 +290,24 @@ It looks for libraries in the [`lib_path`](https://github.com/ethteck/splat/wiki
 - { type: lib, name: a_lib, object: b_obj, section: .text }
 ```
 
+## `o`
+
+Similar to the `lib` segment but used to reference an object file (for example extracted from a shared library file). Does not extract anything from the input binary.
+
+```yaml
+# link to .text of myobject.o
+- [auto, o, myobject]
+```
+
+```yaml
+# link to .rodata of myobject.o
+- [auto, o, myobject, .rodata]
+```
+
+```yaml
+# link to .text of myobject.o (dict representation)
+- { type: o, name: myobject, section: .text }
+```
 
 ## `pad`
 

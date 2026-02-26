@@ -16,6 +16,7 @@ from src.splat.segtypes.common.rodata import CommonSegRodata
 from src.splat.segtypes.common.code import CommonSegCode
 from src.splat.segtypes.common.c import CommonSegC
 from src.splat.segtypes.common.bss import CommonSegBss
+from src.splat.segtypes.common.o import CommonSegO
 from src.splat.segtypes.segment import Segment
 
 
@@ -366,6 +367,44 @@ class Bss(unittest.TestCase):
         )
         assert bss.spim_section.get_section().bssVramStart == 0x40000000
         assert bss.spim_section.get_section().bssVramEnd == 0x300
+
+
+class O(unittest.TestCase):
+    def test_o_text(self):
+        # Segment __init__ requires opts to be initialized
+        test_init()
+
+        o = CommonSegO(
+            rom_start=0x100,
+            rom_end=0x200,
+            vram_start=0x0,
+            type="o",
+            name="myobject",
+            args=[],
+            yaml=None,
+        )
+        expected = Path("test/basic_app/build/myobject")
+        self.assertEqual(expected, o.out_path())
+        self.assertEqual(".text", o.get_linker_section())
+
+    def test_o_rodata(self):
+        # Segment __init__ requires opts to be initialized
+        test_init()
+
+        section = ".rodata"
+        o = CommonSegO(
+            rom_start=0x100,
+            rom_end=0x200,
+            vram_start=0x0,
+            type="o",
+            name="myobject",
+            args=[section],
+            yaml=None,
+        )
+        out_path = Path("test/basic_app/build/myobject")
+
+        self.assertEqual(out_path, o.out_path())
+        self.assertEqual(section, o.get_linker_section())
 
 
 class SymbolsInitialize(unittest.TestCase):
