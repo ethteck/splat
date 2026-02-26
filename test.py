@@ -369,7 +369,7 @@ class Bss(unittest.TestCase):
         assert bss.spim_section.get_section().bssVramEnd == 0x300
 
 
-class O(unittest.TestCase):
+class Object(unittest.TestCase):
     def test_o_text(self):
         # Segment __init__ requires opts to be initialized
         test_init()
