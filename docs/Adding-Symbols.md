@@ -196,6 +196,20 @@ obj_fallCA1_tex_rgb_ia8 = 0x06013118; // allow_duplicated:True
 obj_fallCA1_tex_rgb_ia8 = 0x060140A8; // allow_duplicated:True
 ```
 
+### `use_non_matching_label`
+
+Tells spimdisasm to add the non matching label to a symbol.
+
+This can be used to keep handwritten assembly extracted by splat without counting against the total matching progress.
+
+Defaults to `True`.
+
+**Example:**
+
+```ini
+dummy_func = 0x80200060; // use_non_matching_label:False
+```
+
 ### `filename`
 
 Allows specifying a different filename than the default (the symbol's name) when writing the symbol to its own file.
