@@ -715,7 +715,6 @@ class Symbol:
     _generated_default_name: str | None = None
     _last_type: str | None = None
 
-
     def __str__(self) -> str:
         return self.name
 
