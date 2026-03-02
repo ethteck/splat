@@ -1,5 +1,10 @@
 # splat Release Notes
 
+### 0.38.0
+
+* New symbol attribute: `use_non_matching_label`.
+  * Toggles the nonmatching marker for a specific symbol.
+
 ### 0.37.3
 
 * create_config: Avoid emitting relocations for addresses paired by using `ori`

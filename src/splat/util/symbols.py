@@ -270,6 +270,8 @@ def handle_sym_addrs(
                             if attr_name == "allow_duplicated":
                                 sym.allow_duplicated = True
                                 continue
+                            if attr_name == "use_non_matching_label":
+                                sym.use_non_matching_label = tf_val
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -548,6 +550,8 @@ def add_symbol_to_spim_segment(
         context_sym.visibility = sym.given_visibility
     if sym.given_align:
         context_sym.setAlignment(sym.given_align)
+    if sym.use_non_matching_label is not None:
+        context_sym.useNonMatchingLabel = sym.use_non_matching_label
 
     return context_sym
 
@@ -598,6 +602,8 @@ def add_symbol_to_spim_section(
         context_sym.visibility = sym.given_visibility
     if sym.given_align:
         context_sym.setAlignment(sym.given_align)
+    if sym.use_non_matching_label is not None:
+        context_sym.useNonMatchingLabel = sym.use_non_matching_label
 
     return context_sym
 
@@ -704,8 +710,11 @@ class Symbol:
 
     given_align: int | None = None
 
+    use_non_matching_label: bool | None = None
+
     _generated_default_name: str | None = None
     _last_type: str | None = None
+
 
     def __str__(self) -> str:
         return self.name
