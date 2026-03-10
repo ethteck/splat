@@ -430,7 +430,7 @@ class Segment:
         if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss):
             # We need to know the bss space for the segment.
             if isinstance(parent, CommonSegCode):
-                if not ret.type.startswith(".") and parent.bss_size <= 0:
+                if parent.bss_size <= 0 and not ret.type.startswith("."):
                     log.error(
                         f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section)."
                     )
