@@ -99,6 +99,8 @@ class SplatOpts:
 
     # Determines the path to library files that are to be linked into the target binary
     lib_path: Path
+    # Determines the path to object files that are to be linked into the target binary
+    o_path: Path
 
     # TODO document
     elf_section_list_path: Optional[Path]
@@ -502,6 +504,7 @@ def _parse_yaml(
         ),
         extensions_path=p.parse_optional_path(base_path, "extensions_path"),
         lib_path=p.parse_path(base_path, "lib_path", "lib"),
+        o_path=p.parse_path(base_path, "o_path", "build"),
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
         emit_subalign=p.parse_opt("emit_subalign", bool, True),

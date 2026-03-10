@@ -46,5 +46,5 @@ class CommonSegO(CommonSegment):
         return self.section
 
     def out_path(self) -> Optional[Path]:
-        out_path = options.opts.build_path / f"{self.name}"
+        out_path = options.opts.o_path / f"{self.name}"
         return out_path
