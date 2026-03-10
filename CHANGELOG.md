@@ -3,7 +3,7 @@
 
 ### 0.38.1
 
-* Fix `bss_size` being required for parent segments that contain `.bss` sections.
+* Fix `bss_size` being required for parent segments that contain `.bss` segments; it is still required for `bss` segments.
 
 ### 0.38.0
 
