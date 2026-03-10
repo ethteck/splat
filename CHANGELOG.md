@@ -1,5 +1,10 @@
 # splat Release Notes
 
+
+### 0.38.1
+
+* Fix `bss_size` being required for parent segments that contain `.bss` sections.
+
 ### 0.38.0
 
 * New symbol attribute: `use_non_matching_label`.
