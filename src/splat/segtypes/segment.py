@@ -427,7 +427,11 @@ class Segment:
         from .common.code import CommonSegCode
         from .common.bss import CommonSegBss
 
-        if options.opts.ld_bss_is_noload and isinstance(ret, CommonSegBss):
+        if (
+            options.opts.ld_bss_is_noload
+            and isinstance(ret, CommonSegBss)
+            and not ret.type.startswith(".")
+        ):
             # We need to know the bss space for the segment.
             if isinstance(parent, CommonSegCode):
                 if parent.bss_size <= 0:
