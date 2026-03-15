@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout reposistory
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
 
     - name: Install local splat
       run: python3 -m pip install .[dev]
