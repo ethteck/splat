@@ -384,6 +384,17 @@ extensions_path: path/to/extensions/folder
 
 Determines the path to library files that are to be linked into the target binary when the [`lib`](https://github.com/ethteck/splat/wiki/Segments#lib) segment type is used.
 
+#### Default
+`lib`
+
+
+### o_path
+
+Determines the path to object files that are to be linked into the target binary when the [`o`](https://github.com/ethteck/splat/wiki/Segments#o) segment type is used.
+
+#### Default
+`build`
+
 
 ### elf_section_list_path
 Path to file containing elf section list.

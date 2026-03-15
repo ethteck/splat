@@ -1,5 +1,8 @@
 # splat Release Notes
 
+### 0.39.0
+
+* New `o` segment allowing for a more granular way to include library objects.
 
 ### 0.38.1
 
