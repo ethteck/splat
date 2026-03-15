@@ -17,14 +17,14 @@ jobs:
     steps:
     # Clone the wiki repository
     - name: Checkout Wiki repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
       with:
         repository: ${{ github.event.repository.owner.name }}/${{ github.event.repository.name }}.wiki
         path: wiki_repo
 
     # Clone the main repository
     - name: Checkout main repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
       with:
         repository: ${{ github.event.repository.owner.name }}/${{ github.event.repository.name }}
         path: splat_repo
