@@ -26,7 +26,7 @@ The following is a list of projects known to be using **splat** along with the c
 | [Snowboard Kids 2](https://github.com/cdlewis/snowboardkids2-decomp)          | kmc gcc2.7.2                   | makefile     |
 | [Space Station Silicon Valley](https://github.com/mkst/sssv)                  | ido5.3                         | makefile     |
 | [Turok 3](https://github.com/drahsid/turok3)                                  | psyq gcc2.8.0                  | makefile     |
-| [Wave Race 64](https://github.com/LLONSIT/Wave-Race-64)                       | ido7.1                         | makefile     |
+| [Wave Race 64](https://github.com/LLONSIT/Wave-Race-64)                       | ido5.3                         | makefile     |
 | [Yoshi's Story](https://github.com/decompals/yoshis-story)                    | ido7.1                         | makefile     |
 
 ## PS1 Projects
