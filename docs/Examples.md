@@ -9,7 +9,7 @@ The following is a list of projects known to be using **splat** along with the c
 | [Banjo Kazooie](https://gitlab.com/banjo.decomp/banjo-kazooie)                | ido5.3                         | makefile     |
 | [Beetle Adventure Racing](https://github.com/synamaxmusic/bar-decomp)         | ido5.3                         | makefile     |
 | [Conker's Bad Fur Day](https://github.com/mkst/conker)                        | ido5.3                         | makefile     |
-| [Dinosaur Planet](https://github.com/zestydevy/dinosaur-planet)               | ido5.3                         | python       |
+| [Dinosaur Planet](https://github.com/zestydevy/dinosaur-planet)               | ido5.3                         | ninja/python |
 | [Dr. Mario 64](https://github.com/AngheloAlf/drmario64)                       | kmc gcc2.7.2 & egcs gcc2.91.66 | makefile     |
 | [Gauntlet Legends](https://github.com/Drahsid/gauntlet-legends)               | kmc gcc2.7.2                   | ninja/python | (uses old KMC GCC wrapper - do not use for reference)
 | [Gex 64: Enter the Gecko](https://github.com/MatBourgon/Gex64Decomp)          | kmc gcc2.7.2                   | makefile     |
