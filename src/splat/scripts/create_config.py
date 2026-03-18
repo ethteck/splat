@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 import hashlib
 from pathlib import Path
 import subprocess
 import sys
-from typing import Optional
 
 from ..util.n64 import find_code_length, rominfo
 from ..util.psx import psxexeinfo
@@ -13,7 +13,7 @@ from ..util.ps2 import ps2elfinfo
 from ..util import log, file_presets, conf
 
 
-def main(file_path: Path, objcopy: Optional[str]):
+def main(file_path: Path, objcopy: str | None):
     if not file_path.exists():
         sys.exit(f"File {file_path} does not exist ({file_path.absolute()})")
     if file_path.is_dir():
@@ -195,7 +195,7 @@ segments:
     # Write reloc_addrs.txt file
     reloc_addrs: list[str] = []
 
-    addresses_info: list[tuple[Optional[rominfo.EntryAddressInfo], str]] = [
+    addresses_info: list[tuple[rominfo.EntryAddressInfo | None, str]] = [
         (rom.entrypoint_info.main_address, "main"),
         (rom.entrypoint_info.bss_start_address, "main_BSS_START"),
         (rom.entrypoint_info.bss_size, "main_BSS_SIZE"),
@@ -374,7 +374,7 @@ segments:
     file_presets.write_all_files()
 
 
-def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: Optional[str]):
+def do_elf(elf_path: Path, elf_bytes: bytes, objcopy: str | None):
     elf = ps2elfinfo.Ps2Elf.get_info(elf_path, elf_bytes)
     if elf is None:
         log.error(f"Unsupported elf file '{elf_path}'")
@@ -531,7 +531,7 @@ options:
     print("```")
 
 
-def find_objcopy() -> str:
+def find_objcopy() -> str:  # noqa: RET503
     # First we try to figure out if the user has objcopy on their pc, and under
     # which name.
     # We just try a bunch and hope for the best

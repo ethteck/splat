@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from .segment import CommonSegment
 from ..linker_entry import LinkerEntry, LinkerWriter
@@ -25,5 +24,5 @@ class CommonSegPad(CommonSegment):
     def get_linker_section_linksection(self) -> str:
         return ""
 
-    def get_linker_entries(self) -> List[LinkerEntry]:
+    def get_linker_entries(self) -> list[LinkerEntry]:
         return [LinkerEntryPad(self)]

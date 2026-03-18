@@ -1,17 +1,29 @@
-import sys
-from typing import NoReturn, Optional
-from pathlib import Path
+from __future__ import annotations
 
-from colorama import Fore, init, Style
+import sys
+from typing import TYPE_CHECKING, NoReturn, Optional, TextIO
+
+from colorama import Fore, Style, init
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from typing_extensions import TypeAlias
 
 init(autoreset=True)
 
 newline = True
 
-Status = Optional[str]
+Status: TypeAlias = Optional[str]
 
 
-def write(*args, status=None, **kwargs):
+def write(
+    *args: object,
+    status: Status = None,
+    sep: str | None = None,
+    end: str | None = None,
+    flush: bool = False,
+) -> None:
     global newline
 
     if not newline:
@@ -21,37 +33,40 @@ def write(*args, status=None, **kwargs):
     print(
         status_to_ansi(status) + str(args[0]),
         *args[1:],
-        **kwargs,
+        sep=sep,
+        end=end,
         file=output_file(status),
+        flush=flush,
     )
 
 
-def error(*args, **kwargs) -> NoReturn:
-    write(*args, **kwargs, status="error")
+def error(
+    *args: object, sep: str | None = None, end: str | None = None, flush: bool = False
+) -> NoReturn:
+    write(*args, status="error", sep=sep, end=end, flush=flush)
     sys.exit(2)
 
 
 # The line_num is expected to be zero-indexed
-def parsing_error_preamble(path: Path, line_num: int, line: str):
+def parsing_error_preamble(path: Path, line_num: int, line: str) -> None:
     write("")
     write(f"error reading {path}, line {line_num + 1}:", status="error")
     write(f"\t{line}")
 
 
-def status_to_ansi(status: Status):
+def status_to_ansi(status: Status) -> Fore | str:
     if status == "ok":
         return Fore.GREEN
-    elif status == "warn":
+    if status == "warn":
         return Fore.YELLOW + Style.BRIGHT
-    elif status == "error":
+    if status == "error":
         return Fore.RED + Style.BRIGHT
-    elif status == "skip":
+    if status == "skip":
         return Style.DIM
-    else:
-        return ""
+    return ""
 
 
-def output_file(status: Status):
+def output_file(status: Status) -> TextIO:
     if status == "warn" or status == "error":
         return sys.stderr
     return sys.stdout

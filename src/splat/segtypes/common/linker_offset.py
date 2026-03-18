@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from ..linker_entry import LinkerEntry, LinkerWriter
 from ..segment import Segment
@@ -24,5 +23,5 @@ class CommonSegLinker_offset(Segment):
     def get_linker_section_linksection(self) -> str:
         return ""
 
-    def get_linker_entries(self) -> List[LinkerEntry]:
+    def get_linker_entries(self) -> list[LinkerEntry]:
         return [LinkerEntryOffset(self)]

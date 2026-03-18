@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 from ...util import log, options
 
@@ -17,7 +17,7 @@ class CommonSegRodatabin(CommonSegTextbin):
     def get_linker_section(self) -> str:
         return ".rodata"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "a"
 
     def split(self, rom_bytes):

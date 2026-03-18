@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 from ...util import log, options
 
@@ -17,7 +17,7 @@ class CommonSegDatabin(CommonSegTextbin):
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "wa"
 
     def split(self, rom_bytes):

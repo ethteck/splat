@@ -1,20 +1,23 @@
-from pathlib import Path
+from __future__ import annotations
 import re
-from typing import Optional, TextIO
+from typing import TextIO, TYPE_CHECKING
 
 from ...util import log, options
 
 from .segment import CommonSegment
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 class CommonSegTextbin(CommonSegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
+        vram_start: int | None,
         args: list,
         yaml,
     ):
@@ -38,10 +41,10 @@ class CommonSegTextbin(CommonSegment):
     def get_linker_section(self) -> str:
         return ".text"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "ax"
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         if self.use_src_path:
             return options.opts.src_path / self.dir / f"{self.name}.s"
 

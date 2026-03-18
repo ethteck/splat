@@ -5,26 +5,32 @@ Dumps out Vtx as a .inc.c file.
 Originally written by Mark Street (https://github.com/mkst)
 """
 
+from __future__ import annotations
+
 import struct
-from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING
 
 from ...util import options, log
 
 from ..common.codesubsegment import CommonSegCodeSubsegment
 
+if TYPE_CHECKING:
+    from pathlib import Path
+    from ...util.vram_classes import SerializedSegmentData
+    from ...util.symbols import Symbol
+
 
 class N64SegVtx(CommonSegCodeSubsegment):
     def __init__(
         self,
-        rom_start: Optional[int],
-        rom_end: Optional[int],
+        rom_start: int | None,
+        rom_end: int | None,
         type: str,
         name: str,
-        vram_start: Optional[int],
-        args: list,
-        yaml,
-    ):
+        vram_start: int | None,
+        args: list[str],
+        yaml: SerializedSegmentData | list[str],
+    ) -> None:
         super().__init__(
             rom_start,
             rom_end,
@@ -34,10 +40,10 @@ class N64SegVtx(CommonSegCodeSubsegment):
             args=args,
             yaml=yaml,
         )
-        self.file_text: Optional[str] = None
+        self.file_text: str | None = None
         self.data_only = isinstance(yaml, dict) and yaml.get("data_only", False)
 
-    def format_sym_name(self, sym) -> str:
+    def format_sym_name(self, sym: Symbol) -> str:
         return sym.name
 
     def get_linker_section(self) -> str:
@@ -46,10 +52,10 @@ class N64SegVtx(CommonSegCodeSubsegment):
     def out_path(self) -> Path:
         return options.opts.asset_path / self.dir / f"{self.name}.vtx.inc.c"
 
-    def scan(self, rom_bytes: bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         self.file_text = self.disassemble_data(rom_bytes)
 
-    def disassemble_data(self, rom_bytes) -> str:
+    def disassemble_data(self, rom_bytes: bytes) -> str:
         assert isinstance(self.rom_start, int)
         assert isinstance(self.rom_end, int)
         assert isinstance(self.vram_start, int)
@@ -88,11 +94,12 @@ class N64SegVtx(CommonSegCodeSubsegment):
         lines.append("")
         return "\n".join(lines)
 
-    def split(self, rom_bytes: bytes):
-        if self.file_text and self.out_path():
-            self.out_path().parent.mkdir(parents=True, exist_ok=True)
+    def split(self, rom_bytes: bytes) -> None:
+        out_path = self.out_path()
+        if self.file_text and out_path is not None:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.out_path(), "w", newline="\n") as f:
+            with open(out_path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(self.file_text)
 
     def should_scan(self) -> bool:
@@ -102,7 +109,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
         return self.extract and options.opts.is_mode_active("vtx")
 
     @staticmethod
-    def estimate_size(yaml: Union[Dict, List]) -> Optional[int]:
+    def estimate_size(yaml: SerializedSegmentData | list[str]) -> int | None:
         if isinstance(yaml, dict) and "length" in yaml:
             return yaml["length"] * 0x10
         return None

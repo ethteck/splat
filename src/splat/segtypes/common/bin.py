@@ -1,10 +1,13 @@
-from pathlib import Path
-from typing import Optional
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from ...util import log, options
 
 from .segment import CommonSegment
-from ..segment import SegmentType
+
+if TYPE_CHECKING:
+    from ..segment import SegmentType
+    from pathlib import Path
 
 
 class CommonSegBin(CommonSegment):
@@ -12,7 +15,7 @@ class CommonSegBin(CommonSegment):
     def is_data() -> bool:
         return True
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         return options.opts.asset_path / self.dir / f"{self.name}.bin"
 
     def split(self, rom_bytes):

@@ -1,11 +1,16 @@
-from pathlib import Path
-from typing import Optional, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from ...util import options, symbols, log
 
 from .codesubsegment import CommonSegCodeSubsegment
 from .group import CommonSegGroup
 
 from ...disassembler.disassembler_section import DisassemblerSection, make_data_section
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from ...segtypes.linker_entry import LinkerEntry
 
 
 class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
@@ -20,28 +25,26 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         return options.opts.data_path / self.dir / f"{self.name}.{typ}.s"
 
-    def out_path(self) -> Optional[Path]:
+    def out_path(self) -> Path | None:
         if self.type.startswith("."):
             if self.sibling:
                 # C file
                 return self.sibling.out_path()
-            else:
-                # Implied C file
-                return options.opts.src_path / self.dir / f"{self.name}.c"
-        else:
-            # ASM
-            return self.asm_out_path()
+            # Implied C file
+            return options.opts.src_path / self.dir / f"{self.name}.c"
+        # ASM
+        return self.asm_out_path()
 
-    def scan(self, rom_bytes: bytes):
+    def scan(self, rom_bytes: bytes) -> None:
         CommonSegGroup.scan(self, rom_bytes)
 
         if self.rom_start is not None and self.rom_end is not None:
             self.disassemble_data(rom_bytes)
 
-    def get_asm_file_extra_directives(self) -> List[str]:
+    def get_asm_file_extra_directives(self) -> list[str]:
         return []
 
-    def split(self, rom_bytes: bytes):
+    def split(self, rom_bytes: bytes) -> None:
         super().split(rom_bytes)
 
         if self.spim_section is None or not self.should_self_split():
@@ -66,10 +69,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
     def get_linker_section(self) -> str:
         return ".data"
 
-    def get_section_flags(self) -> Optional[str]:
+    def get_section_flags(self) -> str | None:
         return "wa"
 
-    def get_linker_entries(self):
+    def get_linker_entries(self) -> list[LinkerEntry]:
         return CommonSegCodeSubsegment.get_linker_entries(self)
 
     def configure_disassembler_section(
@@ -78,6 +81,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         "Allows to configure the section before running the analysis on it"
 
         section = disassembler_section.get_section()
+        assert section is not None
 
         # Set data string encoding
         # First check the global configuration
@@ -88,7 +92,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
         if self.str_encoding is not None:
             section.stringEncoding = self.str_encoding
 
-    def disassemble_data(self, rom_bytes):
+    def disassemble_data(self, rom_bytes: bytes) -> None:
         if self.is_auto_segment:
             return
 
@@ -128,16 +132,17 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         rodata_encountered = False
 
-        for symbol in self.spim_section.get_section().symbolList:
+        section = self.spim_section.get_section()
+        assert section is not None
+
+        for symbol in section.symbolList:
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), symbol.contextSym, force_in_segment=True
             )
 
             # Gather symbols found by spimdisasm and create those symbols in splat's side
             for referenced_vram in symbol.referencedVrams:
-                context_sym = self.spim_section.get_section().getSymbol(
-                    referenced_vram, tryPlusOffset=False
-                )
+                context_sym = section.getSymbol(referenced_vram, tryPlusOffset=False)
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
                         self.get_most_parent(), context_sym, force_in_segment=False

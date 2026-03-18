@@ -1,30 +1,70 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, TypedDict
 
 from . import log
+
+if TYPE_CHECKING:
+    from typing_extensions import NotRequired
 
 
 @dataclass(frozen=True)
 class VramClass:
     name: str
     vram: int
-    given_vram_symbol: Optional[str] = None
-    follows_classes: List[str] = field(default_factory=list, compare=False)
+    given_vram_symbol: str | None = None
+    follows_classes: list[str] = field(default_factory=list, compare=False)
 
     @property
-    def vram_symbol(self) -> Optional[str]:
+    def vram_symbol(self) -> str | None:
         if self.given_vram_symbol is not None:
             return self.given_vram_symbol
-        elif self.follows_classes:
+        if self.follows_classes:
             return self.name + "_CLASS_VRAM"
-        else:
-            return None
+        return None
 
 
-_vram_classes: Dict[str, VramClass] = {}
+_vram_classes: dict[str, VramClass] = {}
 
 
-def initialize(yaml: Any):
+class SerializedSegmentData(TypedDict):
+    name: NotRequired[str]
+    vram: int
+    vram_symbol: str | None
+    follows_classes: list[str]
+    vram_class: NotRequired[str]
+    follows_vram: NotRequired[str | None]
+    align: NotRequired[str]
+    subalign: NotRequired[str]
+    section_order: NotRequired[list[str]]
+    start: NotRequired[str]
+    type: NotRequired[str]
+    dir: NotRequired[str]
+    symbol_name_format: NotRequired[str]
+    symbol_name_format_no_rom: NotRequired[str]
+    path: NotRequired[str]
+    bss_contains_common: NotRequired[bool]
+    linker_section_order: NotRequired[str]
+    linker_section: NotRequired[str]
+    ld_fill_value: NotRequired[int]
+    ld_align_segment_start: NotRequired[int]
+    pair_segment: NotRequired[str]
+    exclusive_ram_id: NotRequired[str]
+    find_file_boundaries: NotRequired[bool]
+    size: NotRequired[int]
+    global_id: NotRequired[str]
+    length: NotRequired[int]
+    in_segment: NotRequired[bool]
+    data_only: NotRequired[bool]
+    bss_size: NotRequired[int]
+    str_encoding: NotRequired[str]
+    detect_redundant_function_end: NotRequired[bool]
+    width: NotRequired[int]
+    height: NotRequired[int]
+
+
+def initialize(yaml: list[SerializedSegmentData | list[str]] | None) -> None:
     global _vram_classes
 
     _vram_classes = {}
@@ -47,8 +87,8 @@ def initialize(yaml: Any):
     for vram_class in yaml:
         name: str
         vram: int
-        vram_symbol: Optional[str] = None
-        follows_classes: List[str] = []
+        vram_symbol: str | None = None
+        follows_classes: list[str] = []
 
         if isinstance(vram_class, dict):
             if "name" not in vram_class:
@@ -83,7 +123,7 @@ def initialize(yaml: Any):
                     f"vram_class ({vram_class}) must have 2 elements, got {len(vram_class)}"
                 )
             name = vram_class[0]
-            vram = vram_class[1]
+            vram = int(vram_class[1])
         else:
             log.error(f"vram_class must be a dict or list, got {type(vram_class)}")
 
