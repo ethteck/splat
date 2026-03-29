@@ -263,7 +263,8 @@ class N64SegGfx(CommonSegCodeSubsegment):
         if self.file_text and out_path:
             out_path.parent.mkdir(parents=True, exist_ok=True)
 
-            out_path.write_text(self.file_text, encoding="utf-8", newline="\n")
+            with out_path.open("w", encoding="utf-8", newline="\n") as f:
+                f.write(self.file_text)
 
     def should_scan(self) -> bool:
         return (

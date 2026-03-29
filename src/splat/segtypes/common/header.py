@@ -37,7 +37,8 @@ class CommonSegHeader(CommonSegment):
 
         src_path = self.out_path()
         src_path.parent.mkdir(parents=True, exist_ok=True)
-        src_path.write_text("\n".join(header_lines), encoding="utf-8", newline="\n")
+        with src_path.open("w", encoding="utf-8", newline="\n") as f:
+            f.write("\n".join(header_lines))
         self.log(f"Wrote {self.name} to {src_path}")
 
     @staticmethod

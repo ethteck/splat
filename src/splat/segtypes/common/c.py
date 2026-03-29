@@ -477,8 +477,8 @@ class CommonSegC(CommonSegCodeSubsegment):
                     c_lines += self.get_c_lines_for_rodata_sym(rodata_sym, asm_out_dir)
 
         c_path.parent.mkdir(parents=True, exist_ok=True)
-        text = "\n".join(c_lines)
-        c_path.write_text(text, encoding="utf-8", newline=options.opts.c_newline)
+        with c_path.open("w", encoding="utf-8", newline=options.opts.c_newline) as f:
+            f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
 
     def create_asm_dependencies_file(

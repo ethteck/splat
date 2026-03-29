@@ -460,11 +460,12 @@ def write_elf_sections_file(all_segments: List[Segment]):
         for segment in all_segments:
             section_list += "." + segment.get_cname() + "\n"
         options.opts.elf_section_list_path.parent.mkdir(parents=True, exist_ok=True)
-        options.opts.elf_section_list_path.write_text(
-            section_list,
+        with options.opts.elf_section_list_path.open(
+            "w",
             encoding="utf-8",
             newline="\n",
-        )
+        ) as f:
+            f.write(section_list)
 
 
 def write_undefined_auto(to_write: List[symbols.Symbol], file_path: Path):

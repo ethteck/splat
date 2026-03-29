@@ -31,7 +31,8 @@ def _write(filepath: str, contents: str):
         existing_contents = p.read_text(encoding="utf-8")
         if existing_contents == contents:
             return
-    p.write_text(contents, encoding="utf-8", newline="\n")
+    with p.open("w", encoding="utf-8", newline="\n") as f:
+        f.write(contents)
 
 
 def write_include_asm_h():

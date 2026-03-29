@@ -51,7 +51,8 @@ def write_file_if_different(path: Path, new_content: str):
 
     if old_content != new_content:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(new_content, encoding="utf-8", newline=options.opts.c_newline)
+        with path.open("w", encoding="utf-8", newline=options.opts.c_newline) as f:
+            f.write(new_content)
 
 
 def get_segment_rom_start(cname: str) -> str:
