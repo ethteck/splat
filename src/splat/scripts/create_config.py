@@ -182,7 +182,7 @@ segments:
 """
 
     out_file = Path(f"{cleaned_basename}.yaml")
-    with out_file.open("w", newline="\n") as f:
+    with out_file.open("w", encoding="utf-8", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
@@ -247,7 +247,7 @@ segments:
         )
         reloc_addrs.append("")
     if reloc_addrs:
-        with Path("reloc_addrs.txt").open("w", newline="\n") as f:
+        with Path("reloc_addrs.txt").open("w", encoding="utf-8", newline="\n") as f:
             print("Writing reloc_addrs.txt")
             f.write(
                 "// Visit https://github.com/ethteck/splat/wiki/Advanced-Reloc for documentation about this file\n"
@@ -265,7 +265,7 @@ segments:
         )
     if symbol_addrs:
         symbol_addrs.append("")
-        with Path("symbol_addrs.txt").open("w", newline="\n") as f:
+        with Path("symbol_addrs.txt").open("w", encoding="utf-8", newline="\n") as f:
             print("Writing symbol_addrs.txt")
             f.write(
                 "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
@@ -363,7 +363,7 @@ segments:
 """
 
     out_file = Path(f"{cleaned_basename}.yaml")
-    with out_file.open("w", newline="\n") as f:
+    with out_file.open("w", encoding="utf-8", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
@@ -478,7 +478,7 @@ options:
 """
 
     out_file = Path(f"{cleaned_basename}.yaml")
-    with out_file.open("w", newline="\n") as f:
+    with out_file.open("w", encoding="utf-8", newline="\n") as f:
         print(f"Writing config to {out_file}")
         f.write(header)
         f.write(segments)
@@ -493,7 +493,7 @@ options:
     symbol_addrs.append(f"_start = 0x{elf.entrypoint:08X}; // type:func")
     if symbol_addrs:
         symbol_addrs.append("")
-        with Path("symbol_addrs.txt").open("w", newline="\n") as f:
+        with Path("symbol_addrs.txt").open("w", encoding="utf-8", newline="\n") as f:
             print("Writing symbol_addrs.txt")
             f.write(
                 "// Visit https://github.com/ethteck/splat/wiki/Adding-Symbols for documentation about this file\n"
@@ -506,7 +506,11 @@ options:
     linker_script.append("ENTRY(_start);")
     if linker_script:
         linker_script.append("")
-        with Path("linker_script_extra.ld").open("w", newline="\n") as f:
+        with Path("linker_script_extra.ld").open(
+            "w",
+            encoding="utf-8",
+            newline="\n",
+        ) as f:
             print("Writing linker_script_extra.ld")
             f.write(
                 "/* Pass this file to the linker with the `-T linker_script_extra.ld` flag */\n"

@@ -28,11 +28,10 @@ class CommonSegBin(CommonSegment):
         if self.size is None or self.size <= 0:
             log.error(f"Segment {self.name} has zero size.")
 
-        with open(path, "wb") as f:
-            assert isinstance(self.rom_start, int)
-            assert isinstance(self.rom_end, int)
+        assert isinstance(self.rom_start, int)
+        assert isinstance(self.rom_end, int)
+        path.write_bytes(rom_bytes[self.rom_start : self.rom_end])
 
-            f.write(rom_bytes[self.rom_start : self.rom_end])
         self.log(f"Wrote {self.name} to {path}")
 
     @property

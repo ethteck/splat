@@ -344,7 +344,7 @@ def initialize(all_segments: "List[Segment]"):
     # Manual list of func name / addrs
     for path in options.opts.symbol_addrs_paths:
         if path.exists():
-            with open(path) as f:
+            with open(path, encoding="utf-8") as f:
                 sym_addrs_lines = f.readlines()
                 handle_sym_addrs(path, sym_addrs_lines, all_segments)
 

@@ -259,10 +259,11 @@ class N64SegGfx(CommonSegCodeSubsegment):
         return out_str
 
     def split(self, rom_bytes: bytes):
-        if self.file_text and self.out_path():
-            self.out_path().parent.mkdir(parents=True, exist_ok=True)
+        out_path = self.out_path()
+        if self.file_text and out_path:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.out_path(), "w", newline="\n") as f:
+            with out_path.open("w", encoding="utf-8", newline="\n") as f:
                 f.write(self.file_text)
 
     def should_scan(self) -> bool:

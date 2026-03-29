@@ -28,11 +28,10 @@ def _write(filepath: str, contents: str):
     p.parent.mkdir(parents=True, exist_ok=True)
 
     if p.exists():
-        with p.open("r", encoding="UTF-8") as f:
-            existing_contents = f.read()
+        existing_contents = p.read_text(encoding="utf-8")
         if existing_contents == contents:
             return
-    with p.open("w", encoding="UTF-8", newline="\n") as f:
+    with p.open("w", encoding="utf-8", newline="\n") as f:
         f.write(contents)
 
 

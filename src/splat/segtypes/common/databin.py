@@ -35,7 +35,7 @@ class CommonSegDatabin(CommonSegTextbin):
             assert s_path is not None
             s_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with s_path.open("w") as f:
+            with s_path.open("w", encoding="utf-8") as f:
                 f.write('.include "macro.inc"\n\n')
                 preamble = options.opts.generated_s_preamble
                 if preamble:

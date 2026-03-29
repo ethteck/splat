@@ -51,8 +51,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_funcs_defined_in_c(c_file: Path) -> Set[str]:
-        with open(c_file, "r", encoding="utf-8") as f:
-            text = CommonSegC.strip_c_comments(f.read())
+        text = CommonSegC.strip_c_comments(c_file.read_text(encoding="utf-8"))
 
         return set(m.group(1) for m in C_FUNC_RE.finditer(text))
 
@@ -105,8 +104,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_global_asm_funcs(c_file: Path) -> Set[str]:
-        with c_file.open(encoding="utf-8") as f:
-            text = CommonSegC.strip_c_comments(f.read())
+        text = CommonSegC.strip_c_comments(c_file.read_text(encoding="utf-8"))
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
         else:
@@ -114,8 +112,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
     @staticmethod
     def get_global_asm_rodata_syms(c_file: Path) -> Set[str]:
-        with c_file.open(encoding="utf-8") as f:
-            text = CommonSegC.strip_c_comments(f.read())
+        text = CommonSegC.strip_c_comments(c_file.read_text(encoding="utf-8"))
         if options.opts.compiler == IDO:
             return set(m.group(2) for m in C_GLOBAL_ASM_IDO_RE.finditer(text))
         else:
@@ -351,7 +348,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
-        with outpath.open("w", newline="\n") as f:
+        with outpath.open("w", encoding="utf-8", newline="\n") as f:
             if options.opts.asm_inc_header:
                 f.write(
                     options.opts.c_newline.join(options.opts.asm_inc_header.split("\n"))
@@ -389,7 +386,7 @@ class CommonSegC(CommonSegCodeSubsegment):
 
         outpath.parent.mkdir(parents=True, exist_ok=True)
 
-        with outpath.open("w", newline="\n") as f:
+        with outpath.open("w", encoding="utf-8", newline="\n") as f:
             preamble = options.opts.generated_s_preamble
             if preamble:
                 f.write(preamble + "\n")
@@ -480,7 +477,7 @@ class CommonSegC(CommonSegCodeSubsegment):
                     c_lines += self.get_c_lines_for_rodata_sym(rodata_sym, asm_out_dir)
 
         c_path.parent.mkdir(parents=True, exist_ok=True)
-        with c_path.open("w", newline=options.opts.c_newline) as f:
+        with c_path.open("w", encoding="utf-8", newline=options.opts.c_newline) as f:
             f.write("\n".join(c_lines))
         log.write(f"Wrote {self.name} to {c_path}")
 
