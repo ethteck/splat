@@ -245,7 +245,7 @@ class CommonSegCodeSubsegment(Segment):
 
         self.print_file_boundaries()
 
-        with open(out_path, "w", newline="\n") as f:
+        with out_path.open("w", encoding="utf-8", newline="\n") as f:
             # Write `.text` contents
             for line in self.get_asm_file_header():
                 f.write(line + "\n")
@@ -257,7 +257,7 @@ class CommonSegCodeSubsegment(Segment):
 
         self.print_file_boundaries()
 
-        with open(out_path, "w", newline="\n") as f:
+        with open(out_path, "w", encoding="utf-8", newline="\n") as f:
             # self.spim_section would be None if the current section was
             # declared `auto` in the yaml.
             # This can be useful when there are TUs with only data/rodata/bss/etc

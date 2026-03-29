@@ -354,8 +354,7 @@ def do_split(
         if segment.should_split():
             segment_bytes = rom_bytes
             if segment.file_path:
-                with open(segment.file_path, "rb") as segment_input_file:
-                    segment_bytes = segment_input_file.read()
+                segment_bytes = segment.file_path.read_bytes()
             segment.split(segment_bytes)
 
 
@@ -461,13 +460,16 @@ def write_elf_sections_file(all_segments: List[Segment]):
         for segment in all_segments:
             section_list += "." + segment.get_cname() + "\n"
         options.opts.elf_section_list_path.parent.mkdir(parents=True, exist_ok=True)
-        with options.opts.elf_section_list_path.open("w", newline="\n") as f:
-            f.write(section_list)
+        options.opts.elf_section_list_path.write_text(
+            section_list,
+            encoding="utf-8",
+            newline="\n",
+        )
 
 
 def write_undefined_auto(to_write: List[symbols.Symbol], file_path: Path):
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    with file_path.open("w", newline="\n") as f:
+    with file_path.open("w", encoding="utf-8", newline="\n") as f:
         for symbol in to_write:
             f.write(f"{symbol.name} = 0x{symbol.vram_start:X};\n")
 
@@ -518,7 +520,7 @@ def dump_symbols() -> None:
     splat_hidden_folder = options.opts.base_path / ".splat"
     splat_hidden_folder.mkdir(parents=True, exist_ok=True)
 
-    with open(splat_hidden_folder / "splat_symbols.csv", "w") as f:
+    with open(splat_hidden_folder / "splat_symbols.csv", "w", encoding="utf-8") as f:
         f.write(
             "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
         )

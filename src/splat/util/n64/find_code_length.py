@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
+from pathlib import Path
 
 import rabbitizer
 import spimdisasm
@@ -49,8 +50,7 @@ def run(rom_bytes, start_offset, vram, end_offset=None):
 def main():
     args = parser.parse_args()
 
-    with open(args.rom, "rb") as f:
-        rom_bytes = f.read()
+    rom_bytes = Path(args.rom).read_bytes()
 
     start = args.start
     end = args.end

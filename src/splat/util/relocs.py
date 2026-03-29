@@ -31,7 +31,7 @@ def initialize():
         if not path.exists():
             continue
 
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             sym_addrs_lines = f.readlines()
 
         prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)

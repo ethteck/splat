@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.39.1
+
+* Make sure all plain text file read and writes have an explicit UTF-8 encoding.
+
 ### 0.39.0
 
 * New `o` segment allowing for a more granular way to include library objects.

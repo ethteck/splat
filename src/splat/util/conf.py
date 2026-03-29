@@ -78,8 +78,8 @@ def load(
 
     config: Dict[str, Any] = {}
     for entry in config_path:
-        with entry.open() as f:
-            additional_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
+        entry_text = entry.read_text(encoding="utf-8")
+        additional_config = yaml.load(entry_text, Loader=yaml.SafeLoader)
         config = _merge_configs(config, additional_config, entry)
 
     vram_classes.initialize(config.get("vram_classes"))

@@ -89,11 +89,11 @@ class N64SegVtx(CommonSegCodeSubsegment):
         return "\n".join(lines)
 
     def split(self, rom_bytes: bytes):
-        if self.file_text and self.out_path():
-            self.out_path().parent.mkdir(parents=True, exist_ok=True)
+        out_path = self.out_path()
+        if self.file_text and out_path:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.out_path(), "w", newline="\n") as f:
-                f.write(self.file_text)
+            out_path.write_text(self.file_text, encoding="utf-8", newline="\n")
 
     def should_scan(self) -> bool:
         return options.opts.is_mode_active("vtx")

@@ -45,14 +45,13 @@ def path_to_object_path(path: Path) -> Path:
 
 def write_file_if_different(path: Path, new_content: str):
     if path.exists():
-        old_content = path.read_text()
+        old_content = path.read_text(encoding="utf-8")
     else:
         old_content = ""
 
     if old_content != new_content:
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w", newline=options.opts.c_newline) as f:
-            f.write(new_content)
+        path.write_text(new_content, encoding="utf-8", newline=options.opts.c_newline)
 
 
 def get_segment_rom_start(cname: str) -> str:

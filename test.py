@@ -22,7 +22,7 @@ from src.splat.segtypes.segment import Segment
 
 class Testing(unittest.TestCase):
     def compare_files(self, test_path, ref_path):
-        with io.open(test_path) as test_f, io.open(ref_path) as ref_f:
+        with io.open(test_path, encoding="utf-8") as test_f, io.open(ref_path, encoding="utf-8") as ref_f:
             self.assertListEqual(list(test_f), list(ref_f))
 
     def get_same_files(self, dcmp: filecmp.dircmp, out: List[Tuple[str, str, str]]):
@@ -103,9 +103,9 @@ class Testing(unittest.TestCase):
                     remove_from_diff.add(file)
                 continue
 
-            with open(f"{file[1]}/{file[0]}") as file1:
+            with open(f"{file[1]}/{file[0]}", encoding="utf-8") as file1:
                 file1_lines = file1.readlines()
-            with open(f"{file[2]}/{file[0]}") as file2:
+            with open(f"{file[2]}/{file[0]}", encoding="utf-8") as file2:
                 file2_lines = file2.readlines()
 
             for line in difflib.unified_diff(
