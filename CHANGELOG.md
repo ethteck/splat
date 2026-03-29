@@ -2,6 +2,7 @@
 
 ### 0.39.1
 
+* Fix data-only splits missing the initial `macro.inc` include.
 * Make sure all plain text file read and writes have an explicit UTF-8 encoding.
 
 ### 0.39.0
