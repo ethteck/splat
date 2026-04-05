@@ -541,7 +541,11 @@ class LinkerWriter:
         for path in seen:
             output += f"{path.as_posix()}:\n"
         if options.opts.ld_dependencies_include:
-            deps = [path.with_suffix(".d").as_posix() for path in seen if path.suffix == ".o"]
+            deps = [
+                path.with_suffix(".d").as_posix()
+                for path in seen
+                if path.suffix == ".o"
+            ]
             if deps:
                 output += f"-include {' '.join(deps)}\n"
         write_file_if_different(output_path, output)
