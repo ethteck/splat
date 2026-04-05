@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.39.2
+
+* New `ld_dependencies_include` option for generating additional dependency include directives.
+
 ### 0.39.1
 
 * Fix data-only splits missing the initial `macro.inc` include.

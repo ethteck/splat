@@ -562,6 +562,10 @@ Folder where the built partially linked segments will be placed by the build sys
 
 Generate a dependency file for every linker script generated. Dependency files will have the same path and name as the corresponding linker script, but changing the extension to `.d`. Requires `elf_path` to be set.
 
+### ld_dependencies_include
+
+Emit an `-include` directive in the generated dependency file that includes .o file dependencies if they exist.
+
 ### ld_legacy_generation
 
 Currently splat imposes the given `section_order` when generating the linker script. But in some cases it may not be desirable to impose the section ordering because the ROM itself may not follow a logical section ordering.
