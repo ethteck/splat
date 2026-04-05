@@ -529,18 +529,17 @@ class LinkerWriter:
             )
 
     def save_dependencies_file(self, output_path: Path, target_elf_path: Path):
+        seen = dict.fromkeys(
+            entry.object_path
+            for entry in self.dependencies_entries
+            if entry.object_path is not None
+        )
         output = f"{clean_up_path(target_elf_path).as_posix()}:"
-
-        for entry in self.dependencies_entries:
-            if entry.object_path is None:
-                continue
-            output += f" \\\n    {entry.object_path.as_posix()}"
-
+        for path in seen:
+            output += f" \\\n    {path.as_posix()}"
         output += "\n"
-        for entry in self.dependencies_entries:
-            if entry.object_path is None:
-                continue
-            output += f"{entry.object_path.as_posix()}:\n"
+        for path in seen:
+            output += f"{path.as_posix()}:\n"
         write_file_if_different(output_path, output)
 
     def _writeln(self, line: str):
