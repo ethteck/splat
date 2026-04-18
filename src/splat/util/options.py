@@ -533,7 +533,7 @@ def _parse_yaml(
             base_path, "ld_partial_build_segments_path"
         ),
         ld_dependencies=p.parse_opt("ld_dependencies", bool, False),
-        ld_dependencies_include=p.parse_opt("ld_dependencies_include", bool, False),
+        ld_dependencies_include=p.parse_opt("ld_dependencies_include", bool, True),
         ld_legacy_generation=p.parse_opt("ld_legacy_generation", bool, False),
         segment_end_before_align=p.parse_opt("segment_end_before_align", bool, False),
         segment_symbols_style=p.parse_opt_within(
