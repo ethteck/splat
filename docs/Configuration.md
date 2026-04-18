@@ -564,7 +564,7 @@ Generate a dependency file for every linker script generated. Dependency files w
 
 ### ld_dependencies_include
 
-Emit an `-include` directive in the generated dependency file that includes .o file dependencies if they exist.
+Emit an `-include` directive in the generated linker dependency file that includes .o file dependencies if they exist. Module dependencies can be generated as a side effect of compilation or as a separate step in your toolchain, GCC for example supports a number of options starting with `-M` for this purpose. Generating dependency files in this manner enables a build script to express most if not all build dependencies automatically with no need to maintain separate lists of .o files or define mappings for .o files to .c files etc., and means the splat config file can be the sole source of truth for this information. As an example, if your splat config includes modules `[0x1000, c, foo/bar]` and `[0x2000, c, foo/baz]`, the linker dependency file will contain a make rule similar to `build/foo.elf: foo/bar.o foo/baz.o`. If you generate compilation dependencies, you will also have the files `build/foo/bar.d` and `build/foo/baz.d` that contain make rules like `foo/bar.o: foo/bar.c someheader.h`, and `foo/baz.o: foo/baz.c anotherheader.h` respectively. Enabling `ld_dependencies_include` will add `-include build/foo/bar.d build/foo/baz.d` to the end of the linker dependency file, so all that needs to be done to provide make with the complete picture is `-include config/foo.d` (or wherever you output the .ld file to).
 
 ### ld_legacy_generation
 
