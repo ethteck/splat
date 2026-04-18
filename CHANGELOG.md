@@ -2,7 +2,7 @@
 
 ### 0.39.2
 
-* New `ld_dependencies_include` option for generating additional dependency include directives.
+* New `ld_dependencies_include` option for generating additional dependency include directives, reducing the burden of manually maintaining dependencies for modules in makefiles or elsewhere. See the configuration page for a detailed explanation and an example.
 
 ### 0.39.1
 
