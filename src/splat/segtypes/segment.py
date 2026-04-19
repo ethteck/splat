@@ -280,6 +280,12 @@ class Segment:
             return yaml["pair_segment"]
         return None
 
+    @staticmethod
+    def parse_bss_size(yaml: Union[dict, list]) -> Optional[int]:
+        if isinstance(yaml, dict):
+            return yaml.get("bss_size")
+        return None
+
     def __init__(
         self,
         rom_start: Optional[int],
@@ -288,13 +294,15 @@ class Segment:
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
-    ):
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
+    ) -> None:
         self.rom_start = rom_start
         self.rom_end = rom_end
         self.type = type
         self.name = name
         self.vram_start: Optional[int] = vram_start
+        self.bss_size = bss_size
 
         self.align: Optional[int] = None
         self.given_subalign: Optional[int] = options.opts.subalign
@@ -386,13 +394,15 @@ class Segment:
         rom_start: Optional[int],
         rom_end: Optional[int],
         parent: Optional["Segment"],
-        vram=None,
-    ):
+        vram: Optional[int] = None,
+        bss_size: Optional[int] = None,
+    ) -> "Segment":
         type = Segment.parse_segment_type(yaml)
         name = Segment.parse_segment_name(cls, rom_start, yaml)
 
         vram_class = parse_segment_vram_class(yaml)
 
+        vram_start: Optional[int]
         if vram is not None:
             vram_start = vram
         elif vram_class:
@@ -408,6 +418,7 @@ class Segment:
             type=type,
             name=name,
             vram_start=vram_start,
+            bss_size=bss_size,
             args=args,
             yaml=yaml,
         )
@@ -434,18 +445,20 @@ class Segment:
         ):
             # We need to know the bss space for the segment.
             if isinstance(parent, CommonSegCode):
-                if parent.bss_size <= 0:
+                if parent.bss_size is None or parent.bss_size < 0:
                     log.error(
-                        f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A non-zero `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section)."
+                        f"Top-level segment '{parent.name}' is missing a `bss_size` value.\n    A positive `bss_size` value must be defined on the top-level segments that contain '{ret.type}' sections (produced by the '{ret.name}' section)."
                     )
-                if (
-                    isinstance(ret.vram_start, int)
-                    and isinstance(parent.vram_end, int)
-                    and ret.vram_start >= parent.vram_end
-                ):
-                    log.error(
-                        f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small."
-                    )
+                if isinstance(ret.vram_start, int) and isinstance(parent.vram_end, int):
+                    # Check if this segment starts after the end of the parent.
+                    # Allow this segment to start at the end of the parent only if it is zero sized.
+                    if ret.vram_start > parent.vram_end or (
+                        ret.vram_start == parent.vram_end
+                        and ret.vram_end != ret.vram_start
+                    ):
+                        log.error(
+                            f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small."
+                        )
 
         ret.given_section_order = parse_segment_section_order(yaml)
         ret.given_subalign = parse_segment_subalign(yaml)
@@ -582,7 +595,8 @@ class Segment:
     @property
     def size(self) -> Optional[int]:
         if self.rom_start is not None and self.rom_end is not None:
-            return self.rom_end - self.rom_start
+            bss_size = self.bss_size or 0
+            return self.rom_end - self.rom_start + bss_size
         else:
             return None
 

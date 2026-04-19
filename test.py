@@ -240,7 +240,7 @@ class Symbols(unittest.TestCase):
             name="MyFunc",
             vram_start=0x40000000,
             args=[],
-            yaml=None,
+            yaml={},
         )
         context_sym = spimdisasm.common.ContextSymbol(address=0)
         result = symbols.create_symbol_from_spim_symbol(
@@ -258,6 +258,7 @@ def get_yaml():
         "start": 0,
         "vram": 0x400000,
         "subalign": 4,
+        "bss_size": 0x100,
         "subsegments": [[0, "data"], [0x1DC, "c", "main"], [0x1FC, "data"]],
     }
 
@@ -271,8 +272,8 @@ class Rodata(unittest.TestCase):
             type=".rodata",
             name="MyRodata",
             vram_start=0x400,
-            args=None,
-            yaml=None,
+            args=[],
+            yaml={},
         )
         rom_data = []
         for i in range(0x100):
@@ -315,8 +316,8 @@ class Rodata(unittest.TestCase):
             type=".rodata",
             name="MyRodata",
             vram_start=0x400,
-            args=None,
-            yaml=None,
+            args=[],
+            yaml={},
         )
 
         common_seg_rodata.parent = CommonSegCode(
@@ -341,13 +342,14 @@ class Bss(unittest.TestCase):
         test_init()
 
         bss = CommonSegBss(
-            rom_start=0x0,
-            rom_end=0x100,
+            rom_start=0x200,
+            rom_end=0x200,
             type=".bss",
-            name=None,
-            vram_start=0x40000000,
-            args=None,
-            yaml=None,
+            name="bss seg",
+            vram_start=0x300,
+            args=[],
+            yaml={},
+            bss_size=0x100,
         )
 
         bss.parent = CommonSegCode(
@@ -368,8 +370,8 @@ class Bss(unittest.TestCase):
         assert isinstance(
             bss.spim_section.get_section(), spimdisasm.mips.sections.SectionBss
         )
-        assert bss.spim_section.get_section().bssVramStart == 0x40000000
-        assert bss.spim_section.get_section().bssVramEnd == 0x300
+        assert bss.spim_section.get_section().bssVramStart == 0x300
+        assert bss.spim_section.get_section().bssVramEnd == 0x400
 
 
 class Object(unittest.TestCase):
@@ -384,7 +386,7 @@ class Object(unittest.TestCase):
             type="o",
             name="myobject",
             args=[],
-            yaml=None,
+            yaml={},
         )
         expected = Path("test/basic_app/build/myobject")
         self.assertEqual(expected, o.out_path())
@@ -402,7 +404,7 @@ class Object(unittest.TestCase):
             type="o",
             name="myobject",
             args=[section],
-            yaml=None,
+            yaml={},
         )
         out_path = Path("test/basic_app/build/myobject")
 
