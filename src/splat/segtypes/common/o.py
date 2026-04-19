@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from pathlib import Path
 
@@ -16,7 +16,8 @@ class CommonSegO(CommonSegment):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
     ):
         super().__init__(
             rom_start,
@@ -26,13 +27,14 @@ class CommonSegO(CommonSegment):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=bss_size,
         )
 
         vram = parse_segment_vram(self.yaml)
         if vram is not None:
             self.vram_start = vram
 
-        if isinstance(yaml, dict):
+        if yaml and isinstance(yaml, dict):
             self.section = yaml.get("section", ".text")
         else:
             if len(args) > 0:

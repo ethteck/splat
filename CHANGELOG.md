@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.39.2
+
+* Internal rework for `bss_size` attribute.
+  * Now internally every segment has a `bss_size` attribute, which is considered in most calculations now.
+  * This fixes some usages where bss segments would report the wrong `vram_end`.
+
 ### 0.39.1
 
 * Fix data-only splits missing the initial `macro.inc` include.

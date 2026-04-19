@@ -60,14 +60,9 @@ class CommonSegBss(CommonSegData):
                 f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
-        next_subsegment = self.parent.get_next_subsegment_for_ram(
-            self.vram_start, self.index_within_group
-        )
-        if next_subsegment is None:
-            bss_end = self.get_most_parent().vram_end
-        else:
-            bss_end = next_subsegment.vram_start
-        assert isinstance(bss_end, int), f"{self.name} {bss_end}"
+        # Supposedly logic error, not user error
+        assert isinstance(self.bss_size, int), f"{self.name} {self.bss_size}"
+        bss_end = self.vram_start + self.bss_size
 
         self.spim_section = make_bss_section(
             self.rom_start,

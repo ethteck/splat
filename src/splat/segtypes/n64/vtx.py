@@ -23,7 +23,8 @@ class N64SegVtx(CommonSegCodeSubsegment):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
     ):
         super().__init__(
             rom_start,
@@ -33,6 +34,7 @@ class N64SegVtx(CommonSegCodeSubsegment):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=bss_size,
         )
         self.file_text: Optional[str] = None
         self.data_only = isinstance(yaml, dict) and yaml.get("data_only", False)

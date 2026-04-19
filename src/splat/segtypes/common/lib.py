@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from ...util import log, options
 
@@ -37,7 +37,8 @@ class CommonSegLib(CommonSegment):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
     ):
         super().__init__(
             rom_start,
@@ -47,6 +48,7 @@ class CommonSegLib(CommonSegment):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=bss_size,
         )
 
         vram = parse_segment_vram(self.yaml)
