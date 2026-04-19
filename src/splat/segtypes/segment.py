@@ -452,7 +452,10 @@ class Segment:
                 if isinstance(ret.vram_start, int) and isinstance(parent.vram_end, int):
                     # Check if this segment starts after the end of the parent.
                     # Allow this segment to start at the end of the parent only if it is zero sized.
-                    if ret.vram_start > parent.vram_end or (ret.vram_start == parent.vram_end and ret.vram_end != ret.vram_start):
+                    if ret.vram_start > parent.vram_end or (
+                        ret.vram_start == parent.vram_end
+                        and ret.vram_end != ret.vram_start
+                    ):
                         log.error(
                             f"The section '{ret.name}' (vram 0x{ret.vram_start:08X}) is outside its parent's address range '{parent.name}' (0x{parent.vram_start:08X} ~ 0x{parent.vram_end:08X}).\n    This may happen when the specified `bss_size` value is too small."
                         )
