@@ -1,8 +1,10 @@
 # splat Release Notes
 
-### 0.39.2
+### 0.40.0
 
-* New `ld_dependencies_include` option for generating additional dependency include directives, reducing the burden of manually maintaining dependencies for modules in makefiles or elsewhere. See the configuration page for a detailed explanation and an example.
+* Append an `-include` directive to the generated elf dependency file.  
+  * Includes the dependency files for each object needed to build the target, simplifying dependency management on the build system.  
+  * This behavior is enabled by default, and can be disabled with the new option `ld_dependencies_include`.
 
 ### 0.39.1
 
