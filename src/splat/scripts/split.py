@@ -526,7 +526,7 @@ def dump_symbols() -> None:
             "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract"
         )
         if options.opts.dump_symbols_segments:
-            f.write(",segment,subsegment")
+            f.write(",segment,subsegment,subsegment_type")
         if options.opts.dump_symbols_references:
             f.write(",referenced_by")
         f.write("\n")
@@ -548,13 +548,13 @@ def dump_symbols() -> None:
                     if hasattr(s.segment, "get_subsegment_for_ram"):
                         subsegment = s.segment.get_subsegment_for_ram(s.vram_start)
                         if subsegment is not None:
-                            f.write(f",{subsegment.name}")
+                            f.write(f",{subsegment.name},{subsegment.type}")
                         else:
-                            f.write(",None")
+                            f.write(",None,None")
                     else:
-                        f.write(",None")
+                        f.write(",None,None")
                 else:
-                    f.write(",None,None")
+                    f.write(",None,None,None")
             if options.opts.dump_symbols_references:
                 f.write(",")
                 cs = symbols.spim_context.globalSegment.getSymbol(s.vram_start)
