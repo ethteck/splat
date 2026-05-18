@@ -550,7 +550,8 @@ class LinkerWriter:
                 output += f"-include {' '.join(deps)}\n"
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(output, encoding="utf-8", newline=options.opts.c_newline)
+        with output_path.open("w", encoding="utf-8", newline=options.opts.c_newline) as f:
+            f.write(output)
 
     def _writeln(self, line: str):
         if len(line) == 0:
