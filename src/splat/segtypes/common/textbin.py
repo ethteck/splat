@@ -1,6 +1,6 @@
 from pathlib import Path
 import re
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Union
 
 from ...util import log, options
 
@@ -16,7 +16,8 @@ class CommonSegTextbin(CommonSegment):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
     ):
         super().__init__(
             rom_start,
@@ -26,6 +27,7 @@ class CommonSegTextbin(CommonSegment):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=bss_size,
         )
         self.use_src_path: bool = isinstance(yaml, dict) and yaml.get(
             "use_src_path", False

@@ -4,6 +4,10 @@
 
 * Always write the link dependency file.
   * The old behavior only wrote it if the contents were different to the existing one.
+* Internal rework for `bss_size` attribute.
+  * Now internally every segment has a `bss_size` attribute, which is considered in most calculations now.
+  * This fixes some usages where bss segments would report the wrong `vram_end`.
+* Consider zero-sized bss segments as valid if they are the last subsegment of a code segment.
 
 ### 0.40.0
 
