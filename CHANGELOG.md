@@ -3,7 +3,7 @@
 ### 0.40.1
 
 * Always write the link dependency file.
-  * The old behavior only write it if the contents were different to the existing one.
+  * The old behavior only wrote it if the contents were different to the existing one.
 
 ### 0.40.0
 
