@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.40.2
+
+* Add `dump_symbols_segments` and `dump_symbols_references` options alongside `dump_symbols`, adding columns to the `splat_symbols.csv` file.
+
 ### 0.40.1
 
 * Always write the link dependency file.
@@ -19,7 +23,6 @@
 
 * Fix data-only splits missing the initial `macro.inc` include.
 * Make sure all plain text file read and writes have an explicit UTF-8 encoding.
-* Add `dump_symbols_segments` and `dump_symbols_references` options alongside `dump_symbols`, adding columns to the `splat_symbols.csv` file.
 
 ### 0.39.0
 
