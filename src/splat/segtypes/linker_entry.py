@@ -548,7 +548,12 @@ class LinkerWriter:
             ]
             if deps:
                 output += f"-include {' '.join(deps)}\n"
-        write_file_if_different(output_path, output)
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open(
+            "w", encoding="utf-8", newline=options.opts.c_newline
+        ) as f:
+            f.write(output)
 
     def _writeln(self, line: str):
         if len(line) == 0:
