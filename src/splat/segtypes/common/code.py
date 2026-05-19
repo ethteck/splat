@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List, Optional, Type, Tuple
+from typing import List, Optional, Type, Tuple, Union
 
 from ...util import log, options, utils
 
@@ -21,9 +21,10 @@ class CommonSegCode(CommonSegGroup):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
     ):
-        self.bss_size: int = yaml.get("bss_size", 0) if isinstance(yaml, dict) else 0
+        self.bss_size = bss_size if bss_size is not None else self.parse_bss_size(yaml)
 
         super().__init__(
             rom_start,
@@ -33,6 +34,7 @@ class CommonSegCode(CommonSegGroup):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=self.bss_size,
         )
 
         self.reported_file_split = False
@@ -40,17 +42,6 @@ class CommonSegCode(CommonSegGroup):
         self.align = parse_segment_align(yaml)
         if self.align is None:
             self.align = 0x10
-
-    @property
-    def needs_symbols(self) -> bool:
-        return True
-
-    @property
-    def vram_end(self) -> Optional[int]:
-        if self.vram_start is not None and self.size is not None:
-            return self.vram_start + self.size + self.bss_size
-        else:
-            return None
 
     # Generates a placeholder segment for the auto_link_sections option
     def _generate_segment_from_all(
@@ -62,6 +53,7 @@ class CommonSegCode(CommonSegGroup):
         rom_start: Optional[int] = None,
         rom_end: Optional[int] = None,
         vram_start: Optional[int] = None,
+        bss_size: Optional[int] = None,
     ) -> Segment:
         rep: Segment = replace_class(
             rom_start=rom_start,
@@ -69,6 +61,7 @@ class CommonSegCode(CommonSegGroup):
             type=rep_type,
             name=base_name,
             vram_start=vram_start,
+            bss_size=bss_size,
             args=[],
             yaml={},
         )
@@ -146,19 +139,22 @@ class CommonSegCode(CommonSegGroup):
         return ret
 
     def parse_subsegments(self, segment_yaml) -> List[Segment]:
+        ret: List[Segment] = []
+
         if "subsegments" not in segment_yaml:
             if not self.parent:
                 raise Exception(
                     f"No subsegments provided in top-level code segment {self.name}"
                 )
-            return []
+            return ret
+        yaml_subsegments = segment_yaml["subsegments"]
 
         base_segments: OrderedDict[str, Segment] = OrderedDict()
-        ret: List[Segment] = []
-        prev_start: Optional[int] = -1
-        prev_vram: Optional[int] = -1
+        prev_start: Optional[int] = None
+        prev_vram: Optional[int] = None
 
-        last_rom_end = None
+        # Start as the "start" address of the group.
+        last_rom_end = self.rom_start
 
         # Determine what comes first, either text or rodata/rdata
         readonly_before = False
@@ -172,10 +168,14 @@ class CommonSegCode(CommonSegGroup):
                 if rdata_index is not None:
                     readonly_before = rdata_index < text_index
 
-        for i, subsegment_yaml in enumerate(segment_yaml["subsegments"]):
+        for i, subsegment_yaml in enumerate(yaml_subsegments):
             # endpos marker
             if isinstance(subsegment_yaml, list) and len(subsegment_yaml) == 1:
                 continue
+
+            next_subsegment_yaml = (
+                yaml_subsegments[i + 1] if i + 1 < len(yaml_subsegments) else None
+            )
 
             typ = Segment.parse_segment_type(subsegment_yaml)
             start, is_auto_segment = Segment.parse_segment_start(subsegment_yaml)
@@ -183,28 +183,26 @@ class CommonSegCode(CommonSegGroup):
             segment_class = Segment.get_class_for_type(typ)
 
             if start is None:
-                # Attempt to infer the start address
-                if i == 0:
-                    # The start address of this segment is the start address of the group
-                    start = self.rom_start
-                else:
-                    # The start address is the end address of the previous segment
-                    start = last_rom_end
+                # Attempt to infer the start address.
+                # The start address is the end address of the previous segment.
+                # If this is the first subsegment then this value will fallback
+                # to the start address of the group.
+                start = last_rom_end
 
             # First, try to get the end address from the next segment's start address
             # Second, try to get the end address from the estimated size of this segment
             # Third, try to get the end address from the next segment with a start address
             end: Optional[int] = None
-            if i < len(segment_yaml["subsegments"]) - 1:
+            if next_subsegment_yaml is not None:
                 end, end_is_auto_segment = Segment.parse_segment_start(
-                    segment_yaml["subsegments"][i + 1]
+                    next_subsegment_yaml
                 )
             if start is not None and end is None:
                 est_size = segment_class.estimate_size(subsegment_yaml)
                 if est_size is not None:
                     end = start + est_size
             if end is None:
-                end = self.get_next_seg_start(i, segment_yaml["subsegments"])
+                end = self.get_next_seg_start(i, yaml_subsegments)
 
             if start is not None and prev_start is not None and start < prev_start:
                 log.error(
@@ -216,14 +214,25 @@ class CommonSegCode(CommonSegGroup):
                 assert isinstance(start, int)
                 vram = self.get_most_parent().rom_to_ram(start)
 
-            if segment_class.is_noload() and last_rom_end is not None:
-                # Pretend bss's rom address is after the last actual rom segment
-                start = last_rom_end
-                # and it has a rom size of zero
-                end = last_rom_end
+            # noload (bss) segments need a bit of special calculation
+            start, end, vram, bss_size = self._calculate_noload_values(
+                segment_class,
+                subsegment_yaml,
+                next_subsegment_yaml,
+                start,
+                end,
+                vram,
+                last_rom_end,
+            )
 
-            segment: Segment = Segment.from_yaml(
-                segment_class, subsegment_yaml, start, end, self, vram
+            segment = Segment.from_yaml(
+                segment_class,
+                subsegment_yaml,
+                start,
+                end,
+                self,
+                vram,
+                bss_size,
             )
             segment.is_auto_segment = is_auto_segment
 
@@ -274,6 +283,10 @@ class CommonSegCode(CommonSegGroup):
             seg.index_within_group = i
 
         return ret
+
+    @property
+    def needs_symbols(self) -> bool:
+        return True
 
     def scan(self, rom_bytes):
         # Always scan code first

@@ -25,8 +25,9 @@ class N64SegImg(Segment):
         name: str,
         vram_start: Optional[int],
         args: list,
-        yaml,
+        yaml: Union[dict, list],
         img_cls: Type[Image],
+        bss_size: Optional[int] = None,
     ):
         super().__init__(
             rom_start,
@@ -36,6 +37,7 @@ class N64SegImg(Segment):
             vram_start,
             args=args,
             yaml=yaml,
+            bss_size=bss_size,
         )
 
         if rom_start is None:
