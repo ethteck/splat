@@ -1,10 +1,17 @@
 # splat Release Notes
 
-### 0.39.2
+### 0.40.1
 
 * Internal rework for `bss_size` attribute.
   * Now internally every segment has a `bss_size` attribute, which is considered in most calculations now.
   * This fixes some usages where bss segments would report the wrong `vram_end`.
+* Consider zero-sized bss segments as valid if they are the last subsegment of a code segment.
+
+### 0.40.0
+
+* Append an `-include` directive to the generated elf dependency file.  
+  * Includes the dependency files for each object needed to build the target, simplifying dependency management on the build system.  
+  * This behavior is enabled by default, and can be disabled with the new option `ld_dependencies_include`.
 
 ### 0.39.1
 
