@@ -26,8 +26,12 @@ mips = [
     "n64img>=0.3.3",
     "crunch64>=0.5.1,<1.0.0",
 ]
+win32 = [
+    "capstone>=5.0.0",
+]
 dev = [
     "splat64[mips]",
+    "splat64[win32]",
     "ruff",
     "mypy",
     "types-PyYAML",

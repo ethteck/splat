@@ -251,6 +251,10 @@ def write_assembly_inc_files():
         gas = macros_inc.replace("\\label", '"\\label"').replace(
             '"\\label"\\().NON_MATCHING', '"\\label\\().NON_MATCHING"'
         )
+    elif options.opts.platform == "win32":
+        # The win32 segtypes emit asm directly with `.section ... , "<flags>"`
+        # headers and don't rely on the macros.inc / labels.inc helpers.
+        gas = ""
     elif not options.opts.is_unsupported_platform:
         log.error(f"Unknown platform '{options.opts.platform}'")
     else:

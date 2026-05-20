@@ -1,0 +1,13 @@
+/split/
+/split-exact/
+/split-reasm-exact/
+/_autogen/
+/win32_app.exe
+/win32_app.reasm.exe
+/win32_app.reasm-exact.exe
+/main_text.o
+/main_text.bin
+/splat-exact.yaml
+/splat-reasm-exact.yaml
+__pycache__/
+!splat.yaml

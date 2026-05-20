@@ -1,0 +1,45 @@
+options:
+  base_path: split
+  platform: win32
+  compiler: MSVC6
+  basename: win32_app64
+  build_path: build
+  target_path: ../win32_app64.exe
+  asm_path: asm
+  src_path: src
+  data_path: data
+  ld_script_path: win32_app64.ld
+  cache_path: .splache
+  symbol_addrs_path: generated.symbols.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.txt
+  undefined_syms_auto_path: undefined_syms_auto.txt
+  asset_path: assets
+  section_order: [".header", ".text", ".rdata", ".data", ".pdata", ".rodata", ".bss"]
+
+segments:
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: text
+    type: code
+    start: 0x200
+    vram: 0x140001000
+    subsegments:
+      - [0x200, text, main_text]
+
+  - name: rdata
+    type: code
+    start: 0x400
+    vram: 0x140002000
+    subsegments:
+      - [0x400, rodata, main_rdata]
+
+  - name: pdata
+    type: code
+    start: 0x600
+    vram: 0x140003000
+    subsegments:
+      - [0x600, pdata, main_pdata]
+
+  - [0x800]

@@ -388,7 +388,9 @@ def _parse_yaml(
     if is_unsupported_platform:
         platform = p.parse_opt("platform", str)
     else:
-        platform = p.parse_opt_within("platform", str, ["n64", "psx", "ps2", "psp"])
+        platform = p.parse_opt_within(
+            "platform", str, ["n64", "psx", "ps2", "psp", "win32"]
+        )
 
     comp = compiler.for_name(p.parse_opt("compiler", str, "IDO"))
 
@@ -510,8 +512,21 @@ def _parse_yaml(
         elf_section_list_path=p.parse_optional_path(base_path, "elf_section_list_path"),
         subalign=p.parse_optional_opt_with_default("subalign", int, 16),
         emit_subalign=p.parse_opt("emit_subalign", bool, True),
+        # The `[.data, .rodata, .bss]` default reflects the MIPS / N64
+        # convention where each `.c` file produces a text-base segment
+        # with implicit data/rodata/bss siblings sharing the same name
+        # (and on-disk filename). On platforms whose sections are
+        # declared as independent subsegments — e.g. Win32 PE, where a
+        # `.text` subsegment named `main_text` and a `.data` subsegment
+        # named `main_data` have distinct file paths — the implicit
+        # sibling generation produces phantom LinkerEntries pointing at
+        # non-existent `build/asm/data/main_text.s.o` files. Default to
+        # an empty list there so the linker script only references the
+        # subsegments that were actually emitted.
         auto_link_sections=p.parse_opt(
-            "auto_link_sections", list, [".data", ".rodata", ".bss"]
+            "auto_link_sections",
+            list,
+            [] if platform == "win32" else [".data", ".rodata", ".bss"],
         ),
         ld_script_path=p.parse_path(base_path, "ld_script_path", f"{basename}.ld"),
         ld_symbol_header_path=p.parse_optional_path(base_path, "ld_symbol_header_path"),
