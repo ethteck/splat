@@ -64,6 +64,41 @@ PSYQ = Compiler(
 MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
 EEGCC = Compiler("EEGCC", align_on_branch_labels=True)
 
+
+# Win32 / PE — every MSVC linker emits MASM-style asm; for splat
+# purposes they all share the same config (.globl for symbols, no
+# end-label, no INCLUDE_ASM). Distinct version tags keep generated
+# configs documenting which MSVC produced the binary so future
+# refactors can specialise per-version if needed.
+def _msvc_compiler(name: str) -> Compiler:
+    return Compiler(
+        name,
+        asm_function_macro=".globl",
+        asm_function_alt_macro=".globl",
+        asm_jtbl_label_macro=".globl",
+        asm_data_macro=".globl",
+        asm_end_label="",
+        asm_data_end_label="",
+        asm_nonmatching_label_macro="",
+        asm_emit_size_directive=False,
+        uses_include_asm=False,
+    )
+
+
+MINGW = _msvc_compiler("MINGW")
+CLANG_LLD = _msvc_compiler("CLANG_LLD")
+MSVC2 = _msvc_compiler("MSVC2")
+MSVC4 = _msvc_compiler("MSVC4")
+MSVC5 = _msvc_compiler("MSVC5")
+MSVC6 = _msvc_compiler("MSVC6")
+MSVC7 = _msvc_compiler("MSVC7")
+MSVC8 = _msvc_compiler("MSVC8")
+MSVC9 = _msvc_compiler("MSVC9")
+MSVC10 = _msvc_compiler("MSVC10")
+MSVC11 = _msvc_compiler("MSVC11")
+MSVC12 = _msvc_compiler("MSVC12")
+MSVC14 = _msvc_compiler("MSVC14")
+
 compiler_for_name: Dict[str, Compiler] = {
     x.name: x
     for x in [
@@ -75,6 +110,19 @@ compiler_for_name: Dict[str, Compiler] = {
         PSYQ,
         MWCCPS2,
         EEGCC,
+        MINGW,
+        CLANG_LLD,
+        MSVC2,
+        MSVC4,
+        MSVC5,
+        MSVC6,
+        MSVC7,
+        MSVC8,
+        MSVC9,
+        MSVC10,
+        MSVC11,
+        MSVC12,
+        MSVC14,
     ]
 }
 
