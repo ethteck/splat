@@ -1,5 +1,46 @@
 # splat Release Notes
 
+### Unreleased
+
+* Add support for Win32 PE binaries (x86 PE32 and x86_64 PE32+).
+  * New `platform: win32` option backed by a self-contained PE parser
+    (every populated data directory + COFF symtab + x64 SEH unwind
+    info + the .NET CLR header) and a Capstone-based x86 / x86_64
+    disassembler. Optional dependency group `win32` pulls in
+    `capstone>=5.0.0`.
+  * New segtypes under `segtypes/win32/`: `header` (structured PE
+    header byte-by-byte dump + human-readable summary block),
+    `text` / `asm` (Capstone disasm with GAS-compatible operand
+    rewrites), `data` / `rodata` (heuristic string + pointer
+    detection, NUL-run collapse), `bss` (NOLOAD reservation), `bin`
+    (opaque blob for `.reloc` / `.rsrc` / signature / COFF symtab),
+    `pdata` (PE32+ RUNTIME_FUNCTION rows with optional decoded
+    UNWIND_INFO opcode lists).
+  * New compiler tags: `MSVC2..14`, `MINGW`, `CLANG_LLD`. All share
+    the same MASM-style asm conventions; distinct names preserve
+    provenance of generated configs.
+  * `create_config` auto-detects PE files (MZ + PE magic), generates
+    a YAML + symbol_addrs.txt with named symbols for the entrypoint,
+    exports (incl. forwarders as comments), eager + delay imports,
+    TLS callbacks, SafeSEH handlers, /guard:cf targets, /GS security
+    cookie, .NET CLR metadata pointers, and unwind RVAs.
+  * `auto_link_sections` default is `[]` for `platform: win32` (PE
+    sections are independent subsegments — implicit MIPS-style
+    sibling generation produces phantom linker entries otherwise).
+  * New `python -m splat.scripts.win32_reassemble <yaml>` script:
+    runs `as` + `ld` + `objcopy` against the splat-generated
+    layout to reconstruct a PE. With `exact_encoding: true` on
+    text/data/pdata subsegments, the reassembled PE is
+    byte-identical to the original. Verified end-to-end on
+    5 real-world binaries: Sysinternals PsExec (PE32) + PsExec64
+    (PE32+), PuTTY 0.60 (vintage MSVC6), PuTTY 0.70 32-bit (MSVC14
+    with `.00cfg` CFG section), PuTTY 0.83 64-bit (MSVC14 PE32+
+    with 2410 RUNTIME_FUNCTION entries).
+  * Tests: 199 unit tests covering the PE parser, label generation
+    helpers, segtype emission, header rendering, and string
+    detectors; 10 end-to-end tests covering split + reassemble +
+    GAS-clean assembly on both PE32 and PE32+ synthetic fixtures.
+
 ### 0.40.1
 
 * Always write the link dependency file.

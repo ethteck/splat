@@ -1,0 +1,4 @@
+/split/
+*.exe
+Server/
+!splat.yaml
