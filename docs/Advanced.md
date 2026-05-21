@@ -224,6 +224,7 @@ Symbols are further clustered by subsegments, indicated by black rectangles, and
 Each text subsegment is colored differently.
 
 A suggested workflow based on this visualization is then to
+
 0. Pick a segment of interest
 1. Run `splat split`
 2. Generate and render a graph
