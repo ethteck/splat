@@ -2,7 +2,8 @@
 
 ### 0.40.2
 
-* Add `dump_symbols_segments` and `dump_symbols_references` options alongside `dump_symbols`, adding columns to the `splat_symbols.csv` file.
+* Expand `dump_symbols` output, also providing segment and subsegment information per symbol.
+* Add `dump_symbols_references` option alongside `dump_symbols`, adding a `referenced_by` column to the `splat_symbols.csv` file.
 
 ### 0.40.1
 
