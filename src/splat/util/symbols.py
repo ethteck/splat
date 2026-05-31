@@ -63,6 +63,10 @@ def add_symbol(sym: "Symbol"):
     if sym.size > 4:
         all_symbols_ranges.addi(sym.vram_start, sym.vram_end, sym)
 
+    # Import here to avoid circular imports.
+    from .metadata.segment_metadata_group import metadata_group
+    metadata_group
+
 
 def to_cname(symbol_name: str) -> str:
     symbol_name = re.sub(r"[^0-9a-zA-Z_]", "_", symbol_name)
@@ -713,6 +717,8 @@ class Symbol:
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
 
+    _added_to_meta: bool = False
+
     def __str__(self):
         return self.name
 
@@ -818,8 +824,13 @@ def reset_symbols():
     global all_symbols_ranges
     global ignored_addresses
     global to_mark_as_defined
+    global spim_context
     all_symbols = []
     all_symbols_dict = {}
     all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
     to_mark_as_defined = set()
+    spim_context = spimdisasm.common.Context()
+
+    from .metadata import segment_metadata_group
+    segment_metadata_group.reset()

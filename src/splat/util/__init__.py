@@ -14,3 +14,4 @@ from . import statistics as statistics
 from . import symbols as symbols
 from . import utils as utils
 from . import vram_classes as vram_classes
+from . import metadata as metadata

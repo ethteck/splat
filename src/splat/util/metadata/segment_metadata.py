@@ -40,7 +40,7 @@ class SegmentMetadata:
             return False
         return True
 
-    def add_symbol(self, vram: int, allow_addend) -> Symbol:
+    def create_symbol(self, vram: int, allow_addend: bool) -> Symbol:
         if not self.in_vram_range(vram):
             log.write(f"\nWARNING: Bug! Adding symbol 0x{vram:08X} to segment '{self.name}' ({self.kind}), but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n", status="warn")
 
@@ -51,7 +51,19 @@ class SegmentMetadata:
 
         return symbol
 
-    def find_symbol(self, vram: int, allow_addend) -> Symbol | None:
+    def add_user_symbol(self, sym: Symbol) -> None:
+        if not self.in_vram_range(sym.vram_start):
+            log.error(f"\nERROR: Adding symbol 0x{sym.vram_start:08X} to segment '{self.name}' ({self.kind}), but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n")
+
+        existing_sym = self.find_symbol(sym.vram_start, True)
+        if existing_sym is not None:
+            log.error(f"\nERROR: The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size 0x{sym.size:X}) overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size 0x{existing_sym.size:X})")
+
+        sym._added_to_meta = True
+        self.symbols[sym.vram_start] = sym
+
+
+    def find_symbol(self, vram: int, allow_addend: bool) -> Symbol | None:
         if allow_addend:
             pair = self.symbols.getKeyRight(vram, True)
             if pair is None:

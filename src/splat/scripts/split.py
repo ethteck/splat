@@ -10,7 +10,7 @@ from collections import defaultdict, deque
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
+from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets, metadata
 
 from colorama import Style
 from intervaltree import Interval, IntervalTree
@@ -300,6 +300,7 @@ def initialize_all_symbols(all_segments: List[Segment]):
     if options.opts.is_mode_active("code"):
         symbols.initialize_spim_context(all_segments)
         relocs.initialize_spim_context()
+        metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
 
 
 def do_scan(

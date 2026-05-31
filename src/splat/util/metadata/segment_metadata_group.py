@@ -1,21 +1,28 @@
-import dataclasses
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
-from .segment_metadata import SegmentMetadata
+from spimdisasm.common import SortedDict
+
+from .segment_metadata import SegmentMetadata, SegmentKind
 from .parent_segment_info import ParentSegmentInfo
 from .overlay_metadata import OverlayMetadata
 
 from ..symbols import Symbol
-from .. import log
+from .. import log, options
 
-@dataclasses.dataclass
+# circular import
+if TYPE_CHECKING:
+    from ...segtypes.segment import Segment
+
 class SegmentMetadataGroup:
-    global_segment: SegmentMetadata
+    def __init__(self) -> None:
+        self.global_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Global, "$global", 0x0, 0x1000, 0x80000000, 0x80001000, exclusive_ram_id=None, symbols=SortedDict())
 
-    overlay_segments: dict[str, OverlayMetadata]
-    """key: exclusive_ram_id"""
+        self.overlay_segments: dict[str, OverlayMetadata] = dict()
+        """key: exclusive_ram_id"""
 
-    unknown_segment: SegmentMetadata
+        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, exclusive_ram_id=None, symbols=SortedDict())
+
+        self.all_symbols: list[Symbol] = list()
 
     def find_owned_segment(self, info: ParentSegmentInfo) -> SegmentMetadata:
         if info.exclusive_ram_id is not None:
@@ -150,3 +157,197 @@ class SegmentMetadataGroup:
                         return sym
 
         return None
+
+    def _add_overlay_segment(
+        self,
+        exclusive_ram_id: str,
+        name: str,
+        rom_start: int,
+        rom_end: int,
+        vram_start: int,
+        vram_end: int,
+    ) -> SegmentMetadata:
+        ovl_meta = self.overlay_segments.setdefault(exclusive_ram_id, OverlayMetadata(exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()))
+        return ovl_meta.add_segment(
+            name,
+            rom_start,
+            rom_end,
+            vram_start,
+            vram_end,
+        )
+
+
+metadata_group = SegmentMetadataGroup()
+
+def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> None:
+    global_rom_start = None
+    global_rom_end = None
+    global_vram_start = options.opts.global_vram_start
+    global_vram_end = options.opts.global_vram_end
+    # overlay_segments: set[spimdisasm.common.SymbolsSegment] = set()
+    overlay_segments: list[SegmentMetadata] = list()
+
+    # spim_context.bannedSymbols |= ignored_addresses
+
+    from ...segtypes.common.code import CommonSegCode
+
+    global_segments_after_overlays: list[CommonSegCode] = []
+
+    for segment in all_segments:
+        if not isinstance(segment, CommonSegCode):
+            # We only care about the VRAMs of code segments
+            continue
+
+        if segment.special_vram_segment:
+            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
+            continue
+
+        if (
+            not isinstance(segment.vram_start, int)
+            or not isinstance(segment.vram_end, int)
+            or not isinstance(segment.rom_start, int)
+            or not isinstance(segment.rom_end, int)
+        ):
+            continue
+
+        ram_id = segment.get_exclusive_ram_id()
+
+        if ram_id is not None:
+            if segment.vram_start != segment.vram_end:
+                # Skip zero-sized segments.
+                """
+                spim_segment = spim_context.addOverlaySegment(
+                    ram_id,
+                    segment.rom_start,
+                    segment.rom_end,
+                    segment.vram_start,
+                    segment.vram_end,
+                )
+                # Add the segment-specific symbols first
+                for symbols_list in segment.seg_symbols.values():
+                    for sym in symbols_list:
+                        add_symbol_to_spim_segment(spim_segment, sym)
+
+                overlay_segments.add(spim_segment)
+                """
+                seg_meta = metadata_group._add_overlay_segment(
+                    ram_id,
+                    segment.name,
+                    segment.rom_start,
+                    segment.rom_end,
+                    segment.vram_start,
+                    segment.vram_end,
+                )
+                # Add the segment-specific symbols first
+                for symbols_list in segment.seg_symbols.values():
+                    for sym in symbols_list:
+                        seg_meta.add_user_symbol(sym)
+
+                overlay_segments.append(seg_meta)
+        else:
+            if global_vram_start is None:
+                global_vram_start = segment.vram_start
+            elif segment.vram_start < global_vram_start:
+                global_vram_start = segment.vram_start
+
+            if global_vram_end is None:
+                global_vram_end = segment.vram_end
+            elif global_vram_end < segment.vram_end:
+                global_vram_end = segment.vram_end
+
+                if len(overlay_segments) > 0:
+                    # Global segment *after* overlay segments?
+                    global_segments_after_overlays.append(segment)
+
+            if global_rom_start is None:
+                global_rom_start = segment.rom_start
+            elif segment.rom_start < global_rom_start:
+                global_rom_start = segment.rom_start
+
+            if global_rom_end is None:
+                global_rom_end = segment.rom_end
+            elif global_rom_end < segment.rom_end:
+                global_rom_end = segment.rom_end
+
+
+    if (
+        global_vram_start is not None
+        and global_vram_end is not None
+        and global_rom_start is not None
+        and global_rom_end is not None
+    ):
+        metadata_group.global_segment.rom_start = global_rom_start
+        metadata_group.global_segment.rom_end = global_rom_end
+        metadata_group.global_segment.vram_start = global_vram_start
+        metadata_group.global_segment.vram_end = global_rom_end
+
+        overlaps_found = False
+        # Check the vram range of the global segment does not overlap with any overlay segment
+        for ovl_segment in overlay_segments:
+            assert ovl_segment.vram_start <= ovl_segment.vram_end, (
+                f"{ovl_segment.vram_start:08X} {ovl_segment.vram_end:08X}"
+            )
+            if (
+                ovl_segment.vram_end > global_vram_start
+                and global_vram_end > ovl_segment.vram_start
+            ):
+                log.write(
+                    f"Error: the vram range ([0x{ovl_segment.vram_start:08X}, 0x{ovl_segment.vram_end:08X}]) of the non-global segment at rom address 0x{ovl_segment.rom_start:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
+                    status="warn",
+                )
+                overlaps_found = True
+        if overlaps_found:
+            log.write(
+                "Many overlaps between non-global and global segments were found.",
+            )
+            log.write(
+                "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
+            )
+            if len(global_segments_after_overlays) > 0:
+                log.write(
+                    "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
+                    status="warn",
+                )
+                for seg in global_segments_after_overlays:
+                    log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}")
+            else:
+                log.write("No suspected segments??", status="warn")
+            log.error("Stopping due to the above errors")
+
+    # pass the global symbols to spimdisasm
+    for segment in all_segments:
+        if not isinstance(segment, CommonSegCode):
+            # We only care about the VRAMs of code segments
+            continue
+
+        ram_id = segment.get_exclusive_ram_id()
+        if ram_id is not None:
+            continue
+
+        for symbols_list in segment.seg_symbols.values():
+            for sym in symbols_list:
+                metadata_group.global_segment.add_user_symbol(sym)
+
+    if global_vram_start and global_vram_end:
+        # Pass global symbols to spimdisasm that are not part of any segment on the binary we are splitting (for psx and psp)
+        for sym in all_symbols:
+            if sym.segment is not None:
+                # We already handled this symbol somewhere else
+                continue
+
+            if sym.vram_start < global_vram_start or sym.vram_end > global_vram_end:
+                # Not global
+                continue
+
+            metadata_group.global_segment.add_user_symbol(sym)
+
+    lost_symbols = [f"{sym.name} (0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
+    if len(lost_symbols) > 0:
+        log.write("WARNING: Unable to determine a segment for the following user-declared symbols:", status="warn")
+        log.write("\n    ".join(lost_symbols))
+
+    metadata_group.all_symbols = all_symbols
+
+def reset() -> None:
+    global metadata_group
+    metadata_group = SegmentMetadataGroup()
