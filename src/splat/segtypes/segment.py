@@ -4,9 +4,9 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union, Tuple
+from typing import Callable, Dict, List, Optional, Type, TYPE_CHECKING, Union, Tuple
 
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 from ..util import vram_classes
 
 from ..util.vram_classes import VramClass
@@ -788,56 +788,6 @@ class Segment:
 
         return s + self.type + "_" + self.name
 
-    @staticmethod
-    def visible_ram(seg1: "Segment", seg2: "Segment") -> bool:
-        if seg1.get_most_parent() == seg2.get_most_parent():
-            return True
-        if seg1.get_exclusive_ram_id() is None or seg2.get_exclusive_ram_id() is None:
-            return True
-        return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
-
-    def retrieve_symbol(
-        self, syms: Dict[int, List[Symbol]], addr: int
-    ) -> Optional[Symbol]:
-        if addr not in syms:
-            return None
-
-        items = syms[addr]
-
-        # Filter out symbols that are in different top-level segments with the same unique_ram_id
-        items = [
-            i
-            for i in items
-            if i.segment is None or Segment.visible_ram(self, i.segment)
-        ]
-
-        if len(items) > 1:
-            # print(f"Trying to retrieve {addr:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
-            pass
-        if len(items) == 0:
-            return None
-        return items[0]
-
-    def retrieve_sym_type(
-        self, syms: Dict[int, List[Symbol]], addr: int, type: str
-    ) -> Optional[symbols.Symbol]:
-        if addr not in syms:
-            return None
-
-        items = syms[addr]
-
-        items = [
-            i
-            for i in items
-            if (i.segment is None or Segment.visible_ram(self, i.segment))
-            and (type == i.type)
-        ]
-
-        if len(items) == 0:
-            return None
-
-        return items[0]
-
     def get_symbol(
         self,
         addr: int,
@@ -848,6 +798,7 @@ class Segment:
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
+        validation: Callable[[Symbol], bool]|None=None,
     ) -> Optional[Symbol]:
         from ..util.metadata.segment_metadata_group import metadata_group
         from ..util.metadata.parent_segment_info import ParentSegmentInfo
@@ -857,7 +808,7 @@ class Segment:
 
         most_parent = self.get_most_parent()
         parent_segment_info = None
-        if most_parent.rom_start is not None and most_parent.vram_start:
+        if most_parent.rom_start is not None and most_parent.vram_start is not None:
             parent_segment_info = ParentSegmentInfo(most_parent.rom_start, most_parent.vram_start, most_parent.exclusive_ram_id)
 
         if create:
@@ -868,17 +819,19 @@ class Segment:
                 rom = seg_meta.rom_from_vram(addr)
             else:
                 seg_meta = metadata_group.find_referenced_segment(addr, parent_segment_info)
-            ret = seg_meta.create_symbol(addr, True)
+            ret = seg_meta.create_symbol(addr, search_ranges)
         else:
             if parent_segment_info is None:
                 seg_meta = metadata_group.unknown_segment
-                ret = seg_meta.find_symbol(addr, True)
+                ret = seg_meta.find_symbol(addr, search_ranges)
             elif in_segment:
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
-                ret = seg_meta.find_symbol(addr, True)
+                ret = seg_meta.find_symbol(addr, search_ranges)
                 rom = seg_meta.rom_from_vram(addr)
             elif not local_only:
-                ret = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, True, lambda sym: True)
+                if validation is None:
+                    validation = default_sym_validation
+                ret = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation)
 
         if ret:
             if define:
@@ -922,3 +875,7 @@ class Segment:
     def __repr__(self) -> str:
         # Shows a nicer string on the debugging screen
         return f"{self.name} ({self.type})"
+
+
+def default_sym_validation(_sym: Symbol) -> bool:
+    return True

@@ -1,7 +1,5 @@
 from typing import Callable, TYPE_CHECKING
 
-from spimdisasm.common import SortedDict
-
 from .segment_metadata import SegmentMetadata, SegmentKind
 from .parent_segment_info import ParentSegmentInfo
 from .overlay_metadata import OverlayMetadata
@@ -15,12 +13,12 @@ if TYPE_CHECKING:
 
 class SegmentMetadataGroup:
     def __init__(self) -> None:
-        self.global_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Global, "$global", 0x0, 0x1000, 0x80000000, 0x80001000, exclusive_ram_id=None, symbols=SortedDict())
+        self.global_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Global, "$global", 0x0, 0x1000, 0x80000000, 0x80001000, exclusive_ram_id=None)
 
         self.overlay_segments: dict[str, OverlayMetadata] = dict()
         """key: exclusive_ram_id"""
 
-        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, exclusive_ram_id=None, symbols=SortedDict())
+        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, exclusive_ram_id=None)
 
         self.all_symbols: list[Symbol] = list()
 
@@ -215,21 +213,6 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         if ram_id is not None:
             if segment.vram_start != segment.vram_end:
                 # Skip zero-sized segments.
-                """
-                spim_segment = spim_context.addOverlaySegment(
-                    ram_id,
-                    segment.rom_start,
-                    segment.rom_end,
-                    segment.vram_start,
-                    segment.vram_end,
-                )
-                # Add the segment-specific symbols first
-                for symbols_list in segment.seg_symbols.values():
-                    for sym in symbols_list:
-                        add_symbol_to_spim_segment(spim_segment, sym)
-
-                overlay_segments.add(spim_segment)
-                """
                 seg_meta = metadata_group._add_overlay_segment(
                     ram_id,
                     segment.name,
@@ -279,7 +262,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         metadata_group.global_segment.rom_start = global_rom_start
         metadata_group.global_segment.rom_end = global_rom_end
         metadata_group.global_segment.vram_start = global_vram_start
-        metadata_group.global_segment.vram_end = global_rom_end
+        metadata_group.global_segment.vram_end = global_vram_end
 
         overlaps_found = False
         # Check the vram range of the global segment does not overlap with any overlay segment
@@ -341,10 +324,11 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
 
             metadata_group.global_segment.add_user_symbol(sym)
 
-    lost_symbols = [f"{sym.name} (0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
+    lost_symbols = [f"{sym.name} (Vram: 0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
     if len(lost_symbols) > 0:
         log.write("WARNING: Unable to determine a segment for the following user-declared symbols:", status="warn")
-        log.write("\n    ".join(lost_symbols))
+        log.write("    " + "\n    ".join(lost_symbols))
+        log.write("\n")
 
     metadata_group.all_symbols = all_symbols
 

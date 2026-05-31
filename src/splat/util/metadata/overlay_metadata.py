@@ -1,7 +1,5 @@
 import dataclasses
 
-from spimdisasm.common import SortedDict
-
 from .segment_metadata import SegmentMetadata, SegmentKind
 
 from .. import log
@@ -46,13 +44,14 @@ class OverlayMetadata:
                       f"  Old segment '{old_segment.name}'. Rom 0x{old_segment.rom_start:08X}~0x{old_segment.rom_end:08X}. Vram 0x{old_segment.vram_start:08X}~0x{old_segment.vram_start:08X}\n"
                       f"  New segment '{name}'. Rom 0x{rom_start:08X}~0x{rom_end:08X}. Vram 0x{vram_start:08X}~0x{vram_start:08X}\n")
 
-        seg = SegmentMetadata(SegmentKind.Overlay, name, 
+        seg = SegmentMetadata(
+            SegmentKind.Overlay,
+            name,
             rom_start,
             rom_end,
             vram_start,
             vram_end,
             self.exclusive_ram_id,
-            SortedDict(),
         )
         self.segments[rom_start] = seg
         return seg

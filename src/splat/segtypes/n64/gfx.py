@@ -131,7 +131,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def dl_handler(self, addr):
         # Look for 'Gfx'-typed symbols first
-        sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Gfx")
+        sym = self.get_symbol(addr, in_segment=False, reference=True, local_only=False, validation=lambda sym: sym.type == "Gfx")
 
         if not sym:
             sym = self.create_symbol(
@@ -163,7 +163,7 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def vtx_handler(self, addr, count):
         # Look for 'Vtx'-typed symbols first
-        sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Vtx")
+        sym = self.get_symbol(addr, in_segment=False, reference=True, local_only=False, validation=lambda sym: sym.type == "Vtx")
 
         if not sym:
             sym = self.create_symbol(

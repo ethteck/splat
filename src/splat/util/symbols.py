@@ -27,6 +27,7 @@ TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
 
 splat_sym_types = {"func", "jtbl", "jtbl_label", "label"}
+label_types = {"jtbl_label", "label"}
 
 ILLEGAL_FILENAME_CHARS = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
 
