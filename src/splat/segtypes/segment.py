@@ -849,45 +849,36 @@ class Segment:
         search_ranges: bool = False,
         local_only: bool = False,
     ) -> Optional[Symbol]:
+        from ..util.metadata.segment_metadata_group import metadata_group
+        from ..util.metadata.parent_segment_info import ParentSegmentInfo
+
         ret: Optional[Symbol] = None
         rom: Optional[int] = None
 
         most_parent = self.get_most_parent()
+        parent_segment_info = None
+        if most_parent.rom_start is not None and most_parent.vram_start:
+            parent_segment_info = ParentSegmentInfo(most_parent.rom_start, most_parent.vram_start, most_parent.exclusive_ram_id)
 
-        if in_segment:
-            # If the vram address is within this segment, we can calculate the symbol's rom address
-            rom = most_parent.ram_to_rom(addr)
-            ret = most_parent.retrieve_symbol(most_parent.seg_symbols, addr)
-
-            if not ret and search_ranges:
-                # Search ranges first, starting with rom
-                if rom is not None:
-                    cands: Set[Interval] = most_parent.symbol_ranges_rom[rom]
-                    if cands:
-                        ret = cands.pop().data
-                # and then vram if we can't find a rom match
-                if not ret:
-                    cands = most_parent.symbol_ranges_ram[addr]
-                    if cands:
-                        ret = cands.pop().data
-        elif not local_only:
-            ret = most_parent.retrieve_symbol(symbols.all_symbols_dict, addr)
-
-            if not ret and search_ranges:
-                cands = symbols.all_symbols_ranges[addr]
-                if cands:
-                    ret = cands.pop().data
-
-        # Create the symbol if it doesn't exist
-        if not ret and create:
-            ret = Symbol(addr, rom=rom, type=type)
-            symbols.add_symbol(ret)
-
-            if in_segment:
-                ret.segment = most_parent
-                if addr not in most_parent.seg_symbols:
-                    most_parent.seg_symbols[addr] = []
-                most_parent.seg_symbols[addr].append(ret)
+        if create:
+            if parent_segment_info is None:
+                seg_meta = metadata_group.unknown_segment
+            elif in_segment:
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                rom = seg_meta.rom_from_vram(addr)
+            else:
+                seg_meta = metadata_group.find_referenced_segment(addr, parent_segment_info)
+            ret = seg_meta.create_symbol(addr, True)
+        else:
+            if parent_segment_info is None:
+                seg_meta = metadata_group.unknown_segment
+                ret = seg_meta.find_symbol(addr, True)
+            elif in_segment:
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                ret = seg_meta.find_symbol(addr, True)
+                rom = seg_meta.rom_from_vram(addr)
+            elif not local_only:
+                ret = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, True, lambda sym: True)
 
         if ret:
             if define:

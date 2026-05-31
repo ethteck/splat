@@ -119,7 +119,7 @@ class CommonSegCodeSubsegment(Segment):
         self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(
-            self.get_most_parent(), func_spim.contextSym, force_in_segment=False
+            self.get_most_parent(), func_spim.contextSym, force_in_segment=True
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
