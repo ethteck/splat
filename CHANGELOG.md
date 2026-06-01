@@ -1,5 +1,12 @@
 # splat Release Notes
 
+### 0.41.0
+
+* Add `bss_size` attribute for `bss` subsegments.
+  * Allows to specify a size for bss subsegments when the size for the subsegment can't be infered.
+  * splat may be unable to infer the size when the bss subsegment is followed by a segment that doesn't define a vram address, like `lib`, so this option is provided as a fallback.
+  * `bss_size` for `bss` segments can only be used if the size can't be infered. It is a hard error to define one when splat can infer the size.
+
 ### 0.40.1
 
 * Always write the link dependency file.
