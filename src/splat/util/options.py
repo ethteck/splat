@@ -238,6 +238,12 @@ class SplatOpts:
     rodata_string_guesser_level: Optional[int]
     # Global option for the data string guesser. 0 disables the guesser completely.
     data_string_guesser_level: Optional[int]
+    # Tells the disassembler whether to create dummy and unreferenced data symbols after another symbol with non-zero user-declared size.
+    create_data_pads: Optional[bool]
+    # Tells the disassembler whether to create dummy and unreferenced rodata symbols after another symbol with non-zero user-declared size.
+    create_rodata_pads: Optional[bool]
+    # Tells the disassembler whether to create dummy and unreferenced bss/sbss symbols after another symbol with non-zero user-declared size.
+    create_bss_pads: Optional[bool]
     # Global option for allowing data symbols using addends on symbol references. It can be overriden per symbol
     allow_data_addends: bool
     # Tells the disassembler to try disassembling functions with unknown instructions instead of falling back to disassembling as raw data
@@ -618,6 +624,9 @@ def _parse_yaml(
         data_string_guesser_level=p.parse_optional_opt(
             "data_string_guesser_level", int
         ),
+        create_data_pads=p.parse_optional_opt("create_data_pads", bool),
+        create_rodata_pads=p.parse_optional_opt("create_rodata_pads", bool),
+        create_bss_pads=p.parse_optional_opt("create_bss_pads", bool),
         allow_data_addends=p.parse_opt("allow_data_addends", bool, True),
         header_encoding=p.parse_opt("header_encoding", str, "ASCII"),
         gfx_ucode=p.parse_opt_within(

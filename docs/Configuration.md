@@ -851,6 +851,18 @@ Global option for the rodata string guesser. 0 disables the guesser completely.
 
 Global option for the data string guesser. 0 disables the guesser completely.
 
+### create_data_pads
+
+Tells the disassembler whether to create dummy and unreferenced data symbols after symbols with a non-zero user-declared size.
+
+### create_rodata_pads
+
+Tells the disassembler whether to create dummy and unreferenced rodata symbols after symbols with a non-zero user-declared size.
+
+### create_bss_pads
+
+Tells the disassembler whether to create dummy and unreferenced bss/sbss symbols after symbols with a non-zero user-declared size.
+
 ### allow_data_addends
 
 Global option for allowing data symbols using addends on symbol references. It can be overriden per symbol

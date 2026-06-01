@@ -37,6 +37,21 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
                 options.opts.data_string_guesser_level
             )
 
+        if options.opts.create_data_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_DATA_PADS = (
+                options.opts.create_data_pads
+            )
+
+        if options.opts.create_rodata_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_RODATA_PADS = (
+                options.opts.create_rodata_pads
+            )
+
+        if options.opts.create_bss_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_BSS_PADS = (
+                options.opts.create_bss_pads
+            )
+
         rabbitizer.config.regNames_userFpcCsr = False
         rabbitizer.config.regNames_vr4300Cop0NamedRegisters = False
 
