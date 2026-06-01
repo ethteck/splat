@@ -10,7 +10,7 @@ from intervaltree import IntervalTree
 from ..util import vram_classes
 
 from ..util.vram_classes import VramClass
-from ..util import log, options, symbols
+from ..util import log, options
 from ..util.symbols import Symbol, to_cname
 
 from .. import __package_name__
@@ -18,6 +18,8 @@ from .. import __package_name__
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
+    from ..util.metadata.segment_metadata import SegmentMetadata
+    from ..util.metadata.parent_segment_info import ParentSegmentInfo
 
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
@@ -816,9 +818,10 @@ class Segment:
                 seg_meta = metadata_group.unknown_segment
             elif in_segment:
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
-                rom = seg_meta.rom_from_vram(addr)
+                rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             else:
                 seg_meta = metadata_group.find_referenced_segment(addr, parent_segment_info)
+                rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             ret = seg_meta.create_symbol(addr, search_ranges)
         else:
             if parent_segment_info is None:
@@ -827,11 +830,14 @@ class Segment:
             elif in_segment:
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 ret = seg_meta.find_symbol(addr, search_ranges)
-                rom = seg_meta.rom_from_vram(addr)
+                rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             elif not local_only:
                 if validation is None:
                     validation = default_sym_validation
-                ret = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation)
+                aux = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation)
+                if aux is not None:
+                    ret, seg_meta = aux
+                    rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
 
         if ret:
             if define:
@@ -879,3 +885,16 @@ class Segment:
 
 def default_sym_validation(_sym: Symbol) -> bool:
     return True
+
+def rom_from_vram(vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment) -> int | None:
+    from ..util.metadata.segment_metadata import SegmentKind
+
+    if seg_meta.kind == SegmentKind.Unknown:
+        return None
+    if not seg_meta.is_owned_segment(info):
+        return None
+    if seg_meta.kind == SegmentKind.Overlay:
+        return seg_meta.rom_from_vram(vram)
+    if seg_meta.kind == SegmentKind.Global:
+        return seg.ram_to_rom(vram)
+    return None

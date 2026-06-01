@@ -75,14 +75,14 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool]
-    ) -> Symbol | None:
+    ) -> tuple[Symbol, SegmentMetadata] | None:
         if self.global_segment.in_vram_range(vram):
             # If we find this vram is within a global segment then we can stop
             # searching, because we know this should be the only segment that
             # should overlap this segment.
             sym = self.global_segment.find_symbol(vram, allow_addend)
             if sym is not None and validate(sym):
-                return sym
+                return sym, self.global_segment
             return None
 
         if len(self.overlay_segments) > 0:
@@ -92,7 +92,7 @@ class SegmentMetadataGroup:
 
         sym = self.unknown_segment.find_symbol(vram, allow_addend)
         if sym is not None and validate(sym):
-            return sym
+            return sym, self.unknown_segment
         return None
 
     def _find_symbol_from_overlay_segments(
@@ -101,7 +101,7 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool]
-    ) -> Symbol | None:
+    ) -> tuple[Symbol, SegmentMetadata] | None:
         exclusive_ram_id = info.exclusive_ram_id
 
         # First, look up for the segment associated to this exclusive_ram_id
@@ -115,7 +115,7 @@ class SegmentMetadataGroup:
                     if owned_segment.in_vram_range(vram):
                         sym = owned_segment.find_symbol(vram, allow_addend)
                         if sym is not None and validate(sym):
-                            return sym
+                            return sym, owned_segment
                         return None
 
         # If not found, then we should check every exclusive_ram_id except the
@@ -136,7 +136,7 @@ class SegmentMetadataGroup:
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
-                        return sym
+                        return sym, segment
 
         # if we haven't found the symbol yet, then just look up everywhere else.
         for ovl_id, segments_per_rom in self.overlay_segments.items():
@@ -152,7 +152,7 @@ class SegmentMetadataGroup:
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
-                        return sym
+                        return sym, segment
 
         return None
 
@@ -326,7 +326,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
 
     lost_symbols = [f"{sym.name} (Vram: 0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
     if len(lost_symbols) > 0:
-        log.write("WARNING: Unable to determine a segment for the following user-declared symbols:", status="warn")
+        log.write("WARNING: Unable to determine a segment for the following user-declared symbols. Try specifying the segment they belong to with 'segment:segment_name' in your symbol_addrs file:", status="warn")
         log.write("    " + "\n    ".join(lost_symbols))
         log.write("\n")
 

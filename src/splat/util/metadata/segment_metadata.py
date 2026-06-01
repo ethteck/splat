@@ -6,6 +6,8 @@ from spimdisasm.common import SortedDict
 from ..symbols import Symbol, label_types
 from .. import log
 
+from .parent_segment_info import ParentSegmentInfo
+
 class SegmentKind(enum.Enum):
     Global = 0
     Overlay = 1
@@ -73,6 +75,16 @@ class SegmentMetadata:
         if not self.in_rom_range(rom):
             return None
         return rom
+
+
+    def is_owned_segment(self, info: ParentSegmentInfo) -> bool:
+        if self.exclusive_ram_id is None and info.exclusive_ram_id is None:
+            return True
+        if self.exclusive_ram_id != info.exclusive_ram_id:
+            return False
+        if self.rom_start != info.segment_rom:
+            return False
+        return True
 
 
     def create_symbol(self, vram: int, allow_addend: bool) -> Symbol:
