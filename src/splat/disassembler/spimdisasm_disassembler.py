@@ -7,7 +7,7 @@ from typing import Set
 
 class SpimdisasmDisassembler(disassembler.Disassembler):
     # This value should be kept in sync with the version listed on requirements.txt and pyproject.toml
-    SPIMDISASM_MIN = (1, 40, 0)
+    SPIMDISASM_MIN = (1, 41, 0)
 
     def configure(self):
         # Configure spimdisasm
@@ -35,6 +35,21 @@ class SpimdisasmDisassembler(disassembler.Disassembler):
         if options.opts.data_string_guesser_level is not None:
             spimdisasm.common.GlobalConfig.DATA_STRING_GUESSER_LEVEL = (
                 options.opts.data_string_guesser_level
+            )
+
+        if options.opts.create_data_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_DATA_PADS = (
+                options.opts.create_data_pads
+            )
+
+        if options.opts.create_rodata_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_RODATA_PADS = (
+                options.opts.create_rodata_pads
+            )
+
+        if options.opts.create_bss_pads is not None:
+            spimdisasm.common.GlobalConfig.CREATE_BSS_PADS = (
+                options.opts.create_bss_pads
             )
 
         rabbitizer.config.regNames_userFpcCsr = False
