@@ -93,14 +93,12 @@ class CommonSegBss(CommonSegData):
                 f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
-        # Supposedly logic error, not user error
         if self.bss_size is None:
             log.error(
                 f"Unable to infer the size for segment '{self.name}' (type '{self.type}', vram 0x{self.vram_start:08X}).\n"
                 "  This may happen when this segment is followed by a segment that doesn't use a vram address.\n"
                 "  HINT: Try setting a vram address to the next segment in the yaml or set `bss_size=0xXXXX` for this segment."
             )
-
         bss_end = self.vram_start + self.bss_size
 
         self.spim_section = make_bss_section(
