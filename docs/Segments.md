@@ -245,6 +245,10 @@ The `.rdata` segment behaves the same as the `.rodata` segment but supports roda
 
 Note that the `bss_size` option needs to be set at segment level for `bss` segments to work correctly.
 
+It is possible to specify a `bss_size` for a given `bss` subsegment only if it is impossible for splat to determine the size of the bss subsegment.
+This may happen if a `bss` subsegment is followed by a subsegment that doesn't have a vram address.
+It is not possible to specify a `bss_size` for a specific `bss` subsegment if splat can infer the size.
+
 **Example:**
 
 ```yaml
