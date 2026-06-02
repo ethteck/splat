@@ -25,7 +25,7 @@ class CommonSegBss(CommonSegData):
         if bss_size is not None:
             if parsed_bss_size is not None:
                 log.error(
-                    f"Error: Passing bss_size attribute to bss section {self.name} (0x{vram_start:08X}) is not allowed when the size of the bss section can be inferred (was inferred to 0x{bss_size:X}).\n"""
+                    f"Error: Passing bss_size attribute to bss section {self.name} (0x{vram_start:08X}) is not allowed when the size of the bss section can be inferred (was inferred to 0x{bss_size:X}).\n"
                     "  Setting this attribute is only allowed when the bss size can't be inferred."
                 )
             self.bss_size = bss_size
