@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from ...util import options, symbols, log
 
@@ -10,6 +10,39 @@ from ...disassembler.disassembler_section import DisassemblerSection, make_bss_s
 
 
 class CommonSegBss(CommonSegData):
+    def __init__(
+        self,
+        rom_start: Optional[int],
+        rom_end: Optional[int],
+        type: str,
+        name: str,
+        vram_start: Optional[int],
+        args: list,
+        yaml: Union[dict, list],
+        bss_size: Optional[int] = None,
+    ):
+        parsed_bss_size = self.parse_bss_size(yaml)
+        if bss_size is not None:
+            if parsed_bss_size is not None:
+                log.error(
+                    f"Error: Passing bss_size attribute to bss section {self.name} (0x{vram_start:08X}) is not allowed when the size of the bss section can be inferred (was inferred to 0x{bss_size:X}).\n"
+                    "  Setting this attribute is only allowed when the bss size can't be inferred."
+                )
+            self.bss_size = bss_size
+        else:
+            self.bss_size = parsed_bss_size
+
+        super().__init__(
+            rom_start,
+            rom_end,
+            type,
+            name,
+            vram_start,
+            args=args,
+            yaml=yaml,
+            bss_size=self.bss_size,
+        )
+
     def get_linker_section(self) -> str:
         return ".bss"
 
@@ -60,8 +93,12 @@ class CommonSegBss(CommonSegData):
                 f"Segment '{self.name}' (type '{self.type}') requires a vram address. Got '{self.vram_start}'"
             )
 
-        # Supposedly logic error, not user error
-        assert isinstance(self.bss_size, int), f"{self.name} {self.bss_size}"
+        if self.bss_size is None:
+            log.error(
+                f"Unable to infer the size for segment '{self.name}' (type '{self.type}', vram 0x{self.vram_start:08X}).\n"
+                "  This may happen when this segment is followed by a segment that doesn't use a vram address.\n"
+                "  HINT: Try setting a vram address to the next segment in the yaml or set `bss_size=0xXXXX` for this segment."
+            )
         bss_end = self.vram_start + self.bss_size
 
         self.spim_section = make_bss_section(
