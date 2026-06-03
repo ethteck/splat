@@ -523,8 +523,12 @@ def dump_symbols() -> None:
 
     with open(splat_hidden_folder / "splat_symbols.csv", "w", encoding="utf-8") as f:
         f.write(
-            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
+            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract"
+            ",segment,subsegment,subsegment_type"
         )
+        if options.opts.dump_symbols_references:
+            f.write(",referenced_by")
+        f.write("\n")
         for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
             f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
             if s.given_size is not None:
@@ -536,7 +540,29 @@ def dump_symbols() -> None:
                 f.write(f"0x{s.rom:X},")
             else:
                 f.write("None,")
-            f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}\n")
+            f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}")
+            if s.segment is not None:
+                f.write(f",{s.segment.name}")
+                subsegment = None
+                if hasattr(s.segment, "get_subsegment_for_ram"):
+                    subsegment = s.segment.get_subsegment_for_ram(s.vram_start)
+                if subsegment is not None:
+                    f.write(f",{subsegment.name},{subsegment.type}")
+                else:
+                    f.write(",None,None")
+            else:
+                f.write(",None,None,None")
+            if options.opts.dump_symbols_references:
+                f.write(",")
+                cs = symbols.spim_context.globalSegment.getSymbol(s.vram_start)
+                if cs is not None:
+                    f.write(
+                        "|".join(
+                            _rcs.getName()
+                            for _rcs in cs.referenceSymbols | cs.referenceFunctions
+                        )
+                    )
+            f.write("\n")
 
     symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 

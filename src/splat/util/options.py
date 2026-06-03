@@ -12,6 +12,7 @@ class SplatOpts:
     # Debug / logging
     verbose: bool
     dump_symbols: bool
+    dump_symbols_references: bool
     modes: List[str]
 
     # Project configuration
@@ -454,6 +455,7 @@ def _parse_yaml(
     ret = SplatOpts(
         verbose=verbose,
         dump_symbols=p.parse_opt("dump_symbols", bool, False),
+        dump_symbols_references=p.parse_opt("dump_symbols_references", bool, False),
         modes=modes,
         base_path=base_path,
         target_path=p.parse_path(base_path, "target_path"),
