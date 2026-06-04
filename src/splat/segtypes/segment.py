@@ -901,5 +901,6 @@ def rom_from_vram(vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentIn
     if seg_meta.kind == SegmentKind.Overlay:
         return seg_meta.rom_from_vram(vram)
     if seg_meta.kind == SegmentKind.Global:
+        # TODO: yeet
         return seg.ram_to_rom(vram)
     return None
