@@ -790,6 +790,15 @@ class Segment:
 
         return s + self.type + "_" + self.name
 
+    def get_parent_segment_info(self) -> tuple["Segment", "ParentSegmentInfo | None"]:
+        from ..util.metadata.parent_segment_info import ParentSegmentInfo
+
+        most_parent = self.get_most_parent()
+        parent_segment_info = None
+        if most_parent.rom_start is not None and most_parent.vram_start is not None:
+            parent_segment_info = ParentSegmentInfo(most_parent.rom_start, most_parent.vram_start, most_parent.exclusive_ram_id)
+        return most_parent, parent_segment_info
+
     def get_symbol(
         self,
         addr: int,
@@ -803,15 +812,11 @@ class Segment:
         validation: Callable[[Symbol], bool]|None=None,
     ) -> Optional[Symbol]:
         from ..util.metadata.segment_metadata_group import metadata_group
-        from ..util.metadata.parent_segment_info import ParentSegmentInfo
 
         ret: Optional[Symbol] = None
         rom: Optional[int] = None
 
-        most_parent = self.get_most_parent()
-        parent_segment_info = None
-        if most_parent.rom_start is not None and most_parent.vram_start is not None:
-            parent_segment_info = ParentSegmentInfo(most_parent.rom_start, most_parent.vram_start, most_parent.exclusive_ram_id)
+        most_parent, parent_segment_info = self.get_parent_segment_info()
 
         if create:
             if parent_segment_info is None:

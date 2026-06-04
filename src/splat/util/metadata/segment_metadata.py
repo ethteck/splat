@@ -100,7 +100,7 @@ class SegmentMetadata:
 
     def add_user_symbol(self, sym: Symbol) -> None:
         if not self.in_vram_range(sym.vram_start):
-            log.error(f"\nERROR: Adding symbol 0x{sym.vram_start:08X} to segment '{self.name}' ({self.kind}), but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n")
+            log.error(f"\nERROR: Adding user symbol '{sym.name}' (0x{sym.vram_start:08X}) to segment '{self.name}' ({self.kind}), but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n")
 
         existing_sym = self.find_symbol(sym.vram_start, True)
         if existing_sym is not None:
