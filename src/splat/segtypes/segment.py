@@ -6,7 +6,6 @@ from pathlib import Path
 
 from typing import Callable, Dict, List, Optional, Type, TYPE_CHECKING, Union, Tuple
 
-from intervaltree import IntervalTree
 from ..util import vram_classes
 
 from ..util.vram_classes import VramClass
@@ -317,10 +316,6 @@ class Segment:
         # Symbols known to be in this segment
         self.given_seg_symbols: Dict[int, List[Symbol]] = {}
 
-        # Ranges for faster symbol lookup
-        self.symbol_ranges_ram: IntervalTree = IntervalTree()
-        self.symbol_ranges_rom: IntervalTree = IntervalTree()
-
         self.given_section_order: List[str] = options.opts.section_order
 
         self.vram_class: Optional[VramClass] = None
@@ -580,12 +575,6 @@ class Segment:
         if symbol.vram_start not in self.given_seg_symbols:
             self.given_seg_symbols[symbol.vram_start] = []
         self.given_seg_symbols[symbol.vram_start].append(symbol)
-
-        # For larger symbols, add their ranges to interval trees for faster lookup
-        if symbol.size > 4:
-            self.symbol_ranges_ram.addi(symbol.vram_start, symbol.vram_end, symbol)
-            if symbol.rom is not None:
-                self.symbol_ranges_rom.addi(symbol.rom, symbol.rom_end, symbol)
 
     @property
     def seg_symbols(self) -> Dict[int, List[Symbol]]:

@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import spimdisasm
 
-from intervaltree import IntervalTree
 from ..disassembler import disassembler_instance
 from pathlib import Path
 
@@ -16,7 +15,6 @@ from . import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
 all_symbols_dict: Dict[int, List["Symbol"]] = {}
-all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
 to_mark_as_defined: Set[str] = set()
 
@@ -59,10 +57,6 @@ def add_symbol(sym: "Symbol"):
         if sym.vram_start not in all_symbols_dict:
             all_symbols_dict[sym.vram_start] = []
         all_symbols_dict[sym.vram_start].append(sym)
-
-    # For larger symbols, add their ranges to interval trees for faster lookup
-    if sym.size > 4:
-        all_symbols_ranges.addi(sym.vram_start, sym.vram_end, sym)
 
     # Import here to avoid circular imports.
     from .metadata.segment_metadata_group import metadata_group
@@ -290,6 +284,23 @@ def handle_sym_addrs(
                 sym.segment = get_seg_for_rom(sym.rom)
 
             if sym.segment:
+                if sym.segment.vram_start is not None and sym.segment.vram_end is not None and not sym.segment.contains_vram(sym.vram_start):
+                    log.write(
+                        f"\nWarning: User-declared symbol '{sym.name}' was associated to segment '{sym.segment.name}', "
+                        "but its address is outside the segment's vram range.\n"
+                        f"  The symbol's Vram 0x{sym.vram_start:08X} is outside from the segment's Vram range 0x{sym.segment.vram_start:08X} ~ 0x{sym.segment.vram_end:08X}",
+                        status="warn"
+                    )
+                if sym.rom is not None:
+                    expected_rom = sym.segment.ram_to_rom(sym.vram_start)
+                    if expected_rom is not None and expected_rom != sym.rom:
+                        log.write(
+                            f"\nWarning: User-declared symbol '{sym.name}' has a wrong user-declared rom address.\n"
+                            f"  This symbol has been mapped to segment '{sym.segment.name}', but the expected Rom\n"
+                            f"  address for a symbol with Vram address 0x{sym.vram_start:08X} in that segment is\n"
+                            f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
+                            status="warn"
+                        )
                 sym.segment.add_symbol(sym)
 
             sym.user_declared = True
@@ -340,11 +351,9 @@ def handle_sym_addrs(
 def initialize(all_segments: "List[Segment]"):
     global all_symbols
     global all_symbols_dict
-    global all_symbols_ranges
 
     all_symbols = []
     all_symbols_dict = {}
-    all_symbols_ranges = IntervalTree()
 
     # Manual list of func name / addrs
     for path in options.opts.symbol_addrs_paths:
@@ -822,13 +831,11 @@ def get_all_symbols():
 def reset_symbols():
     global all_symbols
     global all_symbols_dict
-    global all_symbols_ranges
     global ignored_addresses
     global to_mark_as_defined
     global spim_context
     all_symbols = []
     all_symbols_dict = {}
-    all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
     to_mark_as_defined = set()
     spim_context = spimdisasm.common.Context()
