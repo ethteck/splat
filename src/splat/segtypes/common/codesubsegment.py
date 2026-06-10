@@ -123,14 +123,13 @@ class CommonSegCodeSubsegment(Segment):
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referenced_vram in func_spim.referencedVrams:
-            context_sym = self.spim_section.get_section().getSymbol(
-                referenced_vram, tryPlusOffset=False
-            )
-            if context_sym is not None:
-                symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym, force_in_segment=False
-                )
+        for i in range(0, func_spim.sizew * 4, 4):
+            reloc_info = func_spim.getReloc(i)
+            if reloc_info is not None:
+                if isinstance(reloc_info.symbol, spimdisasm.common.ContextSymbol):
+                    symbols.create_symbol_from_spim_symbol(
+                        self.get_most_parent(), reloc_info.symbol, force_in_segment=False
+                    )
 
         # Main loop
         for i, insn in enumerate(func_spim.instructions):

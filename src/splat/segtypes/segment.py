@@ -814,9 +814,17 @@ class Segment:
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             else:
-                seg_meta = metadata_group.find_referenced_segment(addr, parent_segment_info)
-                rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
-            ret = seg_meta.create_symbol(addr, search_ranges)
+                # aux = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation if validation is not None else default_sym_validation)
+                # if aux is not None:
+                #     ret, seg_meta = aux
+                #     rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
+                if False:
+                    pass
+                else:
+                    seg_meta = metadata_group.find_referenced_segment_for_creation(addr, parent_segment_info)
+                    rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
+            if ret is None:
+                ret = seg_meta.create_symbol(addr, search_ranges)
         else:
             if parent_segment_info is None:
                 seg_meta = metadata_group.unknown_segment

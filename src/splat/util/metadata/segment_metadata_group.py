@@ -39,9 +39,10 @@ class SegmentMetadataGroup:
                     # This can be required by segments that only have bss sections.
                     return owned_segment
 
-        log.error(f"Unable to find an owned segment for {info=}")
+        # log.write(f"Error: Unable to find an owned segment for {info=}.", status="warn")
+        return self.unknown_segment
 
-    def find_referenced_segment(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata:
+    def find_referenced_segment_for_creation(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata:
         # First, check the global segments.
         # Overlays shouldn't overlap with the global segments, so this should be fine.
         for seg in self.global_segments:
@@ -50,7 +51,7 @@ class SegmentMetadataGroup:
 
         # Look up in overlays
         if len(self.overlay_segments) > 0:
-            overlay_segment = self._find_referenced_overlay_segment(vram, info)
+            overlay_segment = self._find_referenced_overlay_segment_for_creation(vram, info)
             if overlay_segment is not None:
                 return overlay_segment
 
@@ -58,15 +59,22 @@ class SegmentMetadataGroup:
         return self.unknown_segment
 
 
-    def _find_referenced_overlay_segment(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata | None:
+    def _find_referenced_overlay_segment_for_creation(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata | None:
+        # If the parent info has no exclusive_ram_id, then it is a global segment,
+        # meaning it shouldn't be referencing an overlay symbol by default.
         if info.exclusive_ram_id is None:
             return None
 
+        # Check the segment corresponding to this specific overlay.
         segments_per_rom = self.overlay_segments.get(info.exclusive_ram_id)
         if segments_per_rom is not None:
             owned_segment = segments_per_rom.segments.get(info.segment_rom)
             if owned_segment is not None and owned_segment.in_vram_range(vram):
                 return owned_segment
+
+        # Don't check other overlay segments here!
+        # We don't have a way to know what segment this overlay is referencing,
+        # picking an arbitrary one for symbol creation will lead to nasty bugs.
 
         return None
 

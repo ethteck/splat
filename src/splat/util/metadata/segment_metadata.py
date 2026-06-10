@@ -89,7 +89,11 @@ class SegmentMetadata:
 
     def create_symbol(self, vram: int, allow_addend: bool) -> Symbol:
         if not self.in_vram_range(vram):
-            log.write(f"\nWARNING: Bug! Adding symbol 0x{vram:08X} to segment '{self.name}' ({self.kind}), but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n", status="warn")
+            log.write(
+                f"\nWARNING: Bug! Adding symbol 0x{vram:08X} to segment '{self.name}' ({self.kind}),\n"
+                "  but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n",
+                status="warn",
+            )
 
         symbol = self.find_symbol(vram, allow_addend)
         if symbol is None:
