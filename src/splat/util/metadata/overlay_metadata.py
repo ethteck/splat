@@ -37,6 +37,7 @@ class OverlayMetadata:
         rom_end: int,
         vram_start: int,
         vram_end: int,
+        prioritise_segments: list[str],
     ) -> SegmentMetadata:
         old_segment = self.segments.get(rom_start)
         if old_segment is not None:
@@ -51,6 +52,7 @@ class OverlayMetadata:
             rom_end,
             vram_start,
             vram_end,
+            prioritise_segments,
             self.exclusive_ram_id,
         )
         self.segments[rom_start] = seg

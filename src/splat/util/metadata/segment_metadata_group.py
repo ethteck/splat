@@ -18,7 +18,7 @@ class SegmentMetadataGroup:
         self.overlay_segments: dict[str, OverlayMetadata] = dict()
         """key: exclusive_ram_id"""
 
-        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, exclusive_ram_id=None)
+        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritise_segments=list(), exclusive_ram_id=None)
 
         self.all_symbols: list[Symbol] = list()
 
@@ -69,8 +69,18 @@ class SegmentMetadataGroup:
         segments_per_rom = self.overlay_segments.get(info.exclusive_ram_id)
         if segments_per_rom is not None:
             owned_segment = segments_per_rom.segments.get(info.segment_rom)
-            if owned_segment is not None and owned_segment.in_vram_range(vram):
-                return owned_segment
+            if owned_segment is not None:
+                if owned_segment.in_vram_range(vram):
+                    return owned_segment
+
+                # Check for any prioiritised overlay, if any.
+                for prioritised_segment in owned_segment.get_prioritise_segments():
+                    for _ovl_cat, segments_per_rom in self.overlay_segments.items():
+                        if not segments_per_rom.in_vram_range(vram):
+                            continue
+                        for _segment_rom, segment in segments_per_rom.segments.items():
+                            if segment.name == prioritised_segment and segment.in_vram_range(vram):
+                                return segment
 
         # Don't check other overlay segments here!
         # We don't have a way to know what segment this overlay is referencing,
@@ -129,6 +139,17 @@ class SegmentMetadataGroup:
                             return sym, owned_segment
                         return None
 
+                    # Check for any prioiritised segment, if any.
+                    for prioritised_segment in owned_segment.get_prioritise_segments():
+                        for _ovl_cat, segments_per_rom in self.overlay_segments.items():
+                            if not segments_per_rom.in_vram_range(vram):
+                                continue
+                            for _segment_rom, segment in segments_per_rom.segments.items():
+                                if segment.name == prioritised_segment and segment.in_vram_range(vram):
+                                    sym = segment.find_symbol(vram, allow_addend)
+                                    if sym is not None and validate(sym):
+                                        return sym, segment
+
         # If not found, then we should check every exclusive_ram_id except the
         # one associated with the parent segment.
 
@@ -174,8 +195,9 @@ class SegmentMetadataGroup:
         rom_end: int,
         vram_start: int,
         vram_end: int,
+        prioritise_segments: list[str],
     ) -> SegmentMetadata:
-        seg_meta = SegmentMetadata(SegmentKind.Global, name, rom_start, rom_end, vram_start, vram_end, None)
+        seg_meta = SegmentMetadata(SegmentKind.Global, name, rom_start, rom_end, vram_start, vram_end, prioritise_segments, None)
         self.global_segments.append(seg_meta)
         return seg_meta
 
@@ -187,6 +209,7 @@ class SegmentMetadataGroup:
         rom_end: int,
         vram_start: int,
         vram_end: int,
+        prioritise_segments: list[str],
     ) -> SegmentMetadata:
         ovl_meta = self.overlay_segments.setdefault(exclusive_ram_id, OverlayMetadata(exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()))
         return ovl_meta.add_segment(
@@ -195,6 +218,7 @@ class SegmentMetadataGroup:
             rom_end,
             vram_start,
             vram_end,
+            prioritise_segments,
         )
 
 
@@ -244,6 +268,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     segment.rom_end,
                     segment.vram_start,
                     segment.vram_end,
+                    segment.prioritise_segments,
                 )
                 # Add the segment-specific symbols first
                 for symbols_list in segment.seg_symbols.values():
@@ -258,6 +283,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                 segment.rom_end,
                 segment.vram_start,
                 segment.vram_end,
+                segment.prioritise_segments,
             )
 
             if global_rom_start is None or segment.rom_start < global_rom_start:
@@ -303,6 +329,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     seen_global_rom_start,
                     global_vram_start,
                     seen_global_vram_start,
+                    [],
                 )
             if global_vram_end > seen_global_vram_end:
                 metadata_group._add_global_segment(
@@ -311,6 +338,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     seen_global_rom_end + global_vram_end - seen_global_vram_end,
                     seen_global_vram_end,
                     global_vram_end,
+                    [],
                 )
 
         overlaps_found = False

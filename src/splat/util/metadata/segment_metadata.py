@@ -25,6 +25,8 @@ class SegmentMetadata:
 
     exclusive_ram_id: str | None
 
+    prioritise_segments: list[str]
+
     symbols: SortedDict[Symbol]
 
     def __init__(
@@ -35,6 +37,7 @@ class SegmentMetadata:
         rom_end: int,
         vram_start: int,
         vram_end: int,
+        prioritise_segments: list[str],
         exclusive_ram_id: str | None,
     ) -> None:
         if rom_start > rom_end:
@@ -50,8 +53,9 @@ class SegmentMetadata:
         self.vram_end = vram_end
         self.exclusive_ram_id = exclusive_ram_id
 
-        self.symbols = SortedDict()
+        self.prioritise_segments = prioritise_segments
 
+        self.symbols = SortedDict()
 
 
     def in_rom_range(self, rom: int) -> bool:
@@ -145,3 +149,7 @@ class SegmentMetadata:
             return sym
 
         return self.symbols.get(vram)
+
+
+    def get_prioritise_segments(self) -> list[str]:
+        return self.prioritise_segments
