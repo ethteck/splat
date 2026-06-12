@@ -620,10 +620,11 @@ def add_symbol_to_spim_section(
     return context_sym
 
 
-# force_in_segment=True when the symbol belongs to this specific segment.
+# force_in_segment=True when the symbol belongs to this specific parent segment.
 # force_in_segment=False when this symbol is just a reference.
 def create_symbol_from_spim_symbol(
-    segment: "Segment",
+    segment_most_parent: "Segment",
+    current_segment: "Segment",
     context_sym: spimdisasm.common.ContextSymbol,
     *,
     force_in_segment: bool,
@@ -646,24 +647,30 @@ def create_symbol_from_spim_symbol(
     if not in_segment:
         if (
             context_sym.overlayCategory is None
-            and segment.get_exclusive_ram_id() is None
+            and segment_most_parent.get_exclusive_ram_id() is None
         ):
-            in_segment = segment.contains_vram(context_sym.vram)
-        elif context_sym.overlayCategory == segment.get_exclusive_ram_id():
+            in_segment = segment_most_parent.contains_vram(context_sym.vram)
+        elif context_sym.overlayCategory == segment_most_parent.get_exclusive_ram_id():
             if context_sym.vromAddress is not None:
-                in_segment = segment.contains_rom(context_sym.vromAddress)
+                in_segment = segment_most_parent.contains_rom(context_sym.vromAddress)
             else:
-                in_segment = segment.contains_vram(context_sym.vram)
+                in_segment = segment_most_parent.contains_vram(context_sym.vram)
 
-    sym = segment.create_symbol(
+    sym = segment_most_parent.create_symbol(
         context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True
     )
 
+    # Avoid overriding names for user declared symbols
+    if sym.given_name is not None and context_sym.name is None:
+        context_sym.name = sym.given_name
     if sym.given_name is None and context_sym.name is not None:
         sym.given_name = context_sym.name
 
     # To keep the symbol name in sync between splat and spimdisasm
-    context_sym.setNameGetCallback(lambda _: sym.name)
+    if in_segment:
+        context_sym.setNameGetCallback(lambda _: sym.name)
+    else:
+        context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     if context_sym.size is not None:
         sym.given_size = context_sym.getSize()
@@ -673,6 +680,13 @@ def create_symbol_from_spim_symbol(
         sym.defined = True
     if context_sym.referenceCounter > 0:
         sym.referenced = True
+
+    # Void the autodetected symbol type if it is a branch target, but the
+    # symbol isn't part of a text section.
+    # This may happen on handwritten asm where the function jumps to some
+    # data/bss symbol. This can be seen on libultra's monoutil.s (__isExp).
+    if not current_segment.is_text() and sym_type is None and sym.type in ("label", "jtbl_label"):
+        sym.type = None
 
     return sym
 

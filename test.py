@@ -244,7 +244,7 @@ class Symbols(unittest.TestCase):
         )
         context_sym = spimdisasm.common.ContextSymbol(address=0)
         result = symbols.create_symbol_from_spim_symbol(
-            segment, context_sym, force_in_segment=False
+            segment, segment, context_sym, force_in_segment=False
         )
         assert result.referenced
         assert result.extract
