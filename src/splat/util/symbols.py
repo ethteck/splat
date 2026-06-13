@@ -688,13 +688,16 @@ def create_symbol_from_spim_symbol(
                 in_segment = segment_most_parent.contains_vram(context_sym.vram)
 
     sym = segment_most_parent.create_symbol(
-        context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True
+        context_sym.vram,
+        force_in_segment or in_segment,
+        type=sym_type,
+        reference=True,
     )
 
     # Only update context_sym attributes if it isn't part of the unknown segment.
     # There are many trash references in the unknown segment, it is more likely
     # to include garbage instead of anything useful.
-    if not sym.unknown_segment and not context_sym.unknownSegment:
+    if not sym.unknown_segment and not context_sym.unknownSegment or True:
         # Avoid overriding names for user declared symbols
         if sym.given_name is not None and context_sym.name is None:
             context_sym.name = sym.given_name

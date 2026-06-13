@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+from typing import Optional
 
 from spimdisasm.common import SortedDict
 
@@ -26,7 +27,7 @@ class SegmentMetadata:
     vram_start: int
     vram_end: int
 
-    exclusive_ram_id: str | None
+    exclusive_ram_id: Optional[str]
 
     prioritised_segments: list[str]
 
@@ -41,7 +42,7 @@ class SegmentMetadata:
         vram_start: int,
         vram_end: int,
         prioritised_segments: list[str],
-        exclusive_ram_id: str | None,
+        exclusive_ram_id: Optional[str],
     ) -> None:
         if rom_start > rom_end:
             log.error(
@@ -78,7 +79,7 @@ class SegmentMetadata:
             return False
         return True
 
-    def rom_from_vram(self, vram: int) -> int | None:
+    def rom_from_vram(self, vram: int) -> Optional[int]:
         if self.kind == SegmentKind.Unknown or self.kind == SegmentKind.UserSegment:
             return None
 
@@ -130,7 +131,10 @@ class SegmentMetadata:
             if existing_sym is sym:
                 # there's a bug somewhere...
                 pass
-            elif sym.type in {"alabel", *label_types} or existing_sym in {"alabel", *label_types}:
+            elif sym.type in {"alabel", *label_types} or existing_sym in {
+                "alabel",
+                *label_types,
+            }:
                 # It is expected for labels to overlap with functions
                 pass
             else:
@@ -152,7 +156,7 @@ class SegmentMetadata:
         sym._added_to_meta = True
         self.symbols[sym.vram_start] = sym
 
-    def find_symbol(self, vram: int, allow_addend: bool) -> Symbol | None:
+    def find_symbol(self, vram: int, allow_addend: bool) -> Optional[Symbol]:
         if allow_addend:
             pair = self.symbols.getKeyRight(vram, True)
             if pair is None:

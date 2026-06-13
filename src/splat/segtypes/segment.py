@@ -781,7 +781,9 @@ class Segment:
 
         return s + self.type + "_" + self.name
 
-    def get_parent_segment_info(self) -> tuple["Segment", "ParentSegmentInfo | None"]:
+    def get_parent_segment_info(
+        self,
+    ) -> tuple["Segment", "Optional[ParentSegmentInfo]"]:
         from ..util.metadata.parent_segment_info import ParentSegmentInfo
 
         most_parent = self.get_most_parent()
@@ -804,7 +806,7 @@ class Segment:
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
-        validation: Callable[[Symbol], bool] | None = None,
+        validation: Optional[Callable[[Symbol], bool]] = None,
     ) -> Optional[Symbol]:
         from ..util.metadata.segment_metadata_group import metadata_group
 
@@ -905,7 +907,7 @@ def default_sym_validation(_sym: Symbol) -> bool:
 
 def rom_from_vram(
     vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment
-) -> int | None:
+) -> Optional[int]:
     from ..util.metadata.segment_metadata import SegmentKind
 
     if seg_meta.kind == SegmentKind.Unknown or seg_meta.kind == SegmentKind.UserSegment:

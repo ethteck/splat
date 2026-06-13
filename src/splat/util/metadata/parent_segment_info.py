@@ -1,11 +1,12 @@
 import dataclasses
+from typing import Optional
 
 
 @dataclasses.dataclass
 class ParentSegmentInfo:
     segment_rom: int
     segment_vram: int
-    exclusive_ram_id: str | None
+    exclusive_ram_id: Optional[str]
 
     def __repr__(self) -> str:
         if self.exclusive_ram_id is None:

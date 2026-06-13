@@ -1,4 +1,4 @@
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, Optional, TYPE_CHECKING
 
 from .segment_metadata import SegmentMetadata, SegmentKind
 from .parent_segment_info import ParentSegmentInfo
@@ -91,7 +91,7 @@ class SegmentMetadataGroup:
         self,
         vram: int,
         info: ParentSegmentInfo,
-    ) -> SegmentMetadata | None:
+    ) -> Optional[SegmentMetadata]:
         # If the parent info has no exclusive_ram_id, then it is a global segment,
         # meaning it shouldn't be referencing an overlay symbol by default.
         if info.exclusive_ram_id is None:
@@ -129,7 +129,7 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool],
-    ) -> tuple[Symbol, SegmentMetadata] | None:
+    ) -> Optional[tuple[Symbol, SegmentMetadata]]:
         sym = self.user_segment.find_symbol(vram, allow_addend)
         if sym is not None:
             return sym, self.user_segment
@@ -165,7 +165,7 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool],
-    ) -> tuple[Symbol, SegmentMetadata] | None:
+    ) -> Optional[tuple[Symbol, SegmentMetadata]]:
         exclusive_ram_id = info.exclusive_ram_id
 
         # First, look up for the segment associated to this exclusive_ram_id
