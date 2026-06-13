@@ -308,7 +308,7 @@ class Segment:
         self.align: Optional[int] = None
         self.given_subalign: Optional[int] = options.opts.subalign
         self.exclusive_ram_id: Optional[str] = None
-        self.prioritise_segments: list[str] = list()
+        self.prioritised_segments: list[str] = list()
         self.given_dir: Path = Path()
 
         # Default to global options.
@@ -464,7 +464,7 @@ class Segment:
         if isinstance(yaml, dict):
             ret.extract = bool(yaml.get("extract", ret.extract))
             ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
-            ret.prioritise_segments = yaml.get("prioritise_segments", [])
+            ret.prioritised_segments = yaml.get("prioritised_segments", [])
             ret.given_dir = Path(yaml.get("dir", ""))
             ret.has_linker_entry = bool(yaml.get("linker_entry", True))
             ret.given_find_file_boundaries = yaml.get("find_file_boundaries", None)
@@ -893,7 +893,7 @@ def default_sym_validation(_sym: Symbol) -> bool:
 def rom_from_vram(vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment) -> int | None:
     from ..util.metadata.segment_metadata import SegmentKind
 
-    if seg_meta.kind == SegmentKind.Unknown:
+    if seg_meta.kind == SegmentKind.Unknown or seg_meta.kind == SegmentKind.UserSegment:
         return None
     if not seg_meta.is_owned_segment(info):
         return None

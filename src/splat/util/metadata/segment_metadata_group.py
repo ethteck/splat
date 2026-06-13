@@ -13,13 +13,16 @@ if TYPE_CHECKING:
 
 class SegmentMetadataGroup:
     def __init__(self) -> None:
+        self.user_segment: SegmentMetadata = SegmentMetadata(SegmentKind.UserSegment, "$user_segment", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritised_segments=list(), exclusive_ram_id=None)
+
         self.global_segments: list[SegmentMetadata] = list()
 
         self.overlay_segments: dict[str, OverlayMetadata] = dict()
         """key: exclusive_ram_id"""
 
-        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritise_segments=list(), exclusive_ram_id=None)
+        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritised_segments=list(), exclusive_ram_id=None)
 
+        # ?
         self.all_symbols: list[Symbol] = list()
 
     def find_owned_segment(self, info: ParentSegmentInfo) -> SegmentMetadata:
@@ -74,7 +77,7 @@ class SegmentMetadataGroup:
                     return owned_segment
 
                 # Check for any prioiritised overlay, if any.
-                for prioritised_segment in owned_segment.get_prioritise_segments():
+                for prioritised_segment in owned_segment.get_prioritised_segments():
                     for _ovl_cat, segments_per_rom in self.overlay_segments.items():
                         if not segments_per_rom.in_vram_range(vram):
                             continue
@@ -96,6 +99,10 @@ class SegmentMetadataGroup:
         allow_addend: bool,
         validate: Callable[[Symbol], bool]
     ) -> tuple[Symbol, SegmentMetadata] | None:
+        sym = self.user_segment.find_symbol(vram, allow_addend)
+        if sym is not None:
+            return sym, self.user_segment
+
         for seg in self.global_segments:
             if seg.in_vram_range(vram):
                 # If we find this vram is within a global segment then we can stop
@@ -127,7 +134,7 @@ class SegmentMetadataGroup:
 
         # First, look up for the segment associated to this exclusive_ram_id
         # which matches the rom address of the parent segment so we can
-        # prioritize it.
+        # prioritise it.
         if exclusive_ram_id is not None:
             segments_per_rom = self.overlay_segments.get(exclusive_ram_id)
             if segments_per_rom is not None:
@@ -140,7 +147,7 @@ class SegmentMetadataGroup:
                         return None
 
                     # Check for any prioiritised segment, if any.
-                    for prioritised_segment in owned_segment.get_prioritise_segments():
+                    for prioritised_segment in owned_segment.get_prioritised_segments():
                         for _ovl_cat, segments_per_rom in self.overlay_segments.items():
                             if not segments_per_rom.in_vram_range(vram):
                                 continue
@@ -195,9 +202,9 @@ class SegmentMetadataGroup:
         rom_end: int,
         vram_start: int,
         vram_end: int,
-        prioritise_segments: list[str],
+        prioritised_segments: list[str],
     ) -> SegmentMetadata:
-        seg_meta = SegmentMetadata(SegmentKind.Global, name, rom_start, rom_end, vram_start, vram_end, prioritise_segments, None)
+        seg_meta = SegmentMetadata(SegmentKind.Global, name, rom_start, rom_end, vram_start, vram_end, prioritised_segments, None)
         self.global_segments.append(seg_meta)
         return seg_meta
 
@@ -209,7 +216,7 @@ class SegmentMetadataGroup:
         rom_end: int,
         vram_start: int,
         vram_end: int,
-        prioritise_segments: list[str],
+        prioritised_segments: list[str],
     ) -> SegmentMetadata:
         ovl_meta = self.overlay_segments.setdefault(exclusive_ram_id, OverlayMetadata(exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()))
         return ovl_meta.add_segment(
@@ -218,7 +225,7 @@ class SegmentMetadataGroup:
             rom_end,
             vram_start,
             vram_end,
-            prioritise_segments,
+            prioritised_segments,
         )
 
 
@@ -268,7 +275,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     segment.rom_end,
                     segment.vram_start,
                     segment.vram_end,
-                    segment.prioritise_segments,
+                    segment.prioritised_segments,
                 )
                 # Add the segment-specific symbols first
                 for symbols_list in segment.seg_symbols.values():
@@ -283,7 +290,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                 segment.rom_end,
                 segment.vram_start,
                 segment.vram_end,
-                segment.prioritise_segments,
+                segment.prioritised_segments,
             )
 
             if global_rom_start is None or segment.rom_start < global_rom_start:
@@ -407,9 +414,22 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     seg.add_user_symbol(sym)
                     break
 
+    for sym in all_symbols:
+        if sym._added_to_meta:
+            continue
+        if sym.user_segment:
+            metadata_group.user_segment.add_user_symbol(sym)
+
     lost_symbols = [f"{sym.name} (Vram: 0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
     if len(lost_symbols) > 0:
-        log.write("WARNING: Unable to determine a segment for the following user-declared symbols. Try specifying the segment they belong to with 'segment:segment_name' in your symbol_addrs file:", status="warn")
+        log.write(
+            "WARNING: Unable to determine a segment for the following user-declared symbols.\n"
+            "  Try specifying the segment they belong to with 'segment:segment_name' in your symbol_addrs file.\n"
+            "  If the address of this symbol is not part of any segment, or if you believe this symbol should be\n"
+            "  globally visible and take priority over other symbol references then use the `user_segment:True`\n"
+            "  user attribute instead.",
+            status="warn",
+        )
         log.write("    " + "\n    ".join(lost_symbols))
         log.write("\n")
 

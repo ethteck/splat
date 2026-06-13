@@ -269,6 +269,8 @@ def handle_sym_addrs(
                                 continue
                             if attr_name == "use_non_matching_label":
                                 sym.use_non_matching_label = tf_val
+                            if attr_name == "user_segment":
+                                sym.user_segment = tf_val
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -277,73 +279,92 @@ def handle_sym_addrs(
                     spim_context.addBannedSymbolRangeBySize(
                         sym.vram_start, sym.given_size
                     )
-
                 continue
 
-            if sym.segment is None and sym.rom is not None:
-                sym.segment = get_seg_for_rom(sym.rom)
-
-            if sym.segment:
-                if sym.segment.vram_start is not None and sym.segment.vram_end is not None and not sym.segment.contains_vram(sym.vram_start):
-                    log.write(
-                        f"\nWarning: User-declared symbol '{sym.name}' was associated to segment '{sym.segment.name}', "
-                        "but its address is outside the segment's vram range.\n"
-                        f"  The symbol's Vram 0x{sym.vram_start:08X} is outside from the segment's Vram range 0x{sym.segment.vram_start:08X} ~ 0x{sym.segment.vram_end:08X}",
-                        status="warn"
-                    )
+            if sym.user_segment:
+                # Most attributes make no sense for a user_segment symbol.
+                # For now just warn about these two.
                 if sym.rom is not None:
-                    expected_rom = sym.segment.ram_to_rom(sym.vram_start)
-                    if expected_rom is not None and expected_rom != sym.rom:
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.write(
+                        f"Warning: User-segment symbol '{sym.name}' (0x{sym.vram_start:08X}) has user-declared rom address.\n"
+                        "  This kind of symbol shouldn't have a rom address associated.",
+                        status="warn",
+                    )
+                if sym.segment is not None:
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.write(
+                        f"Warning: User-segment symbol '{sym.name}' (0x{sym.vram_start:08X}) has user-declared segment.\n"
+                        "  This kind of symbol shouldn't have a segment associated.",
+                        status="warn",
+                    )
+            else:
+                if sym.segment is None and sym.rom is not None:
+                    sym.segment = get_seg_for_rom(sym.rom)
+
+                if sym.segment:
+                    if sym.segment.vram_start is not None and sym.segment.vram_end is not None and not sym.segment.contains_vram(sym.vram_start):
+                        log.parsing_error_preamble(path, line_num, line)
                         log.write(
-                            f"\nWarning: User-declared symbol '{sym.name}' has a wrong user-declared rom address.\n"
-                            f"  This symbol has been mapped to segment '{sym.segment.name}', but the expected Rom\n"
-                            f"  address for a symbol with Vram address 0x{sym.vram_start:08X} in that segment is\n"
-                            f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
+                            f"Warning: User-declared symbol '{sym.name}' was associated to segment '{sym.segment.name}', "
+                            "but its address is outside the segment's vram range.\n"
+                            f"  The symbol's Vram 0x{sym.vram_start:08X} is outside from the segment's Vram range 0x{sym.segment.vram_start:08X} ~ 0x{sym.segment.vram_end:08X}",
                             status="warn"
                         )
-                sym.segment.add_symbol(sym)
+                    if sym.rom is not None:
+                        expected_rom = sym.segment.ram_to_rom(sym.vram_start)
+                        if expected_rom is not None and expected_rom != sym.rom:
+                            log.parsing_error_preamble(path, line_num, line)
+                            log.write(
+                                f"Warning: User-declared symbol '{sym.name}' has a wrong user-declared rom address.\n"
+                                f"  This symbol has been mapped to segment '{sym.segment.name}', but the expected Rom\n"
+                                f"  address for a symbol with Vram address 0x{sym.vram_start:08X} in that segment is\n"
+                                f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
+                                status="warn"
+                            )
+                    sym.segment.add_symbol(sym)
 
-            sym.user_declared = True
+                sym.user_declared = True
 
-            if sym.name in seen_symbols:
-                item = seen_symbols[sym.name]
-                if not sym.allow_duplicated or not item.allow_duplicated:
+                if sym.name in seen_symbols:
+                    item = seen_symbols[sym.name]
+                    if not sym.allow_duplicated or not item.allow_duplicated:
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.error(
+                            f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                        )
+
+                if addr in all_symbols_dict:
+                    items = all_symbols_dict[addr]
+                    for item in items:
+                        have_same_rom_addresses = sym.rom == item.rom
+                        same_segment = sym.segment == item.segment
+
+                        if have_same_rom_addresses and same_segment:
+                            if not sym.allow_duplicated or not item.allow_duplicated:
+                                log.parsing_error_preamble(path, line_num, line)
+                                log.error(
+                                    f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                                )
+
+                if len(sym.filename) > 253 or any(
+                    c in ILLEGAL_FILENAME_CHARS for c in sym.filename
+                ):
                     log.parsing_error_preamble(path, line_num, line)
                     log.error(
-                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                        # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
+                        # Other lines have two spaces to make identation nicer and consistent
+                        f"Ilegal symbol filename detected!\n"
+                        f"  The symbol\n"
+                        f"    {sym.name}\n"
+                        f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
+                        f"  which will be a problem when writing the symbol to its own file.\n"
+                        f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
+                        f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
+                        f"    {ILLEGAL_FILENAME_CHARS}"
                     )
 
-            if addr in all_symbols_dict:
-                items = all_symbols_dict[addr]
-                for item in items:
-                    have_same_rom_addresses = sym.rom == item.rom
-                    same_segment = sym.segment == item.segment
-
-                    if have_same_rom_addresses and same_segment:
-                        if not sym.allow_duplicated or not item.allow_duplicated:
-                            log.parsing_error_preamble(path, line_num, line)
-                            log.error(
-                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
-                            )
-
-            if len(sym.filename) > 253 or any(
-                c in ILLEGAL_FILENAME_CHARS for c in sym.filename
-            ):
-                log.parsing_error_preamble(path, line_num, line)
-                log.error(
-                    # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
-                    # Other lines have two spaces to make identation nicer and consistent
-                    f"Ilegal symbol filename detected!\n"
-                    f"  The symbol\n"
-                    f"    {sym.name}\n"
-                    f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
-                    f"  which will be a problem when writing the symbol to its own file.\n"
-                    f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
-                    f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
-                    f"    {ILLEGAL_FILENAME_CHARS}"
-                )
-
-            seen_symbols[sym.name] = sym
+                seen_symbols[sym.name] = sym
 
             add_symbol(sym)
 
@@ -429,7 +450,11 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 segment.rom_end,
                 segment.vram_start,
                 segment.vram_end,
+                segment.name,
             )
+            for prioritised_seg in segment.prioritised_segments:
+                spim_segment.addPrioritisedSegment(prioritised_seg)
+
             # Add the segment-specific symbols first
             for symbols_list in segment.seg_symbols.values():
                 for sym in symbols_list:
@@ -506,6 +531,10 @@ def initialize_spim_context(all_segments: "List[Segment]") -> None:
                 continue
 
             add_symbol_to_spim_segment(spim_context.globalSegment, sym)
+
+    for sym in all_symbols:
+        if sym.user_segment:
+            add_symbol_to_spim_segment(spim_context.userSegment, sym)
 
 
 def add_symbol_to_spim_segment(
@@ -737,6 +766,8 @@ class Symbol:
     given_align: Optional[int] = None
 
     use_non_matching_label: Optional[bool] = None
+
+    user_segment: bool = False
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None

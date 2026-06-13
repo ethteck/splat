@@ -12,6 +12,7 @@ class SegmentKind(enum.Enum):
     Global = 0
     Overlay = 1
     Unknown = 2
+    UserSegment = 3
 
 @dataclasses.dataclass
 class SegmentMetadata:
@@ -25,7 +26,7 @@ class SegmentMetadata:
 
     exclusive_ram_id: str | None
 
-    prioritise_segments: list[str]
+    prioritised_segments: list[str]
 
     symbols: SortedDict[Symbol]
 
@@ -37,7 +38,7 @@ class SegmentMetadata:
         rom_end: int,
         vram_start: int,
         vram_end: int,
-        prioritise_segments: list[str],
+        prioritised_segments: list[str],
         exclusive_ram_id: str | None,
     ) -> None:
         if rom_start > rom_end:
@@ -53,7 +54,7 @@ class SegmentMetadata:
         self.vram_end = vram_end
         self.exclusive_ram_id = exclusive_ram_id
 
-        self.prioritise_segments = prioritise_segments
+        self.prioritised_segments = prioritised_segments
 
         self.symbols = SortedDict()
 
@@ -73,6 +74,9 @@ class SegmentMetadata:
         return True
 
     def rom_from_vram(self, vram: int) -> int | None:
+        if self.kind == SegmentKind.Unknown or self.kind == SegmentKind.UserSegment:
+            return None
+
         if not self.in_vram_range(vram):
             return None
         rom = vram - self.vram_start + self.rom_start
@@ -95,7 +99,7 @@ class SegmentMetadata:
         if not self.in_vram_range(vram):
             log.write(
                 f"\nWARNING: Bug! Adding symbol 0x{vram:08X} to segment '{self.name}' ({self.kind}),\n"
-                "  but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n",
+                f"  but the address of the symbol is outside the segment vram range (0x{self.vram_start:08X} ~ 0x{self.vram_end:08X})\n",
                 status="warn",
             )
 
@@ -127,6 +131,7 @@ class SegmentMetadata:
                 existing_size = f"0x{existing_sym.given_size:X}" if existing_sym.given_size is not None else "None"
                 size = f"0x{sym.given_size:X}" if sym.given_size is not None else "None"
                 msg = f"The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}) overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size {existing_size})"
+                # TODO: Change this into a hard error.
                 if False:
                     log.error(f"\nERROR: {msg}")
                 else:
@@ -151,5 +156,5 @@ class SegmentMetadata:
         return self.symbols.get(vram)
 
 
-    def get_prioritise_segments(self) -> list[str]:
-        return self.prioritise_segments
+    def get_prioritised_segments(self) -> list[str]:
+        return self.prioritised_segments
