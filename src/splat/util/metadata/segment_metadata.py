@@ -3,16 +3,18 @@ import enum
 
 from spimdisasm.common import SortedDict
 
-from ..symbols import Symbol, label_types
+from ..symbols import Symbol, label_types, get_all_symbols
 from .. import log
 
 from .parent_segment_info import ParentSegmentInfo
+
 
 class SegmentKind(enum.Enum):
     Global = 0
     Overlay = 1
     Unknown = 2
     UserSegment = 3
+
 
 @dataclasses.dataclass
 class SegmentMetadata:
@@ -42,9 +44,13 @@ class SegmentMetadata:
         exclusive_ram_id: str | None,
     ) -> None:
         if rom_start > rom_end:
-            log.error(f"Error creating segment '{name}': rom_start (0x{rom_start:X}) is larger than rom_end (0x{rom_end:X})")
+            log.error(
+                f"Error creating segment '{name}': rom_start (0x{rom_start:X}) is larger than rom_end (0x{rom_end:X})"
+            )
         if vram_start > vram_end:
-            log.error(f"Error creating segment '{name}': rom_start (0x{vram_start:X}) is larger than rom_end (0x{vram_end:X})")
+            log.error(
+                f"Error creating segment '{name}': rom_start (0x{vram_start:X}) is larger than rom_end (0x{vram_end:X})"
+            )
 
         self.kind = kind
         self.name = name
@@ -57,7 +63,6 @@ class SegmentMetadata:
         self.prioritised_segments = prioritised_segments
 
         self.symbols = SortedDict()
-
 
     def in_rom_range(self, rom: int) -> bool:
         if rom < self.rom_start:
@@ -84,7 +89,6 @@ class SegmentMetadata:
             return None
         return rom
 
-
     def is_owned_segment(self, info: ParentSegmentInfo) -> bool:
         if self.exclusive_ram_id is None and info.exclusive_ram_id is None:
             return True
@@ -93,7 +97,6 @@ class SegmentMetadata:
         if self.rom_start != info.segment_rom:
             return False
         return True
-
 
     def create_symbol(self, vram: int, allow_addend: bool) -> Symbol:
         if not self.in_vram_range(vram):
@@ -108,6 +111,7 @@ class SegmentMetadata:
             symbol = Symbol(vram)
             self.symbols[vram] = symbol
 
+        get_all_symbols().append(symbol)
         return symbol
 
     def add_user_symbol(self, sym: Symbol) -> None:
@@ -128,7 +132,10 @@ class SegmentMetadata:
                 # It is expected for labels to overlap with functions
                 pass
             else:
-                existing_size = f"0x{existing_sym.given_size:X}" if existing_sym.given_size is not None else "None"
+                if existing_sym.given_size is None:
+                    existing_size = "None"
+                else:
+                    existing_size = f"0x{existing_sym.given_size:X}"
                 size = f"0x{sym.given_size:X}" if sym.given_size is not None else "None"
                 msg = f"The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}) overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size {existing_size})"
                 # TODO: Change this into a hard error.
@@ -139,7 +146,6 @@ class SegmentMetadata:
 
         sym._added_to_meta = True
         self.symbols[sym.vram_start] = sym
-
 
     def find_symbol(self, vram: int, allow_addend: bool) -> Symbol | None:
         if allow_addend:
@@ -154,7 +160,6 @@ class SegmentMetadata:
             return sym
 
         return self.symbols.get(vram)
-
 
     def get_prioritised_segments(self) -> list[str]:
         return self.prioritised_segments

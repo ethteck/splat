@@ -10,7 +10,14 @@ from collections import defaultdict, deque
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets, metadata
+from ..util import (
+    cache_handler,
+    progress_bar,
+    vram_classes,
+    statistics,
+    file_presets,
+    metadata,
+)
 
 from colorama import Style
 from intervaltree import Interval, IntervalTree

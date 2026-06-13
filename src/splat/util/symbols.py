@@ -60,6 +60,7 @@ def add_symbol(sym: "Symbol"):
 
     # Import here to avoid circular imports.
     from .metadata.segment_metadata_group import metadata_group
+
     metadata_group
 
 
@@ -303,13 +304,17 @@ def handle_sym_addrs(
                     sym.segment = get_seg_for_rom(sym.rom)
 
                 if sym.segment:
-                    if sym.segment.vram_start is not None and sym.segment.vram_end is not None and not sym.segment.contains_vram(sym.vram_start):
+                    if (
+                        sym.segment.vram_start is not None
+                        and sym.segment.vram_end is not None
+                        and not sym.segment.contains_vram(sym.vram_start)
+                    ):
                         log.parsing_error_preamble(path, line_num, line)
                         log.write(
                             f"Warning: User-declared symbol '{sym.name}' was associated to segment '{sym.segment.name}', "
                             "but its address is outside the segment's vram range.\n"
                             f"  The symbol's Vram 0x{sym.vram_start:08X} is outside from the segment's Vram range 0x{sym.segment.vram_start:08X} ~ 0x{sym.segment.vram_end:08X}",
-                            status="warn"
+                            status="warn",
                         )
                     if sym.rom is not None:
                         expected_rom = sym.segment.ram_to_rom(sym.vram_start)
@@ -320,7 +325,7 @@ def handle_sym_addrs(
                                 f"  This symbol has been mapped to segment '{sym.segment.name}', but the expected Rom\n"
                                 f"  address for a symbol with Vram address 0x{sym.vram_start:08X} in that segment is\n"
                                 f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
-                                status="warn"
+                                status="warn",
                             )
                     sym.segment.add_symbol(sym)
 
@@ -714,7 +719,11 @@ def create_symbol_from_spim_symbol(
     # symbol isn't part of a text section.
     # This may happen on handwritten asm where the function jumps to some
     # data/bss symbol. This can be seen on libultra's monoutil.s (__isExp).
-    if not current_segment.is_text() and sym_type is None and sym.type in ("label", "jtbl_label"):
+    if (
+        not current_segment.is_text()
+        and sym_type is None
+        and sym.type in ("label", "jtbl_label")
+    ):
         sym.type = None
 
     return sym
@@ -886,4 +895,5 @@ def reset_symbols():
     spim_context = spimdisasm.common.Context()
 
     from .metadata import segment_metadata_group
+
     segment_metadata_group.reset()

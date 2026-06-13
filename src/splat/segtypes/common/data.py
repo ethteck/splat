@@ -140,7 +140,10 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), self, context_sym, force_in_segment=False
+                        self.get_most_parent(),
+                        self,
+                        context_sym,
+                        force_in_segment=False,
                     )
 
             # Hint to the user that we are now in the .rodata section and no longer in the .data section (assuming rodata follows data)

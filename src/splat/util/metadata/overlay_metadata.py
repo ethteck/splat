@@ -4,6 +4,7 @@ from .segment_metadata import SegmentMetadata, SegmentKind
 
 from .. import log
 
+
 @dataclasses.dataclass
 class OverlayMetadata:
     exclusive_ram_id: str
@@ -41,9 +42,11 @@ class OverlayMetadata:
     ) -> SegmentMetadata:
         old_segment = self.segments.get(rom_start)
         if old_segment is not None:
-            log.error(f"Tried to create an overlay at a duplicated rom address {rom_start} for exclusive_ram_id={self.exclusive_ram_id}.\n"
-                      f"  Old segment '{old_segment.name}'. Rom 0x{old_segment.rom_start:08X}~0x{old_segment.rom_end:08X}. Vram 0x{old_segment.vram_start:08X}~0x{old_segment.vram_start:08X}\n"
-                      f"  New segment '{name}'. Rom 0x{rom_start:08X}~0x{rom_end:08X}. Vram 0x{vram_start:08X}~0x{vram_start:08X}\n")
+            log.error(
+                f"Tried to create an overlay at a duplicated rom address {rom_start} for exclusive_ram_id={self.exclusive_ram_id}.\n"
+                f"  Old segment '{old_segment.name}'. Rom 0x{old_segment.rom_start:08X}~0x{old_segment.rom_end:08X}. Vram 0x{old_segment.vram_start:08X}~0x{old_segment.vram_start:08X}\n"
+                f"  New segment '{name}'. Rom 0x{rom_start:08X}~0x{rom_end:08X}. Vram 0x{vram_start:08X}~0x{vram_start:08X}\n"
+            )
 
         seg = SegmentMetadata(
             SegmentKind.Overlay,

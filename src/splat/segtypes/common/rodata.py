@@ -119,7 +119,10 @@ class CommonSegRodata(CommonSegData):
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), self, context_sym, force_in_segment=False
+                        self.get_most_parent(),
+                        self,
+                        context_sym,
+                        force_in_segment=False,
                     )
 
             possible_text = self.get_possible_text_subsegment_for_symbol(symbol)

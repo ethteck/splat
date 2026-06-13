@@ -787,7 +787,11 @@ class Segment:
         most_parent = self.get_most_parent()
         parent_segment_info = None
         if most_parent.rom_start is not None and most_parent.vram_start is not None:
-            parent_segment_info = ParentSegmentInfo(most_parent.rom_start, most_parent.vram_start, most_parent.exclusive_ram_id)
+            parent_segment_info = ParentSegmentInfo(
+                most_parent.rom_start,
+                most_parent.vram_start,
+                most_parent.exclusive_ram_id,
+            )
         return most_parent, parent_segment_info
 
     def get_symbol(
@@ -800,7 +804,7 @@ class Segment:
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
-        validation: Callable[[Symbol], bool]|None=None,
+        validation: Callable[[Symbol], bool] | None = None,
     ) -> Optional[Symbol]:
         from ..util.metadata.segment_metadata_group import metadata_group
 
@@ -823,7 +827,10 @@ class Segment:
                 if False:
                     pass
                 else:
-                    seg_meta = metadata_group.find_referenced_segment_for_creation(addr, parent_segment_info)
+                    seg_meta = metadata_group.find_referenced_segment_for_creation(
+                        addr,
+                        parent_segment_info,
+                    )
                     rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             if ret is None:
                 ret = seg_meta.create_symbol(addr, search_ranges)
@@ -838,7 +845,12 @@ class Segment:
             elif not local_only:
                 if validation is None:
                     validation = default_sym_validation
-                aux = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation)
+                aux = metadata_group.find_symbol_from_any_segment(
+                    addr,
+                    parent_segment_info,
+                    search_ranges,
+                    validation,
+                )
                 if aux is not None:
                     ret, seg_meta = aux
                     rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
@@ -890,7 +902,10 @@ class Segment:
 def default_sym_validation(_sym: Symbol) -> bool:
     return True
 
-def rom_from_vram(vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment) -> int | None:
+
+def rom_from_vram(
+    vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment
+) -> int | None:
     from ..util.metadata.segment_metadata import SegmentKind
 
     if seg_meta.kind == SegmentKind.Unknown or seg_meta.kind == SegmentKind.UserSegment:

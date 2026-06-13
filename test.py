@@ -264,7 +264,7 @@ def get_yaml():
 
 
 class Rodata(unittest.TestCase):
-    def test_disassemble_data(self):
+    def test_disassemble_rodata(self):
         test_init()
         common_seg_rodata = CommonSegRodata(
             rom_start=0x0,
@@ -418,7 +418,7 @@ class SymbolsInitialize(unittest.TestCase):
         test_init()
 
         sym_addrs_lines = [
-            "func_1 = 0x100; // type:func size:10 rom:100 segment:test_segment name_end:the_name_end "
+            "func_1 = 0x300; // type:func size:10 rom:0x100 segment:test_segment name_end:the_name_end "
         ]
 
         all_segments = [
@@ -437,7 +437,7 @@ class SymbolsInitialize(unittest.TestCase):
         assert symbols.all_symbols[0].given_name == "func_1"
         assert symbols.all_symbols[0].type == "func"
         assert symbols.all_symbols[0].given_size == 10
-        assert symbols.all_symbols[0].rom == 100
+        assert symbols.all_symbols[0].rom == 0x100
         assert symbols.all_symbols[0].segment == all_segments[0]
         assert symbols.all_symbols[0].given_name_end == "the_name_end"
 

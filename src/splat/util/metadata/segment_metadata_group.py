@@ -11,16 +11,35 @@ from .. import log, options
 if TYPE_CHECKING:
     from ...segtypes.segment import Segment
 
+
 class SegmentMetadataGroup:
     def __init__(self) -> None:
-        self.user_segment: SegmentMetadata = SegmentMetadata(SegmentKind.UserSegment, "$user_segment", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritised_segments=list(), exclusive_ram_id=None)
+        self.user_segment: SegmentMetadata = SegmentMetadata(
+            SegmentKind.UserSegment,
+            "$user_segment",
+            0x0,
+            0x0,
+            0x00000000,
+            0xFFFFFFFF,
+            prioritised_segments=list(),
+            exclusive_ram_id=None,
+        )
 
         self.global_segments: list[SegmentMetadata] = list()
 
         self.overlay_segments: dict[str, OverlayMetadata] = dict()
         """key: exclusive_ram_id"""
 
-        self.unknown_segment: SegmentMetadata = SegmentMetadata(SegmentKind.Unknown, "$unknown", 0x0, 0x0, 0x00000000, 0xFFFFFFFF, prioritised_segments=list(), exclusive_ram_id=None)
+        self.unknown_segment: SegmentMetadata = SegmentMetadata(
+            SegmentKind.Unknown,
+            "$unknown",
+            0x0,
+            0x0,
+            0x00000000,
+            0xFFFFFFFF,
+            prioritised_segments=list(),
+            exclusive_ram_id=None,
+        )
 
         # ?
         self.all_symbols: list[Symbol] = list()
@@ -45,7 +64,11 @@ class SegmentMetadataGroup:
         # log.write(f"Error: Unable to find an owned segment for {info=}.", status="warn")
         return self.unknown_segment
 
-    def find_referenced_segment_for_creation(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata:
+    def find_referenced_segment_for_creation(
+        self,
+        vram: int,
+        info: ParentSegmentInfo,
+    ) -> SegmentMetadata:
         # First, check the global segments.
         # Overlays shouldn't overlap with the global segments, so this should be fine.
         for seg in self.global_segments:
@@ -54,15 +77,21 @@ class SegmentMetadataGroup:
 
         # Look up in overlays
         if len(self.overlay_segments) > 0:
-            overlay_segment = self._find_referenced_overlay_segment_for_creation(vram, info)
+            overlay_segment = self._find_referenced_overlay_segment_for_creation(
+                vram,
+                info,
+            )
             if overlay_segment is not None:
                 return overlay_segment
 
         # Fallback to the unknown segment
         return self.unknown_segment
 
-
-    def _find_referenced_overlay_segment_for_creation(self, vram: int, info: ParentSegmentInfo) -> SegmentMetadata | None:
+    def _find_referenced_overlay_segment_for_creation(
+        self,
+        vram: int,
+        info: ParentSegmentInfo,
+    ) -> SegmentMetadata | None:
         # If the parent info has no exclusive_ram_id, then it is a global segment,
         # meaning it shouldn't be referencing an overlay symbol by default.
         if info.exclusive_ram_id is None:
@@ -82,7 +111,10 @@ class SegmentMetadataGroup:
                         if not segments_per_rom.in_vram_range(vram):
                             continue
                         for _segment_rom, segment in segments_per_rom.segments.items():
-                            if segment.name == prioritised_segment and segment.in_vram_range(vram):
+                            if (
+                                segment.name == prioritised_segment
+                                and segment.in_vram_range(vram)
+                            ):
                                 return segment
 
         # Don't check other overlay segments here!
@@ -91,13 +123,12 @@ class SegmentMetadataGroup:
 
         return None
 
-
     def find_symbol_from_any_segment(
         self,
         vram: int,
         info: ParentSegmentInfo,
         allow_addend: bool,
-        validate: Callable[[Symbol], bool]
+        validate: Callable[[Symbol], bool],
     ) -> tuple[Symbol, SegmentMetadata] | None:
         sym = self.user_segment.find_symbol(vram, allow_addend)
         if sym is not None:
@@ -114,9 +145,14 @@ class SegmentMetadataGroup:
                 return None
 
         if len(self.overlay_segments) > 0:
-            sym = self._find_symbol_from_overlay_segments(vram, info, allow_addend, validate)
-            if sym is not None:
-                return sym
+            aux = self._find_symbol_from_overlay_segments(
+                vram,
+                info,
+                allow_addend,
+                validate,
+            )
+            if aux is not None:
+                return aux
 
         sym = self.unknown_segment.find_symbol(vram, allow_addend)
         if sym is not None and validate(sym):
@@ -128,7 +164,7 @@ class SegmentMetadataGroup:
         vram: int,
         info: ParentSegmentInfo,
         allow_addend: bool,
-        validate: Callable[[Symbol], bool]
+        validate: Callable[[Symbol], bool],
     ) -> tuple[Symbol, SegmentMetadata] | None:
         exclusive_ram_id = info.exclusive_ram_id
 
@@ -151,8 +187,14 @@ class SegmentMetadataGroup:
                         for _ovl_cat, segments_per_rom in self.overlay_segments.items():
                             if not segments_per_rom.in_vram_range(vram):
                                 continue
-                            for _segment_rom, segment in segments_per_rom.segments.items():
-                                if segment.name == prioritised_segment and segment.in_vram_range(vram):
+                            for (
+                                _segment_rom,
+                                segment,
+                            ) in segments_per_rom.segments.items():
+                                if (
+                                    segment.name == prioritised_segment
+                                    and segment.in_vram_range(vram)
+                                ):
                                     sym = segment.find_symbol(vram, allow_addend)
                                     if sym is not None and validate(sym):
                                         return sym, segment
@@ -204,7 +246,16 @@ class SegmentMetadataGroup:
         vram_end: int,
         prioritised_segments: list[str],
     ) -> SegmentMetadata:
-        seg_meta = SegmentMetadata(SegmentKind.Global, name, rom_start, rom_end, vram_start, vram_end, prioritised_segments, None)
+        seg_meta = SegmentMetadata(
+            SegmentKind.Global,
+            name,
+            rom_start,
+            rom_end,
+            vram_start,
+            vram_end,
+            prioritised_segments,
+            None,
+        )
         self.global_segments.append(seg_meta)
         return seg_meta
 
@@ -218,7 +269,12 @@ class SegmentMetadataGroup:
         vram_end: int,
         prioritised_segments: list[str],
     ) -> SegmentMetadata:
-        ovl_meta = self.overlay_segments.setdefault(exclusive_ram_id, OverlayMetadata(exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()))
+        ovl_meta = self.overlay_segments.setdefault(
+            exclusive_ram_id,
+            OverlayMetadata(
+                exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()
+            ),
+        )
         return ovl_meta.add_segment(
             name,
             rom_start,
@@ -230,6 +286,7 @@ class SegmentMetadataGroup:
 
 
 metadata_group = SegmentMetadataGroup()
+
 
 def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> None:
     global_rom_start = None
@@ -311,12 +368,18 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                     # Global segment *after* overlay segments?
                     global_segments_after_overlays.append(segment)
 
-            if seen_global_rom_start is None or segment.rom_start < seen_global_rom_start:
+            if (
+                seen_global_rom_start is None
+                or segment.rom_start < seen_global_rom_start
+            ):
                 seen_global_rom_start = segment.rom_start
             if seen_global_rom_end is None or seen_global_rom_end < segment.rom_end:
                 seen_global_rom_end = segment.rom_end
 
-            if seen_global_vram_start is None or segment.vram_start < seen_global_vram_start:
+            if (
+                seen_global_vram_start is None
+                or segment.vram_start < seen_global_vram_start
+            ):
                 seen_global_vram_start = segment.vram_start
             if seen_global_vram_end is None or seen_global_vram_end < segment.vram_end:
                 seen_global_vram_end = segment.vram_end
@@ -327,7 +390,12 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         and global_rom_start is not None
         and global_rom_end is not None
     ):
-        if seen_global_vram_start is not None and seen_global_vram_end is not None and seen_global_rom_start is not None and seen_global_rom_end is not None:
+        if (
+            seen_global_vram_start is not None
+            and seen_global_vram_end is not None
+            and seen_global_rom_start is not None
+            and seen_global_rom_end is not None
+        ):
             # Account for options.opts.global_vram_start and options.opts.global_vram_end for PSX and PSP
             if global_vram_start < seen_global_vram_start:
                 metadata_group._add_global_segment(
@@ -393,9 +461,9 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
 
         for symbols_list in segment.seg_symbols.values():
             for sym in symbols_list:
-                for seg in metadata_group.global_segments:
-                    if seg.in_vram_range(sym.vram_start):
-                        seg.add_user_symbol(sym)
+                for meta_seg in metadata_group.global_segments:
+                    if meta_seg.in_vram_range(sym.vram_start):
+                        meta_seg.add_user_symbol(sym)
                         break
 
     if global_vram_start and global_vram_end:
@@ -409,9 +477,9 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                 # Not global
                 continue
 
-            for seg in metadata_group.global_segments:
-                if seg.in_vram_range(sym.vram_start):
-                    seg.add_user_symbol(sym)
+            for meta_seg in metadata_group.global_segments:
+                if meta_seg.in_vram_range(sym.vram_start):
+                    meta_seg.add_user_symbol(sym)
                     break
 
     for sym in all_symbols:
@@ -420,7 +488,11 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         if sym.user_segment:
             metadata_group.user_segment.add_user_symbol(sym)
 
-    lost_symbols = [f"{sym.name} (Vram: 0x{sym.vram_start:08X})" for sym in all_symbols if not sym._added_to_meta]
+    lost_symbols = [
+        f"{sym.name} (Vram: 0x{sym.vram_start:08X})"
+        for sym in all_symbols
+        if not sym._added_to_meta
+    ]
     if len(lost_symbols) > 0:
         log.write(
             "WARNING: Unable to determine a segment for the following user-declared symbols.\n"
@@ -434,6 +506,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         log.write("\n")
 
     metadata_group.all_symbols = all_symbols
+
 
 def reset() -> None:
     global metadata_group

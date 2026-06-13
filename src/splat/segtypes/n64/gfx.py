@@ -42,8 +42,6 @@ from ...util.log import error
 
 from ..common.codesubsegment import CommonSegCodeSubsegment
 
-from ...util import symbols
-
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 
 
@@ -131,7 +129,13 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def dl_handler(self, addr):
         # Look for 'Gfx'-typed symbols first
-        sym = self.get_symbol(addr, in_segment=False, reference=True, local_only=False, validation=lambda sym: sym.type == "Gfx")
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Gfx",
+        )
 
         if not sym:
             sym = self.create_symbol(
@@ -163,7 +167,13 @@ class N64SegGfx(CommonSegCodeSubsegment):
 
     def vtx_handler(self, addr, count):
         # Look for 'Vtx'-typed symbols first
-        sym = self.get_symbol(addr, in_segment=False, reference=True, local_only=False, validation=lambda sym: sym.type == "Vtx")
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Vtx",
+        )
 
         if not sym:
             sym = self.create_symbol(
