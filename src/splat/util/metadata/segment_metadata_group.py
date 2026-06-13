@@ -495,7 +495,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
     ]
     if len(lost_symbols) > 0:
         log.write(
-            "WARNING: Unable to determine a segment for the following user-declared symbols.\n"
+            "\nWARNING: Unable to determine a segment for the following user-declared symbols.\n"
             "  Try specifying the segment they belong to with 'segment:segment_name' in your symbol_addrs file.\n"
             "  If the address of this symbol is not part of any segment, or if you believe this symbol should be\n"
             "  globally visible and take priority over other symbol references then use the `user_segment:True`\n"

@@ -503,7 +503,7 @@ def write_undefined_syms_auto():
             for s in symbols.all_symbols
             if s.referenced
             and not s.defined
-            and s.type not in {"func", "label", "jtbl_label"}
+            and s.type not in {"func", "label", "jtbl_label", "alabel"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 

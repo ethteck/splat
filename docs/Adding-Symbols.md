@@ -30,10 +30,12 @@ An optional `key:pair` list of settings, note that each option should be separat
 ### `type`
 
 Override splat's automatic type detection, possible values are:
+
 - `func`: Functions
 - `jtbl`: Jumptables
 - `jtbl_label`: Jumptables labels (inside functions)
 - `label`: Branch labels (inside functions)
+- `alabel`: Alternative function entrypoints (inside functions).
 - `s8`, `u8`: To specify data/rodata to be disassembled as `.byte`s
 - `s16`, `u16`: To specify data/rodata to be disassembled as `.short`s
 - `s32`, `u32`: To specify data/rodata to be disassembled as `.word`s (the default)

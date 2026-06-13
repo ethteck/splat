@@ -110,8 +110,10 @@ class SegmentMetadata:
         if symbol is None:
             symbol = Symbol(vram)
             self.symbols[vram] = symbol
+            get_all_symbols().append(symbol)
+            if self.kind == SegmentKind.Unknown:
+                symbol.unknown_segment = True
 
-        get_all_symbols().append(symbol)
         return symbol
 
     def add_user_symbol(self, sym: Symbol) -> None:
@@ -128,7 +130,7 @@ class SegmentMetadata:
             if existing_sym is sym:
                 # there's a bug somewhere...
                 pass
-            elif sym.type in label_types or existing_sym in label_types:
+            elif sym.type in {"alabel", *label_types} or existing_sym in {"alabel", *label_types}:
                 # It is expected for labels to overlap with functions
                 pass
             else:
@@ -137,7 +139,10 @@ class SegmentMetadata:
                 else:
                     existing_size = f"0x{existing_sym.given_size:X}"
                 size = f"0x{sym.given_size:X}" if sym.given_size is not None else "None"
-                msg = f"The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}) overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size {existing_size})"
+                msg = (
+                    f"The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}, segment '{sym.segment}')\n"
+                    f"  overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size {existing_size}, segment '{existing_sym.segment}')"
+                )
                 # TODO: Change this into a hard error.
                 if False:
                     log.error(f"\nERROR: {msg}")
