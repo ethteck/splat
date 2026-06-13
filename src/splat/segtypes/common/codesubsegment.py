@@ -135,8 +135,8 @@ class CommonSegCodeSubsegment(Segment):
                     )
 
         # Main loop
-        for i, insn in enumerate(func_spim.instructions):
-            if options.opts.platform == "ps2":
+        if options.opts.platform == "ps2":
+            for insn in func_spim.instructions:
                 from .c import CommonSegC
                 from rabbitizer import TrinaryValue
 
@@ -145,21 +145,6 @@ class CommonSegCodeSubsegment(Segment):
                 else:
                     insn.flag_r5900UseDollar = TrinaryValue.TRUE
                 insn.flag_r5900DisasmAsData = TrinaryValue.TRUE
-
-            instr_offset = i * 4
-
-            # update pointer accesses from this function
-            if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
-                sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
-
-                context_sym = self.spim_section.get_section().getSymbol(sym_address)
-                if context_sym is not None:
-                    symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(),
-                        self,
-                        context_sym,
-                        force_in_segment=False,
-                    )
 
     def print_file_boundaries(self):
         if not self.show_file_boundaries or not self.spim_section:
