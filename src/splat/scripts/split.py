@@ -3,7 +3,7 @@
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
 from collections import defaultdict, deque
@@ -20,7 +20,7 @@ from ..util import (
 )
 
 from colorama import Style
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 import sys
 
 from ..segtypes.linker_entry import (

@@ -477,7 +477,10 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
             if meta is not None:
                 meta.add_user_symbol(sym)
                 continue
-            log.write(f"Maybe bug: Symbol '{sym}' is unexpectely associated to segment '{sym.segment}'. Please report.", status="warn")
+            log.write(
+                f"Maybe bug: Symbol '{sym}' is unexpectely associated to segment '{sym.segment}'. Please report.",
+                status="warn",
+            )
 
         # Then try to look up for global segments.
         found_global = False
