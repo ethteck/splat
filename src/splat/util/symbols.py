@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 from . import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
-all_symbols_dict: Dict[int, List["Symbol"]] = {}
 ignored_addresses: Set[int] = set()
 to_mark_as_defined: Set[str] = set()
 
@@ -52,12 +51,13 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def add_symbol(sym: "Symbol"):
+def add_symbol(sym: "Symbol", all_symbols_dict: Dict[int, List["Symbol"]]):
     all_symbols.append(sym)
-    if sym.vram_start is not None:
-        if sym.vram_start not in all_symbols_dict:
-            all_symbols_dict[sym.vram_start] = []
-        all_symbols_dict[sym.vram_start].append(sym)
+    items = all_symbols_dict.get(sym.vram_start)
+    if items is None:
+        all_symbols_dict[sym.vram_start] = [sym]
+    else:
+        items.append(sym)
 
 
 def to_cname(symbol_name: str) -> str:
@@ -70,7 +70,7 @@ def to_cname(symbol_name: str) -> str:
 
 
 def handle_sym_addrs(
-    path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]"
+    path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]",
 ):
     def get_seg_for_name(name: str) -> Optional["Segment"]:
         for segment in all_segments:
@@ -83,6 +83,8 @@ def handle_sym_addrs(
             if segment.contains_rom(rom):
                 return segment
         return None
+
+    all_symbols_dict: Dict[int, List["Symbol"]] = {}
 
     seen_symbols: Dict[str, "Symbol"] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
@@ -323,7 +325,6 @@ def handle_sym_addrs(
                                 f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
                                 status="warn",
                             )
-                    sym.segment.add_symbol(sym)
 
                 sym.user_declared = True
 
@@ -335,8 +336,8 @@ def handle_sym_addrs(
                             f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
                         )
 
-                if addr in all_symbols_dict:
-                    items = all_symbols_dict[addr]
+                items = all_symbols_dict.get(addr)
+                if items is not None:
                     for item in items:
                         have_same_rom_addresses = sym.rom == item.rom
                         same_segment = sym.segment == item.segment
@@ -367,15 +368,13 @@ def handle_sym_addrs(
 
                 seen_symbols[sym.name] = sym
 
-            add_symbol(sym)
+            add_symbol(sym, all_symbols_dict)
 
 
 def initialize(all_segments: "List[Segment]"):
     global all_symbols
-    global all_symbols_dict
 
     all_symbols = []
-    all_symbols_dict = {}
 
     # Manual list of func name / addrs
     for path in options.opts.symbol_addrs_paths:
@@ -772,12 +771,10 @@ def get_all_symbols():
 
 def reset_symbols():
     global all_symbols
-    global all_symbols_dict
     global ignored_addresses
     global to_mark_as_defined
     global spim_context
     all_symbols = []
-    all_symbols_dict = {}
     ignored_addresses = set()
     to_mark_as_defined = set()
     spim_context = spimdisasm.common.Context()

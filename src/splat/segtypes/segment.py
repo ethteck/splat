@@ -314,9 +314,6 @@ class Segment:
         # Default to global options.
         self.given_find_file_boundaries: Optional[bool] = None
 
-        # Symbols known to be in this segment
-        self.given_seg_symbols: Dict[int, List[Symbol]] = {}
-
         self.given_section_order: List[str] = options.opts.section_order
 
         self.vram_class: Optional[VramClass] = None
@@ -572,18 +569,6 @@ class Segment:
         if self.parent:
             return self.parent.get_exclusive_ram_id()
         return self.exclusive_ram_id
-
-    def add_symbol(self, symbol: Symbol):
-        if symbol.vram_start not in self.given_seg_symbols:
-            self.given_seg_symbols[symbol.vram_start] = []
-        self.given_seg_symbols[symbol.vram_start].append(symbol)
-
-    @property
-    def seg_symbols(self) -> Dict[int, List[Symbol]]:
-        if self.parent:
-            return self.parent.seg_symbols
-        else:
-            return self.given_seg_symbols
 
     @property
     def size(self) -> Optional[int]:

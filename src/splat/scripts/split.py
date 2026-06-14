@@ -175,30 +175,6 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     return ret
 
 
-def assign_symbols_to_segments():
-    # return
-    for symbol in symbols.all_symbols:
-        if symbol.segment:
-            continue
-
-        if symbol.rom:
-            cands: Set[Interval] = segment_roms[symbol.rom]
-            if len(cands) > 1:
-                log.error("multiple segments rom overlap symbol", symbol)
-            elif len(cands) == 0:
-                log.error("no segment rom overlaps symbol", symbol)
-            else:
-                cand: Interval = cands.pop()
-                seg: Segment = cand.data
-                seg.add_symbol(symbol)
-        else:
-            cands = segment_rams[symbol.vram_start]
-            segs: List[Segment] = [cand.data for cand in cands]
-            for seg in segs:
-                if not seg.get_exclusive_ram_id():
-                    seg.add_symbol(symbol)
-
-
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -302,11 +278,9 @@ def initialize_all_symbols(all_segments: List[Segment]):
     symbols.initialize(all_segments)
     relocs.initialize()
 
-    # Assign symbols to segments
-    assign_symbols_to_segments()
+    metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
 
     if options.opts.is_mode_active("code"):
-        metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
         symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
         relocs.initialize_spim_context()
 
