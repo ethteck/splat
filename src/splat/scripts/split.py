@@ -306,9 +306,9 @@ def initialize_all_symbols(all_segments: List[Segment]):
     assign_symbols_to_segments()
 
     if options.opts.is_mode_active("code"):
-        symbols.initialize_spim_context(all_segments)
-        relocs.initialize_spim_context()
         metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
+        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+        relocs.initialize_spim_context()
 
 
 def do_scan(

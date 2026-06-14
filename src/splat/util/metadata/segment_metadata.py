@@ -153,7 +153,6 @@ class SegmentMetadata:
                 else:
                     log.write(f"\nWARNING: {msg}", status="warn")
 
-        sym._added_to_meta = True
         self.symbols[sym.vram_start] = sym
 
     def find_symbol(self, vram: int, allow_addend: bool) -> Optional[Symbol]:
