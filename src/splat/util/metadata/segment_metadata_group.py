@@ -339,19 +339,21 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         ram_id = segment.get_exclusive_ram_id()
 
         if ram_id is not None:
-            if segment.vram_start != segment.vram_end:
+            if segment.vram_start == segment.vram_end:
                 # Skip zero-sized segments.
-                seg_meta = metadata_group._add_overlay_segment(
-                    ram_id,
-                    segment.name,
-                    segment.rom_start,
-                    segment.rom_end,
-                    segment.vram_start,
-                    segment.vram_end,
-                    segment.prioritised_segments,
-                )
-                overlay_segments.append(seg_meta)
-                segments_by_name[seg_meta.name] = seg_meta
+                continue
+            seg_meta = metadata_group._add_overlay_segment(
+                ram_id,
+                segment.name,
+                segment.rom_start,
+                segment.rom_end,
+                segment.vram_start,
+                segment.vram_end,
+                segment.prioritised_segments,
+            )
+            segment.owned_metadata = seg_meta
+            overlay_segments.append(seg_meta)
+            segments_by_name[seg_meta.name] = seg_meta
         else:
             seg_meta = metadata_group._add_global_segment(
                 segment.name,
@@ -361,6 +363,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
                 segment.vram_end,
                 segment.prioritised_segments,
             )
+            segment.owned_metadata = seg_meta
             segments_by_name[seg_meta.name] = seg_meta
 
             if global_rom_start is None or segment.rom_start < global_rom_start:

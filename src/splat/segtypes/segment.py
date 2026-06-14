@@ -11,14 +11,14 @@ from ..util import vram_classes
 from ..util.vram_classes import VramClass
 from ..util import log, options
 from ..util.symbols import Symbol, to_cname
+from ..util.metadata.segment_metadata import SegmentMetadata
+from ..util.metadata.parent_segment_info import ParentSegmentInfo
 
 from .. import __package_name__
 
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.linker_entry import LinkerEntry
-    from ..util.metadata.segment_metadata import SegmentMetadata
-    from ..util.metadata.parent_segment_info import ParentSegmentInfo
 
 
 def parse_segment_vram(segment: Union[dict, list]) -> Optional[int]:
@@ -310,6 +310,10 @@ class Segment:
         self.exclusive_ram_id: Optional[str] = None
         self.prioritised_segments: list[str] = list()
         self.given_dir: Path = Path()
+
+        # Metadata, symbols and symbol lookup information,
+        # only the most_parent has this information.
+        self.owned_metadata: Optional[SegmentMetadata] = None
 
         # Default to global options.
         self.given_find_file_boundaries: Optional[bool] = None
@@ -804,21 +808,19 @@ class Segment:
             if parent_segment_info is None:
                 seg_meta = metadata_group.unknown_segment
             elif in_segment:
-                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                # Check if we know our own segment metadata,
+                # if not, then default to look it up.
+                if most_parent.owned_metadata is not None:
+                    seg_meta = most_parent.owned_metadata
+                else:
+                    seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             else:
-                # aux = metadata_group.find_symbol_from_any_segment(addr, parent_segment_info, search_ranges, validation if validation is not None else default_sym_validation)
-                # if aux is not None:
-                #     ret, seg_meta = aux
-                #     rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
-                if False:
-                    pass
-                else:
-                    seg_meta = metadata_group.find_referenced_segment_for_creation(
-                        addr,
-                        parent_segment_info,
-                    )
-                    rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
+                seg_meta = metadata_group.find_referenced_segment_for_creation(
+                    addr,
+                    parent_segment_info,
+                )
+                rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             if ret is None:
                 ret = seg_meta.create_symbol(addr, search_ranges)
         else:
@@ -826,7 +828,10 @@ class Segment:
                 seg_meta = metadata_group.unknown_segment
                 ret = seg_meta.find_symbol(addr, search_ranges)
             elif in_segment:
-                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                if most_parent.owned_metadata is not None:
+                    seg_meta = most_parent.owned_metadata
+                else:
+                    seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 ret = seg_meta.find_symbol(addr, search_ranges)
                 rom = rom_from_vram(addr, seg_meta, parent_segment_info, self)
             elif not local_only:
