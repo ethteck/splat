@@ -27,7 +27,7 @@
 * `alabel` is recognized as a symbol type.
   * An alternative entrypoint for functions.
   * Works similarly to branch labels, in the way that it is used to declare symbols in the middle of functions.
-* `spimdisasm` 1.XX.0 or above is now required.
+* `spimdisasm` 1.42.0 or above is now required.
 
 ### 0.41.0
 
