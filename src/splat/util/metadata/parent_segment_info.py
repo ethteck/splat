@@ -4,6 +4,11 @@ from typing import Optional
 
 @dataclasses.dataclass
 class ParentSegmentInfo:
+    """
+    Information from the parent segment, used to locate the segment's metadata
+    or to locate segments that can be referenced by this parent segment.
+    """
+
     segment_rom: int
     segment_vram: int
     exclusive_ram_id: Optional[str]

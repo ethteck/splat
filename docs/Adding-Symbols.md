@@ -1,3 +1,5 @@
+# Declaring symbols
+
 Symbols (i.e. labelling a function or variable) are controlled by the `symbols_addrs.txt` file.
 
 The format for defining symbols is:
@@ -5,6 +7,7 @@ The format for defining symbols is:
 ```ini
 symbol = address; // option1:value1 option2:value2
 ```
+
 e.g.
 ```ini
 osInitialize = 0x801378C0; // type:func
@@ -63,7 +66,9 @@ RawHuffmanTable = 0x8022E0E0; // type:symbol size:0x100
 
 ### `rom`
 
-The ROM offset for the symbol, useful (potentially mandatory) for symbols in overlays where multiple symbols could share the same VRAM address.
+The ROM offset for the symbol.
+
+It is mandatory to either specify at least this or [segment](#segment) for symbols in overlays where multiple symbols could share the same VRAM address. If both are missing, the symbol is assumed to be part of any of the non-overlay segments.
 
 **Example:**
 ```ini
@@ -72,11 +77,30 @@ create_particle_effect = 0x802D5F4C; // type:func rom:0x6E75FC
 
 ### `segment`
 
-Allows specifying to which specific segment this symbol belongs to, useful to disambiguate symbols from segments that share the same VRAM address. This name must be the same as the name of a segment listed in the yaml.
+Allows specifying to which specific segment this symbol belongs to, useful to disambiguate symbols from segments that share the same VRAM address.
+
+This name must be the same as the name of a segment listed in the yaml.
+The segment's Vram and Rom address must include the addresses of the given symbol.
+
+It is mandatory to either specify at least this or [rom](#rom) for symbols in overlays where multiple symbols could share the same VRAM address. If both are missing, the symbol is assumed to be part of any of the non-overlay segments.
 
 **Example:**
 ```ini
 sMenuTexture = 0x06004040; // segment:menu_assets
+```
+
+### `absolute`
+
+Declares this symbol as being associated to no segment.
+
+Some symbols are special in the way they exist outside the address space of the ROM. Instead they are provided by the OS, hardware, etc. This way you can name these kind of symbols.
+
+`absolute` symbols also have the property of being prioritized over everything else when looking up for address references.
+
+**Example:**
+
+```ini
+osTvType = 0x80000300; // absolute:True
 ```
 
 ### `name_end`

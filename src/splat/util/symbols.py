@@ -270,8 +270,8 @@ def handle_sym_addrs(
                                 continue
                             if attr_name == "use_non_matching_label":
                                 sym.use_non_matching_label = tf_val
-                            if attr_name == "user_segment":
-                                sym.user_segment = tf_val
+                            if attr_name == "absolute":
+                                sym.absolute = tf_val
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -282,21 +282,21 @@ def handle_sym_addrs(
                     )
                 continue
 
-            if sym.user_segment:
+            if sym.absolute:
                 sym.defined = True
 
-                # Most attributes make no sense for a user_segment symbol.
+                # Most attributes make no sense for a absolute symbol.
                 # For now just warn about these two.
                 if sym.rom is not None:
                     log.parsing_error_preamble(path, line_num, line)
                     log.write(
-                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both a rom address (0x{sym.rom:08X}) and user_segment:True.",
+                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both a rom address (0x{sym.rom:08X}) and absolute:True.",
                         status="warn",
                     )
                 if sym.segment is not None:
                     log.parsing_error_preamble(path, line_num, line)
                     log.write(
-                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both an associated segment ({sym.segment}) and user_segment:True.",
+                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both an associated segment ({sym.segment}) and absolute:True.",
                         status="warn",
                     )
             else:
@@ -389,6 +389,7 @@ def initialize(all_segments: "List[Segment]"):
 def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
     spim_context.bannedSymbols |= ignored_addresses
 
+    # Initialize spimdisasm's global ranges.
     if (
         metadata_group.global_rom_start is not None
         and metadata_group.global_rom_end is not None
@@ -402,13 +403,16 @@ def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
             metadata_group.global_vram_end,
         )
 
-    for sym in metadata_group.user_segment.symbols.values():
-        add_symbol_to_spimdisasm_segment(spim_context.userSegment, sym)
+    # Pass absolute symbols.
+    for sym in metadata_group.absolute_segment.symbols.values():
+        add_symbol_to_spimdisasm_segment(spim_context.absoluteSegment, sym)
 
+    # Pass global symbols
     for seg_meta in metadata_group.global_segments:
         for sym in seg_meta.symbols.values():
             add_symbol_to_spimdisasm_segment(spim_context.globalSegment, sym)
 
+    # Create overlays and pass their symbols.
     for ovl_id, segments_per_rom in metadata_group.overlay_segments.items():
         for _, seg_meta in segments_per_rom.segments.items():
             spimdisasm_segment = spim_context.addOverlaySegment(
@@ -490,7 +494,7 @@ def add_symbol_to_spimdisasm_segment(
 # force_in_segment=True when the symbol belongs to this specific parent segment.
 # force_in_segment=False when this symbol is just a reference.
 def create_symbol_from_spim_symbol(
-    segment_most_parent: "Segment",
+    most_parent: "Segment",
     current_segment: "Segment",
     context_sym: spimdisasm.common.ContextSymbol,
     *,
@@ -511,16 +515,16 @@ def create_symbol_from_spim_symbol(
     if not in_segment:
         if (
             context_sym.overlayCategory is None
-            and segment_most_parent.get_exclusive_ram_id() is None
+            and most_parent.get_exclusive_ram_id() is None
         ):
-            in_segment = segment_most_parent.contains_vram(context_sym.vram)
-        elif context_sym.overlayCategory == segment_most_parent.get_exclusive_ram_id():
+            in_segment = most_parent.contains_vram(context_sym.vram)
+        elif context_sym.overlayCategory == most_parent.get_exclusive_ram_id():
             if context_sym.vromAddress is not None:
-                in_segment = segment_most_parent.contains_rom(context_sym.vromAddress)
+                in_segment = most_parent.contains_rom(context_sym.vromAddress)
             else:
-                in_segment = segment_most_parent.contains_vram(context_sym.vram)
+                in_segment = most_parent.contains_vram(context_sym.vram)
 
-    sym = segment_most_parent.create_symbol(
+    sym = most_parent.create_symbol(
         context_sym.vram,
         force_in_segment or in_segment,
         type=sym_type,
@@ -613,12 +617,11 @@ class Symbol:
 
     use_non_matching_label: Optional[bool] = None
 
-    user_segment: bool = False
+    unknown_segment: bool = False
+    absolute: bool = False
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
-
-    unknown_segment: bool = False
 
     def __str__(self):
         return self.name

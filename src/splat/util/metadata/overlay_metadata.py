@@ -7,8 +7,13 @@ from .. import log
 
 @dataclasses.dataclass
 class OverlayMetadata:
+    """
+    A group of overlays that share the same `exclusive_ram_id`.
+    """
+
     exclusive_ram_id: str
 
+    # Ranges covering all the overlays for this `exclusive_ram_id`.
     rom_start: int
     rom_end: int
     vram_start: int
