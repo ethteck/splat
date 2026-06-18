@@ -124,7 +124,6 @@ class SegmentMetadata:
         Returns `None` if either:
         - This segment is either the Absolute or Unknown special segments.
         - The given Vram is outside the Vram space of this segment.
-        - The resulting Rom address is outside the Rom space of this segment.
         """
 
         if self.kind == SegmentKind.Unknown or self.kind == SegmentKind.Absolute:
@@ -133,8 +132,6 @@ class SegmentMetadata:
         if not self.in_vram_range(vram):
             return None
         rom = vram - self.vram_start + self.rom_start
-        if not self.in_rom_range(rom):
-            return None
         return rom
 
     def is_owned_segment(self, info: ParentSegmentInfo) -> bool:

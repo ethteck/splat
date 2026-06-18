@@ -800,6 +800,7 @@ class Segment:
         rom: Optional[int] = None
 
         most_parent, parent_segment_info = self.get_parent_segment_info()
+        seg_meta = None
 
         if create:
             if parent_segment_info is None:
@@ -811,13 +812,11 @@ class Segment:
                     seg_meta = most_parent.owned_metadata
                 else:
                     seg_meta = metadata_group.find_owned_segment(parent_segment_info)
-                rom = rom_from_vram(addr, seg_meta, parent_segment_info, most_parent)
             else:
                 seg_meta = metadata_group.find_referenced_segment_for_creation(
                     addr,
                     parent_segment_info,
                 )
-                rom = rom_from_vram(addr, seg_meta, parent_segment_info, most_parent)
             if ret is None:
                 ret = seg_meta.create_symbol(addr, search_ranges)
         else:
@@ -830,7 +829,6 @@ class Segment:
                 else:
                     seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 ret = seg_meta.find_symbol(addr, search_ranges)
-                rom = rom_from_vram(addr, seg_meta, parent_segment_info, most_parent)
             elif not local_only:
                 if validation is None:
                     validation = default_sym_validation
@@ -842,12 +840,10 @@ class Segment:
                 )
                 if aux is not None:
                     ret, seg_meta = aux
-                    rom = rom_from_vram(
-                        addr,
-                        seg_meta,
-                        parent_segment_info,
-                        most_parent,
-                    )
+
+        if seg_meta is not None and parent_segment_info is not None:
+            if seg_meta.is_owned_segment(parent_segment_info):
+                rom = seg_meta.rom_from_vram(addr)
 
         if ret:
             if define:
@@ -895,17 +891,3 @@ class Segment:
 
 def default_sym_validation(_sym: Symbol) -> bool:
     return True
-
-
-def rom_from_vram(
-    vram: int, seg_meta: "SegmentMetadata", info: "ParentSegmentInfo", seg: Segment
-) -> Optional[int]:
-    if seg_meta.kind == SegmentKind.Unknown or seg_meta.kind == SegmentKind.Absolute:
-        return None
-    if not seg_meta.is_owned_segment(info):
-        return None
-    if seg_meta.kind == SegmentKind.Overlay:
-        return seg_meta.rom_from_vram(vram)
-    if seg_meta.kind == SegmentKind.Global:
-        return seg.ram_to_rom(vram)
-    return None
