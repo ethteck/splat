@@ -369,28 +369,23 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
 
     segments_by_name: Dict[str, SegmentMetadata] = dict()
 
-    from ...segtypes.common.code import CommonSegCode
-
-    global_segments_after_overlays: list[CommonSegCode] = []
+    global_segments_after_overlays: list[Segment] = []
+    skipped_segments: set[str] = set()
 
     for segment in all_segments:
-        if not isinstance(segment, CommonSegCode):
-            # We only care about the VRAMs of code segments
-            continue
-
-        if segment.special_vram_segment:
-            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
-            continue
-
         if (
             not isinstance(segment.vram_start, int)
             or not isinstance(segment.vram_end, int)
             or not isinstance(segment.rom_start, int)
             or not isinstance(segment.rom_end, int)
         ):
+            skipped_segments.add(segment.name)
             continue
 
         ram_id = segment.get_exclusive_ram_id()
+        if ram_id is None and segment.special_vram_segment:
+            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
+            ram_id = "$special_vram_segment"
 
         if ram_id is not None:
             # Overlay
@@ -540,10 +535,18 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
             if meta is not None:
                 meta.add_user_symbol(sym)
                 continue
-            log.write(
-                f"Maybe bug: Symbol '{sym}' is unexpectely associated to segment '{sym.segment}'. Please report.",
-                status="warn",
-            )
+            elif sym.segment.name in skipped_segments:
+                log.write(
+                    f"Error: Unable to associated '{sym}' to segment '{sym.segment}' because that segment is missing a vram/rom address.",
+                    status="warn",
+                )
+            else:
+                log.write(
+                    f"Warning (Maybe bug): User-declared symbol '{sym}' is unexpectely associated to segment '{sym.segment}'.\n"
+                    "  This is an issue because unexpected segments should have been filtered on a previous step.\n"
+                    "  Please report.",
+                    status="warn",
+                )
 
         # Then try to look up for global segments.
         found_global = False
@@ -562,7 +565,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
 
     if len(lost_symbols) > 0:
         log.write(
-            "\nWARNING: Unable to determine a segment for the following user-declared symbols.\n"
+            "\nError: Unable to determine a segment for the following user-declared symbols.\n"
             "  Try specifying the segment they belong to with 'segment:segment_name' in your symbol_addrs file.\n"
             "  If the address of this symbol is not part of any segment, or if you believe this symbol should be\n"
             "  globally visible and take priority over other symbol references then use the `absolute:True`\n"
@@ -571,6 +574,7 @@ def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> No
         )
         log.write("    " + "\n    ".join(lost_symbols))
         log.write("\n")
+        log.error("Stopping due to the above issues.")
 
     metadata_group.all_symbols = all_symbols
 

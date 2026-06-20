@@ -205,7 +205,7 @@ class SegmentMetadata:
                     existing_size = f"0x{existing_sym.given_size:X}"
                 size = f"0x{sym.given_size:X}" if sym.given_size is not None else "None"
                 msg = (
-                    f"The user defined symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}, segment '{sym.segment}')\n"
+                    f"The user declared symbol '{sym.name}' (Vram 0x{sym.vram_start:08X}, size {size}, segment '{sym.segment}')\n"
                     f"  overlaps with the previously defined '{existing_sym.name}' (Vram 0x{existing_sym.vram_start:08X}, size {existing_size}, segment '{existing_sym.segment}')"
                 )
                 # TODO: Change this into a hard error.

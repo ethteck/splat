@@ -12,7 +12,7 @@ from ..util.vram_classes import VramClass
 from ..util import log, options
 from ..util.symbols import Symbol, to_cname
 from ..util.metadata.parent_segment_info import ParentSegmentInfo
-from ..util.metadata.segment_metadata import SegmentMetadata, SegmentKind
+from ..util.metadata.segment_metadata import SegmentMetadata
 from ..util.metadata.segment_metadata_group import metadata_group
 
 from .. import __package_name__
