@@ -527,7 +527,9 @@ class SegmentMetadataGroup:
                     "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
                 )
                 if last_global_segment is not None:
-                    log.write(f"The last global segment seen is {last_global_segment}. Rom: 0x{last_global_segment.rom_start:X}, Vram: 0x{last_global_segment.vram_start:08X}")
+                    log.write(
+                        f"The last global segment seen is {last_global_segment}. Rom: 0x{last_global_segment.rom_start:X}, Vram: 0x{last_global_segment.vram_start:08X}"
+                    )
                 if len(global_segments_after_overlays) > 0:
                     log.write(
                         "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
@@ -591,8 +593,14 @@ class SegmentMetadataGroup:
                 for seg_meta in segments_by_name.values()
                 if seg_meta.in_vram_range(sym.vram_start)
             ]
-            possible_segments_str = f"[{', '.join(possible_segments)}]" if len(possible_segments) > 0 else "None"
-            lost_symbols.append(f"{sym.name} (Vram: 0x{sym.vram_start:08X}). Suspected segments: {possible_segments_str}")
+            possible_segments_str = (
+                f"[{', '.join(possible_segments)}]"
+                if len(possible_segments) > 0
+                else "None"
+            )
+            lost_symbols.append(
+                f"{sym.name} (Vram: 0x{sym.vram_start:08X}). Suspected segments: {possible_segments_str}"
+            )
             self.unknown_segment.add_user_symbol(sym)
 
         if len(lost_symbols) > 0:
@@ -606,6 +614,7 @@ class SegmentMetadataGroup:
             )
             log.write("    " + "\n    ".join(lost_symbols))
             log.write("\n")
+            # TODO: uncomment on a future version
             # log.error("Stopping due to the above issues.")
 
         self.all_symbols = all_symbols
