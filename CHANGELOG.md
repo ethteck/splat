@@ -5,7 +5,7 @@
 * BREAKING CHANGES:
   * Declaring an overlay symbol but not specifying their `segment:` or `rom:` on the symbol_addrs.txt file is no loger accepted. A warning will be emitted and the symbol won't be used.
   * Associating a symbol to a segment that does not cover the Vram or Rom address space for that segment is no longer accepted.
-    * If you need to tell splat to use a symbol from a specific segment for a given segment, then use the new prioritised segment system.
+    * If you need to tell splat to use a symbol from a specific segment for a given segment, then use the new prioritized segment system.
   * Declaring a symbol without an associated segment, which is not covered by any of the Vram addresses of the global segments is no longer accepted.
     * If you need to declare symbols that aren't part of any real segment of the rom then use the new absoulte symbols system.
   * `splat.utils.symbols.all_symbols_dict` and `splat.utils.symbols.all_symbols_ranges` have been removed.
@@ -13,11 +13,11 @@
   * Completely change how the internal symbol tracking system works, aiming to fix issues with overlapping addresses in overlays.
   * Ideally this should fix most issues related to using a symbol from overlay A in overlay B even when both are marked with the same `exclusive_ram_id`.
   * Because of this, splat is a lot more strict about user-declared symbols. From now on, splat will warn and discard symbols that it can't figure out the corresponding segment on its own, instead of just trying to use them whenever they fit. This is mostly an issue for declaring symbols for overalys with overlapping addresses (segments declared with `exclusive_ram_id`).
-* Add prioritised segment system.
-  * Allows to tell which segments should be prioritised when looking up for symbol references.
+* Add prioritized segment system.
+  * Allows to tell which segments should be prioritized when looking up for symbol references.
   * This way a user can choose how to disambiguate references to multiple segments with overlapping addresses, for example, referencing a an address shared by multiple overlays (say A, B and C) by telling the segment to lookup symbols from segment B first instead of looking into any other arbitrarily.
   * Also allows global segments to reference symbols from specific overlays.
-  * Each segment can have their own list of prioritised segments. This list can be declared with the `prioritised_segments` yaml attribute on the segment level.
+  * Each segment can have their own list of prioritized segments. This list can be declared with the `prioritized_segments` yaml attribute on the segment level.
   * This attribute is only accepted for top-level segments, subsegments silently ignore this attribute.
 * Add absolute symbols system.
   * Allows declaring symbols that are not part of any segment of the ROM.

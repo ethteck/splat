@@ -643,7 +643,7 @@ This value expects the name of the other segment that should be paired to the cu
       # -- snip --
 ```
 
-### `prioritised_segments`
+### `prioritized_segments`
 
 A list of top-level segments.
 
@@ -651,7 +651,7 @@ This segment is allowed to "see" the symbols from the segments on that list, eve
 
 This also allows control over how to disambiguate references over multiple overlay segments with overlaping addresses.
 
-Note the visibility is unidirectional, if you want both segments to see each other then you need to add a `prioritised_segments` on both listing the other segment's name.
+Note the visibility is unidirectional, if you want both segments to see each other then you need to add a `prioritized_segments` on both listing the other segment's name.
 
 ```yaml
   - type: code
@@ -671,6 +671,6 @@ Note the visibility is unidirectional, if you want both segments to see each oth
     vram: 0x802D60E0
     bss_size: 0x170
     exclusive_ram_id: level
-    prioritised_segments:
+    prioritized_segments:
       - volcano_assets
 ```

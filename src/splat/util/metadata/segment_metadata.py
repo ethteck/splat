@@ -58,9 +58,9 @@ class SegmentMetadata:
 
     exclusive_ram_id: Optional[str]
 
-    prioritised_segments: list[str]
+    prioritized_segments: list[str]
     """
-    Other segments this segment is allowed to see and prioritise.
+    Other segments this segment is allowed to see and prioritize.
     """
 
     symbols: SortedDict[Symbol]
@@ -79,7 +79,7 @@ class SegmentMetadata:
         rom_end: int,
         vram_start: int,
         vram_end: int,
-        prioritised_segments: list[str],
+        prioritized_segments: list[str],
         exclusive_ram_id: Optional[str],
     ) -> None:
         if rom_start > rom_end:
@@ -99,7 +99,7 @@ class SegmentMetadata:
         self.vram_end = vram_end
         self.exclusive_ram_id = exclusive_ram_id
 
-        self.prioritised_segments = prioritised_segments
+        self.prioritized_segments = prioritized_segments
 
         self.symbols = SortedDict()
 
@@ -235,5 +235,5 @@ class SegmentMetadata:
 
         return self.symbols.get(vram)
 
-    def get_prioritised_segments(self) -> list[str]:
-        return self.prioritised_segments
+    def get_prioritized_segments(self) -> list[str]:
+        return self.prioritized_segments
