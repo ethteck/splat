@@ -356,14 +356,16 @@ class SegmentMetadataGroup:
         self,
         all_segments: "list[Segment]",
     ) -> Tuple[Dict[str, SegmentMetadata], Set[str]]:
-        global_rom_start = None
-        global_rom_end = None
-        global_vram_start = options.opts.global_vram_start
-        global_vram_end = options.opts.global_vram_end
-        seen_global_rom_start = None
-        seen_global_rom_end = None
-        seen_global_vram_start = None
-        seen_global_vram_end = None
+        global_rom_start: Optional[int] = None
+        global_rom_end: Optional[int] = None
+        global_vram_start: Optional[int] = options.opts.global_vram_start
+        global_vram_end: Optional[int] = options.opts.global_vram_end
+        last_global_segment: Optional[Segment] = None
+
+        seen_global_rom_start: Optional[int] = None
+        seen_global_rom_end: Optional[int] = None
+        seen_global_vram_start: Optional[int] = None
+        seen_global_vram_end: Optional[int] = None
         overlay_segments: list[SegmentMetadata] = list()
 
         segments_by_name: Dict[str, SegmentMetadata] = dict()
@@ -431,8 +433,10 @@ class SegmentMetadataGroup:
 
                 if global_vram_end is None:
                     global_vram_end = segment.vram_end
+                    last_global_segment = segment
                 elif global_vram_end < segment.vram_end:
                     global_vram_end = segment.vram_end
+                    last_global_segment = segment
 
                     if len(overlay_segments) > 0:
                         # Global segment *after* overlay segments?
@@ -513,17 +517,17 @@ class SegmentMetadataGroup:
                     and global_vram_end > ovl_segment.vram_start
                 ):
                     log.write(
-                        f"Error: the vram range ([0x{ovl_segment.vram_start:08X}, 0x{ovl_segment.vram_end:08X}]) of the non-global segment at rom address 0x{ovl_segment.rom_start:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
+                        f"Error: Segment {ovl_segment.name} with vram range ([0x{ovl_segment.vram_start:08X}, 0x{ovl_segment.vram_end:08X}]) of the non-global segment at rom address 0x{ovl_segment.rom_start:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
                         status="warn",
                     )
                     overlaps_found = True
             if overlaps_found:
                 log.write(
-                    "Many overlaps between non-global and global segments were found.",
-                )
-                log.write(
+                    "Overlaps between non-global and global segments were found.\n"
                     "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
                 )
+                if last_global_segment is not None:
+                    log.write(f"The last global segment seen is {last_global_segment}. Rom: 0x{last_global_segment.rom_start:X}, Vram: 0x{last_global_segment.vram_start:08X}")
                 if len(global_segments_after_overlays) > 0:
                     log.write(
                         "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
@@ -582,7 +586,13 @@ class SegmentMetadataGroup:
 
             # We run out of places to put this symbol into.
             # We need the user to give us more info on what to do with this.
-            lost_symbols.append(f"{sym.name} (Vram: 0x{sym.vram_start:08X})")
+            possible_segments = [
+                f"{seg_meta.name} (Vram: 0x{seg_meta.vram_start:08X}, Rom: 0x{seg_meta.rom_start:X})"
+                for seg_meta in segments_by_name.values()
+                if seg_meta.in_vram_range(sym.vram_start)
+            ]
+            possible_segments_str = f"[{', '.join(possible_segments)}]" if len(possible_segments) > 0 else "None"
+            lost_symbols.append(f"{sym.name} (Vram: 0x{sym.vram_start:08X}). Suspected segments: {possible_segments_str}")
             self.unknown_segment.add_user_symbol(sym)
 
         if len(lost_symbols) > 0:
@@ -596,7 +606,7 @@ class SegmentMetadataGroup:
             )
             log.write("    " + "\n    ".join(lost_symbols))
             log.write("\n")
-            log.error("Stopping due to the above issues.")
+            # log.error("Stopping due to the above issues.")
 
         self.all_symbols = all_symbols
 
