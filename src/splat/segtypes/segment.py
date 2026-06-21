@@ -829,7 +829,11 @@ class Segment:
                 ret = seg_meta.find_symbol(addr, search_ranges)
             elif in_segment:
                 if most_parent.owned_metadata is not None:
-                    seg_meta = most_parent.owned_metadata
+                    if most_parent.owned_metadata.in_vram_range(addr):
+                        seg_meta = most_parent.owned_metadata
+                    else:
+                        # Avoid creating a symbol inside this segment if it doesn't belong to.
+                        seg_meta = metadata_group.unknown_segment
                 else:
                     seg_meta = metadata_group.find_owned_segment(parent_segment_info)
                 ret = seg_meta.find_symbol(addr, search_ranges)
