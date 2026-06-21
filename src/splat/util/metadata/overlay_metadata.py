@@ -53,6 +53,11 @@ class OverlayMetadata:
                 f"  New segment '{name}'. Rom 0x{rom_start:08X}~0x{rom_end:08X}. Vram 0x{vram_start:08X}~0x{vram_start:08X}\n"
             )
 
+        self.rom_start = min(self.rom_start, rom_start)
+        self.rom_end = max(self.rom_end, rom_end)
+        self.vram_start = min(self.vram_start, vram_start)
+        self.vram_end = max(self.vram_end, vram_end)
+
         seg = SegmentMetadata(
             SegmentKind.Overlay,
             name,

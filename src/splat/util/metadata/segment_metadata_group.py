@@ -227,7 +227,7 @@ class SegmentMetadataGroup:
                             return sym, owned_segment
                         return None
 
-                    # Check for any prioiritised segment, if any.
+                    # Check for prioritized segments, if any.
                     aux = self._find_symbol_from_prioritized_segments(
                         vram,
                         allow_addend,
