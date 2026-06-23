@@ -152,15 +152,16 @@ class CommonSegCodeSubsegment(Segment):
 
         assert isinstance(self.rom_start, int)
 
-        for in_file_offset in self.spim_section.get_section().fileBoundaries:
+        spim_section = self.spim_section.get_section()
+        for in_file_offset in spim_section.fileBoundaries:
             if not self.parent.reported_file_split:
                 self.parent.reported_file_split = True
 
                 # Look up for the last symbol in this boundary
                 sym_addr = 0
-                for sym in self.spim_section.get_section().symbolList:
+                for sym in spim_section.symbolList:
                     symOffset = (
-                        sym.inFileOffset - self.spim_section.get_section().inFileOffset
+                        sym.inFileOffset - spim_section.inFileOffset
                     )
                     if in_file_offset == symOffset:
                         break

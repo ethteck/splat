@@ -360,7 +360,7 @@ class SegmentMetadataGroup:
         global_rom_end: Optional[int] = None
         global_vram_start: Optional[int] = options.opts.global_vram_start
         global_vram_end: Optional[int] = options.opts.global_vram_end
-        last_global_segment: Optional[Segment] = None
+        global_segment_largest_vram: Optional[Segment] = None
 
         seen_global_rom_start: Optional[int] = None
         seen_global_rom_end: Optional[int] = None
@@ -371,6 +371,7 @@ class SegmentMetadataGroup:
         segments_by_name: Dict[str, SegmentMetadata] = dict()
         skipped_segments: Set[str] = set()
 
+        global_segments: list[Segment] = []
         global_segments_after_overlays: list[Segment] = []
 
         # Create all segments in the grouping
@@ -421,6 +422,7 @@ class SegmentMetadataGroup:
                 )
                 segment.owned_metadata = seg_meta
                 segments_by_name[seg_meta.name] = seg_meta
+                global_segments.append(segment)
 
                 if global_rom_start is None or segment.rom_start < global_rom_start:
                     global_rom_start = segment.rom_start
@@ -433,10 +435,10 @@ class SegmentMetadataGroup:
 
                 if global_vram_end is None:
                     global_vram_end = segment.vram_end
-                    last_global_segment = segment
+                    global_segment_largest_vram = segment
                 elif global_vram_end < segment.vram_end:
                     global_vram_end = segment.vram_end
-                    last_global_segment = segment
+                    global_segment_largest_vram = segment
 
                     if len(overlay_segments) > 0:
                         # Global segment *after* overlay segments?
@@ -517,7 +519,7 @@ class SegmentMetadataGroup:
                     and global_vram_end > ovl_segment.vram_start
                 ):
                     log.write(
-                        f"Error: Segment {ovl_segment.name} with vram range ([0x{ovl_segment.vram_start:08X}, 0x{ovl_segment.vram_end:08X}]) of the non-global segment at rom address 0x{ovl_segment.rom_start:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
+                        f"Error: Overlay segment {ovl_segment.name} with vram range ([0x{ovl_segment.vram_start:08X}, 0x{ovl_segment.vram_end:08X}]) of the non-global segment at rom address 0x{ovl_segment.rom_start:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
                         status="warn",
                     )
                     overlaps_found = True
@@ -526,17 +528,26 @@ class SegmentMetadataGroup:
                     "Overlaps between non-global and global segments were found.\n"
                     "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
                 )
-                if last_global_segment is not None:
+                if len(global_segments) > 0:
                     log.write(
-                        f"The last global segment seen is {last_global_segment}. Rom: 0x{last_global_segment.rom_start:X}, Vram: 0x{last_global_segment.vram_start:08X}"
+                        "These are all the global segments:",
+                        status="warn",
                     )
+                    for seg in global_segments_after_overlays:
+                        log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}")
+
+                if global_segment_largest_vram is not None:
+                    log.write(
+                        f"The global segment with the largest vram seen is {global_segment_largest_vram}. Rom: 0x{global_segment_largest_vram.rom_start:X}, Vram: 0x{global_segment_largest_vram.vram_start:08X}"
+                    )
+
                 if len(global_segments_after_overlays) > 0:
                     log.write(
                         "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
                         status="warn",
                     )
                     for seg in global_segments_after_overlays:
-                        log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}")
+                        log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}")
                 else:
                     log.write("No suspected segments??", status="warn")
                 log.error("Stopping due to the above errors")

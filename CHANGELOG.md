@@ -9,6 +9,9 @@
   * Declaring a symbol without an associated segment, which is not covered by any of the Vram addresses of the global segments is no longer accepted.
     * If you need to declare symbols that aren't part of any real segment of the rom then use the new absoulte symbols system.
   * `splat.utils.symbols.all_symbols_dict` and `splat.utils.symbols.all_symbols_ranges` have been removed.
+  * The algorithm for checking vram overlaps between global segments and overlays have been changed and it is more strict now.
+    * This means it is more likely to produce errors when it didn't before.
+    * A common source of errors is giving a vram address (usually `vram: 0xA4000040`) for the ipl3 segment. A recommened workaround is to either remove the vram for this segment or tag it with its own `exclusive_ram_id` (i.e. `exclusive_ram_id: ipl3`).
 * Rewrite symbol management system.
   * Completely change how the internal symbol tracking system works, aiming to fix issues with overlapping addresses in overlays.
   * Ideally this should fix most issues related to using a symbol from overlay A in overlay B even when both are marked with the same `exclusive_ram_id`.

@@ -128,15 +128,16 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
         rodata_encountered = False
 
-        for symbol in self.spim_section.get_section().symbolList:
+        spim_section = self.spim_section.get_section()
+        for symbol in spim_section.symbolList:
             symbols.create_symbol_from_spim_symbol(
                 self.get_most_parent(), self, symbol.contextSym, force_in_segment=True
             )
 
             # Gather symbols found by spimdisasm and create those symbols in splat's side
             for referenced_vram in symbol.referencedVrams:
-                context_sym = self.spim_section.get_section().getSymbol(
-                    referenced_vram, tryPlusOffset=False
+                context_sym = spim_section.getSymbol(
+                    referenced_vram, tryPlusOffset=False, allowOutsideIfVramIsInside=False,
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(
