@@ -137,7 +137,9 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
             # Gather symbols found by spimdisasm and create those symbols in splat's side
             for referenced_vram in symbol.referencedVrams:
                 context_sym = spim_section.getSymbol(
-                    referenced_vram, tryPlusOffset=False, allowOutsideIfVramIsInside=False,
+                    referenced_vram,
+                    tryPlusOffset=False,
+                    allowOutsideIfVramIsInside=False,
                 )
                 if context_sym is not None:
                     symbols.create_symbol_from_spim_symbol(

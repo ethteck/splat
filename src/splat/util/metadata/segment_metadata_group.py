@@ -28,6 +28,7 @@ class SegmentMetadataGroup:
             0xFFFFFFFF,
             prioritized_segments=list(),
             exclusive_ram_id=None,
+            segment=None,
         )
 
         # Globally visible segments.
@@ -49,6 +50,7 @@ class SegmentMetadataGroup:
             0xFFFFFFFF,
             prioritized_segments=list(),
             exclusive_ram_id=None,
+            segment=None,
         )
 
         # ?
@@ -304,6 +306,7 @@ class SegmentMetadataGroup:
         vram_start: int,
         vram_end: int,
         prioritized_segments: list[str],
+        segment,
     ) -> SegmentMetadata:
         if self.global_rom_start is None or rom_start < self.global_rom_start:
             self.global_rom_start = rom_start
@@ -323,6 +326,7 @@ class SegmentMetadataGroup:
             vram_end,
             prioritized_segments,
             None,
+            segment,
         )
         self.global_segments.append(seg_meta)
         return seg_meta
@@ -336,6 +340,7 @@ class SegmentMetadataGroup:
         vram_start: int,
         vram_end: int,
         prioritized_segments: list[str],
+        segment: Optional["Segment"],
     ) -> SegmentMetadata:
         ovl_meta = self.overlay_segments.setdefault(
             exclusive_ram_id,
@@ -350,6 +355,7 @@ class SegmentMetadataGroup:
             vram_start,
             vram_end,
             prioritized_segments,
+            segment,
         )
 
     def _initialize_segments(
@@ -405,6 +411,7 @@ class SegmentMetadataGroup:
                     segment.vram_start,
                     segment.vram_end,
                     segment.prioritized_segments,
+                    segment,
                 )
                 segment.owned_metadata = seg_meta
                 overlay_segments.append(seg_meta)
@@ -419,6 +426,7 @@ class SegmentMetadataGroup:
                     segment.vram_start,
                     segment.vram_end,
                     segment.prioritized_segments,
+                    segment,
                 )
                 segment.owned_metadata = seg_meta
                 segments_by_name[seg_meta.name] = seg_meta
@@ -490,6 +498,7 @@ class SegmentMetadataGroup:
                         global_vram_start,
                         seen_global_vram_start,
                         [],
+                        None,
                     )
                     segments_by_name[seg_meta.name] = seg_meta
                 if global_vram_end > seen_global_vram_end:
@@ -503,6 +512,7 @@ class SegmentMetadataGroup:
                         seen_global_vram_end,
                         global_vram_end,
                         [],
+                        None,
                     )
                     segments_by_name[seg_meta.name] = seg_meta
 
@@ -534,7 +544,9 @@ class SegmentMetadataGroup:
                         status="warn",
                     )
                     for seg in global_segments_after_overlays:
-                        log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}")
+                        log.write(
+                            f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}"
+                        )
 
                 if global_segment_largest_vram is not None:
                     log.write(
@@ -547,7 +559,9 @@ class SegmentMetadataGroup:
                         status="warn",
                     )
                     for seg in global_segments_after_overlays:
-                        log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}")
+                        log.write(
+                            f"    '{seg.name}', rom: 0x{seg.rom_start:06X}, vram: 0x{seg.vram_start:08X}"
+                        )
                 else:
                     log.write("No suspected segments??", status="warn")
                 log.error("Stopping due to the above errors")

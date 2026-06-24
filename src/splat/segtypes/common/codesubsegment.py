@@ -160,9 +160,7 @@ class CommonSegCodeSubsegment(Segment):
                 # Look up for the last symbol in this boundary
                 sym_addr = 0
                 for sym in spim_section.symbolList:
-                    symOffset = (
-                        sym.inFileOffset - spim_section.inFileOffset
-                    )
+                    symOffset = sym.inFileOffset - spim_section.inFileOffset
                     if in_file_offset == symOffset:
                         break
                     sym_addr = sym.vram

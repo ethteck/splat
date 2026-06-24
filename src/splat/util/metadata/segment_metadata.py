@@ -1,6 +1,6 @@
 import dataclasses
 import enum
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from spimdisasm.common import SortedDict
 
@@ -8,6 +8,9 @@ from ..symbols import Symbol, label_types, get_all_symbols
 from .. import log
 
 from .parent_segment_info import ParentSegmentInfo
+
+if TYPE_CHECKING:
+    from ...segtypes.common.segment import Segment
 
 
 class SegmentKind(enum.Enum):
@@ -56,12 +59,14 @@ class SegmentMetadata:
     vram_start: int
     vram_end: int
 
-    exclusive_ram_id: Optional[str]
-
     prioritized_segments: list[str]
     """
     Other segments this segment is allowed to see and prioritize.
     """
+
+    exclusive_ram_id: Optional[str]
+
+    segment: Optional["Segment"]
 
     symbols: SortedDict[Symbol]
     """
@@ -81,6 +86,7 @@ class SegmentMetadata:
         vram_end: int,
         prioritized_segments: list[str],
         exclusive_ram_id: Optional[str],
+        segment: Optional["Segment"],
     ) -> None:
         if rom_start > rom_end:
             log.error(
@@ -97,9 +103,9 @@ class SegmentMetadata:
         self.rom_end = rom_end
         self.vram_start = vram_start
         self.vram_end = vram_end
-        self.exclusive_ram_id = exclusive_ram_id
-
         self.prioritized_segments = prioritized_segments
+        self.exclusive_ram_id = exclusive_ram_id
+        self.segment = segment
 
         self.symbols = SortedDict()
 
@@ -166,7 +172,7 @@ class SegmentMetadata:
 
         symbol = self.find_symbol(vram, allow_addend)
         if symbol is None:
-            symbol = Symbol(vram)
+            symbol = Symbol(vram, segment=self.segment, seg_meta=self)
             self.symbols[vram] = symbol
             get_all_symbols().append(symbol)
             if self.kind == SegmentKind.Unknown:
@@ -215,6 +221,7 @@ class SegmentMetadata:
                     log.write(f"\nWARNING: {msg}", status="warn")
 
         self.symbols[sym.vram_start] = sym
+        sym.seg_meta = self
 
     def find_symbol(self, vram: int, allow_addend: bool) -> Optional[Symbol]:
         """

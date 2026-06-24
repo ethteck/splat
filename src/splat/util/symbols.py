@@ -11,6 +11,7 @@ from pathlib import Path
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
     from ..util.metadata.segment_metadata_group import SegmentMetadataGroup
+    from ..util.metadata.segment_metadata import SegmentMetadata
 
 from . import log, options, progress_bar
 
@@ -619,6 +620,7 @@ class Symbol:
 
     unknown_segment: bool = False
     absolute: bool = False
+    seg_meta: Optional["SegmentMetadata"] = None
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None

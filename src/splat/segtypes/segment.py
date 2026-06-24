@@ -823,6 +823,7 @@ class Segment:
                 )
             if ret is None:
                 ret = seg_meta.create_symbol(addr, search_ranges)
+            rom = seg_meta.rom_from_vram(addr)
         else:
             if parent_segment_info is None:
                 seg_meta = metadata_group.unknown_segment
@@ -849,9 +850,9 @@ class Segment:
                 if aux is not None:
                     ret, seg_meta = aux
 
-        if seg_meta is not None and parent_segment_info is not None:
-            if seg_meta.is_owned_segment(parent_segment_info):
-                rom = seg_meta.rom_from_vram(addr)
+            if seg_meta is not None and parent_segment_info is not None:
+                if seg_meta.is_owned_segment(parent_segment_info):
+                    rom = seg_meta.rom_from_vram(addr)
 
         if ret:
             if define:

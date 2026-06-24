@@ -1,8 +1,13 @@
 import dataclasses
+from typing import Optional, TYPE_CHECKING
 
 from .segment_metadata import SegmentMetadata, SegmentKind
 
 from .. import log
+
+
+if TYPE_CHECKING:
+    from ...segtypes.common.segment import Segment
 
 
 @dataclasses.dataclass
@@ -44,6 +49,7 @@ class OverlayMetadata:
         vram_start: int,
         vram_end: int,
         prioritized_segments: list[str],
+        segment: Optional["Segment"],
     ) -> SegmentMetadata:
         old_segment = self.segments.get(rom_start)
         if old_segment is not None:
@@ -67,6 +73,7 @@ class OverlayMetadata:
             vram_end,
             prioritized_segments,
             self.exclusive_ram_id,
+            segment,
         )
         self.segments[rom_start] = seg
         return seg
