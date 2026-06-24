@@ -102,6 +102,10 @@ class SegmentMetadataGroup:
         for seg in self.global_segments:
             if seg.in_vram_range(vram):
                 return seg
+            if seg.rom_start == info.segment_rom:
+                segment = self._find_prioritized_segment(vram, seg)
+                if segment is not None:
+                    return segment
 
         # Look up in overlays
         if len(self.overlay_segments) > 0:
@@ -134,7 +138,7 @@ class SegmentMetadataGroup:
                     return owned_segment
 
                 # Check for any prioiritised overlay, if any.
-                segment = self._find_prioritsed_segment(vram, owned_segment)
+                segment = self._find_prioritized_segment(vram, owned_segment)
                 if segment is not None:
                     return segment
 
@@ -144,7 +148,7 @@ class SegmentMetadataGroup:
 
         return None
 
-    def _find_prioritsed_segment(
+    def _find_prioritized_segment(
         self,
         vram: int,
         owned_segment: SegmentMetadata,
@@ -190,6 +194,16 @@ class SegmentMetadataGroup:
                 if sym is not None and validate(sym):
                     return sym, seg
                 return None
+            if seg.rom_start == info.segment_rom:
+                # Check for prioritized segments, if any.
+                aux = self._find_symbol_from_prioritized_segments(
+                    vram,
+                    allow_addend,
+                    seg,
+                    validate,
+                )
+                if aux is not None:
+                    return aux
 
         if len(self.overlay_segments) > 0:
             aux = self._find_symbol_from_overlay_segments(
