@@ -172,7 +172,12 @@ class SegmentMetadata:
 
         symbol = self.find_symbol(vram, allow_addend)
         if symbol is None:
-            symbol = Symbol(vram, segment=self.segment, seg_meta=self)
+            symbol = Symbol(
+                vram,
+                rom=self.rom_from_vram(vram),
+                segment=self.segment,
+                seg_meta=self,
+            )
             self.symbols[vram] = symbol
             get_all_symbols().append(symbol)
             if self.kind == SegmentKind.Unknown:
@@ -221,6 +226,8 @@ class SegmentMetadata:
                     log.write(f"\nWARNING: {msg}", status="warn")
 
         self.symbols[sym.vram_start] = sym
+        if sym.rom is None:
+            sym.rom = self.rom_from_vram(sym.vram_start)
         sym.seg_meta = self
 
     def find_symbol(self, vram: int, allow_addend: bool) -> Optional[Symbol]:

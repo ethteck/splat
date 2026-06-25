@@ -307,7 +307,10 @@ class N64SegGfx(CommonSegCodeSubsegment):
         out_str = "" if self.data_only else options.opts.generated_c_preamble + "\n\n"
 
         sym = self.create_symbol(
-            addr=self.vram_start, in_segment=True, type="data", define=True
+            addr=self.vram_start,
+            in_segment=True,
+            type="Gfx",
+            define=True,
         )
 
         gfxd_input_buffer(gfx_data)
@@ -353,7 +356,10 @@ class N64SegGfx(CommonSegCodeSubsegment):
             light = match.group(0)
             addr = int(light[12:], 0)
             sym = self.create_symbol(
-                addr=addr, in_segment=self.in_segment, type="data", reference=True
+                addr=addr,
+                in_segment=self.in_segment,
+                type="data",
+                reference=True,
             )
             return self.format_sym_name(sym)
 

@@ -71,6 +71,10 @@ def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
     return default
 
 
+def default_sym_validation(_sym: Symbol) -> bool:
+    return True
+
+
 SegmentType = str
 
 
@@ -789,84 +793,40 @@ class Segment:
         addr: int,
         in_segment: bool = False,
         type: Optional[str] = None,
-        create: bool = False,
         define: bool = False,
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
-        validation: Optional[Callable[[Symbol], bool]] = None,
+        validation: Callable[[Symbol], bool] = default_sym_validation,
     ) -> Optional[Symbol]:
         ret: Optional[Symbol] = None
-        rom: Optional[int] = None
 
         most_parent, parent_segment_info = self.get_parent_segment_info()
-        seg_meta = None
 
-        if create:
-            if parent_segment_info is None:
-                seg_meta = metadata_group.unknown_segment
-            elif in_segment:
-                # Check if we know our own segment metadata,
-                # if not, then default to look it up.
-                if most_parent.owned_metadata is not None:
-                    if most_parent.owned_metadata.in_vram_range(addr):
-                        seg_meta = most_parent.owned_metadata
-                    else:
-                        # Avoid creating a symbol inside this segment if it doesn't belong to.
-                        seg_meta = metadata_group.unknown_segment
+        if parent_segment_info is None:
+            seg_meta = metadata_group.unknown_segment
+            ret = seg_meta.find_symbol(addr, search_ranges)
+        elif in_segment:
+            if most_parent.owned_metadata is not None:
+                if most_parent.owned_metadata.in_vram_range(addr):
+                    seg_meta = most_parent.owned_metadata
                 else:
-                    seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                    # Avoid creating a symbol inside this segment if it doesn't belong to.
+                    seg_meta = metadata_group.unknown_segment
             else:
-                seg_meta = metadata_group.find_referenced_segment_for_creation(
-                    addr,
-                    parent_segment_info,
-                )
-            if ret is None:
-                ret = seg_meta.create_symbol(addr, search_ranges)
-            rom = seg_meta.rom_from_vram(addr)
-        else:
-            if parent_segment_info is None:
-                seg_meta = metadata_group.unknown_segment
-                ret = seg_meta.find_symbol(addr, search_ranges)
-            elif in_segment:
-                if most_parent.owned_metadata is not None:
-                    if most_parent.owned_metadata.in_vram_range(addr):
-                        seg_meta = most_parent.owned_metadata
-                    else:
-                        # Avoid creating a symbol inside this segment if it doesn't belong to.
-                        seg_meta = metadata_group.unknown_segment
-                else:
-                    seg_meta = metadata_group.find_owned_segment(parent_segment_info)
-                ret = seg_meta.find_symbol(addr, search_ranges)
-            elif not local_only:
-                if validation is None:
-                    validation = default_sym_validation
-                aux = metadata_group.find_symbol_from_any_segment(
-                    addr,
-                    parent_segment_info,
-                    search_ranges,
-                    validation,
-                )
-                if aux is not None:
-                    ret, seg_meta = aux
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+            ret = seg_meta.find_symbol(addr, search_ranges)
+        elif not local_only:
+            aux = metadata_group.find_symbol_from_any_segment(
+                addr,
+                parent_segment_info,
+                search_ranges,
+                validation,
+            )
+            if aux is not None:
+                ret, seg_meta = aux
 
-            if seg_meta is not None and parent_segment_info is not None:
-                if seg_meta.is_owned_segment(parent_segment_info):
-                    rom = seg_meta.rom_from_vram(addr)
-
-        if ret:
-            if define:
-                ret.defined = True
-            if reference:
-                ret.referenced = True
-            if ret.type is None:
-                ret.type = type
-            if ret.rom is None:
-                ret.rom = rom
-            if in_segment:
-                if ret.segment is None:
-                    ret.segment = most_parent
-
+        _update_symbol(ret, reference, define, type)
         return ret
 
     def create_symbol(
@@ -877,20 +837,31 @@ class Segment:
         define: bool = False,
         reference: bool = False,
         search_ranges: bool = False,
-        local_only: bool = False,
     ) -> Symbol:
-        ret = self.get_symbol(
-            addr,
-            in_segment=in_segment,
-            type=type,
-            create=True,
-            define=define,
-            reference=reference,
-            search_ranges=search_ranges,
-            local_only=local_only,
-        )
-        assert ret is not None
+        most_parent, parent_segment_info = self.get_parent_segment_info()
 
+        if parent_segment_info is None:
+            seg_meta = metadata_group.unknown_segment
+        elif in_segment:
+            # Check if we know our own segment metadata,
+            # if not, then default to look it up.
+            if most_parent.owned_metadata is not None:
+                if most_parent.owned_metadata.in_vram_range(addr):
+                    seg_meta = most_parent.owned_metadata
+                else:
+                    # Avoid creating a symbol inside this segment if it doesn't belong to.
+                    seg_meta = metadata_group.unknown_segment
+            else:
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+        else:
+            seg_meta = metadata_group.find_referenced_segment_for_creation(
+                addr,
+                parent_segment_info,
+            )
+
+        ret = seg_meta.create_symbol(addr, search_ranges)
+
+        _update_symbol(ret, reference, define, type)
         return ret
 
     def __repr__(self) -> str:
@@ -898,5 +869,18 @@ class Segment:
         return f"{self.name} ({self.type})"
 
 
-def default_sym_validation(_sym: Symbol) -> bool:
-    return True
+def _update_symbol(
+    ret: Optional[Symbol],
+    reference: bool,
+    define: bool,
+    type: Optional[str],
+) -> None:
+    if ret is None:
+        return
+
+    if define:
+        ret.defined = True
+    if reference:
+        ret.referenced = True
+    if ret.type is None:
+        ret.type = type
