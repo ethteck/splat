@@ -264,15 +264,19 @@ class Rodata(unittest.TestCase):
             args=[],
             yaml={},
         )
+        metadata.segment_metadata_group.initialize([common_seg_rodata], [])
+        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+
         rom_data = []
         for i in range(0x100):
             rom_data.append(i)
         common_seg_rodata.disassemble_data(bytes(rom_data))
         assert common_seg_rodata.spim_section is not None
         assert common_seg_rodata.spim_section.get_section().words[0] == 0x0010203
-        assert symbols.get_all_symbols()[0].vram_start == 0x400
-        assert symbols.get_all_symbols()[0].segment == common_seg_rodata
-        assert symbols.get_all_symbols()[0].linker_section == ".rodata"
+        sym = symbols.get_all_symbols()[0]
+        assert sym.vram_start == 0x400, f"{sym.vram_start=}"
+        assert sym.segment == common_seg_rodata, f"{sym.segment=}"
+        assert sym.linker_section == ".rodata", f"{sym.linker_section=}"
 
     def test_get_possible_text_subsegment_for_symbol(self):
         context = spimdisasm.common.Context()
