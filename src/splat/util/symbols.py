@@ -425,7 +425,7 @@ def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
                 seg_meta.name,
             )
             for prioritized_seg in seg_meta.prioritized_segments:
-                spimdisasm_segment.addPrioritisedSegment(prioritized_seg)
+                spimdisasm_segment.addPrioritizedSegment(prioritized_seg)
 
             for sym in seg_meta.symbols.values():
                 add_symbol_to_spimdisasm_segment(spimdisasm_segment, sym)
