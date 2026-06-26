@@ -67,6 +67,11 @@ class SegmentMetadata:
     exclusive_ram_id: Optional[str]
 
     segment: Optional["Segment"]
+    """
+    Reference to the corresponding top-level segment.
+
+    This is `None` for `Unknown` and `Absolute` segments.
+    """
 
     symbols: SortedDict[Symbol]
     """
@@ -141,6 +146,9 @@ class SegmentMetadata:
         return rom
 
     def is_owned_segment(self, info: ParentSegmentInfo) -> bool:
+        """
+        Checks if the passed info corresponds to this segment metadata.
+        """
         if self.kind == SegmentKind.Absolute or self.kind == SegmentKind.Unknown:
             return False
 
@@ -172,6 +180,7 @@ class SegmentMetadata:
 
         symbol = self.find_symbol(vram, allow_addend)
         if symbol is None:
+            # Pass as much info as we can to this symbol when creating it.
             symbol = Symbol(
                 vram,
                 rom=self.rom_from_vram(vram),

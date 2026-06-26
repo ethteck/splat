@@ -501,8 +501,6 @@ def create_symbol_from_spim_symbol(
     *,
     force_in_segment: bool,
 ) -> "Symbol":
-    in_segment = False
-
     sym_type = None
     if context_sym.type == spimdisasm.common.SymbolSpecialType.jumptable:
         sym_type = "jtbl"
@@ -513,17 +511,17 @@ def create_symbol_from_spim_symbol(
     elif context_sym.type == spimdisasm.common.SymbolSpecialType.jumptablelabel:
         sym_type = "jtbl_label"
 
-    if not in_segment:
-        if (
-            context_sym.overlayCategory is None
-            and most_parent.get_exclusive_ram_id() is None
-        ):
+    in_segment = False
+    if (
+        context_sym.overlayCategory is None
+        and most_parent.get_exclusive_ram_id() is None
+    ):
+        in_segment = most_parent.contains_vram(context_sym.vram)
+    elif context_sym.overlayCategory == most_parent.get_exclusive_ram_id():
+        if context_sym.vromAddress is not None:
+            in_segment = most_parent.contains_rom(context_sym.vromAddress)
+        else:
             in_segment = most_parent.contains_vram(context_sym.vram)
-        elif context_sym.overlayCategory == most_parent.get_exclusive_ram_id():
-            if context_sym.vromAddress is not None:
-                in_segment = most_parent.contains_rom(context_sym.vromAddress)
-            else:
-                in_segment = most_parent.contains_vram(context_sym.vram)
 
     sym = most_parent.create_symbol(
         context_sym.vram,
@@ -532,21 +530,17 @@ def create_symbol_from_spim_symbol(
         reference=True,
     )
 
-    # Only update context_sym attributes if it isn't part of the unknown segment.
-    # There are many trash references in the unknown segment, it is more likely
-    # to include garbage instead of anything useful.
-    if not sym.unknown_segment and not context_sym.unknownSegment or True:
-        # Avoid overriding names for user declared symbols
-        if sym.given_name is not None and context_sym.name is None:
-            context_sym.name = sym.given_name
-        if sym.given_name is None and context_sym.name is not None:
-            sym.given_name = context_sym.name
+    # Avoid overriding names for user declared symbols
+    if sym.given_name is not None and context_sym.name is None:
+        context_sym.name = sym.given_name
+    if sym.given_name is None and context_sym.name is not None:
+        sym.given_name = context_sym.name
 
-        # To keep the symbol name in sync between splat and spimdisasm
-        if in_segment:
-            context_sym.setNameGetCallback(lambda _: sym.name)
-        else:
-            context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
+    # To keep the symbol name in sync between splat and spimdisasm
+    if in_segment:
+        context_sym.setNameGetCallback(lambda _: sym.name)
+    else:
+        context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     if context_sym.size is not None:
         sym.given_size = context_sym.getSize()

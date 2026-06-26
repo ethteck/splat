@@ -782,6 +782,7 @@ class Segment:
         parent_segment_info = None
         if most_parent.rom_start is not None and most_parent.vram_start is not None:
             parent_segment_info = ParentSegmentInfo(
+                most_parent.name,
                 most_parent.rom_start,
                 most_parent.vram_start,
                 most_parent.exclusive_ram_id,
@@ -804,27 +805,31 @@ class Segment:
         most_parent, parent_segment_info = self.get_parent_segment_info()
 
         if parent_segment_info is None:
+            # Somehow we don't have segment info,
+            # fallback to the unknown segment.
             seg_meta = metadata_group.unknown_segment
             ret = seg_meta.find_symbol(addr, search_ranges)
         elif in_segment:
             if most_parent.owned_metadata is not None:
+                # Check if this address actually is inside the segment or not.
                 if most_parent.owned_metadata.in_vram_range(addr):
                     seg_meta = most_parent.owned_metadata
                 else:
                     # Avoid creating a symbol inside this segment if it doesn't belong to.
                     seg_meta = metadata_group.unknown_segment
             else:
+                # We don't have a reference to our own metadata?
+                # Try to retrieve it.
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
             ret = seg_meta.find_symbol(addr, search_ranges)
         elif not local_only:
-            aux = metadata_group.find_symbol_from_any_segment(
+            # Try to find the symbol anywhere.
+            ret = metadata_group.find_symbol_from_any_segment(
                 addr,
                 parent_segment_info,
                 search_ranges,
                 validation,
             )
-            if aux is not None:
-                ret, seg_meta = aux
 
         _update_symbol(ret, reference, define, type)
         return ret
@@ -841,6 +846,8 @@ class Segment:
         most_parent, parent_segment_info = self.get_parent_segment_info()
 
         if parent_segment_info is None:
+            # Somehow we don't have segment info,
+            # fallback to the unknown segment.
             seg_meta = metadata_group.unknown_segment
         elif in_segment:
             # Check if we know our own segment metadata,
@@ -854,6 +861,7 @@ class Segment:
             else:
                 seg_meta = metadata_group.find_owned_segment(parent_segment_info)
         else:
+            # Try to figure out a feasible segment for this.
             seg_meta = metadata_group.find_referenced_segment_for_creation(
                 addr,
                 parent_segment_info,

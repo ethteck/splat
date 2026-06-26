@@ -93,8 +93,10 @@ class SegmentMetadataGroup:
         """
         Find a segment where a symbol with the given address could be created.
 
-        For overlays, this will return either only the owned overlay segment or
-        a prioritized segment for the given overlay that matches the vram address.
+        This may return the corresponding owned segment if the vram address
+        corresponds to the segment, or a prioritized segment for the owned
+        segment that fits the given vram address. Global segments are always
+        checked, even if they aren't prioritized or owned.
         """
 
         # First, check the global segments.
@@ -153,6 +155,9 @@ class SegmentMetadataGroup:
         vram: int,
         owned_segment: SegmentMetadata,
     ) -> Optional[SegmentMetadata]:
+        """
+        Find a prioritized segment that fits the given vram.
+        """
         for prioritized_segment in owned_segment.get_prioritized_segments():
             for _ovl_cat, segments_per_rom in self.overlay_segments.items():
                 if not segments_per_rom.in_vram_range(vram):
@@ -170,7 +175,7 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool],
-    ) -> Optional[tuple[Symbol, SegmentMetadata]]:
+    ) -> Optional[Symbol]:
         """
         Check all segments looking for a symbol matching the given address.
 
@@ -181,10 +186,12 @@ class SegmentMetadataGroup:
         and so on.
         """
 
+        # Absolute symbols first.
         sym = self.absolute_segment.find_symbol(vram, allow_addend)
         if sym is not None:
-            return sym, self.absolute_segment
+            return sym
 
+        # Global segments second.
         for seg in self.global_segments:
             if seg.in_vram_range(vram):
                 # If we find this vram is within a global segment then we can stop
@@ -192,32 +199,34 @@ class SegmentMetadataGroup:
                 # should overlap this segment.
                 sym = seg.find_symbol(vram, allow_addend)
                 if sym is not None and validate(sym):
-                    return sym, seg
+                    return sym
                 return None
             if seg.rom_start == info.segment_rom:
                 # Check for prioritized segments, if any.
-                aux = self._find_symbol_from_prioritized_segments(
+                sym = self._find_symbol_from_prioritized_segments(
                     vram,
                     allow_addend,
                     seg,
                     validate,
                 )
-                if aux is not None:
-                    return aux
+                if sym is not None:
+                    return sym
 
+        # Overlays third
         if len(self.overlay_segments) > 0:
-            aux = self._find_symbol_from_overlay_segments(
+            sym = self._find_symbol_from_overlay_segments(
                 vram,
                 info,
                 allow_addend,
                 validate,
             )
-            if aux is not None:
-                return aux
+            if sym is not None:
+                return sym
 
+        # Lastly the dumpster
         sym = self.unknown_segment.find_symbol(vram, allow_addend)
         if sym is not None and validate(sym):
-            return sym, self.unknown_segment
+            return sym
         return None
 
     def _find_symbol_from_overlay_segments(
@@ -226,7 +235,7 @@ class SegmentMetadataGroup:
         info: ParentSegmentInfo,
         allow_addend: bool,
         validate: Callable[[Symbol], bool],
-    ) -> Optional[tuple[Symbol, SegmentMetadata]]:
+    ) -> Optional[Symbol]:
         exclusive_ram_id = info.exclusive_ram_id
 
         # First, look up for the segment associated to this exclusive_ram_id
@@ -240,18 +249,18 @@ class SegmentMetadataGroup:
                     if owned_segment.in_vram_range(vram):
                         sym = owned_segment.find_symbol(vram, allow_addend)
                         if sym is not None and validate(sym):
-                            return sym, owned_segment
+                            return sym
                         return None
 
                     # Check for prioritized segments, if any.
-                    aux = self._find_symbol_from_prioritized_segments(
+                    sym = self._find_symbol_from_prioritized_segments(
                         vram,
                         allow_addend,
                         owned_segment,
                         validate,
                     )
-                    if aux is not None:
-                        return aux
+                    if sym is not None:
+                        return sym
 
         # If not found, then we should check every exclusive_ram_id except the
         # one associated with the parent segment.
@@ -271,7 +280,7 @@ class SegmentMetadataGroup:
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
-                        return sym, segment
+                        return sym
 
         # if we haven't found the symbol yet, then just look up everywhere else.
         for ovl_id, segments_per_rom in self.overlay_segments.items():
@@ -287,7 +296,7 @@ class SegmentMetadataGroup:
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
-                        return sym, segment
+                        return sym
 
         return None
 
@@ -297,7 +306,7 @@ class SegmentMetadataGroup:
         allow_addend: bool,
         owned_segment: SegmentMetadata,
         validate: Callable[[Symbol], bool],
-    ) -> Optional[tuple[Symbol, SegmentMetadata]]:
+    ) -> Optional[Symbol]:
         for prioritized_segment in owned_segment.get_prioritized_segments():
             for _ovl_cat, segments_per_rom in self.overlay_segments.items():
                 if not segments_per_rom.in_vram_range(vram):
@@ -308,7 +317,7 @@ class SegmentMetadataGroup:
                     ):
                         sym = segment.find_symbol(vram, allow_addend)
                         if sym is not None and validate(sym):
-                            return sym, segment
+                            return sym
 
         return None
 

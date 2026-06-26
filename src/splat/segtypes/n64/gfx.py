@@ -358,7 +358,6 @@ class N64SegGfx(CommonSegCodeSubsegment):
             sym = self.create_symbol(
                 addr=addr,
                 in_segment=self.in_segment,
-                type="data",
                 reference=True,
             )
             return self.format_sym_name(sym)
