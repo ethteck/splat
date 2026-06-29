@@ -3,17 +3,24 @@
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
 from collections import defaultdict, deque
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
+from ..util import (
+    cache_handler,
+    progress_bar,
+    vram_classes,
+    statistics,
+    file_presets,
+    metadata,
+)
 
 from colorama import Style
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 import sys
 
 from ..segtypes.linker_entry import (
@@ -168,29 +175,6 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     return ret
 
 
-def assign_symbols_to_segments():
-    for symbol in symbols.all_symbols:
-        if symbol.segment:
-            continue
-
-        if symbol.rom:
-            cands: Set[Interval] = segment_roms[symbol.rom]
-            if len(cands) > 1:
-                log.error("multiple segments rom overlap symbol", symbol)
-            elif len(cands) == 0:
-                log.error("no segment rom overlaps symbol", symbol)
-            else:
-                cand: Interval = cands.pop()
-                seg: Segment = cand.data
-                seg.add_symbol(symbol)
-        else:
-            cands = segment_rams[symbol.vram_start]
-            segs: List[Segment] = [cand.data for cand in cands]
-            for seg in segs:
-                if not seg.get_exclusive_ram_id():
-                    seg.add_symbol(symbol)
-
-
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -294,11 +278,10 @@ def initialize_all_symbols(all_segments: List[Segment]):
     symbols.initialize(all_segments)
     relocs.initialize()
 
-    # Assign symbols to segments
-    assign_symbols_to_segments()
+    metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
 
     if options.opts.is_mode_active("code"):
-        symbols.initialize_spim_context(all_segments)
+        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
         relocs.initialize_spim_context()
 
 
@@ -480,7 +463,7 @@ def write_undefined_funcs_auto():
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and s.type == "func"
+            if (s.referenced or s.user_declared) and not s.defined and s.type == "func"
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
@@ -492,9 +475,9 @@ def write_undefined_syms_auto():
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced
+            if (s.referenced or s.user_declared)
             and not s.defined
-            and s.type not in {"func", "label", "jtbl_label"}
+            and s.type not in {"func", "label", "jtbl_label", "alabel"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 

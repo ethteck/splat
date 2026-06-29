@@ -4,14 +4,16 @@ import importlib
 import importlib.util
 from pathlib import Path
 
-from typing import Dict, List, Optional, Set, Type, TYPE_CHECKING, Union, Tuple
+from typing import Callable, Dict, List, Optional, Type, TYPE_CHECKING, Union, Tuple
 
-from intervaltree import Interval, IntervalTree
 from ..util import vram_classes
 
 from ..util.vram_classes import VramClass
-from ..util import log, options, symbols
+from ..util import log, options
 from ..util.symbols import Symbol, to_cname
+from ..util.metadata.parent_segment_info import ParentSegmentInfo
+from ..util.metadata.segment_metadata import SegmentMetadata
+from ..util.metadata.segment_metadata_group import metadata_group
 
 from .. import __package_name__
 
@@ -67,6 +69,10 @@ def parse_segment_section_order(segment: Union[dict, list]) -> List[str]:
     if isinstance(segment, dict):
         return segment.get("section_order", default)
     return default
+
+
+def default_sym_validation(_sym: Symbol) -> bool:
+    return True
 
 
 SegmentType = str
@@ -307,17 +313,15 @@ class Segment:
         self.align: Optional[int] = None
         self.given_subalign: Optional[int] = options.opts.subalign
         self.exclusive_ram_id: Optional[str] = None
+        self.prioritized_segments: list[str] = list()
         self.given_dir: Path = Path()
 
         # Default to global options.
         self.given_find_file_boundaries: Optional[bool] = None
 
-        # Symbols known to be in this segment
-        self.given_seg_symbols: Dict[int, List[Symbol]] = {}
-
-        # Ranges for faster symbol lookup
-        self.symbol_ranges_ram: IntervalTree = IntervalTree()
-        self.symbol_ranges_rom: IntervalTree = IntervalTree()
+        # Metadata, symbols and symbol lookup information,
+        # only the most_parent has this information.
+        self.owned_metadata: Optional[SegmentMetadata] = None
 
         self.given_section_order: List[str] = options.opts.section_order
 
@@ -466,6 +470,7 @@ class Segment:
         if isinstance(yaml, dict):
             ret.extract = bool(yaml.get("extract", ret.extract))
             ret.exclusive_ram_id = yaml.get("exclusive_ram_id")
+            ret.prioritized_segments = yaml.get("prioritized_segments", [])
             ret.given_dir = Path(yaml.get("dir", ""))
             ret.has_linker_entry = bool(yaml.get("linker_entry", True))
             ret.given_find_file_boundaries = yaml.get("find_file_boundaries", None)
@@ -573,24 +578,6 @@ class Segment:
         if self.parent:
             return self.parent.get_exclusive_ram_id()
         return self.exclusive_ram_id
-
-    def add_symbol(self, symbol: Symbol):
-        if symbol.vram_start not in self.given_seg_symbols:
-            self.given_seg_symbols[symbol.vram_start] = []
-        self.given_seg_symbols[symbol.vram_start].append(symbol)
-
-        # For larger symbols, add their ranges to interval trees for faster lookup
-        if symbol.size > 4:
-            self.symbol_ranges_ram.addi(symbol.vram_start, symbol.vram_end, symbol)
-            if symbol.rom is not None:
-                self.symbol_ranges_rom.addi(symbol.rom, symbol.rom_end, symbol)
-
-    @property
-    def seg_symbols(self) -> Dict[int, List[Symbol]]:
-        if self.parent:
-            return self.parent.seg_symbols
-        else:
-            return self.given_seg_symbols
 
     @property
     def size(self) -> Optional[int]:
@@ -788,120 +775,63 @@ class Segment:
 
         return s + self.type + "_" + self.name
 
-    @staticmethod
-    def visible_ram(seg1: "Segment", seg2: "Segment") -> bool:
-        if seg1.get_most_parent() == seg2.get_most_parent():
-            return True
-        if seg1.get_exclusive_ram_id() is None or seg2.get_exclusive_ram_id() is None:
-            return True
-        return seg1.get_exclusive_ram_id() != seg2.get_exclusive_ram_id()
-
-    def retrieve_symbol(
-        self, syms: Dict[int, List[Symbol]], addr: int
-    ) -> Optional[Symbol]:
-        if addr not in syms:
-            return None
-
-        items = syms[addr]
-
-        # Filter out symbols that are in different top-level segments with the same unique_ram_id
-        items = [
-            i
-            for i in items
-            if i.segment is None or Segment.visible_ram(self, i.segment)
-        ]
-
-        if len(items) > 1:
-            # print(f"Trying to retrieve {addr:X} from symbol dict but there are {len(items)} entries to pick from - picking the first")
-            pass
-        if len(items) == 0:
-            return None
-        return items[0]
-
-    def retrieve_sym_type(
-        self, syms: Dict[int, List[Symbol]], addr: int, type: str
-    ) -> Optional[symbols.Symbol]:
-        if addr not in syms:
-            return None
-
-        items = syms[addr]
-
-        items = [
-            i
-            for i in items
-            if (i.segment is None or Segment.visible_ram(self, i.segment))
-            and (type == i.type)
-        ]
-
-        if len(items) == 0:
-            return None
-
-        return items[0]
+    def get_parent_segment_info(
+        self,
+    ) -> tuple["Segment", "Optional[ParentSegmentInfo]"]:
+        most_parent = self.get_most_parent()
+        parent_segment_info = None
+        if most_parent.rom_start is not None and most_parent.vram_start is not None:
+            parent_segment_info = ParentSegmentInfo(
+                most_parent.name,
+                most_parent.rom_start,
+                most_parent.vram_start,
+                most_parent.exclusive_ram_id,
+            )
+        return most_parent, parent_segment_info
 
     def get_symbol(
         self,
         addr: int,
         in_segment: bool = False,
         type: Optional[str] = None,
-        create: bool = False,
         define: bool = False,
         reference: bool = False,
         search_ranges: bool = False,
         local_only: bool = False,
+        validation: Callable[[Symbol], bool] = default_sym_validation,
     ) -> Optional[Symbol]:
         ret: Optional[Symbol] = None
-        rom: Optional[int] = None
 
-        most_parent = self.get_most_parent()
+        most_parent, parent_segment_info = self.get_parent_segment_info()
 
-        if in_segment:
-            # If the vram address is within this segment, we can calculate the symbol's rom address
-            rom = most_parent.ram_to_rom(addr)
-            ret = most_parent.retrieve_symbol(most_parent.seg_symbols, addr)
-
-            if not ret and search_ranges:
-                # Search ranges first, starting with rom
-                if rom is not None:
-                    cands: Set[Interval] = most_parent.symbol_ranges_rom[rom]
-                    if cands:
-                        ret = cands.pop().data
-                # and then vram if we can't find a rom match
-                if not ret:
-                    cands = most_parent.symbol_ranges_ram[addr]
-                    if cands:
-                        ret = cands.pop().data
+        if parent_segment_info is None:
+            # Somehow we don't have segment info,
+            # fallback to the unknown segment.
+            seg_meta = metadata_group.unknown_segment
+            ret = seg_meta.find_symbol(addr, search_ranges)
+        elif in_segment:
+            if most_parent.owned_metadata is not None:
+                # Check if this address actually is inside the segment or not.
+                if most_parent.owned_metadata.in_vram_range(addr):
+                    seg_meta = most_parent.owned_metadata
+                else:
+                    # Avoid creating a symbol inside this segment if it doesn't belong to.
+                    seg_meta = metadata_group.unknown_segment
+            else:
+                # We don't have a reference to our own metadata?
+                # Try to retrieve it.
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+            ret = seg_meta.find_symbol(addr, search_ranges)
         elif not local_only:
-            ret = most_parent.retrieve_symbol(symbols.all_symbols_dict, addr)
+            # Try to find the symbol anywhere.
+            ret = metadata_group.find_symbol_from_any_segment(
+                addr,
+                parent_segment_info,
+                search_ranges,
+                validation,
+            )
 
-            if not ret and search_ranges:
-                cands = symbols.all_symbols_ranges[addr]
-                if cands:
-                    ret = cands.pop().data
-
-        # Create the symbol if it doesn't exist
-        if not ret and create:
-            ret = Symbol(addr, rom=rom, type=type)
-            symbols.add_symbol(ret)
-
-            if in_segment:
-                ret.segment = most_parent
-                if addr not in most_parent.seg_symbols:
-                    most_parent.seg_symbols[addr] = []
-                most_parent.seg_symbols[addr].append(ret)
-
-        if ret:
-            if define:
-                ret.defined = True
-            if reference:
-                ret.referenced = True
-            if ret.type is None:
-                ret.type = type
-            if ret.rom is None:
-                ret.rom = rom
-            if in_segment:
-                if ret.segment is None:
-                    ret.segment = most_parent
-
+        _update_symbol(ret, reference, define, type)
         return ret
 
     def create_symbol(
@@ -912,22 +842,53 @@ class Segment:
         define: bool = False,
         reference: bool = False,
         search_ranges: bool = False,
-        local_only: bool = False,
     ) -> Symbol:
-        ret = self.get_symbol(
-            addr,
-            in_segment=in_segment,
-            type=type,
-            create=True,
-            define=define,
-            reference=reference,
-            search_ranges=search_ranges,
-            local_only=local_only,
-        )
-        assert ret is not None
+        most_parent, parent_segment_info = self.get_parent_segment_info()
 
+        if parent_segment_info is None:
+            # Somehow we don't have segment info,
+            # fallback to the unknown segment.
+            seg_meta = metadata_group.unknown_segment
+        elif in_segment:
+            # Check if we know our own segment metadata,
+            # if not, then default to look it up.
+            if most_parent.owned_metadata is not None:
+                if most_parent.owned_metadata.in_vram_range(addr):
+                    seg_meta = most_parent.owned_metadata
+                else:
+                    # Avoid creating a symbol inside this segment if it doesn't belong to.
+                    seg_meta = metadata_group.unknown_segment
+            else:
+                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+        else:
+            # Try to figure out a feasible segment for this.
+            seg_meta = metadata_group.find_referenced_segment_for_creation(
+                addr,
+                parent_segment_info,
+            )
+
+        ret = seg_meta.create_symbol(addr, search_ranges)
+
+        _update_symbol(ret, reference, define, type)
         return ret
 
     def __repr__(self) -> str:
         # Shows a nicer string on the debugging screen
         return f"{self.name} ({self.type})"
+
+
+def _update_symbol(
+    ret: Optional[Symbol],
+    reference: bool,
+    define: bool,
+    type: Optional[str],
+) -> None:
+    if ret is None:
+        return
+
+    if define:
+        ret.defined = True
+    if reference:
+        ret.referenced = True
+    if ret.type is None:
+        ret.type = type

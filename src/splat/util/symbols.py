@@ -4,19 +4,18 @@ from typing import Dict, List, Optional, Set, TYPE_CHECKING
 
 import spimdisasm
 
-from intervaltree import IntervalTree
 from ..disassembler import disassembler_instance
 from pathlib import Path
 
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
+    from ..util.metadata.segment_metadata_group import SegmentMetadataGroup
+    from ..util.metadata.segment_metadata import SegmentMetadata
 
 from . import log, options, progress_bar
 
 all_symbols: List["Symbol"] = []
-all_symbols_dict: Dict[int, List["Symbol"]] = {}
-all_symbols_ranges = IntervalTree()
 ignored_addresses: Set[int] = set()
 to_mark_as_defined: Set[str] = set()
 
@@ -26,7 +25,8 @@ spim_context = spimdisasm.common.Context()
 TRUEY_VALS = ["true", "on", "yes", "y"]
 FALSEY_VALS = ["false", "off", "no", "n"]
 
-splat_sym_types = {"func", "jtbl", "jtbl_label", "label"}
+splat_sym_types = {"func", "jtbl", "jtbl_label", "label", "alabel"}
+label_types = {"jtbl_label", "label"}
 
 ILLEGAL_FILENAME_CHARS = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
 
@@ -52,16 +52,13 @@ def is_falsey(str: str) -> bool:
     return str.lower() in FALSEY_VALS
 
 
-def add_symbol(sym: "Symbol"):
+def add_symbol(sym: "Symbol", all_symbols_dict: Dict[int, List["Symbol"]]):
     all_symbols.append(sym)
-    if sym.vram_start is not None:
-        if sym.vram_start not in all_symbols_dict:
-            all_symbols_dict[sym.vram_start] = []
-        all_symbols_dict[sym.vram_start].append(sym)
-
-    # For larger symbols, add their ranges to interval trees for faster lookup
-    if sym.size > 4:
-        all_symbols_ranges.addi(sym.vram_start, sym.vram_end, sym)
+    items = all_symbols_dict.get(sym.vram_start)
+    if items is None:
+        all_symbols_dict[sym.vram_start] = [sym]
+    else:
+        items.append(sym)
 
 
 def to_cname(symbol_name: str) -> str:
@@ -74,7 +71,9 @@ def to_cname(symbol_name: str) -> str:
 
 
 def handle_sym_addrs(
-    path: Path, sym_addrs_lines: List[str], all_segments: "List[Segment]"
+    path: Path,
+    sym_addrs_lines: List[str],
+    all_segments: "List[Segment]",
 ):
     def get_seg_for_name(name: str) -> Optional["Segment"]:
         for segment in all_segments:
@@ -87,6 +86,8 @@ def handle_sym_addrs(
             if segment.contains_rom(rom):
                 return segment
         return None
+
+    all_symbols_dict: Dict[int, List["Symbol"]] = {}
 
     seen_symbols: Dict[str, "Symbol"] = dict()
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
@@ -270,6 +271,8 @@ def handle_sym_addrs(
                                 continue
                             if attr_name == "use_non_matching_label":
                                 sym.use_non_matching_label = tf_val
+                            if attr_name == "absolute":
+                                sym.absolute = tf_val
 
             if ignore_sym:
                 if sym.given_size is None or sym.given_size == 0:
@@ -278,68 +281,103 @@ def handle_sym_addrs(
                     spim_context.addBannedSymbolRangeBySize(
                         sym.vram_start, sym.given_size
                     )
-
                 continue
 
-            if sym.segment is None and sym.rom is not None:
-                sym.segment = get_seg_for_rom(sym.rom)
+            if sym.absolute:
+                sym.defined = True
 
-            if sym.segment:
-                sym.segment.add_symbol(sym)
-
-            sym.user_declared = True
-
-            if sym.name in seen_symbols:
-                item = seen_symbols[sym.name]
-                if not sym.allow_duplicated or not item.allow_duplicated:
+                # Most attributes make no sense for a absolute symbol.
+                # For now just warn about these two.
+                if sym.rom is not None:
                     log.parsing_error_preamble(path, line_num, line)
-                    log.error(
-                        f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                    log.write(
+                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both a rom address (0x{sym.rom:08X}) and absolute:True.",
+                        status="warn",
                     )
+                if sym.segment is not None:
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.write(
+                        f"Warning: The symbol '{sym.name}' (0x{sym.vram_start:08X}) has both an associated segment ({sym.segment}) and absolute:True.",
+                        status="warn",
+                    )
+            else:
+                if sym.segment is None and sym.rom is not None:
+                    sym.segment = get_seg_for_rom(sym.rom)
 
-            if addr in all_symbols_dict:
-                items = all_symbols_dict[addr]
-                for item in items:
-                    have_same_rom_addresses = sym.rom == item.rom
-                    same_segment = sym.segment == item.segment
-
-                    if have_same_rom_addresses and same_segment:
-                        if not sym.allow_duplicated or not item.allow_duplicated:
+                if sym.segment:
+                    if (
+                        sym.segment.vram_start is not None
+                        and sym.segment.vram_end is not None
+                        and not sym.segment.contains_vram(sym.vram_start)
+                    ):
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.write(
+                            f"Warning: User-declared symbol '{sym.name}' was associated to segment '{sym.segment.name}', "
+                            "but its address is outside the segment's vram range.\n"
+                            f"  The symbol's Vram 0x{sym.vram_start:08X} is outside from the segment's Vram range 0x{sym.segment.vram_start:08X} ~ 0x{sym.segment.vram_end:08X}",
+                            status="warn",
+                        )
+                    if sym.rom is not None:
+                        expected_rom = sym.segment.ram_to_rom(sym.vram_start)
+                        if expected_rom is not None and expected_rom != sym.rom:
                             log.parsing_error_preamble(path, line_num, line)
-                            log.error(
-                                f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                            log.write(
+                                f"Warning: User-declared symbol '{sym.name}' has a wrong user-declared rom address.\n"
+                                f"  This symbol has been mapped to segment '{sym.segment.name}', but the expected Rom\n"
+                                f"  address for a symbol with Vram address 0x{sym.vram_start:08X} in that segment is\n"
+                                f"  0x{expected_rom:X}, but the given Rom address is 0x{sym.rom:X}.",
+                                status="warn",
                             )
 
-            if len(sym.filename) > 253 or any(
-                c in ILLEGAL_FILENAME_CHARS for c in sym.filename
-            ):
-                log.parsing_error_preamble(path, line_num, line)
-                log.error(
-                    # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
-                    # Other lines have two spaces to make identation nicer and consistent
-                    f"Ilegal symbol filename detected!\n"
-                    f"  The symbol\n"
-                    f"    {sym.name}\n"
-                    f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
-                    f"  which will be a problem when writing the symbol to its own file.\n"
-                    f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
-                    f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
-                    f"    {ILLEGAL_FILENAME_CHARS}"
-                )
+                sym.user_declared = True
 
-            seen_symbols[sym.name] = sym
+                if sym.name in seen_symbols:
+                    item = seen_symbols[sym.name]
+                    if not sym.allow_duplicated or not item.allow_duplicated:
+                        log.parsing_error_preamble(path, line_num, line)
+                        log.error(
+                            f"Duplicate symbol detected! {sym.name} has already been defined at vram 0x{item.vram_start:08X}"
+                        )
 
-            add_symbol(sym)
+                items = all_symbols_dict.get(addr)
+                if items is not None:
+                    for item in items:
+                        have_same_rom_addresses = sym.rom == item.rom
+                        same_segment = sym.segment == item.segment
+
+                        if have_same_rom_addresses and same_segment:
+                            if not sym.allow_duplicated or not item.allow_duplicated:
+                                log.parsing_error_preamble(path, line_num, line)
+                                log.error(
+                                    f"Duplicate symbol detected! {sym.name} clashes with {item.name} defined at vram 0x{addr:08X}.\n  If this is intended, specify either a segment or a rom address for this symbol"
+                                )
+
+                if len(sym.filename) > 253 or any(
+                    c in ILLEGAL_FILENAME_CHARS for c in sym.filename
+                ):
+                    log.parsing_error_preamble(path, line_num, line)
+                    log.error(
+                        # sym.name is written on its own line so reading the error message is nicer because the sym name will be very long.
+                        # Other lines have two spaces to make identation nicer and consistent
+                        f"Ilegal symbol filename detected!\n"
+                        f"  The symbol\n"
+                        f"    {sym.name}\n"
+                        f"  exceeds the 255 bytes filename limit that most OS imposes or uses illegal characters,\n"
+                        f"  which will be a problem when writing the symbol to its own file.\n"
+                        f"  To fix this specify a `filename` for this symbol, like `filename:func_{sym.vram_start:08X}`.\n"
+                        f"  Make sure the filename does not exceed 253 bytes nor it contains any of the following characters:\n"
+                        f"    {ILLEGAL_FILENAME_CHARS}"
+                    )
+
+                seen_symbols[sym.name] = sym
+
+            add_symbol(sym, all_symbols_dict)
 
 
 def initialize(all_segments: "List[Segment]"):
     global all_symbols
-    global all_symbols_dict
-    global all_symbols_ranges
 
     all_symbols = []
-    all_symbols_dict = {}
-    all_symbols_ranges = IntervalTree()
 
     # Manual list of func name / addrs
     for path in options.opts.symbol_addrs_paths:
@@ -349,155 +387,71 @@ def initialize(all_segments: "List[Segment]"):
                 handle_sym_addrs(path, sym_addrs_lines, all_segments)
 
 
-def initialize_spim_context(all_segments: "List[Segment]") -> None:
-    global_vrom_start = None
-    global_vrom_end = None
-    global_vram_start = options.opts.global_vram_start
-    global_vram_end = options.opts.global_vram_end
-    overlay_segments: Set[spimdisasm.common.SymbolsSegment] = set()
-
+def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
     spim_context.bannedSymbols |= ignored_addresses
 
-    from ..segtypes.common.code import CommonSegCode
-
-    global_segments_after_overlays: List[CommonSegCode] = []
-
-    for segment in all_segments:
-        if not isinstance(segment, CommonSegCode):
-            # We only care about the VRAMs of code segments
-            continue
-
-        if segment.special_vram_segment:
-            # Special segments which should not be accounted in the global VRAM calculation, like N64's IPL3
-            continue
-
-        if (
-            not isinstance(segment.vram_start, int)
-            or not isinstance(segment.vram_end, int)
-            or not isinstance(segment.rom_start, int)
-            or not isinstance(segment.rom_end, int)
-        ):
-            continue
-
-        ram_id = segment.get_exclusive_ram_id()
-
-        if ram_id is None:
-            if global_vram_start is None:
-                global_vram_start = segment.vram_start
-            elif segment.vram_start < global_vram_start:
-                global_vram_start = segment.vram_start
-
-            if global_vram_end is None:
-                global_vram_end = segment.vram_end
-            elif global_vram_end < segment.vram_end:
-                global_vram_end = segment.vram_end
-
-                if len(overlay_segments) > 0:
-                    # Global segment *after* overlay segments?
-                    global_segments_after_overlays.append(segment)
-
-            if global_vrom_start is None:
-                global_vrom_start = segment.rom_start
-            elif segment.rom_start < global_vrom_start:
-                global_vrom_start = segment.rom_start
-
-            if global_vrom_end is None:
-                global_vrom_end = segment.rom_end
-            elif global_vrom_end < segment.rom_end:
-                global_vrom_end = segment.rom_end
-
-        elif segment.vram_start != segment.vram_end:
-            # Do not tell to spimdisasm about zero-sized segments.
-
-            spim_segment = spim_context.addOverlaySegment(
-                ram_id,
-                segment.rom_start,
-                segment.rom_end,
-                segment.vram_start,
-                segment.vram_end,
-            )
-            # Add the segment-specific symbols first
-            for symbols_list in segment.seg_symbols.values():
-                for sym in symbols_list:
-                    add_symbol_to_spim_segment(spim_segment, sym)
-
-            overlay_segments.add(spim_segment)
-
+    # Initialize spimdisasm's global ranges.
     if (
-        global_vram_start is not None
-        and global_vram_end is not None
-        and global_vrom_start is not None
-        and global_vrom_end is not None
+        metadata_group.global_rom_start is not None
+        and metadata_group.global_rom_end is not None
+        and metadata_group.global_vram_start is not None
+        and metadata_group.global_vram_end is not None
     ):
         spim_context.changeGlobalSegmentRanges(
-            global_vrom_start, global_vrom_end, global_vram_start, global_vram_end
+            metadata_group.global_rom_start,
+            metadata_group.global_rom_end,
+            metadata_group.global_vram_start,
+            metadata_group.global_vram_end,
         )
 
-        overlaps_found = False
-        # Check the vram range of the global segment does not overlap with any overlay segment
-        for ovl_segment in overlay_segments:
-            assert ovl_segment.vramStart <= ovl_segment.vramEnd, (
-                f"{ovl_segment.vramStart:08X} {ovl_segment.vramEnd:08X}"
+    # Pass absolute symbols.
+    for sym in metadata_group.absolute_segment.symbols.values():
+        add_symbol_to_spimdisasm_segment(spim_context.absoluteSegment, sym)
+
+    all_segment_names = {seg.name for seg in metadata_group.global_segments} | {
+        seg.name
+        for overlay_cat in metadata_group.overlay_segments.values()
+        for seg in overlay_cat.segments.values()
+    }
+
+    # Pass global symbols
+    for seg_meta in metadata_group.global_segments:
+        for sym in seg_meta.symbols.values():
+            for prioritized_seg in seg_meta.prioritized_segments:
+                if prioritized_seg not in all_segment_names:
+                    log.error(
+                        f"\nError: The segment '{seg_meta.name}' references non-existing '{prioritized_seg}' segment. Stopping."
+                    )
+                spim_context.globalSegment.addPrioritizedSegment(prioritized_seg)
+            add_symbol_to_spimdisasm_segment(spim_context.globalSegment, sym)
+
+    # Create overlays and pass their symbols.
+    for ovl_id, segments_per_rom in metadata_group.overlay_segments.items():
+        for _, seg_meta in segments_per_rom.segments.items():
+            spimdisasm_segment = spim_context.addOverlaySegment(
+                ovl_id,
+                seg_meta.rom_start,
+                seg_meta.rom_end,
+                seg_meta.vram_start,
+                seg_meta.vram_end,
+                seg_meta.name,
             )
-            if (
-                ovl_segment.vramEnd > global_vram_start
-                and global_vram_end > ovl_segment.vramStart
-            ):
-                log.write(
-                    f"Error: the vram range ([0x{ovl_segment.vramStart:08X}, 0x{ovl_segment.vramEnd:08X}]) of the non-global segment at rom address 0x{ovl_segment.vromStart:X} overlaps with the global vram range ([0x{global_vram_start:08X}, 0x{global_vram_end:08X}])",
-                    status="warn",
-                )
-                overlaps_found = True
-        if overlaps_found:
-            log.write(
-                "Many overlaps between non-global and global segments were found.",
-            )
-            log.write(
-                "This is usually caused by missing `exclusive_ram_id` tags on segments that have a higher vram address than other `exclusive_ram_id`-tagged segments"
-            )
-            if len(global_segments_after_overlays) > 0:
-                log.write(
-                    "These segments are the main suspects for missing a `exclusive_ram_id` tag:",
-                    status="warn",
-                )
-                for seg in global_segments_after_overlays:
-                    log.write(f"    '{seg.name}', rom: 0x{seg.rom_start:06X}")
-            else:
-                log.write("No suspected segments??", status="warn")
-            log.error("Stopping due to the above errors")
+            for prioritized_seg in seg_meta.prioritized_segments:
+                if prioritized_seg not in all_segment_names:
+                    log.error(
+                        f"\nError: The segment '{seg_meta.name}' references non-existing '{prioritized_seg}' segment. Stopping."
+                    )
+                spimdisasm_segment.addPrioritizedSegment(prioritized_seg)
 
-    # pass the global symbols to spimdisasm
-    for segment in all_segments:
-        if not isinstance(segment, CommonSegCode):
-            # We only care about the VRAMs of code segments
-            continue
-
-        ram_id = segment.get_exclusive_ram_id()
-        if ram_id is not None:
-            continue
-
-        for symbols_list in segment.seg_symbols.values():
-            for sym in symbols_list:
-                add_symbol_to_spim_segment(spim_context.globalSegment, sym)
-
-    if global_vram_start and global_vram_end:
-        # Pass global symbols to spimdisasm that are not part of any segment on the binary we are splitting (for psx and psp)
-        for sym in all_symbols:
-            if sym.segment is not None:
-                # We already handled this symbol somewhere else
-                continue
-
-            if sym.vram_start < global_vram_start or sym.vram_end > global_vram_end:
-                # Not global
-                continue
-
-            add_symbol_to_spim_segment(spim_context.globalSegment, sym)
+            for sym in seg_meta.symbols.values():
+                add_symbol_to_spimdisasm_segment(spimdisasm_segment, sym)
 
 
-def add_symbol_to_spim_segment(
-    segment: spimdisasm.common.SymbolsSegment, sym: "Symbol"
+def add_symbol_to_spimdisasm_segment(
+    segment: spimdisasm.common.SymbolsSegment,
+    sym: "Symbol",
 ) -> spimdisasm.common.ContextSymbol:
-    if sym.type == "func":
+    if sym.type == "func" or sym.type == "alabel":
         context_sym = segment.addFunction(
             sym.vram_start, isAutogenerated=not sym.user_declared, vromAddress=sym.rom
         )
@@ -554,102 +508,55 @@ def add_symbol_to_spim_segment(
     return context_sym
 
 
-def add_symbol_to_spim_section(
-    section: spimdisasm.mips.sections.SectionBase, sym: "Symbol"
-) -> spimdisasm.common.ContextSymbol:
-    if sym.type == "func":
-        context_sym = section.addFunction(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
-        )
-    elif sym.type == "jtbl":
-        context_sym = section.addJumpTable(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
-        )
-    elif sym.type == "jtbl_label":
-        context_sym = section.addJumpTableLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
-        )
-    elif sym.type == "label":
-        context_sym = section.addBranchLabel(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
-        )
-    else:
-        context_sym = section.addSymbol(
-            sym.vram_start, isAutogenerated=not sym.user_declared, symbolVrom=sym.rom
-        )
-        if sym.type is not None:
-            context_sym.type = sym.type
-
-    if sym.user_declared:
-        context_sym.isUserDeclared = True
-    if sym.defined:
-        context_sym.isDefined = True
-    if sym.rom is not None:
-        context_sym.vromAddress = sym.rom
-    if sym.given_size is not None:
-        context_sym.size = sym.size
-    if sym.force_migration:
-        context_sym.forceMigration = True
-    if sym.force_not_migration:
-        context_sym.forceNotMigration = True
-    context_sym.functionOwnerForMigration = sym.function_owner
-    context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
-    if sym.given_name_end:
-        context_sym.nameEnd = sym.given_name_end
-    if sym.given_visibility:
-        context_sym.visibility = sym.given_visibility
-    if sym.given_align:
-        context_sym.setAlignment(sym.given_align)
-    if sym.use_non_matching_label is not None:
-        context_sym.useNonMatchingLabel = sym.use_non_matching_label
-
-    return context_sym
-
-
-# force_in_segment=True when the symbol belongs to this specific segment.
+# force_in_segment=True when the symbol belongs to this specific parent segment.
 # force_in_segment=False when this symbol is just a reference.
 def create_symbol_from_spim_symbol(
-    segment: "Segment",
+    most_parent: "Segment",
+    current_segment: "Segment",
     context_sym: spimdisasm.common.ContextSymbol,
     *,
     force_in_segment: bool,
 ) -> "Symbol":
-    in_segment = False
-
     sym_type = None
     if context_sym.type == spimdisasm.common.SymbolSpecialType.jumptable:
-        in_segment = True
         sym_type = "jtbl"
     elif context_sym.type == spimdisasm.common.SymbolSpecialType.function:
         sym_type = "func"
     elif context_sym.type == spimdisasm.common.SymbolSpecialType.branchlabel:
-        in_segment = True
         sym_type = "label"
     elif context_sym.type == spimdisasm.common.SymbolSpecialType.jumptablelabel:
-        in_segment = True
         sym_type = "jtbl_label"
 
-    if not in_segment:
-        if (
-            context_sym.overlayCategory is None
-            and segment.get_exclusive_ram_id() is None
-        ):
-            in_segment = segment.contains_vram(context_sym.vram)
-        elif context_sym.overlayCategory == segment.get_exclusive_ram_id():
-            if context_sym.vromAddress is not None:
-                in_segment = segment.contains_rom(context_sym.vromAddress)
-            else:
-                in_segment = segment.contains_vram(context_sym.vram)
+    in_segment = False
+    if (
+        context_sym.overlayCategory is None
+        and most_parent.get_exclusive_ram_id() is None
+    ):
+        in_segment = most_parent.contains_vram(context_sym.vram)
+    elif context_sym.overlayCategory == most_parent.get_exclusive_ram_id():
+        if context_sym.vromAddress is not None:
+            in_segment = most_parent.contains_rom(context_sym.vromAddress)
+        else:
+            in_segment = most_parent.contains_vram(context_sym.vram)
 
-    sym = segment.create_symbol(
-        context_sym.vram, force_in_segment or in_segment, type=sym_type, reference=True
+    sym = most_parent.create_symbol(
+        context_sym.vram,
+        force_in_segment or in_segment,
+        type=sym_type,
+        reference=True,
     )
 
+    # Avoid overriding names for user declared symbols
+    if sym.given_name is not None and context_sym.name is None:
+        context_sym.name = sym.given_name
     if sym.given_name is None and context_sym.name is not None:
         sym.given_name = context_sym.name
 
     # To keep the symbol name in sync between splat and spimdisasm
-    context_sym.setNameGetCallback(lambda _: sym.name)
+    if in_segment:
+        context_sym.setNameGetCallback(lambda _: sym.name)
+    else:
+        context_sym.setNameGetCallbackIfUnset(lambda _: sym.name)
 
     if context_sym.size is not None:
         sym.given_size = context_sym.getSize()
@@ -659,6 +566,17 @@ def create_symbol_from_spim_symbol(
         sym.defined = True
     if context_sym.referenceCounter > 0:
         sym.referenced = True
+
+    # Void the autodetected symbol type if it is a branch target, but the
+    # symbol isn't part of a text section.
+    # This may happen on handwritten asm where the function jumps to some
+    # data/bss symbol. This can be seen on libultra's monoutil.s (__isExp).
+    if (
+        not current_segment.is_text()
+        and sym_type is None
+        and sym.type in ("label", "jtbl_label")
+    ):
+        sym.type = None
 
     return sym
 
@@ -709,6 +627,10 @@ class Symbol:
     given_align: Optional[int] = None
 
     use_non_matching_label: Optional[bool] = None
+
+    unknown_segment: bool = False
+    absolute: bool = False
+    seg_meta: Optional["SegmentMetadata"] = None
 
     _generated_default_name: Optional[str] = None
     _last_type: Optional[str] = None
@@ -814,12 +736,14 @@ def get_all_symbols():
 
 def reset_symbols():
     global all_symbols
-    global all_symbols_dict
-    global all_symbols_ranges
     global ignored_addresses
     global to_mark_as_defined
+    global spim_context
     all_symbols = []
-    all_symbols_dict = {}
-    all_symbols_ranges = IntervalTree()
     ignored_addresses = set()
     to_mark_as_defined = set()
+    spim_context = spimdisasm.common.Context()
+
+    from .metadata import segment_metadata_group
+
+    segment_metadata_group.reset()

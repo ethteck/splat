@@ -642,3 +642,35 @@ This value expects the name of the other segment that should be paired to the cu
       - [0x2C6B0, .rodata, libultra/audio/init_15550]
       # -- snip --
 ```
+
+### `prioritized_segments`
+
+A list of top-level segments.
+
+This segment is allowed to "see" the symbols from the segments on that list, even if it shouldn't given their `exclusive_ram_id`.
+
+This also allows control over how to disambiguate references over multiple overlay segments with overlaping addresses.
+
+Note the visibility is unidirectional, if you want both segments to see each other then you need to add a `prioritized_segments` on both listing the other segment's name.
+
+```yaml
+  - type: code
+    name: volcano_assets
+    dir: volcano
+    start: 0x326C10
+    vram: 0x800FFF90
+    bss_size: 0x20
+    exclusive_ram_id: unk800FFF90
+
+  # -- SNIP --
+
+  - name: volcano_code
+    dir: volcano
+    type: code
+    start: 0x7272E0
+    vram: 0x802D60E0
+    bss_size: 0x170
+    exclusive_ram_id: level
+    prioritized_segments:
+      - volcano_assets
+```

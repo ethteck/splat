@@ -119,22 +119,24 @@ class CommonSegCodeSubsegment(Segment):
         self.parent: CommonSegCode = self.parent
 
         symbols.create_symbol_from_spim_symbol(
-            self.get_most_parent(), func_spim.contextSym, force_in_segment=False
+            self.get_most_parent(), self, func_spim.contextSym, force_in_segment=True
         )
 
         # Gather symbols found by spimdisasm and create those symbols in splat's side
-        for referenced_vram in func_spim.referencedVrams:
-            context_sym = self.spim_section.get_section().getSymbol(
-                referenced_vram, tryPlusOffset=False
-            )
-            if context_sym is not None:
-                symbols.create_symbol_from_spim_symbol(
-                    self.get_most_parent(), context_sym, force_in_segment=False
-                )
+        for i in range(0, func_spim.sizew * 4, 4):
+            reloc_info = func_spim.getReloc(i)
+            if reloc_info is not None:
+                if isinstance(reloc_info.symbol, spimdisasm.common.ContextSymbol):
+                    symbols.create_symbol_from_spim_symbol(
+                        self.get_most_parent(),
+                        self,
+                        reloc_info.symbol,
+                        force_in_segment=False,
+                    )
 
         # Main loop
-        for i, insn in enumerate(func_spim.instructions):
-            if options.opts.platform == "ps2":
+        if options.opts.platform == "ps2":
+            for insn in func_spim.instructions:
                 from .c import CommonSegC
                 from rabbitizer import TrinaryValue
 
@@ -144,34 +146,21 @@ class CommonSegCodeSubsegment(Segment):
                     insn.flag_r5900UseDollar = TrinaryValue.TRUE
                 insn.flag_r5900DisasmAsData = TrinaryValue.TRUE
 
-            instr_offset = i * 4
-
-            # update pointer accesses from this function
-            if instr_offset in func_spim.instrAnalyzer.symbolInstrOffset:
-                sym_address = func_spim.instrAnalyzer.symbolInstrOffset[instr_offset]
-
-                context_sym = self.spim_section.get_section().getSymbol(sym_address)
-                if context_sym is not None:
-                    symbols.create_symbol_from_spim_symbol(
-                        self.get_most_parent(), context_sym, force_in_segment=False
-                    )
-
     def print_file_boundaries(self):
         if not self.show_file_boundaries or not self.spim_section:
             return
 
         assert isinstance(self.rom_start, int)
 
-        for in_file_offset in self.spim_section.get_section().fileBoundaries:
+        spim_section = self.spim_section.get_section()
+        for in_file_offset in spim_section.fileBoundaries:
             if not self.parent.reported_file_split:
                 self.parent.reported_file_split = True
 
                 # Look up for the last symbol in this boundary
                 sym_addr = 0
-                for sym in self.spim_section.get_section().symbolList:
-                    symOffset = (
-                        sym.inFileOffset - self.spim_section.get_section().inFileOffset
-                    )
+                for sym in spim_section.symbolList:
+                    symOffset = sym.inFileOffset - spim_section.inFileOffset
                     if in_file_offset == symOffset:
                         break
                     sym_addr = sym.vram

@@ -269,7 +269,9 @@ class CommonSegC(CommonSegCodeSubsegment):
                             or options.opts.disassemble_all
                         ):
                             rodata_sym = self.get_symbol(
-                                spim_rodata_sym.vram, in_segment=True, local_only=True
+                                spim_rodata_sym.vram,
+                                in_segment=True,
+                                local_only=True,
                             )
                             assert rodata_sym is not None
 
@@ -470,7 +472,9 @@ class CommonSegC(CommonSegCodeSubsegment):
             else:
                 for spim_rodata_sym in entry.rodataSyms:
                     rodata_sym = self.get_symbol(
-                        spim_rodata_sym.vram, in_segment=True, local_only=True
+                        spim_rodata_sym.vram,
+                        in_segment=True,
+                        local_only=True,
                     )
                     assert rodata_sym is not None
 
