@@ -408,9 +408,21 @@ def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
     for sym in metadata_group.absolute_segment.symbols.values():
         add_symbol_to_spimdisasm_segment(spim_context.absoluteSegment, sym)
 
+    all_segment_names = {seg.name for seg in metadata_group.global_segments} | {
+        seg.name
+        for overlay_cat in metadata_group.overlay_segments.values()
+        for seg in overlay_cat.segments.values()
+    }
+
     # Pass global symbols
     for seg_meta in metadata_group.global_segments:
         for sym in seg_meta.symbols.values():
+            for prioritized_seg in seg_meta.prioritized_segments:
+                if prioritized_seg not in all_segment_names:
+                    log.error(
+                        f"\nError: The segment '{seg_meta.name}' references non-existing '{prioritized_seg}' segment. Stopping."
+                    )
+                spim_context.globalSegment.addPrioritizedSegment(prioritized_seg)
             add_symbol_to_spimdisasm_segment(spim_context.globalSegment, sym)
 
     # Create overlays and pass their symbols.
@@ -425,6 +437,10 @@ def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
                 seg_meta.name,
             )
             for prioritized_seg in seg_meta.prioritized_segments:
+                if prioritized_seg not in all_segment_names:
+                    log.error(
+                        f"\nError: The segment '{seg_meta.name}' references non-existing '{prioritized_seg}' segment. Stopping."
+                    )
                 spimdisasm_segment.addPrioritizedSegment(prioritized_seg)
 
             for sym in seg_meta.symbols.values():
