@@ -651,7 +651,7 @@ This segment is allowed to "see" the symbols from the segments on that list, eve
 
 This also allows control over how to disambiguate references over multiple overlay segments with overlaping addresses.
 
-Note the visibility is unidirectional, if you want both segments to see each other then you need to add a `prioritized_segments` on both listing the other segment's name.
+Note the visibility is unidirectional; if you want two segments to see each other, you need to add a `prioritized_segments` on both, listing each other's names.
 
 ```yaml
   - type: code

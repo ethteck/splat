@@ -93,7 +93,7 @@ sMenuTexture = 0x06004040; // segment:menu_assets
 
 Declares this symbol as being associated to no segment.
 
-Some symbols are special in the way they exist outside the address space of the ROM. Instead they are provided by the OS, hardware, etc. This way you can name these kind of symbols.
+Some symbols are special in the way they exist outside the address space of the ROM. Instead they are provided by the OS, hardware, etc. `absolute` can be used to name these kind of symbols.
 
 `absolute` symbols also have the property of being prioritized over everything else when looking up for address references.
 
