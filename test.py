@@ -242,7 +242,17 @@ class Symbols(unittest.TestCase):
             args=[],
             yaml={},
         )
-        context_sym = spimdisasm.common.ContextSymbol(address=0)
+        spimdisasm_segment = spimdisasm.common.SymbolsSegment(
+            spimdisasm.common.Context(),
+            segment.rom_start,
+            segment.rom_end,
+            segment.vram_start or 0x40000000,
+            segment.vram_end or 0x40000100,
+        )
+        context_sym = spimdisasm.common.ContextSymbol(
+            address=0,
+            segment=spimdisasm_segment,
+        )
         result = symbols.create_symbol_from_spim_symbol(
             segment, context_sym, force_in_segment=False
         )
@@ -303,7 +313,17 @@ class Rodata(unittest.TestCase):
         )
         rodata_sym.contextSym.forceMigration = True
 
-        context_sym = spimdisasm.common.ContextSymbol(address=0)
+        spimdisasm_segment = spimdisasm.common.SymbolsSegment(
+            context,
+            0x0,
+            0x100,
+            0x400,
+            0x500,
+        )
+        context_sym = spimdisasm.common.ContextSymbol(
+            address=0,
+            segment=spimdisasm_segment,
+        )
         context_sym.address = result_symbol_addr
 
         rodata_sym.contextSym.referenceFunctions = {context_sym}
