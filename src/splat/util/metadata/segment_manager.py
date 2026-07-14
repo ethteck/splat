@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ...segtypes.segment import Segment
 
 
-class SegmentMetadataGroup:
+class SegmentManager:
     """
     Grouping for all segment metadatas.
     """
@@ -668,17 +668,15 @@ class SegmentMetadataGroup:
         self.all_symbols = all_symbols
 
 
-metadata_group = SegmentMetadataGroup()
+manager = SegmentManager()
 
 
 def initialize(all_segments: "list[Segment]", all_symbols: "list[Symbol]") -> None:
-    global metadata_group
-    segments_by_name, skipped_segments = metadata_group._initialize_segments(
-        all_segments
-    )
-    metadata_group._initialize_symbols(all_symbols, segments_by_name, skipped_segments)
+    global manager
+    segments_by_name, skipped_segments = manager._initialize_segments(all_segments)
+    manager._initialize_symbols(all_symbols, segments_by_name, skipped_segments)
 
 
 def reset() -> None:
-    global metadata_group
-    metadata_group = SegmentMetadataGroup()
+    global manager
+    manager = SegmentManager()

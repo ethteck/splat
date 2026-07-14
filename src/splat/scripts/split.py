@@ -278,10 +278,10 @@ def initialize_all_symbols(all_segments: List[Segment]):
     symbols.initialize(all_segments)
     relocs.initialize()
 
-    metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
+    metadata.segment_manager.initialize(all_segments, symbols.all_symbols)
 
     if options.opts.is_mode_active("code"):
-        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+        symbols.initialize_spim_context(metadata.segment_manager.manager)
         relocs.initialize_spim_context()
 
 

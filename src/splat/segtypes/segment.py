@@ -13,7 +13,7 @@ from ..util import log, options
 from ..util.symbols import Symbol, to_cname
 from ..util.metadata.parent_segment_info import ParentSegmentInfo
 from ..util.metadata.segment_metadata import SegmentMetadata
-from ..util.metadata.segment_metadata_group import metadata_group
+from ..util.metadata.segment_manager import manager
 
 from .. import __package_name__
 
@@ -807,7 +807,7 @@ class Segment:
         if parent_segment_info is None:
             # Somehow we don't have segment info,
             # fallback to the unknown segment.
-            seg_meta = metadata_group.unknown_segment
+            seg_meta = manager.unknown_segment
             ret = seg_meta.find_symbol(addr, search_ranges)
         elif in_segment:
             if most_parent.owned_metadata is not None:
@@ -816,15 +816,15 @@ class Segment:
                     seg_meta = most_parent.owned_metadata
                 else:
                     # Avoid creating a symbol inside this segment if it doesn't belong to.
-                    seg_meta = metadata_group.unknown_segment
+                    seg_meta = manager.unknown_segment
             else:
                 # We don't have a reference to our own metadata?
                 # Try to retrieve it.
-                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                seg_meta = manager.find_owned_segment(parent_segment_info)
             ret = seg_meta.find_symbol(addr, search_ranges)
         elif not local_only:
             # Try to find the symbol anywhere.
-            ret = metadata_group.find_symbol_from_any_segment(
+            ret = manager.find_symbol_from_any_segment(
                 addr,
                 parent_segment_info,
                 search_ranges,
@@ -848,7 +848,7 @@ class Segment:
         if parent_segment_info is None:
             # Somehow we don't have segment info,
             # fallback to the unknown segment.
-            seg_meta = metadata_group.unknown_segment
+            seg_meta = manager.unknown_segment
         elif in_segment:
             # Check if we know our own segment metadata,
             # if not, then default to look it up.
@@ -857,12 +857,12 @@ class Segment:
                     seg_meta = most_parent.owned_metadata
                 else:
                     # Avoid creating a symbol inside this segment if it doesn't belong to.
-                    seg_meta = metadata_group.unknown_segment
+                    seg_meta = manager.unknown_segment
             else:
-                seg_meta = metadata_group.find_owned_segment(parent_segment_info)
+                seg_meta = manager.find_owned_segment(parent_segment_info)
         else:
             # Try to figure out a feasible segment for this.
-            seg_meta = metadata_group.find_referenced_segment_for_creation(
+            seg_meta = manager.find_referenced_segment_for_creation(
                 addr,
                 parent_segment_info,
             )

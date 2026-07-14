@@ -10,7 +10,7 @@ from pathlib import Path
 # circular import
 if TYPE_CHECKING:
     from ..segtypes.segment import Segment
-    from ..util.metadata.segment_metadata_group import SegmentMetadataGroup
+    from .metadata.segment_manager import SegmentManager
     from ..util.metadata.segment_metadata import SegmentMetadata
 
 from . import log, options, progress_bar
@@ -387,35 +387,35 @@ def initialize(all_segments: "List[Segment]"):
                 handle_sym_addrs(path, sym_addrs_lines, all_segments)
 
 
-def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
+def initialize_spim_context(manager: "SegmentManager") -> None:
     spim_context.bannedSymbols |= ignored_addresses
 
     # Initialize spimdisasm's global ranges.
     if (
-        metadata_group.global_rom_start is not None
-        and metadata_group.global_rom_end is not None
-        and metadata_group.global_vram_start is not None
-        and metadata_group.global_vram_end is not None
+        manager.global_rom_start is not None
+        and manager.global_rom_end is not None
+        and manager.global_vram_start is not None
+        and manager.global_vram_end is not None
     ):
         spim_context.changeGlobalSegmentRanges(
-            metadata_group.global_rom_start,
-            metadata_group.global_rom_end,
-            metadata_group.global_vram_start,
-            metadata_group.global_vram_end,
+            manager.global_rom_start,
+            manager.global_rom_end,
+            manager.global_vram_start,
+            manager.global_vram_end,
         )
 
     # Pass absolute symbols.
-    for sym in metadata_group.absolute_segment.symbols.values():
+    for sym in manager.absolute_segment.symbols.values():
         add_symbol_to_spimdisasm_segment(spim_context.absoluteSegment, sym)
 
-    all_segment_names = {seg.name for seg in metadata_group.global_segments} | {
+    all_segment_names = {seg.name for seg in manager.global_segments} | {
         seg.name
-        for overlay_cat in metadata_group.overlay_segments.values()
+        for overlay_cat in manager.overlay_segments.values()
         for seg in overlay_cat.segments.values()
     }
 
     # Pass global symbols
-    for seg_meta in metadata_group.global_segments:
+    for seg_meta in manager.global_segments:
         for sym in seg_meta.symbols.values():
             for prioritized_seg in seg_meta.prioritized_segments:
                 if prioritized_seg not in all_segment_names:
@@ -426,7 +426,7 @@ def initialize_spim_context(metadata_group: "SegmentMetadataGroup") -> None:
             add_symbol_to_spimdisasm_segment(spim_context.globalSegment, sym)
 
     # Create overlays and pass their symbols.
-    for ovl_id, segments_per_rom in metadata_group.overlay_segments.items():
+    for ovl_id, segments_per_rom in manager.overlay_segments.items():
         for _, seg_meta in segments_per_rom.segments.items():
             spimdisasm_segment = spim_context.addOverlaySegment(
                 ovl_id,
@@ -744,6 +744,6 @@ def reset_symbols():
     to_mark_as_defined = set()
     spim_context = spimdisasm.common.Context()
 
-    from .metadata import segment_metadata_group
+    from .metadata import segment_manager
 
-    segment_metadata_group.reset()
+    segment_manager.reset()

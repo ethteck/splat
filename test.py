@@ -264,8 +264,8 @@ class Rodata(unittest.TestCase):
             args=[],
             yaml={},
         )
-        metadata.segment_metadata_group.initialize([common_seg_rodata], [])
-        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+        metadata.segment_manager.initialize([common_seg_rodata], [])
+        symbols.initialize_spim_context(metadata.segment_manager.manager)
 
         rom_data = []
         for i in range(0x100):
@@ -532,9 +532,9 @@ class InitializeSpimContext(unittest.TestCase):
         # force this since it's hard to set up
         all_segments[0].exclusive_ram_id = "overlay"
 
-        metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
+        metadata.segment_manager.initialize(all_segments, symbols.all_symbols)
 
-        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+        symbols.initialize_spim_context(metadata.segment_manager.manager)
         # spim should have added something to overlaySegments
         assert (
             type(symbols.spim_context.overlaySegments["overlay"][0x1000])
@@ -573,11 +573,11 @@ class InitializeSpimContext(unittest.TestCase):
             )
         ]
 
-        metadata.segment_metadata_group.initialize(all_segments, symbols.all_symbols)
+        metadata.segment_manager.initialize(all_segments, symbols.all_symbols)
 
         assert symbols.spim_context.globalSegment.vramStart == 0x80000000
         assert symbols.spim_context.globalSegment.vramEnd == 0x80001000
-        symbols.initialize_spim_context(metadata.segment_metadata_group.metadata_group)
+        symbols.initialize_spim_context(metadata.segment_manager.manager)
         assert symbols.spim_context.globalSegment.vramStart == 0x100
         assert symbols.spim_context.globalSegment.vramEnd == 0x2C0
 
