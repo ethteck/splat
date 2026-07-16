@@ -202,7 +202,13 @@ class LinkerWriter:
         self._begin_block()
 
         if not self.is_partial:
-            self._writeln(f"__romPos = {options.opts.ld_rom_start};")
+            # Define `__romPos` as a HIDDEN elf symbol so it isn't
+            # exported/GLOBAL in the symtab, allowing for a built binary to be
+            # used when building other binaries and referencing their symbols.
+            # Useful for PSX projects with overlays being different binaries
+            # from the main program.
+            # https://sourceware.org/binutils/docs/ld/HIDDEN.html
+            self._writeln(f"HIDDEN(__romPos = {options.opts.ld_rom_start});")
 
             if options.opts.ld_gp_expression is not None:
                 self._writeln(f"_gp = {options.opts.ld_gp_expression};")

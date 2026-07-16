@@ -1,5 +1,11 @@
 # splat Release Notes
 
+### 0.41.1
+
+* Mark `__romPos` as `HIDDEN`.
+  * Prevents the generated `__romPos` linker symbol from being exported as GLOBAL in the built elf.
+  * Useful for PSX projects with overlays being different binaries from the main program.
+
 ### 0.41.0
 
 * Add `bss_size` attribute for `bss` subsegments.
