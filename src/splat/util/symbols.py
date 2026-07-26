@@ -88,7 +88,7 @@ def handle_sym_addrs(
                 return segment
         return None
 
-    seen_symbols: Dict[str, "Symbol"] = dict()
+    seen_symbols: Dict[str, "Symbol"] = {}
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str

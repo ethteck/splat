@@ -56,9 +56,6 @@ splat = "splat.__main__:splat_main"
 ignore = [
     "B009", # https://docs.astral.sh/ruff/rules/get-attr-with-constant/
     "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
-    "C401",
-    "C408",
-    "EXE001",
     "FA100",
     "FURB105",
     "FURB122",
