@@ -26,5 +26,5 @@ def get_instance() -> Disassembler:
     global __instance
     global __initialized
     if not __initialized:
-        raise Exception("Disassembler instance not initialized") # noqa: TRY002
+        raise Exception("Disassembler instance not initialized")  # noqa: TRY002
     return __instance
