@@ -51,3 +51,41 @@ features = ["dev"]
 
 [project.scripts]
 splat = "splat.__main__:splat_main"
+
+[tool.ruff.lint]
+ignore = [
+    "B009", # https://docs.astral.sh/ruff/rules/get-attr-with-constant/
+    "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
+    "C401",
+    "C408",
+    "EXE001",
+    "FA100",
+    "FURB105",
+    "FURB122",
+    "FURB188",
+    "I001",
+    "ISC004",
+    "PERF402",
+    "PIE790",
+    "PLC0206",
+    "PLR0402",
+    "PLR1730",
+    "PLW0211",
+    "PLW0602",
+    "PLW1510",
+    "RUF010",
+    "RUF015",
+    "RUF059",
+    "SIM102",
+    "SIM103",
+    "SIM114",
+    "SIM201",
+    "TRY002",
+    "TRY004",
+    "UP006",
+    "UP020",
+    "UP033",
+    "UP035",
+    "UP037",
+    "UP045",
+]
