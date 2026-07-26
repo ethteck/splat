@@ -258,8 +258,7 @@ class CommonSegCodeSubsegment(Segment):
         self.print_file_boundaries()
 
         with open(out_path, "w", encoding="utf-8", newline="\n") as f:
-            for line in self.get_asm_file_header():
-                f.write(line + "\n")
+            f.writelines(line + "\n" for line in self.get_asm_file_header())
 
             # self.spim_section would be None if the current section was
             # declared `auto` in the yaml.

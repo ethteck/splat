@@ -53,13 +53,20 @@ features = ["dev"]
 splat = "splat.__main__:splat_main"
 
 [tool.ruff.lint]
+# Keep alphabetically sorted
+extend-select = [
+    "C401", # https://docs.astral.sh/ruff/rules/unnecessary-generator-set/
+    "C408", # https://docs.astral.sh/ruff/rules/unnecessary-collection-call/
+    "EXE001", # https://docs.astral.sh/ruff/rules/shebang-not-executable/
+    "FURB105", # https://docs.astral.sh/ruff/rules/print-empty-string/
+    "FURB122", # https://docs.astral.sh/ruff/rules/for-loop-writes/
+    "FURB188", # https://docs.astral.sh/ruff/rules/slice-to-remove-prefix-or-suffix/
+]
+
 ignore = [
     "B009", # https://docs.astral.sh/ruff/rules/get-attr-with-constant/
     "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
-    "FA100",
-    "FURB105",
-    "FURB122",
-    "FURB188",
+    "FA100", # https://docs.astral.sh/ruff/rules/future-rewritable-type-annotation/
     "I001",
     "ISC004",
     "PERF402",

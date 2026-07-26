@@ -96,8 +96,7 @@ class Segment:
     @staticmethod
     def get_class_for_type(seg_type) -> Type["Segment"]:
         # so .data loads SegData, for example
-        if seg_type.startswith("."):
-            seg_type = seg_type[1:]
+        seg_type = seg_type.removeprefix(".")
 
         if options.opts.allow_segment_overrides:
             segment_class = Segment.get_extension_segment_class(seg_type)

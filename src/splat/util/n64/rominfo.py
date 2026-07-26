@@ -526,7 +526,7 @@ def main():
     print("CIC: " + rom.cic.ntsc_name + " / " + rom.cic.pal_name)
     print("RAM entry point: " + hex(rom.entry_point))
     print("Header encoding: " + rom.header_encoding)
-    print("")
+    print()
 
     get_compiler_info(rom_bytes, rom.entry_point)
 
