@@ -40,7 +40,7 @@ class CommonSegRodata(CommonSegData):
         if len(rodata_sym.contextSym.referenceFunctions) != 1:
             return None
 
-        func = list(rodata_sym.contextSym.referenceFunctions)[0]
+        func = next(iter(rodata_sym.contextSym.referenceFunctions))
         text_segment = self.parent.get_subsegment_for_ram(func.vram)
 
         if text_segment is None or not text_segment.is_text():

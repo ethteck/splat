@@ -28,7 +28,7 @@ def _merge_configs(main_config, additional_config, additional_config_path):
             main_config[curkey] = additional_config[curkey]
         elif type(main_config[curkey]) is not type(additional_config[curkey]):
             raise TypeError(
-                f"Could not merge {str(additional_config_path)}: type for key '{curkey}' in configs does not match"
+                f"Could not merge {additional_config_path!s}: type for key '{curkey}' in configs does not match"
             )
         else:
             # keys exist and match, see if a list to append

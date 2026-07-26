@@ -193,7 +193,7 @@ class CommonSegCode(CommonSegGroup):
             # Third, try to get the end address from the next segment with a start address
             end: Optional[int] = None
             if next_subsegment_yaml is not None:
-                end, end_is_auto_segment = Segment.parse_segment_start(
+                end, _end_is_auto_segment = Segment.parse_segment_start(
                     next_subsegment_yaml
                 )
             if start is not None and end is None:

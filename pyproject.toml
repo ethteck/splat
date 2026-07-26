@@ -67,6 +67,9 @@ extend-select = [
     "PLC0206", # https://docs.astral.sh/ruff/rules/dict-index-missing-items/
     "PLR1730", # https://docs.astral.sh/ruff/rules/if-stmt-min-max/
     "PLW1510", # https://docs.astral.sh/ruff/rules/subprocess-run-without-check/
+    "RUF010", # https://docs.astral.sh/ruff/rules/explicit-f-string-type-conversion/
+    "RUF015", # https://docs.astral.sh/ruff/rules/unnecessary-iterable-allocation-for-first-element/
+    "RUF059", # https://docs.astral.sh/ruff/rules/unused-unpacked-variable/
 ]
 
 ignore = [
@@ -77,9 +80,6 @@ ignore = [
     "PLR0402", # https://docs.astral.sh/ruff/rules/manual-from-import/
     "PLW0211", # https://docs.astral.sh/ruff/rules/bad-staticmethod-argument
     "PLW0602", # https://docs.astral.sh/ruff/rules/global-variable-not-assigned/
-    "RUF010",
-    "RUF015",
-    "RUF059",
     "SIM102",
     "SIM103",
     "SIM114",
