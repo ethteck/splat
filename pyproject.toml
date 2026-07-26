@@ -73,6 +73,8 @@ extend-select = [
     "SIM201", # https://docs.astral.sh/ruff/rules/negate-equal-op/
     "TRY002", # https://docs.astral.sh/ruff/rules/raise-vanilla-class/
     "TRY004", # https://docs.astral.sh/ruff/rules/type-check-without-type-error/
+    "UP020", # https://docs.astral.sh/ruff/rules/open-alias/
+    "UP033", # https://docs.astral.sh/ruff/rules/lru-cache-with-maxsize-none/
 ]
 
 ignore = [
@@ -86,10 +88,8 @@ ignore = [
     "SIM102", # https://docs.astral.sh/ruff/rules/collapsible-if/
     "SIM103", # https://docs.astral.sh/ruff/rules/needless-bool/
     "SIM114", # https://docs.astral.sh/ruff/rules/if-with-same-arms/
-    "UP006",
-    "UP020",
-    "UP033",
-    "UP035",
-    "UP037",
-    "UP045",
+    "UP006", # https://docs.astral.sh/ruff/rules/non-pep585-annotation/
+    "UP035", # https://docs.astral.sh/ruff/rules/deprecated-import/
+    "UP037", # https://docs.astral.sh/ruff/rules/quoted-annotation/
+    "UP045", # https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional/
 ]

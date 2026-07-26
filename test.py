@@ -2,7 +2,6 @@
 
 import difflib
 import filecmp
-import io
 from pathlib import Path
 import spimdisasm
 import unittest
@@ -23,8 +22,8 @@ from src.splat.segtypes.segment import Segment
 class Testing(unittest.TestCase):
     def compare_files(self, test_path, ref_path):
         with (
-            io.open(test_path, encoding="utf-8") as test_f,
-            io.open(ref_path, encoding="utf-8") as ref_f,
+            open(test_path, encoding="utf-8") as test_f,
+            open(ref_path, encoding="utf-8") as ref_f,
         ):
             self.assertListEqual(list(test_f), list(ref_f))
 
