@@ -61,16 +61,16 @@ extend-select = [
     "FURB105", # https://docs.astral.sh/ruff/rules/print-empty-string/
     "FURB122", # https://docs.astral.sh/ruff/rules/for-loop-writes/
     "FURB188", # https://docs.astral.sh/ruff/rules/slice-to-remove-prefix-or-suffix/
+    "ISC004", # https://docs.astral.sh/ruff/rules/implicit-string-concatenation-in-collection-literal/
+    "PERF402", # https://docs.astral.sh/ruff/rules/manual-list-copy/
+    "PIE790", # https://docs.astral.sh/ruff/rules/unnecessary-placeholder/
 ]
 
 ignore = [
     "B009", # https://docs.astral.sh/ruff/rules/get-attr-with-constant/
     "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
     "FA100", # https://docs.astral.sh/ruff/rules/future-rewritable-type-annotation/
-    "I001",
-    "ISC004",
-    "PERF402",
-    "PIE790",
+    "I001", # https://docs.astral.sh/ruff/rules/unsorted-imports/
     "PLC0206",
     "PLR0402",
     "PLR1730",

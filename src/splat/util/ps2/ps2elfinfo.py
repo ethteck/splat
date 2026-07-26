@@ -126,7 +126,6 @@ class Ps2Elf:
             if typ == Elf32Constants.Elf32SectionHeaderType.PROGBITS:
                 if previous_type == Elf32Constants.Elf32SectionHeaderType.NOBITS:
                     do_new_segs = True
-                pass
             elif typ == Elf32Constants.Elf32SectionHeaderType.NOBITS:
                 pass
             elif typ == Elf32Constants.Elf32SectionHeaderType.MIPS_REGINFO:

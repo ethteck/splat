@@ -285,9 +285,7 @@ class Rodata(unittest.TestCase):
             args=[],
             yaml={},
         )
-        rom_data = []
-        for i in range(0x100):
-            rom_data.append(i)
+        rom_data = list(range(0x100))
         common_seg_rodata.disassemble_data(bytes(rom_data))
         assert common_seg_rodata.spim_section is not None
         assert common_seg_rodata.spim_section.get_section().words[0] == 0x0010203
@@ -466,8 +464,7 @@ class SymbolsInitialize(unittest.TestCase):
         test_init()
 
         sym_addrs_lines = [
-            "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True "
-            "allow_addend:True dont_allow_addend:True"
+            "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True allow_addend:True dont_allow_addend:True",
         ]
 
         all_segments = [
