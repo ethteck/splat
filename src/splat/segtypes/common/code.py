@@ -131,8 +131,7 @@ class CommonSegCode(CommonSegGroup):
                     and link_section not in options.opts.auto_link_sections[: i + 1]
                 ):
                     last_inserted_index -= 1
-                    if last_inserted_index < 0:
-                        last_inserted_index = 0
+                    last_inserted_index = max(last_inserted_index, 0)
                     break
                 last_inserted_index += 1
 

@@ -545,7 +545,7 @@ def find_objcopy() -> str:
     ]
 
     for name in options:
-        sub = subprocess.run([name, "--version"], capture_output=True)
+        sub = subprocess.run([name, "--version"], capture_output=True, check=False)
         if sub.returncode == 0:
             return name
 
@@ -559,7 +559,7 @@ def find_objcopy() -> str:
 def run_objcopy(objcopy_name: str, elf_path: str, rom: str) -> list[str]:
     cmd = [objcopy_name, "-O", "binary", "--gap-fill=0x00", elf_path, rom]
     print("Running:", " ".join(cmd))
-    sub = subprocess.run(cmd)
+    sub = subprocess.run(cmd, check=False)
     if sub.returncode != 0:
         log.error("Failed to run objcopy")
     return cmd

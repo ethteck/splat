@@ -58,9 +58,8 @@ def initialize(all_segments):
                         )
 
             # Resolve "." palette links
-            for pal_name in palette_map:
+            for pal_name, pal in palette_map.items():
                 if pal_name.startswith(raster.name + "."):
-                    pal = palette_map[pal_name]
                     raster.palettes.append(pal)
                     palettes_seen.discard(pal_name)
 

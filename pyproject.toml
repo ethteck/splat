@@ -64,6 +64,9 @@ extend-select = [
     "ISC004", # https://docs.astral.sh/ruff/rules/implicit-string-concatenation-in-collection-literal/
     "PERF402", # https://docs.astral.sh/ruff/rules/manual-list-copy/
     "PIE790", # https://docs.astral.sh/ruff/rules/unnecessary-placeholder/
+    "PLC0206", # https://docs.astral.sh/ruff/rules/dict-index-missing-items/
+    "PLR1730", # https://docs.astral.sh/ruff/rules/if-stmt-min-max/
+    "PLW1510", # https://docs.astral.sh/ruff/rules/subprocess-run-without-check/
 ]
 
 ignore = [
@@ -71,12 +74,9 @@ ignore = [
     "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
     "FA100", # https://docs.astral.sh/ruff/rules/future-rewritable-type-annotation/
     "I001", # https://docs.astral.sh/ruff/rules/unsorted-imports/
-    "PLC0206",
-    "PLR0402",
-    "PLR1730",
-    "PLW0211",
-    "PLW0602",
-    "PLW1510",
+    "PLR0402", # https://docs.astral.sh/ruff/rules/manual-from-import/
+    "PLW0211", # https://docs.astral.sh/ruff/rules/bad-staticmethod-argument
+    "PLW0602", # https://docs.astral.sh/ruff/rules/global-variable-not-assigned/
     "RUF010",
     "RUF015",
     "RUF059",
