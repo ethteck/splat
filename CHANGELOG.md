@@ -37,6 +37,12 @@
   * Works similarly to branch labels, in the way that it is used to declare symbols in the middle of functions.
 * `spimdisasm` 1.42.1 or above is now required.
 
+### 0.41.1
+
+* Mark `__romPos` as `HIDDEN`.
+  * Prevents the generated `__romPos` linker symbol from being exported as GLOBAL in the built elf.
+  * Useful for PSX projects with overlays being different binaries from the main program.
+
 ### 0.41.0
 
 * Add `bss_size` attribute for `bss` subsegments.
