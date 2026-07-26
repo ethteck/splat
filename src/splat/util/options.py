@@ -371,7 +371,7 @@ class OptParser:
         elif isinstance(paths, list):
             return [base_path / path for path in paths]
         else:
-            raise ValueError(f"Expected str or list for '{opt}', got {type(paths)}")
+            raise TypeError(f"Expected str or list for '{opt}', got {type(paths)}")
 
     def check_no_unread_opts(self) -> None:
         opts = [opt for opt in self._yaml if opt not in self._read_opts]

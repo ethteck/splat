@@ -94,7 +94,7 @@ def handle_sym_addrs(
     line: str
     for line_num, line in enumerate(prog_bar):
         line = line.strip()
-        if not line == "" and not line.startswith("//"):
+        if line != "" and not line.startswith("//"):
             comment_loc = line.find("//")
             line_main = line
             line_ext = ""

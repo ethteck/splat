@@ -70,6 +70,9 @@ extend-select = [
     "RUF010", # https://docs.astral.sh/ruff/rules/explicit-f-string-type-conversion/
     "RUF015", # https://docs.astral.sh/ruff/rules/unnecessary-iterable-allocation-for-first-element/
     "RUF059", # https://docs.astral.sh/ruff/rules/unused-unpacked-variable/
+    "SIM201", # https://docs.astral.sh/ruff/rules/negate-equal-op/
+    "TRY002", # https://docs.astral.sh/ruff/rules/raise-vanilla-class/
+    "TRY004", # https://docs.astral.sh/ruff/rules/type-check-without-type-error/
 ]
 
 ignore = [
@@ -80,12 +83,9 @@ ignore = [
     "PLR0402", # https://docs.astral.sh/ruff/rules/manual-from-import/
     "PLW0211", # https://docs.astral.sh/ruff/rules/bad-staticmethod-argument
     "PLW0602", # https://docs.astral.sh/ruff/rules/global-variable-not-assigned/
-    "SIM102",
-    "SIM103",
-    "SIM114",
-    "SIM201",
-    "TRY002",
-    "TRY004",
+    "SIM102", # https://docs.astral.sh/ruff/rules/collapsible-if/
+    "SIM103", # https://docs.astral.sh/ruff/rules/needless-bool/
+    "SIM114", # https://docs.astral.sh/ruff/rules/if-with-same-arms/
     "UP006",
     "UP020",
     "UP033",

@@ -142,9 +142,7 @@ class CommonSegCode(CommonSegGroup):
 
         if "subsegments" not in segment_yaml:
             if not self.parent:
-                raise Exception(
-                    f"No subsegments provided in top-level code segment {self.name}"
-                )
+                log.error(f"No subsegments provided in top-level code segment {self.name}")
             return ret
         yaml_subsegments = segment_yaml["subsegments"]
 
