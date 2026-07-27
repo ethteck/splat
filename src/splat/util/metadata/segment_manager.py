@@ -26,18 +26,18 @@ class SegmentManager:
             0x0,
             0x00000000,
             0xFFFFFFFF,
-            prioritized_segments=list(),
+            prioritized_segments=[],
             exclusive_ram_id=None,
             segment=None,
         )
 
         # Globally visible segments.
         # They have no address overlapping issues with other segments.
-        self.global_segments: list[SegmentMetadata] = list()
+        self.global_segments: list[SegmentMetadata] = []
 
         # Overlays.
         # They have address overlapping between them.
-        self.overlay_segments: dict[str, OverlayMetadata] = dict()
+        self.overlay_segments: dict[str, OverlayMetadata] = {}
         """key: exclusive_ram_id"""
 
         # Dumpster for failed segment lookups.
@@ -48,13 +48,13 @@ class SegmentManager:
             0x0,
             0x00000000,
             0xFFFFFFFF,
-            prioritized_segments=list(),
+            prioritized_segments=[],
             exclusive_ram_id=None,
             segment=None,
         )
 
         # ?
-        self.all_symbols: list[Symbol] = list()
+        self.all_symbols: list[Symbol] = []
 
         self.global_rom_start: Optional[int] = None
         self.global_rom_end: Optional[int] = None
@@ -159,10 +159,10 @@ class SegmentManager:
         Find a prioritized segment that fits the given vram.
         """
         for prioritized_segment in owned_segment.get_prioritized_segments():
-            for _ovl_cat, segments_per_rom in self.overlay_segments.items():
+            for segments_per_rom in self.overlay_segments.values():
                 if not segments_per_rom.in_vram_range(vram):
                     continue
-                for _segment_rom, segment in segments_per_rom.segments.items():
+                for segment in segments_per_rom.segments.values():
                     if segment.name == prioritized_segment and segment.in_vram_range(
                         vram
                     ):
@@ -276,7 +276,7 @@ class SegmentManager:
             if len(segments_per_rom.segments) != 1:
                 continue
 
-            for _, segment in segments_per_rom.segments.items():
+            for segment in segments_per_rom.segments.values():
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
@@ -292,7 +292,7 @@ class SegmentManager:
             if len(segments_per_rom.segments) == 1:
                 continue
 
-            for _, segment in segments_per_rom.segments.items():
+            for segment in segments_per_rom.segments.values():
                 if segment.in_vram_range(vram):
                     sym = segment.find_symbol(vram, allow_addend)
                     if sym is not None and validate(sym):
@@ -308,10 +308,10 @@ class SegmentManager:
         validate: Callable[[Symbol], bool],
     ) -> Optional[Symbol]:
         for prioritized_segment in owned_segment.get_prioritized_segments():
-            for _ovl_cat, segments_per_rom in self.overlay_segments.items():
+            for segments_per_rom in self.overlay_segments.values():
                 if not segments_per_rom.in_vram_range(vram):
                     continue
-                for _segment_rom, segment in segments_per_rom.segments.items():
+                for segment in segments_per_rom.segments.values():
                     if segment.name == prioritized_segment and segment.in_vram_range(
                         vram
                     ):
@@ -368,7 +368,12 @@ class SegmentManager:
         ovl_meta = self.overlay_segments.setdefault(
             exclusive_ram_id,
             OverlayMetadata(
-                exclusive_ram_id, rom_start, rom_end, vram_start, vram_end, dict()
+                exclusive_ram_id,
+                rom_start,
+                rom_end,
+                vram_start,
+                vram_end,
+                {},
             ),
         )
         return ovl_meta.add_segment(
@@ -395,9 +400,9 @@ class SegmentManager:
         seen_global_rom_end: Optional[int] = None
         seen_global_vram_start: Optional[int] = None
         seen_global_vram_end: Optional[int] = None
-        overlay_segments: list[SegmentMetadata] = list()
+        overlay_segments: list[SegmentMetadata] = []
 
-        segments_by_name: Dict[str, SegmentMetadata] = dict()
+        segments_by_name: Dict[str, SegmentMetadata] = {}
         skipped_segments: Set[str] = set()
 
         global_segments: list[Segment] = []

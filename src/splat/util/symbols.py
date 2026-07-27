@@ -427,7 +427,7 @@ def initialize_spim_context(manager: "SegmentManager") -> None:
 
     # Create overlays and pass their symbols.
     for ovl_id, segments_per_rom in manager.overlay_segments.items():
-        for _, seg_meta in segments_per_rom.segments.items():
+        for seg_meta in segments_per_rom.segments.values():
             spimdisasm_segment = spim_context.addOverlaySegment(
                 ovl_id,
                 seg_meta.rom_start,

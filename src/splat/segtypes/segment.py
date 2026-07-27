@@ -312,7 +312,7 @@ class Segment:
         self.align: Optional[int] = None
         self.given_subalign: Optional[int] = options.opts.subalign
         self.exclusive_ram_id: Optional[str] = None
-        self.prioritized_segments: list[str] = list()
+        self.prioritized_segments: list[str] = []
         self.given_dir: Path = Path()
 
         # Default to global options.
