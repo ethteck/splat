@@ -66,8 +66,6 @@ class CommonSegBss(CommonSegData):
     ) -> None:
         "Allows to configure the section before running the analysis on it"
 
-        pass
-
     def disassemble_data(self, rom_bytes: bytes):
         if not options.opts.ld_bss_is_noload:
             super().disassemble_data(rom_bytes)

@@ -143,9 +143,9 @@ for section, section_syms in syms_by_section.items():
             if cur_subsegment is not None:
                 gprint("}")
             cur_subsegment = sym.subsegment
-            gprint(f"subgraph cluster_{cur_subsegment}_{section} " "{")
+            gprint(f"subgraph cluster_{cur_subsegment}_{section} {{")
             y = -i / len(filtered_syms) * 100 + dy - 0.2
-            gprint(f'"{cur_subsegment} {section}"' " [" f' pos = "{x},{y}!"' f' color="none"' " ]")
+            gprint(f'"{cur_subsegment} {section}" [ pos = "{x},{y}!" color="none" ]')
             dy -= 0.8
         assert cur_subsegment is not None
         if 0:
@@ -192,7 +192,7 @@ for section, section_syms in syms_by_section.items():
                     color = color_by_subsegment[sym_by_name[sym_ref_by].subsegment]
                 except KeyError:
                     color = "black"
-                gprint(f'"{sym_ref_by}" -> "{sym.name}"' f' [ color = "{color}" ]')
+                gprint(f'"{sym_ref_by}" -> "{sym.name}" [ color = "{color}" ]')
 
 gprint("}")
 ```

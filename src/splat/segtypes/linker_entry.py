@@ -1,6 +1,6 @@
 import os
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
@@ -11,7 +11,7 @@ from ..util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'
-@lru_cache(maxsize=None)
+@cache
 def clean_up_path(path: Path) -> Path:
     path_resolved = path.resolve()
     base_resolved = options.opts.base_path.resolve()

@@ -89,13 +89,13 @@ def handle_sym_addrs(
 
     all_symbols_dict: Dict[int, List["Symbol"]] = {}
 
-    seen_symbols: Dict[str, "Symbol"] = dict()
+    seen_symbols: Dict[str, "Symbol"] = {}
     prog_bar = progress_bar.get_progress_bar(sym_addrs_lines)
     prog_bar.set_description(f"Loading symbols ({path.stem})")
     line: str
     for line_num, line in enumerate(prog_bar):
         line = line.strip()
-        if not line == "" and not line.startswith("//"):
+        if line != "" and not line.startswith("//"):
             comment_loc = line.find("//")
             line_main = line
             line_ext = ""

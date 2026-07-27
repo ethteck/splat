@@ -51,3 +51,51 @@ features = ["dev"]
 
 [project.scripts]
 splat = "splat.__main__:splat_main"
+
+[tool.ruff.lint]
+# Keep alphabetically sorted
+extend-select = [
+    "C401", # https://docs.astral.sh/ruff/rules/unnecessary-generator-set/
+    "C408", # https://docs.astral.sh/ruff/rules/unnecessary-collection-call/
+    # "EXE",
+    "EXE001", # https://docs.astral.sh/ruff/rules/shebang-not-executable/
+    # "FURB",
+    "FURB105", # https://docs.astral.sh/ruff/rules/print-empty-string/
+    "FURB122", # https://docs.astral.sh/ruff/rules/for-loop-writes/
+    "FURB188", # https://docs.astral.sh/ruff/rules/slice-to-remove-prefix-or-suffix/
+    # "ISC",
+    "ISC004", # https://docs.astral.sh/ruff/rules/implicit-string-concatenation-in-collection-literal/
+    "PERF402", # https://docs.astral.sh/ruff/rules/manual-list-copy/
+    # "PIE",
+    "PIE790", # https://docs.astral.sh/ruff/rules/unnecessary-placeholder/
+    # "PLC",
+    "PLC0206", # https://docs.astral.sh/ruff/rules/dict-index-missing-items/
+    "PLR1730", # https://docs.astral.sh/ruff/rules/if-stmt-min-max/
+    "PLW1510", # https://docs.astral.sh/ruff/rules/subprocess-run-without-check/
+    # "RUF",
+    "RUF010", # https://docs.astral.sh/ruff/rules/explicit-f-string-type-conversion/
+    "RUF015", # https://docs.astral.sh/ruff/rules/unnecessary-iterable-allocation-for-first-element/
+    "RUF059", # https://docs.astral.sh/ruff/rules/unused-unpacked-variable/
+    "SIM201", # https://docs.astral.sh/ruff/rules/negate-equal-op/
+    "TRY002", # https://docs.astral.sh/ruff/rules/raise-vanilla-class/
+    "TRY004", # https://docs.astral.sh/ruff/rules/type-check-without-type-error/
+    "UP020", # https://docs.astral.sh/ruff/rules/open-alias/
+    "UP033", # https://docs.astral.sh/ruff/rules/lru-cache-with-maxsize-none/
+]
+
+ignore = [
+    "B009", # https://docs.astral.sh/ruff/rules/get-attr-with-constant/
+    "BLE001", # https://docs.astral.sh/ruff/rules/blind-except/ TODO: enable
+    "FA100", # https://docs.astral.sh/ruff/rules/future-rewritable-type-annotation/
+    "I001", # https://docs.astral.sh/ruff/rules/unsorted-imports/
+    "PLR0402", # https://docs.astral.sh/ruff/rules/manual-from-import/
+    "PLW0211", # https://docs.astral.sh/ruff/rules/bad-staticmethod-argument
+    "PLW0602", # https://docs.astral.sh/ruff/rules/global-variable-not-assigned/
+    "SIM102", # https://docs.astral.sh/ruff/rules/collapsible-if/
+    "SIM103", # https://docs.astral.sh/ruff/rules/needless-bool/
+    "SIM114", # https://docs.astral.sh/ruff/rules/if-with-same-arms/
+    "UP006", # https://docs.astral.sh/ruff/rules/non-pep585-annotation/
+    "UP035", # https://docs.astral.sh/ruff/rules/deprecated-import/
+    "UP037", # https://docs.astral.sh/ruff/rules/quoted-annotation/
+    "UP045", # https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional/
+]

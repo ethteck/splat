@@ -15,8 +15,7 @@ class CommonSegData(CommonSegCodeSubsegment, CommonSegGroup):
 
     def asm_out_path(self) -> Path:
         typ = self.type
-        if typ.startswith("."):
-            typ = typ[1:]
+        typ = typ.removeprefix(".")
 
         return options.opts.data_path / self.dir / f"{self.name}.{typ}.s"
 

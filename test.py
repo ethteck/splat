@@ -2,7 +2,6 @@
 
 import difflib
 import filecmp
-import io
 from pathlib import Path
 import spimdisasm
 import unittest
@@ -23,8 +22,8 @@ from src.splat.segtypes.segment import Segment
 class Testing(unittest.TestCase):
     def compare_files(self, test_path, ref_path):
         with (
-            io.open(test_path, encoding="utf-8") as test_f,
-            io.open(ref_path, encoding="utf-8") as ref_f,
+            open(test_path, encoding="utf-8") as test_f,
+            open(ref_path, encoding="utf-8") as ref_f,
         ):
             self.assertListEqual(list(test_f), list(ref_f))
 
@@ -267,9 +266,7 @@ class Rodata(unittest.TestCase):
         metadata.segment_manager.initialize([common_seg_rodata], [])
         symbols.initialize_spim_context(metadata.segment_manager.manager)
 
-        rom_data = []
-        for i in range(0x100):
-            rom_data.append(i)
+        rom_data = list(range(0x100))
         common_seg_rodata.disassemble_data(bytes(rom_data))
         assert common_seg_rodata.spim_section is not None
         assert common_seg_rodata.spim_section.get_section().words[0] == 0x0010203
@@ -449,8 +446,7 @@ class SymbolsInitialize(unittest.TestCase):
         test_init()
 
         sym_addrs_lines = [
-            "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True "
-            "allow_addend:True dont_allow_addend:True"
+            "func_1 = 0x100; // defined:True extract:True force_migration:True force_not_migration:True allow_addend:True dont_allow_addend:True",
         ]
 
         all_segments = [
