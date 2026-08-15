@@ -64,6 +64,13 @@ PSYQ = Compiler(
 MWCCPS2 = Compiler("MWCCPS2", uses_include_asm=False)
 EEGCC = Compiler("EEGCC", align_on_branch_labels=True)
 
+# PSP
+SNC = Compiler(
+    "SNC",
+    align_on_branch_labels=True,
+    j_as_branch=True,
+)
+
 compiler_for_name: Dict[str, Compiler] = {
     x.name: x
     for x in [
@@ -75,6 +82,7 @@ compiler_for_name: Dict[str, Compiler] = {
         PSYQ,
         MWCCPS2,
         EEGCC,
+        SNC,
     ]
 }
 

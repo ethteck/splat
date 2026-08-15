@@ -65,17 +65,21 @@ class Ps2Elf:
         spimdisasm.common.GlobalConfig.QUIET = True
 
         elf = Elf32File(elf_bytes)
-        if elf.header.type != Elf32ObjectFileType.EXEC.value:
-            log.write("Elf file is not an EXEC type.", status="warn")
-            return None
         if elf.header.machine != 8:
             # 8 corresponds to EM_MIPS
             # We only care about mips binaries.
             log.write("Elf file is not a MIPS binary.", status="warn")
             return None
-        if Elf32Constants.Elf32HeaderFlag._5900 not in elf.elfFlags:
-            log.write("Missing 5900 flag", status="warn")
-            return None
+
+        # PSP (E)BOOT.BIN files use this type.
+        if elf.header.type != Elf32Constants.Elf32ObjectFileType.SCE_PSPRELEXEC.value:
+            if elf.header.type != Elf32ObjectFileType.EXEC.value:
+                log.write("Elf file is not an EXEC type.", status="warn")
+                return None
+
+            if Elf32Constants.Elf32HeaderFlag._5900 not in elf.elfFlags and Elf32Constants.Elf32HeaderFlag.ARCH_2 not in elf.elfFlags:
+                log.write("Missing 5900 flag", status="warn")
+                return None
 
         if elf.reginfo is not None and elf.reginfo.gpValue != 0:
             gp = elf.reginfo.gpValue

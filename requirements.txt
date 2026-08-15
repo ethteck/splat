@@ -4,6 +4,7 @@ tqdm==4.67.1
 intervaltree==3.1.0
 colorama==0.4.6
 # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py and pyproject.toml
+# TODO: Wait for a version bump after https://github.com/Decompollaborate/spimdisasm/pull/209
 spimdisasm>=1.42.1
 rabbitizer>=1.10.0
 pygfxd>=1.0.5

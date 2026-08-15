@@ -57,6 +57,16 @@ def write_include_asm_h():
         ); \\
     }
 """
+    elif options.opts.include_asm_macro_style == "snc":
+        include_asm_macro = """\
+#define INCLUDE_ASM(FOLDER, NAME) \\
+    __asm__( \\
+        ".section .text\\n" \\
+        "    .set noat\\n" \\
+        "    .include \\"" FOLDER "/" #NAME ".s\\"\\n" \\
+        "    .set at\\n" \\
+    )
+"""
     else:  # default
         include_asm_macro = """\
 #define INCLUDE_ASM(FOLDER, NAME) \\
