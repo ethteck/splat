@@ -1,0 +1,12 @@
+/split/
+/split-exact/
+/split-reasm-exact/
+/win32_app64.exe
+/win32_app64.reasm.exe
+/win32_app64.reasm-exact.exe
+/main_text.o
+/main_text.bin
+/splat-exact.yaml
+/splat-reasm-exact.yaml
+__pycache__/
+!splat.yaml
