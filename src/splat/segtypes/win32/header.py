@@ -12,7 +12,7 @@ padding the linker inserted before the first section is preserved.
 """
 
 import struct
-from typing import List
+from typing import ClassVar, List
 
 from ..common.header import CommonSegHeader
 from ...platforms import win32 as win32_platform
@@ -550,7 +550,7 @@ class Win32SegHeader(CommonSegHeader):
         return out
 
     # Named directory slots in the order the PE optional header stores them.
-    _DATA_DIRECTORY_NAMES = [
+    _DATA_DIRECTORY_NAMES: ClassVar[List[str]] = [
         "Export Table",
         "Import Table",
         "Resource Table",

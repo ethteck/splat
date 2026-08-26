@@ -68,7 +68,9 @@ def _run(cmd: List[str], verbose: bool, cwd: Optional[Path] = None) -> None:
     if verbose:
         prefix = f"(cd {cwd}) " if cwd else ""
         print(f"$ {prefix}" + " ".join(str(c) for c in cmd))
-    r = subprocess.run(cmd, capture_output=True, cwd=str(cwd) if cwd else None)
+    r = subprocess.run(
+        cmd, capture_output=True, cwd=str(cwd) if cwd else None, check=False
+    )
     if r.returncode != 0:
         sys.stderr.write(r.stderr.decode(errors="replace"))
         log.error(f"win32_reassemble: command failed: {cmd[0]}")

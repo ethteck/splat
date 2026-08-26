@@ -8,6 +8,7 @@ from typing import Dict, Optional, Set
 from ..common.segment import CommonSegment
 from ...util import log, options
 from ...util.symbols import Symbol
+from ...util.metadata.segment_manager import manager
 
 
 _HEX_RE = re.compile(r"\b0x([0-9a-fA-F]+)\b")
@@ -147,6 +148,20 @@ class Win32SegText(CommonSegment):
     def should_split(self) -> bool:
         return self.extract and self.should_scan()
 
+    def _declared_symbols(self) -> Dict[int, Symbol]:
+        """Symbols declared for this segment, keyed by vram.
+
+        Replaces the old Segment.seg_symbols mapping, which splat 0.50.0
+        dropped when segment metadata took over symbol ownership.
+        """
+        most_parent, parent_segment_info = self.get_parent_segment_info()
+        if parent_segment_info is None:
+            return {}
+        seg_meta = most_parent.owned_metadata
+        if seg_meta is None:
+            seg_meta = manager.find_owned_segment(parent_segment_info)
+        return dict(seg_meta.symbols)
+
     def split(self, rom_bytes: bytes):
         if self.rom_start is None or self.rom_end is None:
             return
@@ -202,9 +217,9 @@ class Win32SegText(CommonSegment):
         # Build a quick lookup of any user-declared symbols that fall inside
         # this segment so they show up as labels in the disassembly.
         seg_symbols: Dict[int, Optional[Symbol]] = {}
-        for vram_addr, syms in self.seg_symbols.items():
+        for vram_addr, sym in self._declared_symbols().items():
             if self.vram_start <= vram_addr < (self.vram_start + len(data)):
-                seg_symbols[vram_addr] = syms[0]
+                seg_symbols[vram_addr] = sym
         # Also synthesize a label for the platform-level entry point if it
         # lands inside this segment.
         from ...platforms import win32 as win32_platform

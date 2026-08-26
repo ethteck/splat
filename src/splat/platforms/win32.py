@@ -879,7 +879,7 @@ def parse_delay_imports(data: bytes, pe: PEInfo) -> None:
         desc_off += 32
 
         # Translate fields (RVAs for v2, VAs for v1).
-        def to_rva(field: int) -> int:
+        def to_rva(field: int, attrs: int = attrs) -> int:
             if attrs & 1:
                 return field
             return field - pe.image_base if field >= pe.image_base else field
@@ -1613,8 +1613,9 @@ def parse_version_info(data: bytes, pe: PEInfo) -> None:
         blob = data[f_off : f_off + r.size]
         try:
             _walk_versioninfo_node(blob, 0, pe.version_info, 0)
-        except Exception:
-            # Malformed VERSIONINFO; leave whatever we already extracted.
+        except Exception as exc:
+            # Malformed VERSIONINFO; keep whatever was already extracted.
+            log.write(f"warning: could not parse VERSIONINFO resource: {exc}")
             continue
 
 

@@ -13,5 +13,3 @@ class Win32SegBin(CommonSegBin):
     re-exported so YAML `type: bin` resolves through the win32
     segtype lookup. Used for .rsrc / .reloc / .idata / coff_symtab /
     signature segments produced by create_win32_config."""
-
-    pass

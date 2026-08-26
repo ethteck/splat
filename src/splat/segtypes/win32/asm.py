@@ -10,5 +10,3 @@ class Win32SegAsm(Win32SegText):
     """Alias for Win32SegText so YAML can use `type: asm` (the
     convention on other splat platforms) instead of `type: text`.
     No behavioural difference."""
-
-    pass

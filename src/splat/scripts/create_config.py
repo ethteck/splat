@@ -455,9 +455,7 @@ def create_win32_config(exe_path: Path, exe_bytes: bytes):
         # LLD signature: linker_major 14 but characteristics differ.
         # Conservative: only flag if .text$mn or .rdata$zzzdebug are
         # present (LLD-specific section grouping).
-        if any(
-            s.startswith(".text$") or s.startswith(".rdata$") for s in section_names
-        ):
+        if any(s.startswith((".text$", ".rdata$")) for s in section_names):
             return "CLANG_LLD"
         return _LINKER_TO_MSVC.get(pe.linker_major, "MSVC6")
 
