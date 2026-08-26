@@ -42,8 +42,6 @@ from ...util.log import error
 
 from ..common.codesubsegment import CommonSegCodeSubsegment
 
-from ...util import symbols
-
 LIGHTS_RE = re.compile(r"\*\(Lightsn \*\)0x[0-9A-F]{8}")
 
 
@@ -102,68 +100,159 @@ class N64SegGfx(CommonSegCodeSubsegment):
             log.error(f"Unknown target {opt}")
 
     def tlut_handler(self, addr, idx, count):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def timg_handler(self, addr, fmt, size, width, height, pal):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def cimg_handler(self, addr, fmt, size, width):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def zimg_handler(self, addr):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def dl_handler(self, addr):
         # Look for 'Gfx'-typed symbols first
-        sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Gfx")
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Gfx",
+        )
 
         if not sym:
             sym = self.create_symbol(
-                addr=addr, in_segment=self.in_segment, type="data", reference=True
+                addr=addr,
+                in_segment=self.in_segment,
+                type="Gfx",
+                reference=True,
             )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def mtx_handler(self, addr):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Mtx",
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                type="Mtx",
+                reference=True,
+            )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
 
     def lookat_handler(self, addr, count):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "LookAt",
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                type="LookAt",
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def light_handler(self, addr, count):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Light",
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                type="Light",
+                reference=True,
+            )
         gfxd_printf(self.format_sym_name(sym))
         return 1
 
     def vtx_handler(self, addr, count):
         # Look for 'Vtx'-typed symbols first
-        sym = self.retrieve_sym_type(symbols.all_symbols_dict, addr, "Vtx")
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Vtx",
+        )
 
         if not sym:
             sym = self.create_symbol(
@@ -179,9 +268,21 @@ class N64SegGfx(CommonSegCodeSubsegment):
         return 1
 
     def vp_handler(self, addr):
-        sym = self.create_symbol(
-            addr=addr, in_segment=self.in_segment, type="data", reference=True
+        sym = self.get_symbol(
+            addr,
+            in_segment=False,
+            reference=True,
+            local_only=False,
+            validation=lambda sym: sym.type == "Vp",
         )
+
+        if not sym:
+            sym = self.create_symbol(
+                addr=addr,
+                in_segment=self.in_segment,
+                type="Vp",
+                reference=True,
+            )
         gfxd_printf(f"&{self.format_sym_name(sym)}")
         return 1
 
@@ -206,7 +307,10 @@ class N64SegGfx(CommonSegCodeSubsegment):
         out_str = "" if self.data_only else options.opts.generated_c_preamble + "\n\n"
 
         sym = self.create_symbol(
-            addr=self.vram_start, in_segment=True, type="data", define=True
+            addr=self.vram_start,
+            in_segment=True,
+            type="Gfx",
+            define=True,
         )
 
         gfxd_input_buffer(gfx_data)
@@ -252,7 +356,9 @@ class N64SegGfx(CommonSegCodeSubsegment):
             light = match.group(0)
             addr = int(light[12:], 0)
             sym = self.create_symbol(
-                addr=addr, in_segment=self.in_segment, type="data", reference=True
+                addr=addr,
+                in_segment=self.in_segment,
+                reference=True,
             )
             return self.format_sym_name(sym)
 

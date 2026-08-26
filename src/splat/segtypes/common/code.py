@@ -131,8 +131,7 @@ class CommonSegCode(CommonSegGroup):
                     and link_section not in options.opts.auto_link_sections[: i + 1]
                 ):
                     last_inserted_index -= 1
-                    if last_inserted_index < 0:
-                        last_inserted_index = 0
+                    last_inserted_index = max(last_inserted_index, 0)
                     break
                 last_inserted_index += 1
 
@@ -143,7 +142,7 @@ class CommonSegCode(CommonSegGroup):
 
         if "subsegments" not in segment_yaml:
             if not self.parent:
-                raise Exception(
+                log.error(
                     f"No subsegments provided in top-level code segment {self.name}"
                 )
             return ret
@@ -194,7 +193,7 @@ class CommonSegCode(CommonSegGroup):
             # Third, try to get the end address from the next segment with a start address
             end: Optional[int] = None
             if next_subsegment_yaml is not None:
-                end, end_is_auto_segment = Segment.parse_segment_start(
+                end, _end_is_auto_segment = Segment.parse_segment_start(
                     next_subsegment_yaml
                 )
             if start is not None and end is None:

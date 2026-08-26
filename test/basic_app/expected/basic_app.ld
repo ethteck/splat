@@ -1,6 +1,6 @@
 SECTIONS
 {
-    __romPos = 0;
+    HIDDEN(__romPos = 0);
     header_ROM_START = __romPos;
     header_VRAM = ADDR(.header);
     .header : AT(header_ROM_START) SUBALIGN(16)

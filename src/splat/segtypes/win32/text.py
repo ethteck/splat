@@ -307,7 +307,6 @@ class Win32SegText(CommonSegment):
         # Build a global-symbol lookup so we can annotate memory operands
         # that reach known data (IAT slots, exports, etc.) with a trailing
         # comment.
-        from ...util import symbols as symbols_mod
         from .data import _is_string_byte, _escape_string
 
         pe = win32_platform.info
@@ -411,9 +410,9 @@ class Win32SegText(CommonSegment):
         def resolve_sym(addr: int) -> Optional[str]:
             if addr in thunk_labels:
                 return thunk_labels[addr]
-            entries = symbols_mod.all_symbols_dict.get(addr)
-            if entries:
-                return entries[0].name
+            sym = self.get_symbol(addr)
+            if sym is not None:
+                return sym.name
             if addr in synth_labels:
                 return synth_labels[addr]
             if addr == entry_va:

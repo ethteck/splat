@@ -380,12 +380,11 @@ class Win32SegData(CommonSegment):
         return offsets
 
     def _resolve_pointer(self, va: int) -> Optional[str]:
-        from ...util import symbols as symbols_mod
         from ...platforms import win32 as win32_platform
 
-        entries = symbols_mod.all_symbols_dict.get(va)
-        if entries:
-            return entries[0].name
+        sym = self.get_symbol(va)
+        if sym is not None:
+            return sym.name
 
         # No declared symbol — synthesise one based on which section the
         # pointer lands in. Matches the labels Win32SegText auto-emits at

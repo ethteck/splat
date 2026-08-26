@@ -31,18 +31,16 @@ jobs:
 
     - name: Get the new Wiki files
       run: |
-        cd wiki_repo
-        rm *.md
-        cp ../splat_repo/docs/* .
+        rm wiki_repo/*.md
+        cp splat_repo/docs/* wiki_repo/
 
     # `git log -1 --pretty=%aN` prints the current commit's author name
     # `git log -1 --pretty=%aE` prints the current commit's author mail
     - name: Stage new files
       run: |
-        cd wiki_repo
-        git config user.name $(git log -1 --pretty=%aN)
-        git config user.email $(git log -1 --pretty=%aE)
-        git add .
+        git -C wiki_repo config user.name $(git -C splat_repo log -1 --pretty=%aN)
+        git -C wiki_repo config user.email $(git -C splat_repo log -1 --pretty=%aE)
+        git -C wiki_repo add .
 
     # `git diff-index --quiet HEAD` returns non-zero if there are any changes.
     # This allows to avoid making a commit/push if there are no changes to the Wiki files
@@ -50,5 +48,4 @@ jobs:
     # `git log -1 --pretty=%B` prints the current commit's message
     - name: Push new files to the Wiki
       run: |
-        cd wiki_repo
-        git diff-index --quiet HEAD || (git commit -m "$(git log -1 --pretty=%B)" && git push)
+        git -C wiki_repo diff-index --quiet HEAD || (git -C wiki_repo commit -m "$(git -C splat_repo log -1 --pretty=%B)" && git -C wiki_repo push)

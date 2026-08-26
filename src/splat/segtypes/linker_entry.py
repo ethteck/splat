@@ -1,6 +1,6 @@
 import os
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Dict, List, OrderedDict, Set, Tuple, Union, Optional
 
@@ -11,7 +11,7 @@ from ..util.symbols import to_cname
 
 
 # clean 'foo/../bar' to 'bar'
-@lru_cache(maxsize=None)
+@cache
 def clean_up_path(path: Path) -> Path:
     path_resolved = path.resolve()
     base_resolved = options.opts.base_path.resolve()
@@ -202,7 +202,13 @@ class LinkerWriter:
         self._begin_block()
 
         if not self.is_partial:
-            self._writeln(f"__romPos = {options.opts.ld_rom_start};")
+            # Define `__romPos` as a HIDDEN elf symbol so it isn't
+            # exported/GLOBAL in the symtab, allowing for a built binary to be
+            # used when building other binaries and referencing their symbols.
+            # Useful for PSX projects with overlays being different binaries
+            # from the main program.
+            # https://sourceware.org/binutils/docs/ld/HIDDEN.html
+            self._writeln(f"HIDDEN(__romPos = {options.opts.ld_rom_start});")
 
             if options.opts.ld_gp_expression is not None:
                 self._writeln(f"_gp = {options.opts.ld_gp_expression};")

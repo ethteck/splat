@@ -3,17 +3,24 @@
 import argparse
 import hashlib
 import importlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
 from collections import defaultdict, deque
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
-from ..util import cache_handler, progress_bar, vram_classes, statistics, file_presets
+from ..util import (
+    cache_handler,
+    progress_bar,
+    vram_classes,
+    statistics,
+    file_presets,
+    metadata,
+)
 
 from colorama import Style
-from intervaltree import Interval, IntervalTree
+from intervaltree import IntervalTree
 import sys
 
 from ..segtypes.linker_entry import (
@@ -55,11 +62,11 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
 
         segment_class = Segment.get_class_for_type(seg_type)
 
-        this_start, is_auto_segment = Segment.parse_segment_start(seg_yaml)
+        this_start, _is_auto_segment = Segment.parse_segment_start(seg_yaml)
 
         j = i + 1
         while j < len(config_segments):
-            next_start, next_is_auto_segment = Segment.parse_segment_start(
+            next_start, _next_is_auto_segment = Segment.parse_segment_start(
                 config_segments[j]
             )
             if next_start is not None:
@@ -168,29 +175,6 @@ def initialize_segments(config_segments: Union[dict, list]) -> List[Segment]:
     return ret
 
 
-def assign_symbols_to_segments():
-    for symbol in symbols.all_symbols:
-        if symbol.segment:
-            continue
-
-        if symbol.rom:
-            cands: Set[Interval] = segment_roms[symbol.rom]
-            if len(cands) > 1:
-                log.error("multiple segments rom overlap symbol", symbol)
-            elif len(cands) == 0:
-                log.error("no segment rom overlaps symbol", symbol)
-            else:
-                cand: Interval = cands.pop()
-                seg: Segment = cand.data
-                seg.add_symbol(symbol)
-        else:
-            cands = segment_rams[symbol.vram_start]
-            segs: List[Segment] = [cand.data for cand in cands]
-            for seg in segs:
-                if not seg.get_exclusive_ram_id():
-                    seg.add_symbol(symbol)
-
-
 def brief_seg_name(seg: Segment, limit: int, ellipsis="…") -> str:
     s = seg.name.strip()
     if len(s) > limit:
@@ -294,11 +278,10 @@ def initialize_all_symbols(all_segments: List[Segment]):
     symbols.initialize(all_segments)
     relocs.initialize()
 
-    # Assign symbols to segments
-    assign_symbols_to_segments()
+    metadata.segment_manager.initialize(all_segments, symbols.all_symbols)
 
     if options.opts.is_mode_active("code"):
-        symbols.initialize_spim_context(all_segments)
+        symbols.initialize_spim_context(metadata.segment_manager.manager)
         relocs.initialize_spim_context()
 
 
@@ -366,7 +349,9 @@ def write_linker_script(all_segments: List[Segment]) -> LinkerWriter:
     vram_classes_to_search = set(vram_class_dependencies.keys())
 
     max_vram_end_insertion_points: Dict[Segment, List[Tuple[str, List[Segment]]]] = {}
-    for seg in reversed(all_segments):
+    # Emit class start symbols before the first segment in each class so every
+    # member of the class references the same symbol assignment.
+    for seg in all_segments:
         if seg.vram_class in vram_classes_to_search:
             assert seg.vram_class.vram_symbol is not None
             if seg not in max_vram_end_insertion_points:
@@ -480,7 +465,7 @@ def write_undefined_funcs_auto():
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced and not s.defined and s.type == "func"
+            if (s.referenced or s.user_declared) and not s.defined and s.type == "func"
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
@@ -492,9 +477,9 @@ def write_undefined_syms_auto():
         to_write = [
             s
             for s in symbols.all_symbols
-            if s.referenced
+            if (s.referenced or s.user_declared)
             and not s.defined
-            and s.type not in {"func", "label", "jtbl_label"}
+            and s.type not in {"func", "label", "jtbl_label", "alabel"}
         ]
         to_write.sort(key=lambda x: x.vram_start)
 
@@ -523,8 +508,12 @@ def dump_symbols() -> None:
 
     with open(splat_hidden_folder / "splat_symbols.csv", "w", encoding="utf-8") as f:
         f.write(
-            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract\n"
+            "vram_start,given_name,name,type,given_size,size,rom,defined,user_declared,referenced,extract"
+            ",segment,subsegment,subsegment_type"
         )
+        if options.opts.dump_symbols_references:
+            f.write(",referenced_by")
+        f.write("\n")
         for s in sorted(symbols.all_symbols, key=lambda x: x.vram_start):
             f.write(f"{s.vram_start:X},{s.given_name},{s.name},{s.type},")
             if s.given_size is not None:
@@ -536,7 +525,29 @@ def dump_symbols() -> None:
                 f.write(f"0x{s.rom:X},")
             else:
                 f.write("None,")
-            f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}\n")
+            f.write(f"{s.defined},{s.user_declared},{s.referenced},{s.extract}")
+            if s.segment is not None:
+                f.write(f",{s.segment.name}")
+                subsegment = None
+                if hasattr(s.segment, "get_subsegment_for_ram"):
+                    subsegment = s.segment.get_subsegment_for_ram(s.vram_start)
+                if subsegment is not None:
+                    f.write(f",{subsegment.name},{subsegment.type}")
+                else:
+                    f.write(",None,None")
+            else:
+                f.write(",None,None,None")
+            if options.opts.dump_symbols_references:
+                f.write(",")
+                cs = symbols.spim_context.globalSegment.getSymbol(s.vram_start)
+                if cs is not None:
+                    f.write(
+                        "|".join(
+                            _rcs.getName()
+                            for _rcs in cs.referenceSymbols | cs.referenceFunctions
+                        )
+                    )
+            f.write("\n")
 
     symbols.spim_context.saveContextToFile(splat_hidden_folder / "spim_context.csv")
 

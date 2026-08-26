@@ -1,5 +1,43 @@
 Splat has various options for configuration, all of which are listed under the `options` section of the yaml file.
 
+## Debug / logging
+
+### dump_symbols
+
+Whether to write a symbols dump after splitting.
+
+The output is composed of csv files in a `.splat` folder relative to the [`base_path`](#base_path).
+
+The columns of the csv files may change at any point. If you write a tool depending on this output, it is in particular recommended to not make assumptions about the ordering or amount of columns (typically, new columns may be added). For example with Python, using `csv.DictReader` is recommended.
+
+#### Usage
+
+```yaml
+dump_symbols: true
+```
+
+#### Default
+
+`false`
+
+### dump_symbols_references
+
+Whether to also include symbol references (which symbols reference which symbols) in the symbols dump.
+
+This option adds a `referenced_by` column to `.splat/splat_symbols.csv`. The value for the column is a `|`-separated list of symbol names that reference the symbol of the current csv line. An empty value indicates no reference to that symbol was found.
+
+This option is only useful in conjunction with [`dump_symbols`](#dump_symbols) being `true` and does nothing otherwise.
+
+#### Usage
+
+```yaml
+dump_symbols_references: true
+```
+
+#### Default
+
+`false`
+
 ## Project configuration
 
 ### base_path
@@ -850,6 +888,18 @@ Global option for the rodata string guesser. 0 disables the guesser completely.
 ### data_string_guesser_level
 
 Global option for the data string guesser. 0 disables the guesser completely.
+
+### create_data_pads
+
+Tells the disassembler whether to create dummy and unreferenced data symbols after symbols with a non-zero user-declared size.
+
+### create_rodata_pads
+
+Tells the disassembler whether to create dummy and unreferenced rodata symbols after symbols with a non-zero user-declared size.
+
+### create_bss_pads
+
+Tells the disassembler whether to create dummy and unreferenced bss/sbss symbols after symbols with a non-zero user-declared size.
 
 ### allow_data_addends
 

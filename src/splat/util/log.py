@@ -15,7 +15,7 @@ def write(*args, status=None, **kwargs):
     global newline
 
     if not newline:
-        print("")
+        print()
         newline = True
 
     print(

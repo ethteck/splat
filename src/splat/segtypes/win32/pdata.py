@@ -66,7 +66,6 @@ class Win32SegPdata(CommonSegment):
             return
 
         from ...platforms import win32 as win32_platform
-        from ...util import symbols as symbols_mod
 
         pe = win32_platform.info
         data = rom_bytes[self.rom_start : self.rom_end]
@@ -79,9 +78,9 @@ class Win32SegPdata(CommonSegment):
             the `func_<va>` convention text segments emit at every
             direct call target so cross-segment links resolve."""
             va = pe.image_base + rva
-            entries = symbols_mod.all_symbols_dict.get(va)
-            if entries:
-                return entries[0].name
+            sym = self.get_symbol(va)
+            if sym is not None:
+                return sym.name
             # Pdata entries reference function bodies; cross-segment refs
             # use the same `func_<va>` convention as text segments.
             return f"func_{va:08X}"
@@ -135,11 +134,9 @@ class Win32SegPdata(CommonSegment):
                 base_uw = unwind & 0x7FFFFFFF
                 unwind_label = None
                 if base_uw:
-                    candidate = symbols_mod.all_symbols_dict.get(
-                        pe.image_base + base_uw
-                    )
-                    if candidate:
-                        unwind_label = candidate[0].name
+                    candidate = self.get_symbol(pe.image_base + base_uw)
+                    if candidate is not None:
+                        unwind_label = candidate.name
                 if unwind_label is not None:
                     # Preserve the chained-record bit by ORing it in
                     # after the symbolic subtraction.
