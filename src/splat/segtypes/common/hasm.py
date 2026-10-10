@@ -24,6 +24,9 @@ class CommonSegHasm(CommonSegAsm):
         if self.rom_start == self.rom_end:
             return
 
+        if options.opts.make_full_disasm_for_code and options.opts.hasm_in_src_path:
+            self.split_as_asmtu_file(super().asm_out_path())
+
         out_path = self.out_path()
         if out_path and not out_path.exists():
             self.split_as_asm_file(out_path)

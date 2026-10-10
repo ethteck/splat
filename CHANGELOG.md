@@ -1,5 +1,9 @@
 # splat Release Notes
 
+### 0.50.1
+
+* Emit full .s file for `hasm` segments when `make_full_disasm_for_code` is enabled.
+
 ### 0.50.0
 
 * We have skipped to version 0.50.0, as this version may introduce several breaking changes and require some extra care when migrating
