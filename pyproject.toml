@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 mips = [
+    # TODO: Wait for a version bump after https://github.com/Decompollaborate/spimdisasm/pull/209
     "spimdisasm>=1.42.1,<2.0.0", # This value should be keep in sync with the version listed on disassembler/spimdisasm_disassembler.py
     "rabbitizer>=1.12.0,<2.0.0",
     "pygfxd>=1.0.5",

@@ -43,7 +43,8 @@ class SplatOpts:
     # Changes the definition of the generated `INCLUDE_ASM`.
     # default: The default one.
     # maspsx_hack: Use the maspsx hack workaround definition https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
-    include_asm_macro_style: Literal["default", "maspsx_hack"]
+    # snc: Do not set `.set reorder` after the include.
+    include_asm_macro_style: Literal["default", "maspsx_hack", "snc"]
     # Directory to place the generated asm macros files.
     generated_asm_macros_directory: Path
     # Determines whether to use .o as the suffix for all binary files?... TODO document
@@ -429,11 +430,11 @@ def _parse_yaml(
         else:
             raise ValueError(f"Invalid endianness: {endianness}")
 
-    def parse_include_asm_macro_style() -> Literal["default", "maspsx_hack"]:
+    def parse_include_asm_macro_style() -> Literal["default", "maspsx_hack", "snc"]:
         include_asm_macro_style = p.parse_opt_within(
             "include_asm_macro_style",
             str,
-            ["default", "maspsx_hack"],
+            ["default", "maspsx_hack", "snc"],
             "default",
         )
 
@@ -441,8 +442,10 @@ def _parse_yaml(
             return "default"
         elif include_asm_macro_style == "maspsx_hack":
             return "maspsx_hack"
+        elif include_asm_macro_style == "snc":
+            return "snc"
         else:
-            raise ValueError(f"Invalid endianness: {include_asm_macro_style}")
+            raise ValueError(f"Invalid include_asm_macro_style: {include_asm_macro_style}")
 
     default_ld_bss_is_noload = True
     if platform == "psx":
