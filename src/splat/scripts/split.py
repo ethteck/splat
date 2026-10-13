@@ -6,7 +6,8 @@ import importlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
-from collections import defaultdict, deque
+from collections import defaultdict
+from heapq import heapify, heappop, heappush
 
 from .. import __package_name__, __version__
 from ..disassembler import disassembler_instance
@@ -211,42 +212,84 @@ def calc_segment_dependences(
 def sort_segments_by_vram_class_dependency(
     all_segments: List[Segment],
 ) -> List[Segment]:
-    # map all "_VRAM_END" strings to segments
-    end_sym_to_seg: Dict[str, Segment] = {}
-    for seg in all_segments:
-        end_sym_to_seg[get_segment_vram_end_symbol_name(seg)] = seg
+    # Index the segments that can satisfy each kind of dependency.
+    segment_by_end_symbol: Dict[str, Segment] = {}
+    class_members_by_name: Dict[str, List[Segment]] = defaultdict(list)
+    for segment in all_segments:
+        segment_by_end_symbol[get_segment_vram_end_symbol_name(segment)] = segment
+        if segment.vram_class is not None:
+            class_members_by_name[segment.vram_class.name].append(segment)
 
-    # build dependency graph: A -> B means "A must come before B"
-    graph: Dict[Segment, List[Segment]] = defaultdict(list)
-    indeg: Dict[Segment, int] = {seg: 0 for seg in all_segments}
+    # A generated class symbol is emitted immediately before the class's first
+    # member. Since that member is not known until after sorting, place external
+    # users after every class member. Do not add these dependencies to the class
+    # members themselves, or the members would form a cycle with one another.
+    class_members_by_generated_symbol: Dict[str, List[Segment]] = {}
+    for class_members in class_members_by_name.values():
+        vram_class = class_members[0].vram_class
+        assert vram_class is not None
+        if vram_class.given_vram_symbol is None and vram_class.follows_classes:
+            assert vram_class.vram_symbol is not None
+            class_members_by_generated_symbol[vram_class.vram_symbol] = class_members
 
-    for seg in all_segments:
-        sym = seg.vram_symbol
-        if sym is None:
-            continue
-        dep = end_sym_to_seg.get(sym)
-        if dep is None or dep is seg:
-            continue
-        graph[dep].append(seg)
-        indeg[seg] += 1
+    # Build a graph where each edge means "dependency before dependent".
+    dependents_by_segment: Dict[Segment, List[Segment]] = defaultdict(list)
+    dependency_count: Dict[Segment, int] = {segment: 0 for segment in all_segments}
+    added_edges: Set[Tuple[Segment, Segment]] = set()
 
-    # stable topo sort with queue seeded in original order
-    q = deque([seg for seg in all_segments if indeg[seg] == 0])
-    out: List[Segment] = []
+    def add_dependency(dependency: Segment, dependent: Segment) -> None:
+        edge = (dependency, dependent)
+        if dependency is dependent or edge in added_edges:
+            return
+        added_edges.add(edge)
+        dependents_by_segment[dependency].append(dependent)
+        dependency_count[dependent] += 1
 
-    while q:
-        n = q.popleft()
-        out.append(n)
-        for m in graph.get(n, []):
-            indeg[m] -= 1
-            if indeg[m] == 0:
-                q.append(m)
+    for segment in all_segments:
+        vram_symbol = segment.vram_symbol
+        if vram_symbol is not None:
+            direct_dependency = segment_by_end_symbol.get(vram_symbol)
+            if direct_dependency is not None:
+                add_dependency(direct_dependency, segment)
 
-    assert len(out) == len(all_segments), (
+            aliased_class_members = class_members_by_generated_symbol.get(
+                vram_symbol, []
+            )
+            if segment not in aliased_class_members:
+                for dependency in aliased_class_members:
+                    add_dependency(dependency, segment)
+
+        if segment.vram_class is not None:
+            for class_name in segment.vram_class.follows_classes:
+                for dependency in class_members_by_name.get(class_name, []):
+                    add_dependency(dependency, segment)
+
+    # At every step choose the earliest segment in the original list that has
+    # no unsatisfied dependencies. A FIFO queue is not stable here: an early
+    # segment that becomes ready can otherwise remain behind unrelated later
+    # segments that were ready when the queue was initialized.
+    original_index = {segment: i for i, segment in enumerate(all_segments)}
+    ready_segments = [
+        (original_index[segment], segment)
+        for segment in all_segments
+        if dependency_count[segment] == 0
+    ]
+    heapify(ready_segments)
+    sorted_segments: List[Segment] = []
+
+    while ready_segments:
+        _, segment = heappop(ready_segments)
+        sorted_segments.append(segment)
+        for dependent in dependents_by_segment.get(segment, []):
+            dependency_count[dependent] -= 1
+            if dependency_count[dependent] == 0:
+                heappush(ready_segments, (original_index[dependent], dependent))
+
+    assert len(sorted_segments) == len(all_segments), (
         "Encountered cyclic dependency when reordering segments by vram class."
     )
 
-    return out
+    return sorted_segments
 
 
 def read_target_binary() -> bytes:
