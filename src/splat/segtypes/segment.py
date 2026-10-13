@@ -96,11 +96,34 @@ def empty_statistics() -> SegmentStatistics:
     return collections.defaultdict(lambda: SegmentStatisticsInfo(size=0, count=0))
 
 
+# Mapping for segments that are enabled only when the corresponding dependency
+# is available at runtime.
+# The value corresponds to the dependency group listed on the pyproject.toml
+# file installs the required Python dependencies for the given segment.
+_segments_from_optional_dependencies: dict[str, str] = {
+    "yay0": "compression",
+    "mio0": "compression",
+    "gfx": "assets-n64",
+    "ci": "assets-n64",
+    "ci4": "assets-n64",
+    "ci8": "assets-n64",
+    "i1": "assets-n64",
+    "i4": "assets-n64",
+    "i8": "assets-n64",
+    "ia16": "assets-n64",
+    "ia4": "assets-n64",
+    "ia8": "assets-n64",
+    "img": "assets-n64",
+    "rgba16": "assets-n64",
+    "rgba32": "assets-n64",
+}
+
+
 class Segment:
     require_unique_name = True
 
     @staticmethod
-    def get_class_for_type(seg_type) -> Type["Segment"]:
+    def get_class_for_type(seg_type: str) -> Type["Segment"]:
         # so .data loads SegData, for example
         seg_type = seg_type.removeprefix(".")
 
@@ -115,14 +138,21 @@ class Segment:
                 segment_class = Segment.get_extension_segment_class(seg_type)
 
         if segment_class is None:
+            dependency_group = _segments_from_optional_dependencies.get(seg_type)
+            if dependency_group is not None:
+                log.error(
+                    f"Could not load segment type '{seg_type}'.\n"
+                    f"This segment is available by installing the optional dependency group `splat64[{dependency_group}]`"
+                )
             log.error(
-                f"could not load segment type '{seg_type}'\n(hint: confirm your extension directory is configured correctly)"
+                f"Could not load segment type '{seg_type}'\n"
+                "(hint: confirm your extension directory is configured correctly)"
             )
 
         return segment_class
 
     @staticmethod
-    def get_base_segment_class(seg_type):
+    def get_base_segment_class(seg_type: str) -> Optional[Type["Segment"]]:
         platform = options.opts.platform
         is_platform_seg = False
 
@@ -144,7 +174,7 @@ class Segment:
         return getattr(segmodule, f"{seg_prefix}Seg{seg_type.capitalize()}")
 
     @staticmethod
-    def get_extension_segment_class(seg_type):
+    def get_extension_segment_class(seg_type: str) -> Optional[Type["Segment"]]:
         platform = options.opts.platform
 
         ext_path = options.opts.extensions_path
@@ -167,7 +197,8 @@ class Segment:
             return None
 
         return getattr(
-            ext_mod, f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}"
+            ext_mod,
+            f"{platform.upper()}Seg{seg_type[0].upper()}{seg_type[1:]}",
         )
 
     @staticmethod
